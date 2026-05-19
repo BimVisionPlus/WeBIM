@@ -1,0 +1,22 @@
+{
+  "name": "@atlas/auth",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atlas/db": "workspace:*",
+    "@auth/prisma-adapter": "^2.7.0",
+    "bcryptjs": "^2.4.3",
+    "next-auth": "^4.24.7",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.12.0",
+    "typescript": "^5.4.0"
+  }
+}

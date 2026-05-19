@@ -1,0 +1,37 @@
+{
+  "name": "atlas-aec",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Atlas AEC — Atlassian suite clone for Architecture, Engineering & Construction. VN-grounded (NĐ 06/2021).",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=@atlas/web",
+    "dev:landing": "turbo run dev --filter=@atlas/landing",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "pnpm --filter @atlas/workflows test",
+    "test:e2e": "pnpm --filter @atlas/web test:e2e",
+    "db:generate": "pnpm --filter @atlas/db generate",
+    "db:push": "pnpm --filter @atlas/db push",
+    "db:migrate": "pnpm --filter @atlas/db migrate",
+    "db:seed": "pnpm --filter @atlas/db seed",
+    "db:studio": "pnpm --filter @atlas/db studio",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f",
+    "ai:up": "docker compose --profile ai up -d",
+    "ai:down": "docker compose --profile ai down",
+    "ai:logs": "docker compose logs -f ollama whisper ollama-init",
+    "ai:pull": "docker compose --profile ai run --rm ollama-init"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "prettier": "^3.2.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

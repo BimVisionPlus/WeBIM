@@ -1,0 +1,55 @@
+# Atlas AEC — production docker-compose.
+#
+# Boot with:
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+#
+# Assumes:
+#   - Managed Postgres + Redis (host names in DATABASE_URL / REDIS_URL)
+#   - S3 (AWS) bucket already provisioned, IAM creds in env
+#   - Caddy (or another TLS-terminating proxy) in front of :3000
+#
+# Includes:
+#   - web      → Next.js (Layer 1-8 app)
+#   - worker   → cron jobs (scrape · bond-expiry · drift-snapshot)
+#   - scraper  → Python sidecar that POSTs to web/api/winwork/tenders/scrape
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: atlas-aec/web:${VERSION:-latest}
+    env_file: .env.production
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    image: atlas-aec/worker:${VERSION:-latest}
+    env_file: .env.production
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+
+  scraper:
+    build:
+      context: services/scraper-py
+    image: atlas-aec/scraper:${VERSION:-latest}
+    environment:
+      ATLAS_BASE_URL: "http://web:3000"
+      WINWORK_SCRAPE_SECRET: "${WINWORK_SCRAPE_SECRET}"
+      SCRAPE_INTERVAL_HOURS: "24"
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy

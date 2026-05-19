@@ -1,0 +1,27 @@
+{
+  "name": "@atlas/lib",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atlas/db": "workspace:*",
+    "@aws-sdk/client-s3": "^3.620.0",
+    "@aws-sdk/s3-request-presigner": "^3.620.0",
+    "@sentry/node": "^10.53.1",
+    "zod": "^3.23.0"
+  },
+  "optionalDependencies": {
+    "ioredis": "^5.4.1",
+    "nodemailer": "^6.9.14",
+    "pino": "^9.3.0",
+    "pino-pretty": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.15",
+    "typescript": "^5.4.0"
+  }
+}

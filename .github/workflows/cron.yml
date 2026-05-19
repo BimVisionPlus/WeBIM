@@ -1,0 +1,89 @@
+name: Atlas AEC — Cron jobs
+
+# Free-tier worker replacement (Vercel Hobby doesn't have always-on processes).
+# Runs scraper / bond-expiry / drift-snapshot on a schedule via GitHub Actions.
+#
+# Setup: in repo Settings → Secrets and variables → Actions, add:
+#   ATLAS_BASE_URL       — https://app.aecplatform.vn
+#   WINWORK_SCRAPE_SECRET — same value as Vercel env
+#   DATABASE_URL          — Neon connection string (used by drift + bond-expiry only)
+
+on:
+  schedule:
+    # Daily at 07:00 ICT (00:00 UTC) — scrape tenders
+    - cron: "0 0 * * *"
+    # Daily at 08:00 ICT (01:00 UTC) — bond expiry check
+    - cron: "0 1 * * *"
+    # Hourly — drift snapshot (free tier: 24 runs/day × ~30s = 12 min/day < 2000 min/mo budget)
+    - cron: "0 * * * *"
+  workflow_dispatch:    # manual trigger from Actions tab
+
+jobs:
+  scrape-tenders:
+    if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install scraper deps
+        run: |
+          pip install -r services/scraper-py/requirements.txt
+          playwright install chromium
+      - name: Run scraper once
+        env:
+          ATLAS_BASE_URL: ${{ secrets.ATLAS_BASE_URL }}
+          WINWORK_SCRAPE_SECRET: ${{ secrets.WINWORK_SCRAPE_SECRET }}
+          SCRAPE_PAGE_LIMIT: "3"
+        run: |
+          cd services/scraper-py/src
+          # one-shot mode: run() once then exit (vs. the docker container which loops)
+          python -c "
+          import sys; sys.path.insert(0, '.')
+          from run import run_once
+          stats = run_once()
+          print('stats:', stats)
+          "
+
+  bond-expiry:
+    if: github.event.schedule == '0 1 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atlas/db generate
+      - name: Run bond expiry job
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pnpm exec tsx scripts/cron-bond-expiry.ts
+
+  drift-snapshot:
+    if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atlas/db generate
+      - name: Run drift snapshot
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pnpm exec tsx scripts/cron-drift-snapshot.ts

@@ -1,0 +1,11 @@
+services:
+  postgres:
+    ports: !override
+      - '55453:5432'
+  redis:
+    ports: !override
+      - '56395:6379'
+  minio:
+    ports: !override
+      - '55454:9000'
+      - '55455:9001'
