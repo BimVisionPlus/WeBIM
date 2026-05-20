@@ -1,11 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @atlas/db generate && pnpm --filter @atlas/web build",
-  "installCommand": "pnpm install --frozen-lockfile",
   "framework": "nextjs",
-  "outputDirectory": "apps/web/.next",
   "regions": ["sin1"],
-  "ignoreCommand": "bash -c 'git diff HEAD^ HEAD --quiet -- apps/web packages || exit 1'",
   "headers": [
     {
       "source": "/(.*)",
