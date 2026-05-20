@@ -1,11 +1,11 @@
 const modules = [
   {
     n: "01",
-    name: "Atlas AEC",
-    tag: "PM — Workflow Engine",
+    name: "Atlas AEC + aec-platform",
+    tag: "27 mô-đun LIVE — PM ngang + dọc",
     eta: "LIVE",
     status: "live",
-    desc: "Atlassian-style cho thầu chính / TVGS / CĐT. RFI · Submittal · NCR · Punch · BBNT · BIM viewer · NĐ 06/2021 / NĐ 15/2021 / Luật ĐT 22/2023.",
+    desc: "Atlassian-style PM (13 mô-đun: Site/Models/Specs/…) cộng với suite dọc cho nhà thầu VN (14 mô-đun: WinWork/BidRadar/CostPulse/CodeGuard/…). RFI · Submittal · NCR · Punch · BBNT · BIM viewer · NĐ 06/2021 / NĐ 15/2021 / Luật ĐT 22/2023.",
     url: "https://app.aecplatform.vn",
     color: "from-blue-500 to-cyan-400",
   },
