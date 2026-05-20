@@ -60,6 +60,7 @@ export default async function Home() {
             <OrgSwitcher orgs={orgs} activeSlug={activeOrg.slug} />
             <Link href="/" className="hover:text-slate-900">Dự án</Link>
             <Link href="/winwork" className="hover:text-slate-900">WinWork</Link>
+            <Link href="/catalog" className="hover:text-slate-900">Catalog</Link>
             <Link href="/portfolio" className="hover:text-slate-900">Portfolio</Link>
             <Link href="/trust" className="hover:text-slate-900">Trust</Link>
             <Link href="/pricing" className="hover:text-slate-900">Giá</Link>

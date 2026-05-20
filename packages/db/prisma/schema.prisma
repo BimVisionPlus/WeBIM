@@ -1978,3 +1978,206 @@ enum TemplateKind {
   AGENT_SKILL
   CHECKLIST
 }
+
+// ============================================================================
+//  CREWS module — Atlassian "Trello" reskinned for tổ đội thi công
+//  Daily/weekly look-ahead board. Cards = work items assigned to crews.
+// ============================================================================
+
+model Crew {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String // "Tổ thép #1" | "Tổ MEP A"
+  trade       String // "Thép" | "Bê tông" | "MEP" | "Sơn" | "Hoàn thiện"
+  foremanName String? // Tổ trưởng
+  headcount   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  assignments CrewAssignment[]
+
+  @@index([projectId, active])
+}
+
+// One work assignment for a crew on a specific shift.
+// State machine: PLANNED → IN_PROGRESS → DONE  (with BLOCKED branch)
+model CrewAssignment {
+  id          String         @id @default(cuid())
+  projectId   String
+  crewId      String
+  workDate    DateTime       @db.Date
+  shift       Shift          @default(DAY)
+  title       String // "Buộc thép cột tầng 12 trục A-F"
+  description String?        @db.Text
+  zone        String? // "Tầng 12 — Khu A"
+  state       CrewWorkState  @default(PLANNED)
+  blockedReason String? // populated when state = BLOCKED
+  hoursPlanned Float?
+  hoursActual  Float?
+  // Optional: link to upstream Issue (RFI/Submittal/Daily Log) for traceability
+  issueId     String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  crew Crew @relation(fields: [crewId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, workDate, shift])
+  @@index([crewId, workDate])
+}
+
+enum CrewWorkState {
+  PLANNED // Look-ahead planned
+  IN_PROGRESS // Tổ đang làm
+  BLOCKED // Đợi vật tư / bản vẽ / nghiệm thu
+  DONE // Hoàn thành ca/ngày
+  REVIEWED // TVGS / chỉ huy đã xác nhận
+}
+
+// ============================================================================
+//  CATALOG module — Atlassian "Compass" reskinned for cấu kiện · vật tư
+// ============================================================================
+
+model CatalogItem {
+  id          String   @id @default(cuid())
+  projectId   String? // null = global catalog (shared across projects)
+  code        String // "BT-M300" | "THEP-CB300-V-D14"
+  name        String // "Bê tông M300" | "Cốt thép CB300-V Φ14"
+  category    CatalogCategory
+  unit        String // "m³" | "kg" | "tấn"
+  spec        String?  @db.Text // technical spec / TCVN ref
+  baselineUnitPriceVnd BigInt? // reference price, used for variance flags
+  imageUrl    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  suppliers   SupplierCatalogItem[]
+
+  @@unique([projectId, code])
+  @@index([category, active])
+}
+
+enum CatalogCategory {
+  BE_TONG // Bê tông
+  COT_THEP // Cốt thép
+  GACH_DA // Gạch · đá
+  XI_MANG_VOI // Xi măng · vôi
+  SON_PHU // Sơn · phụ gia hoàn thiện
+  ME_HVAC // M&E · HVAC
+  ME_DIEN // M&E · Điện
+  ME_NUOC // M&E · Cấp/thoát nước
+  PCCC // Vật tư PCCC
+  CUA_KINH // Cửa · kính · nhôm
+  THIET_BI_THI_CONG // Thiết bị thi công
+  KHAC // Khác
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  orgId       String? // FK to Organization if supplier is also an org in the system
+  name        String // "CTCP Thép Hòa Phát" | "Tổng cty Xi măng VN"
+  mst         String? // MST nhà cung cấp
+  phone       String?
+  email       String?
+  address     String?
+  rating      Float? // 0-5 — rolling average of project ratings
+  notes       String?  @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  items SupplierCatalogItem[]
+
+  @@index([name])
+  @@index([active])
+}
+
+// Many-to-many: supplier × catalog item with price + lead time.
+model SupplierCatalogItem {
+  id          String   @id @default(cuid())
+  supplierId  String
+  catalogItemId String
+  unitPriceVnd BigInt
+  leadTimeDays Int      @default(7)
+  minOrderQty Float?
+  validFrom   DateTime @default(now())
+  validTo     DateTime?
+  notes       String?
+
+  supplier Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  item     CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, catalogItemId, validFrom])
+  @@index([catalogItemId, unitPriceVnd])
+}
+
+// ============================================================================
+//  HANDOVER module — Atlassian "Jira SM" reskinned for warranty desk
+//  Post-bàn giao tickets per NĐ 06/2021 (12/24/60 tháng bảo hành).
+// ============================================================================
+
+model HandoverTicket {
+  id            String          @id @default(cuid())
+  projectId     String
+  ticketNumber  String // "HG-VHGP-S9-001"
+  unitCode      String? // "S9-12A-05" — căn / lô / unit
+  category      HandoverCategory
+  severity      HandoverSeverity @default(LOW)
+  title         String
+  description   String          @db.Text
+  reporterName  String // Cư dân / CĐT báo lỗi (có thể không là user trong hệ thống)
+  reporterPhone String?
+  reporterEmail String?
+  reportedAt    DateTime        @default(now())
+  // Warranty window check — NĐ 06/2021: 12 tháng phần phụ, 24 phần chính, 60 hạ tầng
+  warrantyType  WarrantyType
+  warrantyEndsAt DateTime
+  state         HandoverState   @default(NEW)
+  slaDueAt      DateTime? // computed from severity
+  assigneeOrgId String? // typically NT_CHINH or NT_PHU responsible
+  rectifiedAt   DateTime?
+  verifiedAt    DateTime?
+  customerSatisfactionScore Int? // 1-5 from reporter after closure
+  // Optional uplink to Issue for the workflow trail
+  issueId       String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([projectId, state])
+  @@index([slaDueAt, state])
+  @@index([warrantyEndsAt])
+}
+
+enum HandoverCategory {
+  THAM_DOT // Thấm dột
+  NUT_TUONG // Nứt tường / trần
+  DIEN_GIAT // Sự cố điện
+  CAP_THOAT_NUOC // Cấp / thoát nước
+  HVAC // Điều hòa, thông gió
+  SON_HOAN_THIEN // Sơn / hoàn thiện
+  CUA_KHOA // Cửa, khóa, bản lề
+  AN_NINH // Camera, kiểm soát ra vào
+  KHAC
+}
+
+enum HandoverSeverity {
+  LOW // 7 ngày SLA
+  MEDIUM // 3 ngày
+  HIGH // 24h
+  CRITICAL // 4h (rò điện, sập trần, vỡ ống)
+}
+
+enum HandoverState {
+  NEW // Vừa báo
+  TRIAGED // Đã phân loại + giao đội xử lý
+  IN_PROGRESS // Đang xử lý tại hiện trường
+  AWAITING_PARTS // Đợi vật tư / phụ kiện
+  RECTIFIED // Khắc phục xong, chờ xác nhận
+  VERIFIED // Cư dân/CĐT xác nhận
+  REJECTED // Ngoài phạm vi bảo hành
+  CLOSED
+}
+
+enum WarrantyType {
+  PHAN_PHU // 12 tháng — sơn, gạch, phụ kiện
+  PHAN_CHINH // 24 tháng — kết cấu, MEP cố định
+  HA_TANG // 60 tháng — đường, cấp nước hạ tầng
+}

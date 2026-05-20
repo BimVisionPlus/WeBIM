@@ -15,10 +15,12 @@ const tabs = [
   { href: "/site/daily-log", label: "Nhật ký" },
   { href: "/models", label: "Models" },
   { href: "/specs", label: "Specs" },
+  { href: "/crews", label: "Crews" },
   { href: "/codeguard", label: "CodeGuard" },
   { href: "/drawbridge", label: "DrawBridge" },
   { href: "/siteeye", label: "SiteEye" },
   { href: "/costpulse", label: "CostPulse" },
+  { href: "/handover", label: "Handover" },
 ];
 
 export function ProjectNav({ projectId }: { projectId: string }) {
