@@ -7,6 +7,13 @@ const nextConfig = {
   transpilePackages: ["@atlas/db", "@atlas/lib", "@atlas/ui", "@atlas/workflows", "@atlas/auth"],
   experimental: {
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs", "pino", "pino-pretty"],
+    outputFileTracingRoot: "../../",
+    outputFileTracingIncludes: {
+      "/**/*": [
+        "../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/**/*",
+        "../../node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client/**/*",
+      ],
+    },
   },
   images: {
     remotePatterns: [
