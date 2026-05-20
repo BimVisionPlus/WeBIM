@@ -62,6 +62,13 @@ async function main() {
   await prisma.modelElement.deleteMany();
   await prisma.clash.deleteMany();
   await prisma.issueElementLink.deleteMany();
+  // Crews + Catalog + Handover (new modules)
+  await prisma.crewAssignment.deleteMany();
+  await prisma.crew.deleteMany();
+  await prisma.supplierCatalogItem.deleteMany();
+  await prisma.catalogItem.deleteMany();
+  await prisma.supplier.deleteMany();
+  await prisma.handoverTicket.deleteMany();
   await prisma.projectStakeholder.deleteMany();
   await prisma.project.deleteMany();
   await prisma.membership.deleteMany();
@@ -958,6 +965,149 @@ async function main() {
       costVnd: BigInt(300 + ((i * 11) % 900)),
       occurredAt: new Date(Date.now() - i * 3600_000),
     })),
+  });
+
+  // ─── Crews · 5 tổ đội + 15 assignments trải đều 2 tuần ──────────────────
+  const crewsCreated = await Promise.all([
+    prisma.crew.create({ data: { projectId: project.id, name: "Tổ thép #1",  trade: "Thép",     foremanName: "Nguyễn Văn Hùng",  headcount: 18 } }),
+    prisma.crew.create({ data: { projectId: project.id, name: "Tổ thép #2",  trade: "Thép",     foremanName: "Trần Minh Đức",    headcount: 16 } }),
+    prisma.crew.create({ data: { projectId: project.id, name: "Tổ bê tông",  trade: "Bê tông",  foremanName: "Lê Quang Hải",     headcount: 22 } }),
+    prisma.crew.create({ data: { projectId: project.id, name: "Tổ MEP A",    trade: "MEP",      foremanName: "Phạm Tuấn Anh",    headcount: 12 } }),
+    prisma.crew.create({ data: { projectId: project.id, name: "Tổ hoàn thiện",trade: "Hoàn thiện",foremanName: "Đỗ Thị Mai",      headcount: 14 } }),
+  ]);
+  const [crewThep1, crewThep2, crewBetong, crewMep, crewHoanThien] = crewsCreated;
+
+  const day = (offsetDays: number) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + offsetDays);
+    return d;
+  };
+
+  await prisma.crewAssignment.createMany({
+    data: [
+      // Hôm qua + 2 days ago (đã xong)
+      { projectId: project.id, crewId: crewThep1!.id,    workDate: day(-2), shift: "DAY", title: "Buộc thép cột tầng 12 trục A-F",       zone: "Tầng 12 — Khu A", hoursPlanned: 8, hoursActual: 7.5, state: "REVIEWED" },
+      { projectId: project.id, crewId: crewBetong!.id,   workDate: day(-1), shift: "DAY", title: "Đổ bê tông sàn tầng 12 phân khu A",    zone: "Tầng 12 — Khu A", hoursPlanned: 10, hoursActual: 9.5, state: "REVIEWED" },
+      { projectId: project.id, crewId: crewMep!.id,      workDate: day(-1), shift: "DAY", title: "Lắp ống nước thoát tầng 8 căn 01-05",  zone: "Tầng 8 — Khu B",  hoursPlanned: 8, hoursActual: 8, state: "DONE" },
+
+      // Hôm nay
+      { projectId: project.id, crewId: crewThep2!.id,    workDate: day(0), shift: "DAY", title: "Buộc thép dầm tầng 13 trục C-E",        zone: "Tầng 13 — Khu A", hoursPlanned: 8, state: "IN_PROGRESS" },
+      { projectId: project.id, crewId: crewMep!.id,      workDate: day(0), shift: "DAY", title: "Lắp HVAC chính tầng 6",                  zone: "Tầng 6 — Trung tâm", hoursPlanned: 10, state: "IN_PROGRESS" },
+      { projectId: project.id, crewId: crewHoanThien!.id,workDate: day(0), shift: "DAY", title: "Lát gạch sảnh tầng 1 khu D",             zone: "Tầng 1 — Khu D",  hoursPlanned: 8, state: "BLOCKED", blockedReason: "Đợi mẫu gạch Holcim đến vào chiều" },
+
+      // Ngày mai
+      { projectId: project.id, crewId: crewThep1!.id,    workDate: day(1), shift: "DAY", title: "Buộc thép tường vây tầng hầm B2",       zone: "Tầng hầm B2",     hoursPlanned: 8, state: "PLANNED" },
+      { projectId: project.id, crewId: crewBetong!.id,   workDate: day(1), shift: "DAY", title: "Đổ bê tông dầm tầng 13",                 zone: "Tầng 13 — Khu A", hoursPlanned: 10, state: "PLANNED" },
+      { projectId: project.id, crewId: crewMep!.id,      workDate: day(1), shift: "NIGHT", title: "Kéo cáp điện trục đứng tầng 4-8",      zone: "Trục thang máy 1",hoursPlanned: 8, state: "PLANNED" },
+
+      // 2-3 ngày tới
+      { projectId: project.id, crewId: crewThep2!.id,    workDate: day(2), shift: "DAY", title: "Lắp giàn giáo bao quanh tầng 14",       zone: "Tầng 14",         hoursPlanned: 8, state: "PLANNED" },
+      { projectId: project.id, crewId: crewHoanThien!.id,workDate: day(3), shift: "DAY", title: "Sơn lớp lót khu B tầng 5-7",             zone: "Tầng 5-7 — Khu B",hoursPlanned: 10, state: "PLANNED" },
+
+      // Tuần sau
+      { projectId: project.id, crewId: crewBetong!.id,   workDate: day(7), shift: "DAY", title: "Đổ bê tông sàn tầng 13 phân khu B",    zone: "Tầng 13 — Khu B", hoursPlanned: 10, state: "PLANNED" },
+      { projectId: project.id, crewId: crewThep1!.id,    workDate: day(8), shift: "DAY", title: "Buộc thép cột tầng 14 trục A-F",       zone: "Tầng 14 — Khu A", hoursPlanned: 8, state: "PLANNED" },
+      { projectId: project.id, crewId: crewMep!.id,      workDate: day(9), shift: "DAY", title: "Test áp lực hệ thống PCCC tầng 5",     zone: "Tầng 5 — Toàn tầng",hoursPlanned: 6, state: "PLANNED" },
+      { projectId: project.id, crewId: crewHoanThien!.id,workDate: day(10),shift: "DAY", title: "Lát gạch nền căn mẫu 12A-05",          zone: "Căn 12A-05",      hoursPlanned: 8, state: "PLANNED" },
+    ],
+  });
+
+  // ─── Catalog · 8 supplier + 28 cấu kiện + price relations ──────────────────
+  const sups = await Promise.all([
+    prisma.supplier.create({ data: { name: "CTCP Thép Hòa Phát",          mst: "0900189186", phone: "024-3855-9999", email: "sales@hoaphat.com.vn",   rating: 4.6 } }),
+    prisma.supplier.create({ data: { name: "Tổng cty Xi măng VN (VICEM)", mst: "0100106435", phone: "024-3733-1551", email: "info@vicem.vn",          rating: 4.3 } }),
+    prisma.supplier.create({ data: { name: "Holcim Việt Nam",             mst: "3500174756", phone: "025-1391-9999", email: "vn.sales@holcim.com",    rating: 4.5 } }),
+    prisma.supplier.create({ data: { name: "INSEE Vietnam",               mst: "3700101027", phone: "025-1372-9999", email: "vn@inseegroup.com",      rating: 4.4 } }),
+    prisma.supplier.create({ data: { name: "Tôn Hoa Sen",                 mst: "3702057295", phone: "025-1376-1111", email: "info@hoasengroup.vn",    rating: 4.2 } }),
+    prisma.supplier.create({ data: { name: "Sơn Jotun Việt Nam",          mst: "0300629260", phone: "028-3823-6611", email: "jotun.vn@jotun.com",     rating: 4.5 } }),
+    prisma.supplier.create({ data: { name: "Schneider Electric Việt Nam", mst: "0300543227", phone: "028-3826-2666", email: "vn.sales@se.com",        rating: 4.4 } }),
+    prisma.supplier.create({ data: { name: "CTCP Bê tông Lê Phan",        mst: "0301443217", phone: "028-3811-9000", email: "info@lephan.vn",         rating: 4.0 } }),
+  ]);
+  const [sHoaPhat, sVicem, sHolcim, sInsee, sHoaSen, sJotun, sSchneider, sLePhan] = sups;
+
+  const items = await Promise.all([
+    // Bê tông
+    prisma.catalogItem.create({ data: { code: "BT-M250", name: "Bê tông thương phẩm M250",            category: "BE_TONG",    unit: "m³",  spec: "TCVN 5574:2018 · slump 12±2cm",  baselineUnitPriceVnd: BigInt(1_650_000) } }),
+    prisma.catalogItem.create({ data: { code: "BT-M300", name: "Bê tông thương phẩm M300",            category: "BE_TONG",    unit: "m³",  spec: "TCVN 5574:2018 · slump 14±2cm",  baselineUnitPriceVnd: BigInt(1_850_000) } }),
+    prisma.catalogItem.create({ data: { code: "BT-M400", name: "Bê tông thương phẩm M400",            category: "BE_TONG",    unit: "m³",  spec: "TCVN 5574:2018 · slump 12±2cm",  baselineUnitPriceVnd: BigInt(2_050_000) } }),
+    // Cốt thép
+    prisma.catalogItem.create({ data: { code: "TH-CB300-D14", name: "Thép thanh CB300-V Φ14",          category: "COT_THEP",   unit: "kg",  spec: "TCVN 7888:2014",                  baselineUnitPriceVnd: BigInt(21_500) } }),
+    prisma.catalogItem.create({ data: { code: "TH-CB300-D16", name: "Thép thanh CB300-V Φ16",          category: "COT_THEP",   unit: "kg",  spec: "TCVN 7888:2014",                  baselineUnitPriceVnd: BigInt(21_400) } }),
+    prisma.catalogItem.create({ data: { code: "TH-CB300-D20", name: "Thép thanh CB300-V Φ20",          category: "COT_THEP",   unit: "kg",  spec: "TCVN 7888:2014",                  baselineUnitPriceVnd: BigInt(21_300) } }),
+    prisma.catalogItem.create({ data: { code: "TH-CB400-D25", name: "Thép thanh CB400-V Φ25",          category: "COT_THEP",   unit: "kg",  spec: "TCVN 7888:2014",                  baselineUnitPriceVnd: BigInt(22_200) } }),
+    // Gạch · đá
+    prisma.catalogItem.create({ data: { code: "GA-AAC-100",   name: "Gạch AAC 100x200x600",            category: "GACH_DA",    unit: "viên", spec: "TCVN 7959:2017",                 baselineUnitPriceVnd: BigInt(28_000) } }),
+    prisma.catalogItem.create({ data: { code: "GA-AAC-150",   name: "Gạch AAC 150x200x600",            category: "GACH_DA",    unit: "viên", spec: "TCVN 7959:2017",                 baselineUnitPriceVnd: BigInt(42_000) } }),
+    prisma.catalogItem.create({ data: { code: "DA-1X2",        name: "Đá 1x2 dăm",                      category: "GACH_DA",    unit: "m³",   spec: "TCVN 7570:2006",                 baselineUnitPriceVnd: BigInt(430_000) } }),
+    // Xi măng · vôi
+    prisma.catalogItem.create({ data: { code: "XM-PCB40",      name: "Xi măng PCB40",                   category: "XI_MANG_VOI", unit: "tấn",  spec: "TCVN 6260:2009",                 baselineUnitPriceVnd: BigInt(1_850_000) } }),
+    prisma.catalogItem.create({ data: { code: "XM-PCB50",      name: "Xi măng PCB50 (mác cao)",         category: "XI_MANG_VOI", unit: "tấn",  spec: "TCVN 6260:2009",                 baselineUnitPriceVnd: BigInt(2_050_000) } }),
+    // Sơn · phụ gia
+    prisma.catalogItem.create({ data: { code: "SON-JOT-IT",    name: "Sơn nội thất Jotun Jotashield",   category: "SON_PHU",    unit: "lít",  spec: "Acrylic gốc nước, độ phủ 12m²/L",baselineUnitPriceVnd: BigInt(285_000) } }),
+    prisma.catalogItem.create({ data: { code: "SON-JOT-EX",    name: "Sơn ngoại thất Jotun Stayblue",   category: "SON_PHU",    unit: "lít",  spec: "Chống UV, bảo hành 10 năm",      baselineUnitPriceVnd: BigInt(390_000) } }),
+    // M&E HVAC
+    prisma.catalogItem.create({ data: { code: "ME-HVAC-400",   name: "Ống HVAC Φ400 sơn tĩnh điện",     category: "ME_HVAC",    unit: "m",    spec: "Tôn mạ kẽm dày 0.8mm",           baselineUnitPriceVnd: BigInt(420_000) } }),
+    prisma.catalogItem.create({ data: { code: "ME-HVAC-FAN",   name: "Quạt cấp gió Greenheck SQ-160",   category: "ME_HVAC",    unit: "cái",  spec: "5000 CFM · 380V",                baselineUnitPriceVnd: BigInt(28_500_000) } }),
+    // M&E Điện
+    prisma.catalogItem.create({ data: { code: "ME-DIEN-MCB63", name: "MCB Schneider iC60N 3P 63A",      category: "ME_DIEN",    unit: "cái",  spec: "10kA · cong C",                  baselineUnitPriceVnd: BigInt(1_850_000) } }),
+    prisma.catalogItem.create({ data: { code: "ME-DIEN-CAB",   name: "Cáp điện CADIVI CV 4.0mm² Cu",    category: "ME_DIEN",    unit: "m",    spec: "TCVN 5934:1995",                 baselineUnitPriceVnd: BigInt(18_500) } }),
+    // M&E Nước
+    prisma.catalogItem.create({ data: { code: "ME-NUOC-PVC110",name: "Ống PVC Tiền Phong DN110 PN10",   category: "ME_NUOC",    unit: "m",    spec: "TCVN 6151:2002",                 baselineUnitPriceVnd: BigInt(95_000) } }),
+    prisma.catalogItem.create({ data: { code: "ME-NUOC-PPR25", name: "Ống PPR DN25 Sinopec PN16",        category: "ME_NUOC",    unit: "m",    spec: "Cấp nước nóng",                  baselineUnitPriceVnd: BigInt(38_000) } }),
+    // PCCC
+    prisma.catalogItem.create({ data: { code: "PC-SPK-RES",    name: "Đầu phun sprinkler hồng",          category: "PCCC",       unit: "cái",  spec: "QCVN 06:2022 · K=80",            baselineUnitPriceVnd: BigInt(285_000) } }),
+    prisma.catalogItem.create({ data: { code: "PC-BINH-MFZL4", name: "Bình chữa cháy MFZL4 (4kg ABC)",   category: "PCCC",       unit: "bình", spec: "TCVN 7026:2013",                 baselineUnitPriceVnd: BigInt(520_000) } }),
+    // Cửa · kính
+    prisma.catalogItem.create({ data: { code: "CV-CUA-AL",     name: "Cửa nhôm Xingfa 1.4mm",            category: "CUA_KINH",   unit: "m²",   spec: "Hệ 55, kính 5+5 Low-E",          baselineUnitPriceVnd: BigInt(2_850_000) } }),
+    prisma.catalogItem.create({ data: { code: "CV-CUA-GO",     name: "Cửa gỗ công nghiệp HDF veneer",    category: "CUA_KINH",   unit: "bộ",   spec: "830x2050mm, bao gồm khung",      baselineUnitPriceVnd: BigInt(4_200_000) } }),
+    // Thiết bị thi công
+    prisma.catalogItem.create({ data: { code: "TBTC-CTHAP",    name: "Cẩu tháp Liebherr 132 EC-H 8 FR.tronic", category: "THIET_BI_THI_CONG", unit: "tháng", spec: "Tải đỉnh 8 tấn, vươn 60m", baselineUnitPriceVnd: BigInt(285_000_000) } }),
+    prisma.catalogItem.create({ data: { code: "TBTC-VANTHANG", name: "Vận thăng SC 200/200",             category: "THIET_BI_THI_CONG", unit: "tháng", spec: "Tải 2000kg, cao 200m",        baselineUnitPriceVnd: BigInt(85_000_000) } }),
+    // Khác
+    prisma.catalogItem.create({ data: { code: "KHAC-MAY-HAN",  name: "Máy hàn que Hồng Ký 250A",         category: "KHAC",       unit: "cái",  spec: "AC/DC, 220V",                    baselineUnitPriceVnd: BigInt(8_500_000) } }),
+    prisma.catalogItem.create({ data: { code: "KHAC-MU-PPE",   name: "Mũ bảo hộ HPE-A1 (vàng)",           category: "KHAC",       unit: "cái",  spec: "TCVN 6407:2014",                 baselineUnitPriceVnd: BigInt(85_000) } }),
+  ]);
+
+  // Supplier × item price relations (only the realistic ones)
+  await prisma.supplierCatalogItem.createMany({
+    data: [
+      { supplierId: sHoaPhat!.id, catalogItemId: items[3]!.id, unitPriceVnd: BigInt(21_400), leadTimeDays: 5 },   // CB300 D14
+      { supplierId: sHoaPhat!.id, catalogItemId: items[4]!.id, unitPriceVnd: BigInt(21_300), leadTimeDays: 5 },
+      { supplierId: sHoaPhat!.id, catalogItemId: items[5]!.id, unitPriceVnd: BigInt(21_200), leadTimeDays: 5 },
+      { supplierId: sHoaPhat!.id, catalogItemId: items[6]!.id, unitPriceVnd: BigInt(22_100), leadTimeDays: 7 },   // CB400 D25
+      { supplierId: sVicem!.id,   catalogItemId: items[10]!.id, unitPriceVnd: BigInt(1_870_000), leadTimeDays: 3 }, // PCB40
+      { supplierId: sVicem!.id,   catalogItemId: items[11]!.id, unitPriceVnd: BigInt(2_070_000), leadTimeDays: 3 },
+      { supplierId: sHolcim!.id,  catalogItemId: items[10]!.id, unitPriceVnd: BigInt(1_850_000), leadTimeDays: 2 }, // Holcim rẻ hơn
+      { supplierId: sInsee!.id,   catalogItemId: items[10]!.id, unitPriceVnd: BigInt(1_840_000), leadTimeDays: 2 },
+      { supplierId: sJotun!.id,   catalogItemId: items[12]!.id, unitPriceVnd: BigInt(285_000),  leadTimeDays: 7 },
+      { supplierId: sJotun!.id,   catalogItemId: items[13]!.id, unitPriceVnd: BigInt(390_000),  leadTimeDays: 7 },
+      { supplierId: sSchneider!.id, catalogItemId: items[16]!.id, unitPriceVnd: BigInt(1_850_000), leadTimeDays: 14 }, // MCB
+      { supplierId: sLePhan!.id,  catalogItemId: items[0]!.id, unitPriceVnd: BigInt(1_620_000), leadTimeDays: 1 },  // BT M250
+      { supplierId: sLePhan!.id,  catalogItemId: items[1]!.id, unitPriceVnd: BigInt(1_830_000), leadTimeDays: 1 },  // BT M300
+      { supplierId: sLePhan!.id,  catalogItemId: items[2]!.id, unitPriceVnd: BigInt(2_030_000), leadTimeDays: 1 },
+    ],
+  });
+
+  // ─── Handover · 7 tickets (mix severity / state / warranty type) ──────────
+  const baseEnd = new Date(); baseEnd.setMonth(baseEnd.getMonth() + 18); // bảo hành đến 18 tháng tới
+  await prisma.handoverTicket.createMany({
+    data: [
+      // CRITICAL — quá SLA 1h
+      { projectId: project.id, ticketNumber: "HG-VHGP-S9-001", unitCode: "S9-12A-05", category: "DIEN_GIAT",       severity: "CRITICAL", title: "Rò điện ổ cắm phòng khách",                     description: "Cư dân phản ánh chạm nhẹ khi cắm sạc — mạnh hơn khi tay ướt. Đã ngắt aptomat tổng.", reporterName: "Anh Nguyễn Văn Hùng", reporterPhone: "0901234567", reporterEmail: "hung.nv@gmail.com", warrantyType: "PHAN_CHINH", warrantyEndsAt: baseEnd, slaDueAt: new Date(Date.now() - 3600_000), state: "TRIAGED", reportedAt: new Date(Date.now() - 5 * 3600_000) },
+      // HIGH — sắp quá hạn
+      { projectId: project.id, ticketNumber: "HG-VHGP-S9-002", unitCode: "S9-08B-12", category: "THAM_DOT",         severity: "HIGH",     title: "Thấm trần phòng tắm sau mưa lớn",                description: "Mưa đêm 18/5 → trần phòng tắm ẩm cả ngày, có vệt nâu. Nghi nứt ống thoát sàn tầng trên.", reporterName: "Chị Trần Thị Bình",  reporterPhone: "0912345678", warrantyType: "PHAN_CHINH", warrantyEndsAt: baseEnd, slaDueAt: new Date(Date.now() + 8 * 3600_000), state: "IN_PROGRESS", reportedAt: new Date(Date.now() - 16 * 3600_000) },
+      // MEDIUM
+      { projectId: project.id, ticketNumber: "HG-VHGP-S9-003", unitCode: "S9-05A-08", category: "CAP_THOAT_NUOC",   severity: "MEDIUM",   title: "Vòi rửa bát chảy nhỏ giọt",                     description: "Vòi inox bị rỉ rò khoảng 1 giọt/5 giây. Đã siết tay nhưng vẫn rò.",                  reporterName: "Anh Lê Quốc Cường",  reporterPhone: "0923456789", warrantyType: "PHAN_PHU",   warrantyEndsAt: baseEnd, slaDueAt: new Date(Date.now() + 48 * 3600_000), state: "NEW", reportedAt: new Date(Date.now() - 6 * 3600_000) },
+      // LOW
+      { projectId: project.id, ticketNumber: "HG-VHGP-S9-004", unitCode: "S9-15C-03", category: "SON_HOAN_THIEN",   severity: "LOW",      title: "Bong tróc sơn cạnh khung cửa phòng ngủ chính",  description: "Một mảng sơn ~5x10cm bong sát cạnh khung cửa. Khả năng do co ngót.",                  reporterName: "Chị Phạm Mỹ Linh",   reporterPhone: "0934567890", warrantyType: "PHAN_PHU",   warrantyEndsAt: baseEnd, slaDueAt: new Date(Date.now() + 5 * 86400_000), state: "NEW", reportedAt: new Date(Date.now() - 24 * 3600_000) },
+      // RECTIFIED — chờ cư dân xác nhận
+      { projectId: project.id, ticketNumber: "HG-VHGP-S9-005", unitCode: "S9-10A-11", category: "HVAC",             severity: "HIGH",     title: "Điều hòa không lạnh — tầng 10 căn 11",          description: "Daikin treo tường không lạnh sau 3 tháng. Kiểm tra: nạp ga, vệ sinh lọc.",            reporterName: "Anh Đỗ Hoàng Nam",  reporterPhone: "0945678901", warrantyType: "PHAN_PHU",   warrantyEndsAt: baseEnd, slaDueAt: new Date(Date.now() - 24 * 3600_000), state: "RECTIFIED", rectifiedAt: new Date(Date.now() - 2 * 3600_000), reportedAt: new Date(Date.now() - 30 * 3600_000) },
+      // VERIFIED — closed loop
+      { projectId: project.id, ticketNumber: "HG-VHGP-S9-006", unitCode: "S9-03B-07", category: "CUA_KHOA",         severity: "LOW",      title: "Khóa cửa chính kẹt khi đóng",                    description: "Chốt khóa thân cửa kẹt — đã chỉnh bản lề + tra dầu.",                                  reporterName: "Chị Vũ Thị Hoa",     reporterPhone: "0956789012", warrantyType: "PHAN_PHU",   warrantyEndsAt: baseEnd, slaDueAt: new Date(Date.now() - 4 * 86400_000), state: "VERIFIED", rectifiedAt: new Date(Date.now() - 5 * 86400_000), verifiedAt: new Date(Date.now() - 4 * 86400_000), customerSatisfactionScore: 5, reportedAt: new Date(Date.now() - 7 * 86400_000) },
+      // REJECTED — ngoài bảo hành (hết hạn rồi)
+      { projectId: project.id, ticketNumber: "HG-VHGP-S9-007", unitCode: "S9-07A-02", category: "SON_HOAN_THIEN",   severity: "LOW",      title: "Đề nghị sơn lại toàn bộ căn",                    description: "Cư dân yêu cầu sơn lại toàn bộ căn. KHÔNG nằm trong phạm vi bảo hành (sơn nội thất 12T, đã hết hạn).", reporterName: "Anh Bùi Minh Khôi",  reporterPhone: "0967890123", warrantyType: "PHAN_PHU",   warrantyEndsAt: new Date(Date.now() - 30 * 86400_000), state: "REJECTED", reportedAt: new Date(Date.now() - 2 * 86400_000) },
+    ],
   });
 
   console.log("✅ Seed complete.");

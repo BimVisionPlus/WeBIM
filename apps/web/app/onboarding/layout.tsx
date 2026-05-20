@@ -11,7 +11,10 @@ export default async function OnboardingLayout({ children }: { children: React.R
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-md bg-blue-600 font-bold text-white">A</div>
-            <span className="text-lg font-semibold">Atlas AEC</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500">AEC Platform</span>
+              <span className="text-base font-semibold text-slate-900">Atlas AEC <span className="text-[10px] font-medium text-slate-400">· Module #1</span></span>
+            </div>
           </Link>
           <span className="text-xs text-slate-500">Khởi tạo</span>
         </div>

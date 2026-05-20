@@ -18,11 +18,29 @@ export default function CreateOrgPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // Strip diacritics + non-[a-z0-9-] for slug field. Also handles URL paste
+  // (cuts off https://, trailing slashes, paths).
+  function cleanSlug(v: string) {
+    return v
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/^https?:\/\//, "")
+      .replace(/\/.*$/, "")
+      .replace(/\.[a-z]{2,}$/, "")           // strip .vn/.com/.com.vn tail
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 50);
+  }
+
   function update<K extends keyof typeof form>(k: K, v: string) {
+    if (k === "slug") {
+      setForm((f) => ({ ...f, slug: cleanSlug(v) }));
+      return;
+    }
     setForm((f) => ({ ...f, [k]: v }));
     if (k === "name" && !form.slug) {
-      const auto = v.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50);
-      setForm((f) => ({ ...f, slug: auto }));
+      setForm((f) => ({ ...f, slug: cleanSlug(v) }));
     }
   }
 
@@ -38,6 +56,24 @@ export default function CreateOrgPage() {
     setBusy(false);
     if (!r.ok) {
       const j = await r.json().catch(() => ({}));
+      // Pull the first field-level message out of Zod's flatten() if present
+      const fields = j?.details?.fieldErrors as Record<string, string[]> | undefined;
+      if (fields) {
+        const fieldLabels: Record<string, string> = {
+          name: "Tên tổ chức",
+          slug: "Slug (URL)",
+          type: "Vai trò",
+          mst: "Mã số thuế",
+          address: "Địa chỉ",
+          phone: "Điện thoại",
+          email: "Email",
+        };
+        const firstField = Object.keys(fields).find((k) => fields[k]?.length);
+        if (firstField) {
+          setErr(`${fieldLabels[firstField] ?? firstField}: ${fields[firstField]![0]}`);
+          return;
+        }
+      }
       setErr(j.error ?? "Không tạo được tổ chức");
       return;
     }
@@ -54,7 +90,14 @@ export default function CreateOrgPage() {
       <CardBody>
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Field label="Tên tổ chức" value={form.name} onChange={(v) => update("name", v)} required />
-          <Field label="Slug (URL)" value={form.slug} onChange={(v) => update("slug", v)} required />
+          <Field
+            label="Slug (URL)"
+            value={form.slug}
+            onChange={(v) => update("slug", v)}
+            required
+            placeholder="viwase"
+            hint="Chỉ chữ thường, số, dấu gạch. Dùng cho đường dẫn nội bộ — KHÔNG nhập https://"
+          />
           <Select label="Vai trò trong ngành" value={form.type} onChange={(v) => update("type", v)} options={[
             ["CHU_DAU_TU", "Chủ đầu tư"],
             ["TU_VAN_GIAM_SAT", "Tư vấn giám sát"],
@@ -86,6 +129,7 @@ function Field(props: {
   type?: string;
   required?: boolean;
   placeholder?: string;
+  hint?: string;
 }) {
   return (
     <label className="block">
@@ -98,6 +142,7 @@ function Field(props: {
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
       />
+      {props.hint && <span className="mt-1 block text-[11px] text-slate-500">{props.hint}</span>}
     </label>
   );
 }
