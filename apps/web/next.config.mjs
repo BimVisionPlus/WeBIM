@@ -7,6 +7,15 @@ const nextConfig = {
   transpilePackages: ["@atlas/db", "@atlas/lib", "@atlas/ui", "@atlas/workflows", "@atlas/auth"],
   experimental: {
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs", "pino", "pino-pretty"],
+    // Vercel doesn't auto-include workspace-generated Prisma binaries.
+    // Force-trace the generated client so .node files reach the function bundle.
+    outputFileTracingRoot: "../../",
+    outputFileTracingIncludes: {
+      "/**/*": [
+        "../../packages/db/src/generated/client/**/*",
+        "../../packages/db/prisma/schema.prisma",
+      ],
+    },
   },
   images: {
     remotePatterns: [
