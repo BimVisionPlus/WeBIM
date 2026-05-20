@@ -37,6 +37,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id: entry.id });
   } catch (e: any) {
     logger().error({ err: e }, "waitlist.error");
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    // TEMP: surface code + first 200 chars while we debug the prod 500
+    return NextResponse.json(
+      { error: "Lỗi server", code: e?.code, msg: String(e?.message ?? "").slice(0, 200) },
+      { status: 500 },
+    );
   }
 }
