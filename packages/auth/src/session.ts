@@ -47,6 +47,24 @@ export async function requireSession(): Promise<SessionContext> {
   return s;
 }
 
+/**
+ * Like requireSession() but also verifies the User row still exists in the DB.
+ * Catches the "stale JWT after DB wipe" case (e.g. someone reset the dev DB
+ * but old cookies are still in the wild). Returns 401 with a distinct message
+ * so the client can clear the cookie + bounce to /signup.
+ */
+export async function requireSessionWithUser(): Promise<SessionContext> {
+  const s = await requireSession();
+  const exists = await prisma.user.findUnique({
+    where: { id: s.userId },
+    select: { id: true },
+  });
+  if (!exists) {
+    throw new AuthError(401, "Tài khoản không còn tồn tại — vui lòng đăng ký lại");
+  }
+  return s;
+}
+
 export async function requireOrgMember(
   orgId: string,
   allowed: MemberRole[] = [],

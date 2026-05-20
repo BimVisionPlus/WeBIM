@@ -17,6 +17,7 @@ export default function CreateOrgPage() {
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [staleSession, setStaleSession] = useState(false);
 
   // Strip diacritics + non-[a-z0-9-] for slug field. Also handles URL paste
   // (cuts off https://, trailing slashes, paths).
@@ -56,6 +57,13 @@ export default function CreateOrgPage() {
     setBusy(false);
     if (!r.ok) {
       const j = await r.json().catch(() => ({}));
+      // Stale-JWT / wiped-user case: surface a one-click recovery path
+      const msg: string = j?.error ?? "";
+      if (r.status === 401 || /không còn tồn tại|Foreign key/i.test(msg)) {
+        setStaleSession(true);
+        setErr("Phiên đăng nhập hết hạn (tài khoản không còn trong DB). Hãy đăng xuất rồi đăng ký lại.");
+        return;
+      }
       // Pull the first field-level message out of Zod's flatten() if present
       const fields = j?.details?.fieldErrors as Record<string, string[]> | undefined;
       if (fields) {
@@ -112,9 +120,23 @@ export default function CreateOrgPage() {
           <div className="md:col-span-2">
             <Field label="Địa chỉ" value={form.address} onChange={(v) => update("address", v)} />
           </div>
-          {err && <div className="md:col-span-2 rounded bg-rose-50 px-3 py-2 text-xs text-rose-700">{err}</div>}
+          {err && (
+            <div className="md:col-span-2 rounded bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              {err}
+              {staleSession && (
+                <div className="mt-2">
+                  <a
+                    href={`/api/auth/signout?callbackUrl=${encodeURIComponent("/signup")}`}
+                    className="inline-block rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                  >
+                    Đăng xuất + Đăng ký lại →
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
           <div className="md:col-span-2">
-            <Button type="submit" disabled={busy}>{busy ? "Đang tạo…" : "Tiếp theo"}</Button>
+            <Button type="submit" disabled={busy || staleSession}>{busy ? "Đang tạo…" : "Tiếp theo"}</Button>
           </div>
         </form>
       </CardBody>

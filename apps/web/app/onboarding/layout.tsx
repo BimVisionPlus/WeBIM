@@ -1,10 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@atlas/auth";
+import { prisma } from "@atlas/db";
 
 export default async function OnboardingLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/signin?callbackUrl=/onboarding/org");
+  // Defend against stale JWT after a DB wipe — bounce to signout if user gone
+  const userRow = await prisma.user.findUnique({ where: { id: session.userId }, select: { id: true } });
+  if (!userRow) redirect("/api/auth/signout?callbackUrl=/signup");
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">

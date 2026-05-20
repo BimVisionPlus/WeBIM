@@ -12,6 +12,21 @@ const prisma = new PrismaClient();
 const DEMO_PASSWORD = "demo1234!";
 
 async function main() {
+  // ─── Production-safety guard ────────────────────────────────────────────────
+  // This seed wipes ALL tables (User, Org, Project, …) before re-creating demo
+  // data. Running it against prod has nuked real signups before. Refuse unless
+  // explicitly opted in.
+  const dbUrl = process.env.DATABASE_URL ?? "";
+  const looksProd =
+    /neon\.tech|supabase\.co|amazonaws\.com|render\.com|railway\.app|aecplatform\.vn/i.test(dbUrl);
+  if (looksProd && process.env.ALLOW_PROD_SEED !== "yes-wipe-everything") {
+    console.error("❌ Refusing to seed: DATABASE_URL points at a production host.");
+    console.error("   Host matched:", dbUrl.replace(/:[^@]+@/, ":***@"));
+    console.error("   To override (DANGEROUS, wipes all users + orgs + projects):");
+    console.error("     ALLOW_PROD_SEED=yes-wipe-everything pnpm db:seed");
+    process.exit(2);
+  }
+
   console.log("🌱 Seeding Atlas AEC demo data…");
 
   // Wipe (dev-only)

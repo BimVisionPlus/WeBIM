@@ -40,7 +40,7 @@ export function Hero() {
 
         <div className="mt-16 grid grid-cols-2 gap-6 text-center sm:grid-cols-4">
           {[
-            { num: "1", label: "module LIVE", note: "Atlas AEC" },
+            { num: "13", label: "mô-đun LIVE", note: "trong Atlas AEC" },
             { num: "8", label: "Layer architecture", note: "core → GTM" },
             { num: "35+", label: "Prisma models", note: "VN-grounded schema" },
             { num: "0đ", label: "/tháng infra", note: "free-tier stack" },
