@@ -47,8 +47,21 @@ async function checkS3(): Promise<CheckResult> {
   return timed(async () => {
     const endpoint = process.env.S3_ENDPOINT;
     if (!endpoint) throw new Error("S3_ENDPOINT not configured");
-    const res = await fetch(`${endpoint}/minio/health/live`, { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // Different providers expose health differently:
+    //   MinIO     → /minio/health/live (200)
+    //   Cloudflare R2 → no health endpoint; root returns 400 (alive) or network error (down)
+    //   AWS S3    → no health endpoint; same shape as R2
+    // We treat HTTP 4xx as "alive but not authorized" = service up.
+    try {
+      const res = await fetch(`${endpoint}/minio/health/live`, { signal: AbortSignal.timeout(3000) });
+      if (res.ok) return;
+    } catch {
+      // fall through to TCP-style check
+    }
+    const res2 = await fetch(endpoint, { signal: AbortSignal.timeout(3000) }).catch(() => null);
+    if (!res2) throw new Error("unreachable");
+    // 200, 400, 403 — all mean service up (R2/S3 don't expose a public health URL)
+    if (res2.status >= 500) throw new Error(`HTTP ${res2.status}`);
   });
 }
 
