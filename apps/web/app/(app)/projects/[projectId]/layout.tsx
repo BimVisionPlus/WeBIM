@@ -25,6 +25,8 @@ export default async function ProjectLayout({
       <header className="bg-white border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-6 py-3">
           <div className="flex items-center gap-3 text-sm text-slate-500">
+            <a href="https://aecplatform.vn" className="hover:text-slate-900" title="AEC Platform">AEC Platform</a>
+            <span>/</span>
             <Link href="/" className="hover:text-slate-900">Atlas AEC</Link>
             <span>/</span>
             <Link href="/" className="hover:text-slate-900">Dự án</Link>

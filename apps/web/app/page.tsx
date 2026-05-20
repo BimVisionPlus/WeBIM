@@ -43,10 +43,17 @@ export default async function Home() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-md bg-blue-600 font-bold text-white">A</div>
-            <span className="text-lg font-semibold">Atlas AEC</span>
-            <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-              v0.1
+            <a href="https://aecplatform.vn" className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-blue-600 to-cyan-500 font-bold text-white hover:opacity-90" title="AEC Platform — về trang chủ">
+              A
+            </a>
+            <div className="flex flex-col leading-tight">
+              <a href="https://aecplatform.vn" className="text-[10px] uppercase tracking-wider text-slate-500 hover:text-slate-900">
+                AEC Platform
+              </a>
+              <span className="text-base font-semibold text-slate-900">Atlas AEC</span>
+            </div>
+            <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+              v1 · LIVE
             </span>
           </div>
           <nav className="flex items-center gap-4 text-sm text-slate-600">

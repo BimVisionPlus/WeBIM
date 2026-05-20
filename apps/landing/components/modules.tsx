@@ -54,9 +54,13 @@ export function Modules() {
     <section className="border-y border-slate-800 bg-slate-900/30 py-20">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">8 module, một workspace</h2>
-          <p className="mt-3 text-slate-400">
-            Mỗi công cụ Atlassian được tái thiết kế thành module AEC chuyên dụng.
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
+            <span className="font-mono">01</span> · Atlas AEC · LIVE
+          </div>
+          <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">Atlas AEC · 8 mô-đun nội bộ</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-slate-400">
+            Module #1 của AEC Platform — Atlassian-style cho dự án xây dựng. 8 sub-module sẵn sàng,
+            mỗi cái tái thiết kế từ 1 sản phẩm Atlassian, gắn chặt nghị định Việt Nam.
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
