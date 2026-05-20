@@ -124,10 +124,26 @@ async function signIn() {
     process.exit(1);
   }
 
-  // Resolve a primary org + project. These IDs come straight from Postgres so
-  // we don't depend on a list endpoint shape that differs across modules.
+  // Resolve a primary org + project. Prefer Prisma direct (works for both
+  // local Docker and Neon prod via DATABASE_URL env). Falls back to docker
+  // exec for legacy local setups.
   let cofico: any, project: any;
   await step("auth.bootstrap.orgs_and_project", async () => {
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl) {
+      const dbMod = await import("../packages/db/src/index.js" as any).catch(() => import("../packages/db/src/index"));
+      const { PrismaClient } = dbMod as any;
+      const p = new PrismaClient();
+      const [org, proj] = await Promise.all([
+        p.organization.findUnique({ where: { slug: "cofico" }, select: { id: true, slug: true } }),
+        p.project.findUnique({ where: { key: "VHGP-S9" }, select: { id: true, key: true } }),
+      ]);
+      await p.$disconnect();
+      assert(org && proj, "Prisma lookup failed");
+      cofico = org;
+      project = proj;
+      return `org=${cofico.slug} project=${project.key} (via Prisma DATABASE_URL)`;
+    }
     const { execSync } = await import("node:child_process");
     const sql = `SELECT o.id || '|' || o.slug || '|' || p.id || '|' || p.key FROM "Organization" o, "Project" p WHERE o.slug='cofico' AND p.key='VHGP-S9' LIMIT 1;`;
     const out = execSync(`docker exec -i atlas-aec-postgres psql -U atlas -d atlas_aec -At`, {
@@ -439,14 +455,29 @@ async function signIn() {
   console.log("\n── Audit log ──");
 
   await step("audit.events_written_for_mutations", async () => {
-    // Use prisma over docker exec since /api/audit isn't exposed
-    const { execSync } = await import("node:child_process");
-    const sql = `SELECT action FROM "AuditEvent" WHERE "createdAt" > NOW() - INTERVAL '5 minutes' ORDER BY "createdAt" DESC LIMIT 60;`;
-    const out = execSync(`docker exec -i atlas-aec-postgres psql -U atlas -d atlas_aec -At`, {
-      encoding: "utf-8",
-      input: sql,
-    });
-    const actions = out.trim().split("\n").filter(Boolean);
+    const dbUrl = process.env.DATABASE_URL;
+    let actions: string[];
+    if (dbUrl) {
+      const dbMod = await import("../packages/db/src/index.js" as any).catch(() => import("../packages/db/src/index"));
+      const { PrismaClient } = dbMod as any;
+      const p = new PrismaClient();
+      const rows = await p.auditEvent.findMany({
+        where: { createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) } },
+        orderBy: { createdAt: "desc" },
+        take: 60,
+        select: { action: true },
+      });
+      await p.$disconnect();
+      actions = rows.map((r) => r.action);
+    } else {
+      const { execSync } = await import("node:child_process");
+      const sql = `SELECT action FROM "AuditEvent" WHERE "createdAt" > NOW() - INTERVAL '5 minutes' ORDER BY "createdAt" DESC LIMIT 60;`;
+      const out = execSync(`docker exec -i atlas-aec-postgres psql -U atlas -d atlas_aec -At`, {
+        encoding: "utf-8",
+        input: sql,
+      });
+      actions = out.trim().split("\n").filter(Boolean);
+    }
     const has = (a: string) => actions.includes(a);
     assert(has("tender.create"), "missing tender.create");
     assert(has("bid.create"), "missing bid.create");
