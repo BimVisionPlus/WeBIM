@@ -6,7 +6,7 @@
 // panel "Gợi ý AI" có dữ liệu hiển thị kể cả khi Ollama chưa boot.
 
 import { hash } from "bcryptjs";
-import { PrismaClient } from "../src/generated/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const DEMO_PASSWORD = "demo1234!";
