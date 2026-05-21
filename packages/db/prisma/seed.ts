@@ -84,6 +84,12 @@ async function main() {
   await prisma.catalogItem.deleteMany();
   await prisma.supplier.deleteMany();
   await prisma.handoverTicket.deleteMany();
+  // Schedule + Permit + PCCC (Wave 3/4 modules)
+  await prisma.scheduleDependency.deleteMany();
+  await prisma.scheduleTask.deleteMany();
+  await prisma.permitChecklist.deleteMany();
+  await prisma.permitApplication.deleteMany();
+  await prisma.pcccApplication.deleteMany();
   await prisma.projectStakeholder.deleteMany();
   await prisma.project.deleteMany();
   await prisma.membership.deleteMany();
@@ -1122,6 +1128,99 @@ async function main() {
       { projectId: project.id, ticketNumber: "HG-VHGP-S9-006", unitCode: "S9-03B-07", category: "CUA_KHOA",         severity: "LOW",      title: "Khóa cửa chính kẹt khi đóng",                    description: "Chốt khóa thân cửa kẹt — đã chỉnh bản lề + tra dầu.",                                  reporterName: "Chị Vũ Thị Hoa",     reporterPhone: "0956789012", warrantyType: "PHAN_PHU",   warrantyEndsAt: baseEnd, slaDueAt: new Date(Date.now() - 4 * 86400_000), state: "VERIFIED", rectifiedAt: new Date(Date.now() - 5 * 86400_000), verifiedAt: new Date(Date.now() - 4 * 86400_000), customerSatisfactionScore: 5, reportedAt: new Date(Date.now() - 7 * 86400_000) },
       // REJECTED — ngoài bảo hành (hết hạn rồi)
       { projectId: project.id, ticketNumber: "HG-VHGP-S9-007", unitCode: "S9-07A-02", category: "SON_HOAN_THIEN",   severity: "LOW",      title: "Đề nghị sơn lại toàn bộ căn",                    description: "Cư dân yêu cầu sơn lại toàn bộ căn. KHÔNG nằm trong phạm vi bảo hành (sơn nội thất 12T, đã hết hạn).", reporterName: "Anh Bùi Minh Khôi",  reporterPhone: "0967890123", warrantyType: "PHAN_PHU",   warrantyEndsAt: new Date(Date.now() - 30 * 86400_000), state: "REJECTED", reportedAt: new Date(Date.now() - 2 * 86400_000) },
+    ],
+  });
+
+  // ─── Schedule · 12 tasks across 4 disciplines, 3 on critical path ───────
+  const dPlus = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
+  await prisma.scheduleTask.createMany({
+    data: [
+      { projectId: project.id, code: "T1.1", name: "Hoàn thành ép cọc móng",        discipline: "Phần ngầm", zone: "Tầng hầm B2", plannedStart: dPlus(-30), plannedEnd: dPlus(-15), actualStart: dPlus(-30), actualEnd: dPlus(-14), pctComplete: 100, state: "DONE",        isCritical: true },
+      { projectId: project.id, code: "T1.2", name: "Đổ bê tông móng + đài",         discipline: "Phần ngầm", zone: "Tầng hầm B2", plannedStart: dPlus(-14), plannedEnd: dPlus(0),   actualStart: dPlus(-14), pctComplete: 92,  state: "IN_PROGRESS", isCritical: true },
+      { projectId: project.id, code: "T2.1", name: "Thi công khung BT cốt thép T1-T5", discipline: "Kết cấu", zone: "Khu A", plannedStart: dPlus(-5),  plannedEnd: dPlus(20),  actualStart: dPlus(-3),  pctComplete: 35,  state: "IN_PROGRESS", isCritical: true },
+      { projectId: project.id, code: "T2.2", name: "Thi công khung BT T6-T12",         discipline: "Kết cấu", zone: "Khu A", plannedStart: dPlus(15), plannedEnd: dPlus(60),  pctComplete: 0,   state: "PLANNED",      isCritical: true },
+      { projectId: project.id, code: "T2.3", name: "Thi công khung BT T13-mái",        discipline: "Kết cấu", zone: "Khu A", plannedStart: dPlus(55), plannedEnd: dPlus(95),  pctComplete: 0,   state: "PLANNED",      isCritical: true },
+      { projectId: project.id, code: "T3.1", name: "Lắp đặt HVAC chính",                discipline: "MEP",     zone: "Toàn nhà", plannedStart: dPlus(40), plannedEnd: dPlus(110), pctComplete: 0,   state: "PLANNED" },
+      { projectId: project.id, code: "T3.2", name: "Đi đường điện thân trục đứng",     discipline: "MEP",     zone: "Trục thang máy", plannedStart: dPlus(35), plannedEnd: dPlus(100), pctComplete: 0,   state: "PLANNED" },
+      { projectId: project.id, code: "T3.3", name: "Lắp đặt hệ thống PCCC sprinkler",  discipline: "MEP",     zone: "Toàn nhà", plannedStart: dPlus(45), plannedEnd: dPlus(115), pctComplete: 0,   state: "PLANNED" },
+      { projectId: project.id, code: "T4.1", name: "Xây tường ngăn căn hộ T1-T5",      discipline: "Hoàn thiện", zone: "Khu A T1-T5", plannedStart: dPlus(25),  plannedEnd: dPlus(50),  pctComplete: 0, state: "PLANNED" },
+      { projectId: project.id, code: "T4.2", name: "Trát + sơn lót T1-T5",              discipline: "Hoàn thiện", zone: "Khu A T1-T5", plannedStart: dPlus(50),  plannedEnd: dPlus(75),  pctComplete: 0, state: "PLANNED" },
+      { projectId: project.id, code: "T4.3", name: "Lát gạch + hoàn thiện sơn căn hộ",  discipline: "Hoàn thiện", zone: "Khu A T1-T12", plannedStart: dPlus(80),  plannedEnd: dPlus(140), pctComplete: 0, state: "PLANNED" },
+      { projectId: project.id, code: "T5.1", name: "Nghiệm thu + bàn giao",             discipline: "Bàn giao",   zone: "Toàn nhà", plannedStart: dPlus(150), plannedEnd: dPlus(165), pctComplete: 0, state: "PLANNED",      isCritical: true },
+    ],
+  });
+
+  // ─── Permit applications · 2 hồ sơ ───────────────────────────────────────
+  const permit1 = await prisma.permitApplication.create({
+    data: {
+      projectId: project.id,
+      permitType: "GPXD_MOI",
+      applicationCode: "GPXD-2025-S9-0042",
+      applicant: "Vinhomes JSC",
+      submittedAt: dPlus(-90),
+      receivedAt: dPlus(-88),
+      decisionAt: dPlus(-60),
+      decision: "APPROVED",
+      decisionNote: "Phê duyệt GPXD 24 tầng — Sở XD TP.HCM Quyết định số 0042/QĐ-SXD",
+      expiresAt: dPlus(720),
+      state: "APPROVED",
+    },
+  });
+  await prisma.permitChecklist.createMany({
+    data: [
+      { applicationId: permit1.id, itemCode: "PL-I.A.1", itemTitle: "Đơn đề nghị cấp GPXD (Mẫu 01)",      attached: true, evidenceUrl: "s3://atlas-aec/permits/VHGP-S9/donxin.pdf" },
+      { applicationId: permit1.id, itemCode: "PL-I.A.2", itemTitle: "Bản sao GCN quyền sử dụng đất",      attached: true, evidenceUrl: "s3://atlas-aec/permits/VHGP-S9/gcndat.pdf" },
+      { applicationId: permit1.id, itemCode: "PL-I.A.3", itemTitle: "Bản vẽ tổng mặt bằng",                 attached: true, evidenceUrl: "s3://atlas-aec/permits/VHGP-S9/totalplan.pdf" },
+      { applicationId: permit1.id, itemCode: "PL-I.A.4", itemTitle: "Bản vẽ kiến trúc — mặt đứng/cắt",      attached: true, evidenceUrl: "s3://atlas-aec/permits/VHGP-S9/kientruc.pdf" },
+      { applicationId: permit1.id, itemCode: "PL-I.A.5", itemTitle: "Bản vẽ kết cấu — móng + khung",         attached: true, evidenceUrl: "s3://atlas-aec/permits/VHGP-S9/ketcau.pdf" },
+      { applicationId: permit1.id, itemCode: "PL-I.A.6", itemTitle: "Bản vẽ M&E (điện · nước · HVAC · PCCC)", attached: true, evidenceUrl: "s3://atlas-aec/permits/VHGP-S9/me.pdf" },
+      { applicationId: permit1.id, itemCode: "PL-I.A.7", itemTitle: "Thẩm duyệt PCCC (NĐ 136/2020)",         attached: true, evidenceUrl: "s3://atlas-aec/permits/VHGP-S9/pccc.pdf" },
+      { applicationId: permit1.id, itemCode: "PL-I.A.8", itemTitle: "Báo cáo ĐTM (nếu thuộc danh mục)",       attached: false },
+    ],
+  });
+
+  const permit2 = await prisma.permitApplication.create({
+    data: {
+      projectId: project.id,
+      permitType: "GPXD_DIEU_CHINH",
+      applicationCode: "GPXD-DC-2026-S9-0011",
+      applicant: "Vinhomes JSC",
+      submittedAt: dPlus(-10),
+      receivedAt: dPlus(-8),
+      decision: "PENDING",
+      state: "REVIEWING",
+    },
+  });
+  await prisma.permitChecklist.createMany({
+    data: [
+      { applicationId: permit2.id, itemCode: "PL-DC.1", itemTitle: "Đơn xin điều chỉnh GPXD",          attached: true },
+      { applicationId: permit2.id, itemCode: "PL-DC.2", itemTitle: "Hồ sơ thiết kế điều chỉnh (kiến trúc + kết cấu)", attached: true },
+      { applicationId: permit2.id, itemCode: "PL-DC.3", itemTitle: "Văn bản chấp thuận của CĐT cho điều chỉnh", attached: false },
+      { applicationId: permit2.id, itemCode: "PL-DC.4", itemTitle: "Bản sao GPXD cũ",                    attached: true },
+    ],
+  });
+
+  // ─── PCCC applications · 2 hồ sơ (1 đã duyệt thiết kế, 1 đang chờ nghiệm thu) ──
+  await prisma.pcccApplication.createMany({
+    data: [
+      {
+        projectId: project.id,
+        stage: "THAM_DUYET_THIET_KE",
+        applicationCode: "PCCC-TD-2025-0089",
+        submittedAt: dPlus(-100),
+        decisionAt: dPlus(-75),
+        decision: "APPROVED",
+        decisionNote: "Phê duyệt thiết kế PCCC 24 tầng — PC07 Công an TP.HCM CV-0089",
+        state: "APPROVED",
+      },
+      {
+        projectId: project.id,
+        stage: "NGHIEM_THU_PCCC",
+        applicationCode: "PCCC-NT-2026-0023",
+        submittedAt: dPlus(-3),
+        decision: "PENDING",
+        state: "REVIEWING",
+      },
     ],
   });
 

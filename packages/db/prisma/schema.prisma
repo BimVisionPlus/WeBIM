@@ -169,24 +169,27 @@ model Project {
   warrantyMonths   Int           @default(24) // NĐ 06/2021: 12 tháng phần phụ, 24 tháng phần chính, 60 tháng hạ tầng
   createdAt        DateTime      @default(now())
 
-  ownerOrg       Organization         @relation("OwnerOrg", fields: [ownerOrgId], references: [id])
-  stakeholders   ProjectStakeholder[]
-  issues         Issue[]
-  rfis           RFI[]
-  submittals     Submittal[]
-  ncrs           NCR[]
-  punchItems     PunchItem[]
-  changeOrders   ChangeOrder[]
-  dailyLogs      DailyLog[]
-  drawingSets    DrawingSet[]
-  models         Model[]
-  acceptances    Acceptance[]
-  payments       ProgressPayment[]
-  specs          SpecPage[]
-  bids           Bid[]
-  regulations    ProjectRegulation[]
-  boqs           BoQ[]
-  overrunSignals CostOverrunSignal[]
+  ownerOrg           Organization         @relation("OwnerOrg", fields: [ownerOrgId], references: [id])
+  stakeholders       ProjectStakeholder[]
+  issues             Issue[]
+  rfis               RFI[]
+  submittals         Submittal[]
+  ncrs               NCR[]
+  punchItems         PunchItem[]
+  changeOrders       ChangeOrder[]
+  dailyLogs          DailyLog[]
+  drawingSets        DrawingSet[]
+  models             Model[]
+  acceptances        Acceptance[]
+  payments           ProgressPayment[]
+  specs              SpecPage[]
+  bids               Bid[]
+  regulations        ProjectRegulation[]
+  boqs               BoQ[]
+  overrunSignals     CostOverrunSignal[]
+  scheduleTasks      ScheduleTask[]
+  permitApplications PermitApplication[]
+  pcccApplications   PcccApplication[]
 }
 
 enum ProjectStatus {
@@ -2002,22 +2005,22 @@ model Crew {
 // One work assignment for a crew on a specific shift.
 // State machine: PLANNED → IN_PROGRESS → DONE  (with BLOCKED branch)
 model CrewAssignment {
-  id          String         @id @default(cuid())
-  projectId   String
-  crewId      String
-  workDate    DateTime       @db.Date
-  shift       Shift          @default(DAY)
-  title       String // "Buộc thép cột tầng 12 trục A-F"
-  description String?        @db.Text
-  zone        String? // "Tầng 12 — Khu A"
-  state       CrewWorkState  @default(PLANNED)
+  id            String        @id @default(cuid())
+  projectId     String
+  crewId        String
+  workDate      DateTime      @db.Date
+  shift         Shift         @default(DAY)
+  title         String // "Buộc thép cột tầng 12 trục A-F"
+  description   String?       @db.Text
+  zone          String? // "Tầng 12 — Khu A"
+  state         CrewWorkState @default(PLANNED)
   blockedReason String? // populated when state = BLOCKED
-  hoursPlanned Float?
-  hoursActual  Float?
+  hoursPlanned  Float?
+  hoursActual   Float?
   // Optional: link to upstream Issue (RFI/Submittal/Daily Log) for traceability
-  issueId     String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  issueId       String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   crew Crew @relation(fields: [crewId], references: [id], onDelete: Cascade)
 
@@ -2038,19 +2041,19 @@ enum CrewWorkState {
 // ============================================================================
 
 model CatalogItem {
-  id          String   @id @default(cuid())
-  projectId   String? // null = global catalog (shared across projects)
-  code        String // "BT-M300" | "THEP-CB300-V-D14"
-  name        String // "Bê tông M300" | "Cốt thép CB300-V Φ14"
-  category    CatalogCategory
-  unit        String // "m³" | "kg" | "tấn"
-  spec        String?  @db.Text // technical spec / TCVN ref
+  id                   String          @id @default(cuid())
+  projectId            String? // null = global catalog (shared across projects)
+  code                 String // "BT-M300" | "THEP-CB300-V-D14"
+  name                 String // "Bê tông M300" | "Cốt thép CB300-V Φ14"
+  category             CatalogCategory
+  unit                 String // "m³" | "kg" | "tấn"
+  spec                 String?         @db.Text // technical spec / TCVN ref
   baselineUnitPriceVnd BigInt? // reference price, used for variance flags
-  imageUrl    String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  imageUrl             String?
+  active               Boolean         @default(true)
+  createdAt            DateTime        @default(now())
 
-  suppliers   SupplierCatalogItem[]
+  suppliers SupplierCatalogItem[]
 
   @@unique([projectId, code])
   @@index([category, active])
@@ -2072,17 +2075,17 @@ enum CatalogCategory {
 }
 
 model Supplier {
-  id          String   @id @default(cuid())
-  orgId       String? // FK to Organization if supplier is also an org in the system
-  name        String // "CTCP Thép Hòa Phát" | "Tổng cty Xi măng VN"
-  mst         String? // MST nhà cung cấp
-  phone       String?
-  email       String?
-  address     String?
-  rating      Float? // 0-5 — rolling average of project ratings
-  notes       String?  @db.Text
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  orgId     String? // FK to Organization if supplier is also an org in the system
+  name      String // "CTCP Thép Hòa Phát" | "Tổng cty Xi măng VN"
+  mst       String? // MST nhà cung cấp
+  phone     String?
+  email     String?
+  address   String?
+  rating    Float? // 0-5 — rolling average of project ratings
+  notes     String?  @db.Text
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
 
   items SupplierCatalogItem[]
 
@@ -2092,15 +2095,15 @@ model Supplier {
 
 // Many-to-many: supplier × catalog item with price + lead time.
 model SupplierCatalogItem {
-  id          String   @id @default(cuid())
-  supplierId  String
+  id            String    @id @default(cuid())
+  supplierId    String
   catalogItemId String
-  unitPriceVnd BigInt
-  leadTimeDays Int      @default(7)
-  minOrderQty Float?
-  validFrom   DateTime @default(now())
-  validTo     DateTime?
-  notes       String?
+  unitPriceVnd  BigInt
+  leadTimeDays  Int       @default(7)
+  minOrderQty   Float?
+  validFrom     DateTime  @default(now())
+  validTo       DateTime?
+  notes         String?
 
   supplier Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   item     CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
@@ -2115,31 +2118,31 @@ model SupplierCatalogItem {
 // ============================================================================
 
 model HandoverTicket {
-  id            String          @id @default(cuid())
-  projectId     String
-  ticketNumber  String // "HG-VHGP-S9-001"
-  unitCode      String? // "S9-12A-05" — căn / lô / unit
-  category      HandoverCategory
-  severity      HandoverSeverity @default(LOW)
-  title         String
-  description   String          @db.Text
-  reporterName  String // Cư dân / CĐT báo lỗi (có thể không là user trong hệ thống)
-  reporterPhone String?
-  reporterEmail String?
-  reportedAt    DateTime        @default(now())
+  id                        String           @id @default(cuid())
+  projectId                 String
+  ticketNumber              String // "HG-VHGP-S9-001"
+  unitCode                  String? // "S9-12A-05" — căn / lô / unit
+  category                  HandoverCategory
+  severity                  HandoverSeverity @default(LOW)
+  title                     String
+  description               String           @db.Text
+  reporterName              String // Cư dân / CĐT báo lỗi (có thể không là user trong hệ thống)
+  reporterPhone             String?
+  reporterEmail             String?
+  reportedAt                DateTime         @default(now())
   // Warranty window check — NĐ 06/2021: 12 tháng phần phụ, 24 phần chính, 60 hạ tầng
-  warrantyType  WarrantyType
-  warrantyEndsAt DateTime
-  state         HandoverState   @default(NEW)
-  slaDueAt      DateTime? // computed from severity
-  assigneeOrgId String? // typically NT_CHINH or NT_PHU responsible
-  rectifiedAt   DateTime?
-  verifiedAt    DateTime?
+  warrantyType              WarrantyType
+  warrantyEndsAt            DateTime
+  state                     HandoverState    @default(NEW)
+  slaDueAt                  DateTime? // computed from severity
+  assigneeOrgId             String? // typically NT_CHINH or NT_PHU responsible
+  rectifiedAt               DateTime?
+  verifiedAt                DateTime?
   customerSatisfactionScore Int? // 1-5 from reporter after closure
   // Optional uplink to Issue for the workflow trail
-  issueId       String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  issueId                   String?
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @updatedAt
 
   @@index([projectId, state])
   @@index([slaDueAt, state])
@@ -2180,4 +2183,173 @@ enum WarrantyType {
   PHAN_PHU // 12 tháng — sơn, gạch, phụ kiện
   PHAN_CHINH // 24 tháng — kết cấu, MEP cố định
   HA_TANG // 60 tháng — đường, cấp nước hạ tầng
+}
+
+// ============================================================================
+//  SCHEDULE module — Gantt + đường găng CPM
+// ============================================================================
+//  Light model — one row per scheduled task. CPM relationships kept in
+//  ScheduleDependency (FS/SS/FF/SF). The aec-platform/schedule page renders
+//  this as a Gantt bar with cross-project filtering.
+
+model ScheduleTask {
+  id           String            @id @default(cuid())
+  projectId    String
+  code         String // "T1.2.3" — WBS code
+  name         String
+  discipline   String? // "Phần ngầm" | "Kết cấu" | "MEP" | "Hoàn thiện"
+  zone         String? // "Tầng 5 — Khu B"
+  plannedStart DateTime
+  plannedEnd   DateTime
+  actualStart  DateTime?
+  actualEnd    DateTime?
+  pctComplete  Float             @default(0) // 0..100
+  state        ScheduleTaskState @default(PLANNED)
+  isCritical   Boolean           @default(false) // on critical path
+  ownerOrgId   String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  predecessors ScheduleDependency[] @relation("SuccessorTask")
+  successors   ScheduleDependency[] @relation("PredecessorTask")
+
+  @@unique([projectId, code])
+  @@index([projectId, plannedStart])
+  @@index([projectId, isCritical, state])
+}
+
+enum ScheduleTaskState {
+  PLANNED
+  IN_PROGRESS
+  ON_HOLD
+  DONE
+  CANCELLED
+}
+
+model ScheduleDependency {
+  id            String                 @id @default(cuid())
+  predecessorId String
+  successorId   String
+  kind          ScheduleDependencyKind @default(FS)
+  lagDays       Int                    @default(0)
+
+  predecessor ScheduleTask @relation("PredecessorTask", fields: [predecessorId], references: [id], onDelete: Cascade)
+  successor   ScheduleTask @relation("SuccessorTask", fields: [successorId], references: [id], onDelete: Cascade)
+
+  @@unique([predecessorId, successorId])
+}
+
+enum ScheduleDependencyKind {
+  FS // Finish-to-Start (mặc định)
+  SS // Start-to-Start
+  FF // Finish-to-Finish
+  SF // Start-to-Finish
+}
+
+// ============================================================================
+//  PERMITFLOW module — xin Giấy phép xây dựng (NĐ 15/2021)
+// ============================================================================
+
+model PermitApplication {
+  id              String                 @id @default(cuid())
+  projectId       String
+  permitType      PermitType
+  applicationCode String? // số hồ sơ Sở XD trả
+  applicant       String // Tổ chức/cá nhân nộp đơn
+  submittedAt     DateTime?
+  receivedAt      DateTime? // Sở XD tiếp nhận
+  decisionAt      DateTime?
+  decision        PermitDecision         @default(PENDING)
+  decisionNote    String?                @db.Text
+  expiresAt       DateTime?
+  evidenceUrl     String? // URL tới quyết định cấp GPXD
+  state           PermitApplicationState @default(DRAFT)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  checklist PermitChecklist[]
+
+  @@index([projectId, state])
+  @@index([state, decisionAt])
+}
+
+enum PermitType {
+  GPXD_MOI // Giấy phép xây dựng mới
+  GPXD_DIEU_CHINH // Điều chỉnh
+  GPXD_SUA_CHUA // Sửa chữa, cải tạo
+  GPXD_TAM // Tạm
+  THONG_BAO_KHOI_CONG // Thông báo khởi công
+  GPXD_HA_TANG // Hạ tầng (Sở GTVT/Bộ XD)
+}
+
+enum PermitApplicationState {
+  DRAFT
+  SUBMITTED
+  REVIEWING // Sở XD đang thẩm tra
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum PermitDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Each checklist row maps to NĐ 15/2021 Phụ lục I item.
+model PermitChecklist {
+  id            String   @id @default(cuid())
+  applicationId String
+  itemCode      String // "PL-I.A.1" — anchor to NĐ 15/2021 Phụ lục
+  itemTitle     String
+  required      Boolean  @default(true)
+  attached      Boolean  @default(false)
+  evidenceUrl   String?
+  note          String?
+  updatedAt     DateTime @updatedAt
+
+  application PermitApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, itemCode])
+}
+
+// ============================================================================
+//  PCCC module — Hồ sơ thẩm duyệt PCCC (NĐ 136/2020 + TCVN 5738)
+// ============================================================================
+
+model PcccApplication {
+  id              String               @id @default(cuid())
+  projectId       String
+  stage           PcccStage
+  applicationCode String?
+  submittedAt     DateTime?
+  decisionAt      DateTime?
+  decision        PermitDecision       @default(PENDING)
+  decisionNote    String?              @db.Text
+  evidenceUrl     String?
+  state           PcccApplicationState @default(DRAFT)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, state])
+}
+
+enum PcccStage {
+  THAM_DUYET_THIET_KE // Thẩm duyệt thiết kế PCCC
+  NGHIEM_THU_PCCC // Nghiệm thu PCCC (trước đưa vào sử dụng)
+  CAP_GIAY_DU_DIEU_KIEN // Giấy chứng nhận đủ điều kiện
+}
+
+enum PcccApplicationState {
+  DRAFT
+  SUBMITTED
+  REVIEWING // Cảnh sát PCCC đang thẩm tra
+  APPROVED
+  REJECTED
+  WITHDRAWN
 }
