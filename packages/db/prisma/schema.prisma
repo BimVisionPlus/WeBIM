@@ -195,6 +195,7 @@ model Project {
   paymentApps        PaymentApplication[]
   takeoffSheets      TakeoffSheet[]
   contractBonds      ContractBond[]
+  hoanCongDossier    HoanCongDossier?
 }
 
 enum ProjectStatus {
@@ -877,6 +878,75 @@ model ContractBond {
   @@unique([projectId, bondNumber])
   @@index([projectId, type, status])
   @@index([status, expiresAt]) // alert T-30 expiry sweep
+}
+
+// ============================================================================
+//  HOAN CONG — Hồ sơ hoàn công (NĐ 06/2021 Phụ lục VIIIb)
+//  13 nhóm tài liệu, đánh số tự động, đóng cuốn PDF/A, ký số chuỗi.
+// ============================================================================
+
+model HoanCongDossier {
+  id              String                 @id @default(cuid())
+  projectId       String                 @unique
+  code            String // "HC-VHGP-S9-2026"
+  title           String
+  state           String // DRAFT, ASSEMBLING, NT_REVIEW, TVGS_REVIEW, CDT_REVIEW, COMPILED, SUBMITTED_QLNN, ACCEPTED
+  pdfaUrl         String? // S3 key of compiled PDF/A book
+  pdfaSizeBytes   BigInt?
+  pdfaSha256      String?
+  pdfaCompiledAt  DateTime?
+  ntSignedAt      DateTime?
+  tvgsSignedAt    DateTime?
+  cdtSignedAt     DateTime?
+  submittedAt     DateTime? // gửi cơ quan QLNN (Sở XD)
+  acceptedAt      DateTime?
+  qlnnRef         String? // số văn bản xác nhận QLNN
+  notes           String?                @db.Text
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  project  Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sections HoanCongSection[]
+
+  @@index([state])
+}
+
+model HoanCongSection {
+  id          String           @id @default(cuid())
+  dossierId   String
+  seq         Int // 1..13 theo VIIIb
+  code        String // "VIIIb.1", "VIIIb.2", …
+  title       String // "Hồ sơ pháp lý đầu tư", "Khảo sát địa chất", …
+  required    Boolean          @default(true)
+  itemCount   Int              @default(0)
+  signedCount Int              @default(0)
+  notes       String?
+
+  dossier HoanCongDossier @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+  items   HoanCongItem[]
+
+  @@unique([dossierId, seq])
+  @@index([dossierId])
+}
+
+model HoanCongItem {
+  id          String         @id @default(cuid())
+  sectionId   String
+  seq         Int // số thứ tự trong cuốn (tự động đánh)
+  title       String
+  docDate     DateTime?
+  docNumber   String? // "BBNT-CV-001"
+  fileUrl     String? // S3 key
+  fileSize    BigInt?
+  sha256      String?
+  signedBy    Json? // [{role, userId, signedAt, certSerial}]
+  status      DossierStatus  @default(MISSING)
+  notes       String?
+
+  section HoanCongSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, seq])
+  @@index([sectionId, status])
 }
 
 // ============================================================================

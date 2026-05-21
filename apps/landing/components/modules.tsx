@@ -249,6 +249,14 @@ const aecPlatformModules = [
     group: "Bàn giao",
   },
   {
+    name: "HoanCong",
+    sub: "Hồ sơ hoàn công",
+    icon: "📚",
+    desc: "Auto-assembly 13 nhóm theo NĐ 06/2021 Phụ lục VIIIb. Đánh số chuỗi + ký số VNPT-CA + đóng cuốn PDF/A-2b → gửi Sở XD.",
+    href: `${APP}/hoancong`,
+    group: "Bàn giao",
+  },
+  {
     name: "Punch list",
     sub: "Tồn đọng bàn giao",
     icon: "✅",
@@ -268,7 +276,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            31 mô-đun chạy thực — 2 suite, 1 tài khoản
+            32 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -303,7 +311,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 18 mô-đun
+                PM dọc cho nhà thầu VN · 19 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">
