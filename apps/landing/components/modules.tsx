@@ -193,6 +193,14 @@ const aecPlatformModules = [
     group: "Pháp lý",
   },
   {
+    name: "HSE-Train",
+    sub: "Huấn luyện ATLĐ",
+    icon: "⛑",
+    desc: "NĐ 44/2016 + TT 31/2018. 6 nhóm đối tượng + LMS online (Moodle) + thẻ ATLĐ QR + alert chứng chỉ hết hạn 30 ngày.",
+    href: `${APP}/hsetrain`,
+    group: "Pháp lý",
+  },
+  {
     name: "PCCC",
     sub: "Phòng cháy chữa cháy",
     icon: "🧯",
@@ -308,7 +316,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            36 mô-đun chạy thực — 2 suite, 1 tài khoản
+            37 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -343,7 +351,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 23 mô-đun
+                PM dọc cho nhà thầu VN · 24 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">

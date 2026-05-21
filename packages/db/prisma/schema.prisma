@@ -40,6 +40,8 @@ model Organization {
   superviseEntries   SuperviseEntry[]     @relation("SuperviseTvgsOrg")
   tenderPackages     TenderPackage[]      @relation("TenderPackageOrg")
   eiaConsultedApps   EiaApplication[]     @relation("EiaConsultant")
+  hseCertsOwned      HseCertificate[]     @relation("HseCertOrg")
+  hseCertsTrained    HseCertificate[]     @relation("HseCertTrainer")
 }
 
 enum OrgType {
@@ -79,6 +81,7 @@ model User {
   resetTokens    PasswordResetToken[]
   bidsOwned      Bid[]                @relation("BidOwner")
   superviseEntries SuperviseEntry[]   @relation("SuperviseTvgsUser")
+  hseCerts       HseCertificate[]     @relation("HseCertUser")
 }
 
 // ─── NextAuth ────────────────────────────────────────────────────────────────
@@ -1235,6 +1238,64 @@ enum EnvMeasureType {
   NUOC_NGAM // Nước ngầm
   DAT // Đất
   RUNG_DONG // Rung động
+}
+
+// ============================================================================
+//  HSE TRAIN — Huấn luyện ATVSLĐ (NĐ 44/2016 + TT 31/2018)
+//  6 nhóm đối tượng + LMS test online + cấp thẻ ATLĐ QR + alert hết hạn.
+// ============================================================================
+
+model HseCourse {
+  id              String       @id @default(cuid())
+  code            String       @unique // "ATLD-N3-2026"
+  group           HseGroup // 1..6
+  title           String
+  durationHours   Int // số giờ theo NĐ 44/2016
+  syllabus        String       @db.Text
+  validityMonths  Int          @default(24) // chứng chỉ có hiệu lực
+  isOnline        Boolean      @default(true) // LMS hỗ trợ
+  passScore       Int          @default(80) // % bài kiểm tra để đạt
+  createdAt       DateTime     @default(now())
+
+  certificates HseCertificate[]
+
+  @@index([group])
+}
+
+model HseCertificate {
+  id              String         @id @default(cuid())
+  courseId        String
+  userId          String?
+  workerName      String // có thể không có user (NLĐ công trường)
+  workerIdNo      String? // CCCD
+  orgId           String? // tổ chức nhận chứng chỉ
+  certNumber      String         @unique // "ATLD-N3-2026-0001"
+  qrCode          String? // QR check thẻ tại cổng
+  issuedAt        DateTime
+  expiresAt       DateTime
+  testScore       Int? // % điểm kiểm tra
+  trainerName     String?
+  trainerOrgId    String? // đơn vị huấn luyện được cấp phép
+  state           String         @default("ACTIVE") // ACTIVE / EXPIRED / REVOKED
+  cardPdfUrl      String? // thẻ ATLĐ PDF
+  createdAt       DateTime       @default(now())
+
+  course      HseCourse     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User?         @relation("HseCertUser", fields: [userId], references: [id])
+  org         Organization? @relation("HseCertOrg", fields: [orgId], references: [id])
+  trainerOrg  Organization? @relation("HseCertTrainer", fields: [trainerOrgId], references: [id])
+
+  @@index([state, expiresAt])
+  @@index([orgId])
+}
+
+enum HseGroup {
+  N1 // Nhóm 1 — Người quản lý phụ trách ATVSLĐ
+  N2 // Nhóm 2 — Cán bộ chuyên trách / bán chuyên trách ATVSLĐ
+  N3 // Nhóm 3 — Người làm công việc có yêu cầu nghiêm ngặt
+  N4 // Nhóm 4 — Người lao động không thuộc N1/N2/N3/N5/N6
+  N5 // Nhóm 5 — Người làm công tác y tế
+  N6 // Nhóm 6 — An toàn, vệ sinh viên
 }
 
 // ============================================================================
