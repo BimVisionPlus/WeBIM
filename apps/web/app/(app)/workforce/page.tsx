@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, CheckinAction } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function WorkforcePage() {
     OR: [{ ownerOrgId: { in: orgIds } }, { stakeholders: { some: { orgId: { in: orgIds } } } }],
   };
 
-  const [workers, todayAttendance] = await Promise.all([
+  const [workers, todayAttendance, accessibleProjects] = await Promise.all([
     prisma.siteWorker.findMany({
       where: { OR: [{ orgId: { in: orgIds } }, { project: projectFilter }] },
       include: { org: { select: { name: true } }, project: { select: { key: true } }, _count: { select: { attendance: true } } },
@@ -32,6 +33,7 @@ export default async function WorkforcePage() {
       orderBy: { checkInAt: "desc" },
       take: 50,
     }),
+    prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } }),
   ]);
 
   const now = new Date();
@@ -53,7 +55,9 @@ export default async function WorkforcePage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">CC hành nghề sắp hết ≤60d</div><div className="mt-1 text-2xl font-bold text-amber-700">{proExpiring}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Danh sách NLĐ ({workers.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {workers.length === 0 ? (
@@ -69,6 +73,7 @@ export default async function WorkforcePage() {
                   <th className="p-2 text-left">CC ATLĐ</th>
                   <th className="p-2 text-left">CC hành nghề</th>
                   <th className="p-2 text-right">Ngày công</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -76,7 +81,7 @@ export default async function WorkforcePage() {
                   const hseOk = w.hseCertExpiry && w.hseCertExpiry > now;
                   const proOk = !w.proLicenseExpiry || w.proLicenseExpiry > now;
                   return (
-                    <tr key={w.id} className="hover:bg-slate-50">
+                    <tr key={w.id} className="hover:bg-slate-50" data-testid={`worker-${w.workerCode}`}>
                       <td className="p-2 font-mono text-xs">{w.workerCode}</td>
                       <td className="p-2 text-xs"><div className="font-medium">{w.fullName}</div>{w.idNo && <div className="text-[10px] text-slate-500">{w.idNo}</div>}</td>
                       <td className="p-2 text-xs">{w.trade}{w.level && <div className="text-[10px] text-slate-500">{w.level}</div>}</td>
@@ -84,6 +89,7 @@ export default async function WorkforcePage() {
                       <td className="p-2 text-xs">{w.hseCertNumber ? <><span className={hseOk ? "text-emerald-700" : "text-rose-700"}>{w.hseCertNumber}</span><div className="text-[10px] text-slate-500">{w.hseCertExpiry ? `hết ${formatDateVn(w.hseCertExpiry)}` : ""}</div></> : <span className="text-slate-400">Chưa có</span>}</td>
                       <td className="p-2 text-xs">{w.proLicenseNo ? <><span className={proOk ? "text-emerald-700" : "text-amber-700"}>{w.proLicenseNo}</span><div className="text-[10px] text-slate-500">{w.proLicenseExpiry ? formatDateVn(w.proLicenseExpiry) : ""}</div></> : <span className="text-slate-400">—</span>}</td>
                       <td className="p-2 text-right text-xs">{w._count.attendance}</td>
+                      <td className="p-2"><CheckinAction id={w.id} /></td>
                     </tr>
                   );
                 })}
