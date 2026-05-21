@@ -11,3 +11,5 @@ coverage/
 prisma/.migrations.lock
 playwright-report/
 test-results/
+apps/web/e2e/.auth.json
+e2e-screenshots/
