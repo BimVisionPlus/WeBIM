@@ -337,6 +337,14 @@ const aecPlatformModules = [
     group: "Bàn giao",
   },
   {
+    name: "ClientPortal",
+    sub: "Cổng CĐT mobile-first",
+    icon: "📲",
+    desc: "Cổng đầu tư cho CĐT — hàng đợi duyệt 1-tap từ PaymentRail/ChangeOrder/QAQC/BPTC. Push noti khẩn. Chữ ký số VNPT-CA Smart Auth.",
+    href: `${APP}/portal`,
+    group: "Bàn giao",
+  },
+  {
     name: "Punch list",
     sub: "Tồn đọng bàn giao",
     icon: "✅",
@@ -356,7 +364,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            42 mô-đun chạy thực — 2 suite, 1 tài khoản
+            43 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -391,7 +399,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 29 mô-đun
+                PM dọc cho nhà thầu VN · 30 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">

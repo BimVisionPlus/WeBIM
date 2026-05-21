@@ -215,6 +215,7 @@ model Project {
   materialLots       MaterialLot[]
   labReports         LabReport[]
   methodStatements   MethodStatement[]
+  approvalRequests   ApprovalRequest[]
 }
 
 enum ProjectStatus {
@@ -1618,6 +1619,71 @@ enum MethodCategory {
   CAU_GIANG_GIO // Cẩu, giàn giáo
   HAN_CO_DIEN // Hàn nóng + công tác có nguy cơ cháy nổ
   KHAC
+}
+
+// ============================================================================
+//  CLIENT PORTAL — Cổng CĐT mobile-first (read-only + approval queue)
+//  ApprovalRequest = phiếu trình duyệt từ các module (PaymentRail, CO, BPTC,
+//  QAQC, Acceptance, MaterialTrace…) gửi CĐT duyệt 1-tap.
+// ============================================================================
+
+model ApprovalRequest {
+  id          String         @id @default(cuid())
+  projectId   String
+  source      ApprovalSource // PAYMENT, CHANGEORDER, METHOD, QAQC, ACCEPTANCE, MATERIAL, …
+  sourceId    String // ID của bản ghi gốc
+  title       String
+  summary     String         @db.Text
+  amountVnd   BigInt?
+  priority    ApprovalPriority @default(NORMAL)
+  state       ApprovalState  @default(PENDING)
+  requesterUserId String?
+  requesterOrgId  String?
+  dueAt       DateTime?
+  decidedAt   DateTime?
+  decidedByUserId String?
+  decision    ApprovalDecision?
+  decisionNote String?       @db.Text
+  attachmentIds String[]
+  createdAt   DateTime       @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, state, dueAt])
+  @@index([source, sourceId])
+}
+
+enum ApprovalSource {
+  PAYMENT // PaymentApplication
+  CHANGEORDER // ChangeOrder
+  METHOD // MethodStatement
+  QAQC // QaqcCheck / Acceptance
+  ACCEPTANCE // Acceptance (BBNT)
+  MATERIAL // MaterialLot
+  PERMIT // PermitApplication
+  TENDER // TenderPackage
+  OTHER
+}
+
+enum ApprovalPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ApprovalState {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ApprovalDecision {
+  APPROVE
+  REJECT
+  ABSTAIN
 }
 
 // ============================================================================
