@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,8 @@ export default async function DinhMucPage({ searchParams }: { searchParams: Prom
           </form>
         </CardBody>
       </Card>
+
+      <div className="mt-4"><CreateForm /></div>
 
       <Card className="mt-4">
         <CardHeader><CardTitle>Kết quả ({norms.length})</CardTitle></CardHeader>
