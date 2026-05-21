@@ -114,7 +114,7 @@ export async function GET() {
       select: { orgId: true },
     });
     const orgIds = memberships.map((m) => m.orgId);
-    const projects = await prisma.project.findMany({
+    const rows = await prisma.project.findMany({
       where: {
         OR: [
           { ownerOrgId: { in: orgIds } },
@@ -124,6 +124,12 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { issues: true, models: true, drawingSets: true } } },
     });
+    // contractValueVnd is BigInt — JSON.stringify chokes on it. Convert to
+    // string at the API boundary; the client can BigInt() or parseInt() it.
+    const projects = rows.map((p) => ({
+      ...p,
+      contractValueVnd: p.contractValueVnd === null ? null : p.contractValueVnd.toString(),
+    }));
     return NextResponse.json({ projects });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: err.status ?? 500 });
