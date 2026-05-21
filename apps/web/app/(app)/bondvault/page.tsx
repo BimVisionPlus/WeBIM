@@ -4,6 +4,8 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +44,8 @@ export default async function BondVaultPage() {
     take: 200,
   });
 
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
+
   const now = new Date();
   const totalActive = bonds.filter((b) => b.status === "ACTIVE").length;
   const expiring30 = bonds.filter((b) => b.status === "ACTIVE" && daysBetween(now, b.expiresAt) <= 30 && daysBetween(now, b.expiresAt) > 0).length;
@@ -61,7 +65,9 @@ export default async function BondVaultPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng giá trị hiệu lực</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalExposureActive))}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Sổ bảo lãnh ({bonds.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {bonds.length === 0 ? (
@@ -80,6 +86,7 @@ export default async function BondVaultPage() {
                   <th className="p-2 text-right">Giá trị</th>
                   <th className="p-2 text-left">Hiệu lực → Hết hạn</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -89,7 +96,7 @@ export default async function BondVaultPage() {
                   const daysLeft = daysBetween(now, b.expiresAt);
                   const expSoon = b.status === "ACTIVE" && daysLeft <= 30 && daysLeft > 0;
                   return (
-                    <tr key={b.id} className="hover:bg-slate-50">
+                    <tr key={b.id} className="hover:bg-slate-50" data-testid={`row-${b.bondNumber}`}>
                       <td className="p-2 font-mono text-xs">{b.bondNumber}</td>
                       <td className="p-2 text-xs">{b.issuerBank}</td>
                       <td className="p-2"><Badge variant={tmeta.variant}>{tmeta.vn}</Badge></td>
@@ -100,7 +107,8 @@ export default async function BondVaultPage() {
                         {formatDateVn(b.effectiveFrom)} → {formatDateVn(b.expiresAt)}
                         {b.status === "ACTIVE" && <div className={`text-[10px] ${daysLeft < 0 ? "text-rose-700" : expSoon ? "text-amber-700" : "text-slate-500"}`}>{daysLeft < 0 ? `Quá ${-daysLeft}d` : `Còn ${daysLeft}d`}</div>}
                       </td>
-                      <td className="p-2"><Badge variant={smeta.variant}>{smeta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`status-${b.bondNumber}`}><Badge variant={smeta.variant}>{smeta.vn}</Badge></td>
+                      <td className="p-2"><RowActions id={b.id} status={b.status} /></td>
                     </tr>
                   );
                 })}

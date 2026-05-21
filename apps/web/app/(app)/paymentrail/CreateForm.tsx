@@ -29,10 +29,11 @@ export function CreateForm({ projects }: { projects: ProjectOpt[] }) {
     e.preventDefault();
     setBusy(true);
     setErr(null);
+    const payload = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ""));
     const res = await fetch("/api/paymentrail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     setBusy(false);
     if (!res.ok) {

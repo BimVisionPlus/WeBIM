@@ -14,7 +14,8 @@ export function CreateForm({ projects }: { projects: ProjectOpt[] }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setErr(null);
-    const res = await fetch("/api/volumemeter", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const payload = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ""));
+    const res = await fetch("/api/volumemeter", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     setBusy(false);
     if (!res.ok) { const j = await res.json().catch(() => ({})); setErr(typeof j.error === "string" ? j.error : "Tạo phiếu thất bại"); return; }
     setOpen(false); setForm({ ...form, code: "", title: "", scope: "" }); router.refresh();

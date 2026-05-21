@@ -27,8 +27,16 @@ async function globalSetup(_config: FullConfig) {
     // Fall back: hit a protected route and rely on server-set cookie roundtrip.
     await page.goto(`${baseURL}/paymentrail`);
   });
+  // Give the cookie a beat to settle after redirect.
+  for (let i = 0; i < 10; i++) {
+    const state = await ctx.storageState();
+    if (state.cookies.some((c) => c.name === "next-auth.session-token")) break;
+    await page.waitForTimeout(500);
+  }
   const state = await ctx.storageState();
   if (!state.cookies.some((c) => c.name === "next-auth.session-token")) {
+    console.error("[globalSetup] cookies seen:", state.cookies.map((c) => c.name));
+    console.error("[globalSetup] page URL after submit:", page.url());
     throw new Error("globalSetup: next-auth.session-token cookie not set — login likely failed");
   }
   await ctx.storageState({ path: STORAGE });
