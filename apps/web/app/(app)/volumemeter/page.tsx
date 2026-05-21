@@ -4,6 +4,8 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +44,8 @@ export default async function VolumeMeterOrgPage() {
     take: 200,
   });
 
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
+
   const totalSheets = sheets.length;
   const approved = sheets.filter((s) => s.state === "CDT_APPROVED").length;
   const totalValue = sheets.reduce((s, sh) => s + Number(sh.totalValue), 0);
@@ -60,7 +64,9 @@ export default async function VolumeMeterOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng giá trị</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalValue))}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Phiếu bóc khối lượng ({totalSheets})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {totalSheets === 0 ? (
@@ -78,20 +84,22 @@ export default async function VolumeMeterOrgPage() {
                   <th className="p-2 text-right">Dòng</th>
                   <th className="p-2 text-right">Giá trị</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {sheets.map((s) => {
                   const meta = stateLabel[s.state] ?? { vn: s.state, variant: "neutral" as const };
                   return (
-                    <tr key={s.id} className="hover:bg-slate-50">
+                    <tr key={s.id} className="hover:bg-slate-50" data-testid={`row-${s.code}`}>
                       <td className="p-2 font-mono text-xs">{s.code}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{s.project.key}</td>
                       <td className="p-2"><div className="font-medium">{s.title}</div><div className="text-[11px] text-slate-500">{s.scope}</div></td>
                       <td className="p-2 text-xs">{sourceLabel[s.source]}</td>
                       <td className="p-2 text-right text-xs">{s._count.lines}</td>
                       <td className="p-2 text-right text-xs font-medium">{formatVnd(s.totalValue)}</td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${s.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><RowActions id={s.id} state={s.state} /></td>
                     </tr>
                   );
                 })}
