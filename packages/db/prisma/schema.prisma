@@ -199,6 +199,7 @@ model Project {
   contractBonds      ContractBond[]
   hoanCongDossier    HoanCongDossier?
   superviseEntries   SuperviseEntry[]
+  qaqcChecks         QaqcCheck[]
 }
 
 enum ProjectStatus {
@@ -1002,6 +1003,94 @@ enum SuperviseShift {
   DAY // ca ngày
   NIGHT // ca đêm
   FULL // cả ngày (ghép)
+}
+
+// ============================================================================
+//  QAQC — Inspection Test Plan + nghiệm thu TT 26/2016
+//  ITP library theo loại kết cấu (cọc/đất/BT/MEP/hoàn thiện) + thực thi từng
+//  check trên Acceptance. Tự sinh BBNT A1/A2/A3 từ template.
+// ============================================================================
+
+model ItpTemplate {
+  id           String        @id @default(cuid())
+  code         String        @unique // "ITP-MONG-COC-D800"
+  category     ItpCategory
+  title        String
+  description  String?       @db.Text
+  tcvnRefs     String[] // ["TCVN 9395:2012", "TCVN 9398:2012"]
+  isGlobal     Boolean       @default(true) // true = library, false = project-custom
+  projectId    String? // nếu custom per project
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  items        ItpItem[]
+  qaqcChecks   QaqcCheck[]
+
+  @@index([category])
+}
+
+model ItpItem {
+  id            String       @id @default(cuid())
+  templateId    String
+  seq           Int
+  checkPoint    String       @db.Text // "Đường kính cọc D800 ± 5%"
+  acceptCrit    String       @db.Text // "490-510mm; có 3 điểm đo mỗi 1m chiều sâu"
+  method        String? // "Đo bằng thước kẹp khi nhổ casing"
+  frequency     String? // "100% cọc; mỗi cọc 3 lần"
+  tcvnRef       String? // "TCVN 9395:2012 Điều 7.3"
+  hold          Boolean      @default(false) // hold-point (TVGS phải có mặt)
+  witness       Boolean      @default(false) // TVGS chứng kiến (không bắt buộc có mặt)
+
+  template ItpTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, seq])
+}
+
+model QaqcCheck {
+  id              String       @id @default(cuid())
+  projectId       String
+  templateId      String? // ITP gốc
+  location        String // "Cọc P14 trục 3-A"
+  scheduledAt     DateTime?
+  conductedAt     DateTime?
+  inspectorOrgId  String? // TVGS / NT_CHINH
+  inspectorUserId String?
+  result          QaqcResult   @default(PENDING)
+  measurements    Json? // {qty:.., spec:.., actual:..} mỗi ItpItem
+  ncrId           String? // nếu FAIL → tạo NCR
+  notes           String?      @db.Text
+  photoUrls       String[]
+  acceptanceId    String? // gắn vào BBNT
+  createdAt       DateTime     @default(now())
+
+  project  Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  template ItpTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([projectId, result])
+  @@index([acceptanceId])
+}
+
+enum ItpCategory {
+  MONG_COC // móng cọc
+  DAT // đất, đắp nền
+  BE_TONG // bê tông
+  COT_THEP // cốt thép
+  KHOI_XAY // khối xây
+  HOAN_THIEN // hoàn thiện
+  MEP_CAP_THOAT // cấp thoát nước
+  MEP_DIEN // điện
+  MEP_DHKK // ĐHKK
+  MEP_PCCC // PCCC
+  KET_CAU_THEP // kết cấu thép
+  KHAC // khác
+}
+
+enum QaqcResult {
+  PENDING
+  PASS
+  FAIL
+  WAIVED // miễn check (CĐT/TVGS chấp thuận)
+  REWORK // làm lại
 }
 
 // ============================================================================
