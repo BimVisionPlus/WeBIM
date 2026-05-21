@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, RowActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export default async function SuperviseLogPage() {
     take: 50,
   });
 
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
+
   const finalized = entries.filter((e) => e.state === "FINALIZED").length;
   const pendingNT = entries.filter((e) => e.state === "TVGS_SIGNED").length;
   const pendingCDT = entries.filter((e) => e.state === "NT_SIGNED").length;
@@ -56,7 +59,9 @@ export default async function SuperviseLogPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Có voice transcript</div><div className="mt-1 text-2xl font-bold text-blue-700">{withTranscript}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Nhật ký TVGS ({entries.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {entries.length === 0 ? (
@@ -74,13 +79,14 @@ export default async function SuperviseLogPage() {
                   <th className="p-2 text-left">Công việc + chất lượng + ATLĐ</th>
                   <th className="p-2 text-left">Ảnh</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Ký số</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {entries.map((e) => {
                   const meta = stateLabel[e.state] ?? { vn: e.state, variant: "neutral" as const };
                   return (
-                    <tr key={e.id} className="hover:bg-slate-50 align-top">
+                    <tr key={e.id} className="hover:bg-slate-50 align-top" data-testid={`row-${e.id}`}>
                       <td className="p-2 text-xs">{formatDateVn(e.logDate)}</td>
                       <td className="p-2 text-xs">{shiftLabel[e.shift]}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{e.project.key}</td>
@@ -92,7 +98,8 @@ export default async function SuperviseLogPage() {
                         {e.voiceTranscript && <div className="text-[10px] text-blue-700">🎤 voice</div>}
                       </td>
                       <td className="p-2 text-xs">{e.photoUrls.length}</td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${e.id}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><RowActions id={e.id} state={e.state} /></td>
                     </tr>
                   );
                 })}
