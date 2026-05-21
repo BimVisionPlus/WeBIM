@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, RowActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,7 @@ export default async function MethodStatementsPage() {
     OR: [{ ownerOrgId: { in: orgIds } }, { stakeholders: { some: { orgId: { in: orgIds } } } }],
   };
 
-  const [templates, statements] = await Promise.all([
+  const [templates, statements, accessibleProjects] = await Promise.all([
     prisma.methodStatement.findMany({ where: { isTemplate: true }, orderBy: { code: "asc" }, take: 30 }),
     prisma.methodStatement.findMany({
       where: { isTemplate: false, project: projectFilter },
@@ -43,7 +44,9 @@ export default async function MethodStatementsPage() {
       orderBy: { updatedAt: "desc" },
       take: 60,
     }),
+    prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } }),
   ]);
+  const templateOpts = templates.map((t) => ({ id: t.id, code: t.code, category: t.category }));
 
   const approved = statements.filter((s) => s.state === "APPROVED" || s.state === "EXECUTING" || s.state === "CLOSED").length;
   const pending = statements.filter((s) => ["NT_SUBMITTED", "TVGS_REVIEW", "CDT_REVIEW"].includes(s.state)).length;
@@ -91,7 +94,9 @@ export default async function MethodStatementsPage() {
         </CardBody>
       </Card>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} templates={templateOpts} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>BPTC dự án ({statements.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {statements.length === 0 ? (
@@ -105,18 +110,20 @@ export default async function MethodStatementsPage() {
                   <th className="p-2 text-left">Tiêu đề</th>
                   <th className="p-2 text-left">TVGS / CĐT</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {statements.map((s) => {
                   const meta = stateLabel[s.state] ?? { vn: s.state, variant: "neutral" as const };
                   return (
-                    <tr key={s.id} className="hover:bg-slate-50">
+                    <tr key={s.id} className="hover:bg-slate-50" data-testid={`bptc-${s.code}`}>
                       <td className="p-2 font-mono text-xs">{s.code}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{s.project?.key ?? "—"}</td>
                       <td className="p-2 text-xs"><div className="font-medium">{s.title}</div><div className="text-[10px] text-slate-500">{catLabel[s.category]}</div></td>
                       <td className="p-2 text-[10px] text-slate-500">{s.tvgsApprovedAt ? `TVGS ${formatDateVn(s.tvgsApprovedAt)}` : "—"}<div>{s.cdtApprovedAt ? `CĐT ${formatDateVn(s.cdtApprovedAt)}` : ""}</div></td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${s.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><RowActions id={s.id} state={s.state} /></td>
                     </tr>
                   );
                 })}
