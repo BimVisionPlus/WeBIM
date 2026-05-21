@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, ResultActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function QaqcPage() {
     OR: [{ ownerOrgId: { in: orgIds } }, { stakeholders: { some: { orgId: { in: orgIds } } } }],
   };
 
-  const [templates, checks] = await Promise.all([
+  const [templates, checks, accessibleProjects] = await Promise.all([
     prisma.itpTemplate.findMany({
       include: { _count: { select: { items: true, qaqcChecks: true } } },
       orderBy: { code: "asc" },
@@ -52,7 +53,9 @@ export default async function QaqcPage() {
       orderBy: { createdAt: "desc" },
       take: 50,
     }),
+    prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } }),
   ]);
+  const itpOpts = templates.map((t) => ({ id: t.id, code: t.code, title: t.title }));
 
   const total = checks.length;
   const pass = checks.filter((c) => c.result === "PASS").length;
@@ -106,7 +109,9 @@ export default async function QaqcPage() {
         </CardBody>
       </Card>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} itps={itpOpts} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Check gần đây ({checks.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {checks.length === 0 ? (
@@ -120,18 +125,20 @@ export default async function QaqcPage() {
                   <th className="p-2 text-left">Vị trí</th>
                   <th className="p-2 text-left">ITP</th>
                   <th className="p-2 text-left">Kết quả</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {checks.map((c) => {
                   const meta = resultLabel[c.result] ?? { vn: c.result, variant: "neutral" as const };
                   return (
-                    <tr key={c.id} className="hover:bg-slate-50">
+                    <tr key={c.id} className="hover:bg-slate-50" data-testid={`row-check-${c.id}`}>
                       <td className="p-2 text-xs">{c.conductedAt ? formatDateVn(c.conductedAt) : "—"}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{c.project.key}</td>
                       <td className="p-2 text-xs">{c.location}</td>
                       <td className="p-2 text-xs"><span className="font-mono">{c.template?.code ?? "—"}</span><div className="text-[10px] text-slate-500">{c.template?.title}</div></td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`result-${c.id}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><ResultActions id={c.id} result={c.result} /></td>
                     </tr>
                   );
                 })}
