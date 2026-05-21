@@ -757,6 +757,83 @@ enum TakeoffSource {
 }
 
 // ============================================================================
+//  DINH MUC DB — Định mức dự toán 10/2019/TT-BXD + giá ca máy TT 11/2019
+//  Knowledge-as-data: tra cứu mã AB.xxxxx, hao phí VL-NC-M, đơn giá theo tỉnh.
+//  Global (cross-project), seeded từ corpus công khai Bộ XD.
+// ============================================================================
+
+model NormCode {
+  id            String         @id @default(cuid())
+  code          String         @unique // "AB.13211"
+  chapter       String // "AB - CÔNG TÁC XÂY DỰNG"
+  section       String // "AB.1 - Công tác đào, đắp"
+  group         String? // "AB.13 - Bê tông"
+  title         String         @db.Text
+  unit          String // "100m3", "tấn", "m"
+  source        NormSource     @default(TT_10_2019)
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  notes         String?        @db.Text
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  resources NormResource[]
+  prices    NormPrice[]
+
+  @@index([chapter])
+  @@index([section])
+}
+
+model NormResource {
+  id            String       @id @default(cuid())
+  normId        String
+  resourceType  ResourceType // VL, NC, M
+  resourceCode  String? // mã vật liệu nội bộ hoặc mã máy
+  description   String       @db.Text
+  unit          String // "kg", "m3", "ca", "công"
+  quantity      Decimal      @db.Decimal(18, 6) // hao phí trên đơn vị định mức
+  notes         String?
+
+  norm NormCode @relation(fields: [normId], references: [id], onDelete: Cascade)
+
+  @@index([normId, resourceType])
+  @@index([resourceCode])
+}
+
+model NormPrice {
+  id          String   @id @default(cuid())
+  normId      String
+  province    String // "HCM", "HN", "DN", "BD"
+  period      String // "2026-Q2"
+  unitPriceVnd BigInt // đơn giá tổng hợp VND/đơn vị định mức
+  vlCostVnd   BigInt? // chi phí vật liệu
+  ncCostVnd   BigInt? // chi phí nhân công
+  mCostVnd    BigInt? // chi phí máy thi công
+  source      String? // "Sở XD HCM Q2/2026" / "Công bố giá VL Bộ XD"
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  norm NormCode @relation(fields: [normId], references: [id], onDelete: Cascade)
+
+  @@unique([normId, province, period])
+  @@index([province, period])
+}
+
+enum NormSource {
+  TT_10_2019 // TT 10/2019/TT-BXD — Định mức dự toán XD
+  TT_11_2019 // TT 11/2019/TT-BXD — Định mức ca máy
+  TT_12_2021 // TT 12/2021/TT-BXD — Định mức XD bổ sung
+  PROVINCIAL // Định mức điều chỉnh tỉnh
+  CUSTOM // Định mức nội bộ doanh nghiệp
+}
+
+enum ResourceType {
+  VL // Vật liệu
+  NC // Nhân công
+  M // Máy thi công
+}
+
+// ============================================================================
 //  SPECS module — Atlassian "Confluence" reskinned
 //  Project wiki: hồ sơ thiết kế text, biện pháp thi công, TCVN/QCVN refs.
 // ============================================================================

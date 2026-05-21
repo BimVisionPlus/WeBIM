@@ -137,6 +137,14 @@ const aecPlatformModules = [
     group: "Đấu thầu",
   },
   {
+    name: "DinhMucDB",
+    sub: "Định mức + đơn giá",
+    icon: "📒",
+    desc: "TT 10/2019 (XD) + TT 11/2019 (máy) + đơn giá tỉnh × quý. Knowledge-as-data, API tra cứu cho CostPulse / VolumeMeter / TenderForge.",
+    href: `${APP}/dinhmuc`,
+    group: "Đấu thầu",
+  },
+  {
     name: "CodeGuard",
     sub: "Đối chiếu QCVN/TCVN",
     icon: "⚖️",
@@ -252,7 +260,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            29 mô-đun chạy thực — 2 suite, 1 tài khoản
+            30 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -287,7 +295,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 16 mô-đun
+                PM dọc cho nhà thầu VN · 17 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">
