@@ -45,6 +45,9 @@ model Organization {
   siteWorkers        SiteWorker[]         @relation("WorkerOrg")
   contractorProfile  ContractorProfile?   @relation("ContractorProfileOrg")
   suppliedLots       MaterialLot[]        @relation("MaterialLotSupplier")
+  consultantTimes    ConsultantTimesheet[] @relation("ConsultantTimeOrg")
+  consultantContracts ConsultantContract[]  @relation("ConsultantContractTvOrg")
+  consultantClients  ConsultantContract[]   @relation("ConsultantContractClientOrg")
 }
 
 enum OrgType {
@@ -85,6 +88,7 @@ model User {
   bidsOwned      Bid[]                @relation("BidOwner")
   superviseEntries SuperviseEntry[]   @relation("SuperviseTvgsUser")
   hseCerts       HseCertificate[]     @relation("HseCertUser")
+  consultantTimes ConsultantTimesheet[] @relation("ConsultantTimeUser")
 }
 
 // ─── NextAuth ────────────────────────────────────────────────────────────────
@@ -216,6 +220,8 @@ model Project {
   labReports         LabReport[]
   methodStatements   MethodStatement[]
   approvalRequests   ApprovalRequest[]
+  consultantTimes    ConsultantTimesheet[]
+  consultantContracts ConsultantContract[]
 }
 
 enum ProjectStatus {
@@ -1684,6 +1690,71 @@ enum ApprovalDecision {
   APPROVE
   REJECT
   ABSTAIN
+}
+
+// ============================================================================
+//  CONSULTANT OPS — Time tracking + multi-project billing cho TVTK/TVGS/TVQLDA
+//  Charge-out rate per role × hours × % hoàn thành DA → revenue projection.
+// ============================================================================
+
+model ConsultantTimesheet {
+  id          String      @id @default(cuid())
+  orgId       String // tổ chức tư vấn (TVTK/TVGS/TVQLDA)
+  userId      String? // user chấm công
+  workerName  String // tên KS/KTS (có thể không có user)
+  role        String // "KS XD chính", "KS MEP", "KS QLDA", "Architect", "Junior KS"
+  projectId   String? // dự án đang tính giờ
+  workDate    DateTime
+  hours       Decimal     @db.Decimal(5, 2)
+  description String      @db.Text
+  billable    Boolean     @default(true)
+  rateVndPerHour BigInt? // charge-out rate VND/giờ
+  amountVnd   BigInt? // = hours * rate
+  invoiced    Boolean     @default(false)
+  invoiceRef  String?
+  createdAt   DateTime    @default(now())
+
+  org     Organization @relation("ConsultantTimeOrg", fields: [orgId], references: [id])
+  user    User?        @relation("ConsultantTimeUser", fields: [userId], references: [id])
+  project Project?     @relation(fields: [projectId], references: [id])
+
+  @@index([orgId, workDate])
+  @@index([projectId, workDate])
+  @@index([userId, workDate])
+}
+
+model ConsultantContract {
+  id              String          @id @default(cuid())
+  orgId           String // bên tư vấn
+  clientOrgId     String? // CĐT
+  projectId       String?
+  contractNo      String
+  contractType    ConsultantType
+  totalValueVnd   BigInt
+  invoicedVnd     BigInt          @default(0)
+  paidVnd         BigInt          @default(0)
+  percentComplete Decimal         @db.Decimal(5, 2) @default(0)
+  startDate       DateTime
+  endDate         DateTime?
+  state           String // ACTIVE / COMPLETED / TERMINATED
+  notes           String?         @db.Text
+  createdAt       DateTime        @default(now())
+
+  org       Organization  @relation("ConsultantContractTvOrg", fields: [orgId], references: [id])
+  clientOrg Organization? @relation("ConsultantContractClientOrg", fields: [clientOrgId], references: [id])
+  project   Project?      @relation(fields: [projectId], references: [id])
+
+  @@unique([orgId, contractNo])
+  @@index([orgId, state])
+}
+
+enum ConsultantType {
+  TVTK // Tư vấn thiết kế
+  TVGS // Tư vấn giám sát
+  TVQLDA // Tư vấn quản lý dự án
+  TVTM // Tư vấn thẩm tra
+  TVDT // Tư vấn đấu thầu
+  KHAC
 }
 
 // ============================================================================
