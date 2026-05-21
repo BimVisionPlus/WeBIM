@@ -225,6 +225,7 @@ model Project {
   agencyDocs         AgencyDocument[]
   agencyAppts        AgencyAppointment[]
   docCorpus          DocCorpus[]
+  monitorPoints      MonitorPoint[]
 }
 
 enum ProjectStatus {
@@ -1916,6 +1917,68 @@ enum CorpusSource {
   RFI // RFI
   EMAIL // Email
   KHAC
+}
+
+// ============================================================================
+//  MONITOR WATCH — Quan trắc lún, nghiêng, biến dạng kết cấu
+//  Total station, inclinometer, piezometer, strain gauge — data ingestion + alert.
+//  Vượt ngưỡng cảnh báo → auto-NCR + email TVGS+CĐT.
+// ============================================================================
+
+model MonitorPoint {
+  id          String         @id @default(cuid())
+  projectId   String
+  pointCode   String // "SET-001", "INC-A2", "PIEZ-3"
+  monitorType MonitorType
+  description String?
+  locationX   Decimal?       @db.Decimal(12, 4) // toạ độ X mặt bằng (m)
+  locationY   Decimal?       @db.Decimal(12, 4)
+  locationZ   Decimal?       @db.Decimal(12, 4) // cao độ (m)
+  installedAt DateTime?
+  thresholdWarn Decimal?     @db.Decimal(12, 4) // ngưỡng cảnh báo
+  thresholdAlert Decimal?    @db.Decimal(12, 4) // ngưỡng nguy hiểm
+  unit        String // "mm", "° (độ)", "m H2O", "µε"
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+
+  project       Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  measurements  MonitorMeasurement[]
+
+  @@unique([projectId, pointCode])
+  @@index([projectId, monitorType, active])
+}
+
+model MonitorMeasurement {
+  id          String        @id @default(cuid())
+  pointId     String
+  measuredAt  DateTime
+  value       Decimal       @db.Decimal(14, 4)
+  cumulative  Decimal?      @db.Decimal(14, 4) // luỹ kế từ ngày đầu
+  rate24h     Decimal?      @db.Decimal(14, 6) // tốc độ thay đổi /ngày
+  alertLevel  AlertLevel    @default(NORMAL)
+  notes       String?
+  rawJson     Json? // raw output từ thiết bị (Leica/Trimble/Topcon)
+
+  point MonitorPoint @relation(fields: [pointId], references: [id], onDelete: Cascade)
+
+  @@index([pointId, measuredAt])
+  @@index([alertLevel])
+}
+
+enum MonitorType {
+  SETTLEMENT // Lún (total station + dấu lún)
+  TILT // Nghiêng (inclinometer)
+  PIEZOMETER // Áp lực nước ngầm
+  STRAIN // Biến dạng (strain gauge)
+  CRACK // Khe nứt (crack meter)
+  VIBRATION // Rung động (geophone)
+  TEMPERATURE // Nhiệt độ BT khối lớn (thermocouple)
+}
+
+enum AlertLevel {
+  NORMAL
+  WARN // vượt ngưỡng cảnh báo
+  ALERT // vượt ngưỡng nguy hiểm
 }
 
 // ============================================================================

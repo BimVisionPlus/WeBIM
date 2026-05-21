@@ -321,6 +321,14 @@ const aecPlatformModules = [
     group: "Thi công",
   },
   {
+    name: "MonitorWatch",
+    sub: "Quan trắc lún/nghiêng",
+    icon: "📡",
+    desc: "Quan trắc lún/nghiêng/áp lực nước ngầm/biến dạng/khe nứt/rung động. Leica/Trimble/Topcon ingestion. Vượt ngưỡng → auto-NCR + email TVGS+CĐT.",
+    href: `${APP}/monitor`,
+    group: "Thi công",
+  },
+  {
     name: "Lệnh thay đổi",
     sub: "Change order tracking",
     icon: "🔁",
@@ -388,7 +396,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            46 mô-đun chạy thực — 2 suite, 1 tài khoản
+            47 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -423,7 +431,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 33 mô-đun
+                PM dọc cho nhà thầu VN · 34 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">
