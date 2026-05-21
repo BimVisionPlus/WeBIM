@@ -39,6 +39,7 @@ model Organization {
   contractBonds      ContractBond[]       @relation("ContractBondContractor")
   superviseEntries   SuperviseEntry[]     @relation("SuperviseTvgsOrg")
   tenderPackages     TenderPackage[]      @relation("TenderPackageOrg")
+  eiaConsultedApps   EiaApplication[]     @relation("EiaConsultant")
 }
 
 enum OrgType {
@@ -201,6 +202,8 @@ model Project {
   hoanCongDossier    HoanCongDossier?
   superviseEntries   SuperviseEntry[]
   qaqcChecks         QaqcCheck[]
+  eiaApplications    EiaApplication[]
+  envMeasurements    EnvMeasurement[]
 }
 
 enum ProjectStatus {
@@ -1157,6 +1160,81 @@ enum TenderSecSource {
   AUTO_FROM_PROFILE // tự gen từ profile DN (năng lực, kinh nghiệm)
   AUTO_FROM_BOQ // tự gen từ BoQ + DinhMucDB
   IMPORTED // import từ file
+}
+
+// ============================================================================
+//  EIA FLOW — Đánh giá tác động môi trường (NĐ 08/2022 + TT 02/2022)
+//  ĐTM (full) / ĐKĐT (cam kết) / Báo cáo môi trường định kỳ + quan trắc bụi/ồn/nước.
+// ============================================================================
+
+model EiaApplication {
+  id              String       @id @default(cuid())
+  projectId       String
+  type            EiaType // DTM / DKDT / DKBVMT (giấy phép môi trường)
+  code            String // "DTM-VHGP-S9-2024"
+  state           String // DRAFT, CONSULTING, AUTHORITY_REVIEW, APPROVED, REJECTED
+  authority       String // "Bộ TNMT" / "Sở TNMT TP HCM" / "UBND huyện"
+  consultantOrgId String? // đơn vị tư vấn lập ĐTM
+  consultStartAt  DateTime? // ngày bắt đầu tham vấn cộng đồng
+  consultEndAt    DateTime?
+  consultMinutes  String? // số biên bản họp tham vấn
+  submittedAt     DateTime?
+  decisionRef     String? // số QĐ phê duyệt
+  decisionDate    DateTime?
+  expiresAt       DateTime? // ngày hết hiệu lực GPMT (nếu có)
+  pdfUrl          String? // S3 key báo cáo ĐTM
+  notes           String?      @db.Text
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  consultantOrg  Organization? @relation("EiaConsultant", fields: [consultantOrgId], references: [id])
+  measurements   EnvMeasurement[]
+
+  @@unique([projectId, code])
+  @@index([projectId, state])
+}
+
+model EnvMeasurement {
+  id           String            @id @default(cuid())
+  eiaId        String?
+  projectId    String
+  measureType  EnvMeasureType // BUI / ON / NUOC_THAI / KHI_THAI / DAT
+  sampleCode   String // "QT-BUI-2026-04-001"
+  sampleDate   DateTime
+  location     String // điểm đo
+  parameter    String // "TSP", "PM10", "Leq", "BOD5", "COD"
+  value        Decimal           @db.Decimal(14, 4)
+  unit         String // "µg/m³", "dB(A)", "mg/L"
+  qcvnRef      String // "QCVN 05:2023/BTNMT"
+  qcvnLimit    Decimal?          @db.Decimal(14, 4)
+  exceeded     Boolean           @default(false)
+  labCode      String? // mã LabReport ngoài
+  notes        String?
+  createdAt    DateTime          @default(now())
+
+  eia     EiaApplication? @relation(fields: [eiaId], references: [id])
+  project Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, measureType, sampleDate])
+  @@index([exceeded])
+}
+
+enum EiaType {
+  DTM // Đánh giá tác động môi trường (dự án nhóm I, II)
+  DKDT // Đăng ký kế hoạch BVMT (dự án nhóm III, IV)
+  GPMT // Giấy phép môi trường
+  BAO_CAO_DK // Báo cáo định kỳ
+}
+
+enum EnvMeasureType {
+  BUI // Bụi (TSP, PM10, PM2.5)
+  ON // Tiếng ồn
+  KHI_THAI // Khí thải
+  NUOC_THAI // Nước thải
+  NUOC_NGAM // Nước ngầm
+  DAT // Đất
+  RUNG_DONG // Rung động
 }
 
 // ============================================================================
