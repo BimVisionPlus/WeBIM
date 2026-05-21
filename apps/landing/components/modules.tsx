@@ -153,6 +153,14 @@ const aecPlatformModules = [
     group: "Đấu thầu",
   },
   {
+    name: "ContractorRegistry",
+    sub: "Sổ năng lực Hạng I/II/III",
+    icon: "🪪",
+    desc: "Sổ năng lực hoạt động XD theo NĐ 15/2021 + chứng chỉ năng lực hành nghề. Cross-project rating đa chiều + blacklist vetting.",
+    href: `${APP}/registry`,
+    group: "Đấu thầu",
+  },
+  {
     name: "CodeGuard",
     sub: "Đối chiếu QCVN/TCVN",
     icon: "⚖️",
@@ -324,7 +332,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            38 mô-đun chạy thực — 2 suite, 1 tài khoản
+            39 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -359,7 +367,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 25 mô-đun
+                PM dọc cho nhà thầu VN · 26 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">

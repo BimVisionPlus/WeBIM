@@ -43,6 +43,7 @@ model Organization {
   hseCertsOwned      HseCertificate[]     @relation("HseCertOrg")
   hseCertsTrained    HseCertificate[]     @relation("HseCertTrainer")
   siteWorkers        SiteWorker[]         @relation("WorkerOrg")
+  contractorProfile  ContractorProfile?   @relation("ContractorProfileOrg")
 }
 
 enum OrgType {
@@ -1370,6 +1371,84 @@ enum AttendMethod {
   FACE // face recognition
   GPS // GPS phone
   MANUAL // bổ sung thủ công
+}
+
+// ============================================================================
+//  CONTRACTOR REGISTRY — Sổ năng lực nhà thầu / supplier (NĐ 15/2021)
+//  Hạng I/II/III năng lực hoạt động xây dựng + chứng chỉ năng lực hành nghề.
+//  Cross-project knowledge — vetting + blacklist.
+// ============================================================================
+
+model ContractorProfile {
+  id              String          @id @default(cuid())
+  orgId           String          @unique
+  legalName       String
+  mst             String? // Mã số thuế
+  capabilityClass CapabilityClass // HANG_I / HANG_II / HANG_III
+  capabilityNo    String? // số chứng chỉ năng lực hoạt động XD
+  capabilityExpiry DateTime?
+  capabilityScope String[] // ["Thi công dân dụng", "Thi công công nghiệp", "Tư vấn giám sát"]
+  charteredEng    Int             @default(0) // số KS chính
+  totalStaff      Int             @default(0)
+  charterCapVnd   BigInt? // vốn điều lệ
+  yearsExperience Int?
+  pastProjects    Int             @default(0) // số DA đã làm
+  pastValueVnd    BigInt? // tổng giá trị DA đã thực hiện
+  rating          Decimal?        @db.Decimal(3, 2) // 0-5 sao bình quân
+  blacklisted     Boolean         @default(false)
+  blacklistReason String?         @db.Text
+  blacklistAt     DateTime?
+  notes           String?         @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  org           Organization              @relation("ContractorProfileOrg", fields: [orgId], references: [id], onDelete: Cascade)
+  performances  ContractorPerformance[]
+  references    ContractorReference[]
+}
+
+model ContractorReference {
+  id           String            @id @default(cuid())
+  contractorId String
+  projectName  String
+  ownerName    String?
+  yearStart    Int
+  yearEnd      Int?
+  valueVnd     BigInt?
+  role         String // "NT chính", "NT phụ MEP", "TVGS"
+  description  String?           @db.Text
+  contactName  String?
+  contactPhone String?
+  verified     Boolean           @default(false)
+
+  contractor ContractorProfile @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+
+  @@index([contractorId])
+}
+
+model ContractorPerformance {
+  id           String   @id @default(cuid())
+  contractorId String
+  projectId    String? // dự án trong hệ thống
+  ratingDate   DateTime
+  ratingScore  Decimal  @db.Decimal(3, 2) // 1-5
+  scheduleScore Decimal? @db.Decimal(3, 2)
+  qualityScore Decimal? @db.Decimal(3, 2)
+  safetyScore  Decimal? @db.Decimal(3, 2)
+  costScore    Decimal? @db.Decimal(3, 2)
+  notes        String?  @db.Text
+  rater        String? // CĐT / Atlas auto-rating
+
+  contractor ContractorProfile @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+
+  @@index([contractorId, ratingDate])
+}
+
+enum CapabilityClass {
+  HANG_I // Hạng I — DA cấp đặc biệt + cấp I (lớn nhất)
+  HANG_II // Hạng II — DA cấp II
+  HANG_III // Hạng III — DA cấp III, IV
+  CHUA_PHAN_HANG // chưa đủ điều kiện phân hạng
 }
 
 // ============================================================================
