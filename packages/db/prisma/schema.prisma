@@ -38,6 +38,7 @@ model Organization {
   paymentApps        PaymentApplication[] @relation("PaymentContractor")
   contractBonds      ContractBond[]       @relation("ContractBondContractor")
   superviseEntries   SuperviseEntry[]     @relation("SuperviseTvgsOrg")
+  tenderPackages     TenderPackage[]      @relation("TenderPackageOrg")
 }
 
 enum OrgType {
@@ -1091,6 +1092,71 @@ enum QaqcResult {
   FAIL
   WAIVED // miễn check (CĐT/TVGS chấp thuận)
   REWORK // làm lại
+}
+
+// ============================================================================
+//  TENDER FORGE — Soạn HSMT (bên mời) + HSDT (nhà thầu) — Luật ĐT 22/2023
+//  Auto-assembly từ template + DinhMucDB pricing + sync muasamcong.mpi.gov.vn.
+//  Pairs với existing BidRadar (scout) + Bid (response tracker).
+// ============================================================================
+
+model TenderPackage {
+  id              String              @id @default(cuid())
+  orgId           String // doanh nghiệp sở hữu package (bên mời thầu hoặc nhà thầu)
+  perspective     TenderPerspective // BEN_MOI (CĐT/BMT soạn HSMT) | NHA_THAU (NT soạn HSDT)
+  code            String // "HSMT-2026-VHGP-04" hoặc "HSDT-2026-CFC-018"
+  title           String
+  tenderId        String? // mã KHLCNT trên muasamcong nếu có
+  oppotunityId    String? // link TenderOpportunity (BidRadar scout)
+  packageType     String // "Xây lắp", "Tư vấn", "Mua sắm hàng hóa", "Hỗn hợp"
+  selectionMethod String // "Đấu thầu rộng rãi", "Chào hàng cạnh tranh", "Chỉ định thầu"…
+  estimatedValueVnd BigInt?
+  bidSecurityVnd  BigInt?
+  language        String              @default("vi")
+  state           String // DRAFT, REVIEWING, READY, SUBMITTED, AWARDED, LOST, CANCELLED
+  submittedAt     DateTime?
+  awardedAt       DateTime?
+  awardedTo       String? // org id of awarded contractor (BEN_MOI perspective)
+  submissionRef   String? // mã giao dịch eGP muasamcong
+  notes           String?             @db.Text
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  org      Organization        @relation("TenderPackageOrg", fields: [orgId], references: [id])
+  sections TenderSection[]
+
+  @@unique([orgId, code])
+  @@index([orgId, perspective, state])
+}
+
+model TenderSection {
+  id          String         @id @default(cuid())
+  packageId   String
+  seq         Int
+  code        String // "I", "II", "Chương 3"
+  title       String
+  body        String?        @db.Text // markdown soạn thảo
+  source      TenderSecSource @default(MANUAL) // auto-generated vs manual
+  templateRef String? // template gốc đã dùng
+  signed      Boolean        @default(false)
+  signedAt    DateTime?
+
+  package TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, seq])
+}
+
+enum TenderPerspective {
+  BEN_MOI // Bên mời thầu (CĐT / BMT): tạo HSMT
+  NHA_THAU // Nhà thầu: tạo HSDT
+}
+
+enum TenderSecSource {
+  MANUAL // soạn thủ công
+  TEMPLATE // từ template ngành
+  AUTO_FROM_PROFILE // tự gen từ profile DN (năng lực, kinh nghiệm)
+  AUTO_FROM_BOQ // tự gen từ BoQ + DinhMucDB
+  IMPORTED // import từ file
 }
 
 // ============================================================================
