@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, RowActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function TenderForgePage() {
     orderBy: { updatedAt: "desc" },
     take: 50,
   });
+  const myOrgs = await prisma.organization.findMany({ where: { id: { in: orgIds } }, select: { id: true, name: true } });
 
   const submitted = packages.filter((p) => ["SUBMITTED", "AWARDED", "LOST"].includes(p.state)).length;
   const won = packages.filter((p) => p.state === "AWARDED").length;
@@ -54,7 +56,9 @@ export default async function TenderForgePage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng giá trị trúng</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalEstimated))}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm orgs={myOrgs} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Gói thầu ({packages.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {packages.length === 0 ? (
@@ -73,13 +77,14 @@ export default async function TenderForgePage() {
                   <th className="p-2 text-right">Chương</th>
                   <th className="p-2 text-left">Nộp lúc</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {packages.map((p) => {
                   const meta = stateLabel[p.state] ?? { vn: p.state, variant: "neutral" as const };
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50">
+                    <tr key={p.id} className="hover:bg-slate-50" data-testid={`row-${p.code}`}>
                       <td className="p-2 font-mono text-xs">{p.code}</td>
                       <td className="p-2 text-xs">{p.org.name}</td>
                       <td className="p-2 text-xs">{perspectiveLabel[p.perspective]}</td>
@@ -87,7 +92,8 @@ export default async function TenderForgePage() {
                       <td className="p-2 text-right text-xs">{p.estimatedValueVnd ? formatVnd(p.estimatedValueVnd) : "—"}</td>
                       <td className="p-2 text-right text-xs">{p._count.sections}</td>
                       <td className="p-2 text-xs">{p.submittedAt ? formatDateVn(p.submittedAt) : "—"}</td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${p.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><RowActions id={p.id} state={p.state} /></td>
                     </tr>
                   );
                 })}
