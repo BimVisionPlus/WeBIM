@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, CertActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,9 @@ export default async function HseTrainPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Khoá đào tạo</div><div className="mt-1 text-2xl font-bold">{courses.length}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm courses={courses.map((c) => ({ id: c.id, code: c.code, group: c.group }))} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Khoá huấn luyện ({courses.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {courses.length === 0 ? (
@@ -111,6 +114,7 @@ export default async function HseTrainPage() {
                   <th className="p-2 text-left">Cấp / Hết hạn</th>
                   <th className="p-2 text-right">Điểm</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -119,14 +123,15 @@ export default async function HseTrainPage() {
                   const dLeft = daysBetween(now, c.expiresAt);
                   const exp = c.state === "ACTIVE" && dLeft <= 30 && dLeft > 0;
                   return (
-                    <tr key={c.id} className={`hover:bg-slate-50 ${exp ? "bg-amber-50" : ""}`}>
+                    <tr key={c.id} className={`hover:bg-slate-50 ${exp ? "bg-amber-50" : ""}`} data-testid={`cert-${c.certNumber}`}>
                       <td className="p-2 font-mono text-xs">{c.certNumber}</td>
                       <td className="p-2 text-xs"><div className="font-medium">{c.workerName}</div>{c.workerIdNo && <div className="text-[10px] text-slate-500">{c.workerIdNo}</div>}</td>
                       <td className="p-2 text-xs">{c.course.code} ({c.course.group})</td>
                       <td className="p-2 text-xs">{c.org?.name ?? "—"}</td>
                       <td className="p-2 text-xs">{formatDateVn(c.issuedAt)} → {formatDateVn(c.expiresAt)}<div className={`text-[10px] ${dLeft < 0 ? "text-rose-700" : exp ? "text-amber-700" : "text-slate-500"}`}>{dLeft < 0 ? `Quá ${-dLeft}d` : `Còn ${dLeft}d`}</div></td>
                       <td className="p-2 text-right text-xs">{c.testScore ?? "—"}{c.testScore ? "%" : ""}</td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${c.certNumber}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><CertActions id={c.id} state={c.state} /></td>
                     </tr>
                   );
                 })}
