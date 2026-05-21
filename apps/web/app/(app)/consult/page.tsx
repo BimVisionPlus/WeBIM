@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function ConsultantOpsPage() {
   const memberships = await prisma.membership.findMany({ where: { userId: session.userId }, select: { orgId: true } });
   const orgIds = memberships.map((m) => m.orgId);
 
-  const [contracts, timesheets] = await Promise.all([
+  const [contracts, timesheets, myOrgs, myProjects] = await Promise.all([
     prisma.consultantContract.findMany({
       where: { orgId: { in: orgIds } },
       include: { org: { select: { name: true } }, clientOrg: { select: { name: true } }, project: { select: { key: true } } },
@@ -29,6 +30,8 @@ export default async function ConsultantOpsPage() {
       orderBy: { workDate: "desc" },
       take: 50,
     }),
+    prisma.organization.findMany({ where: { id: { in: orgIds } }, select: { id: true, name: true } }),
+    prisma.project.findMany({ where: { OR: [{ ownerOrgId: { in: orgIds } }, { stakeholders: { some: { orgId: { in: orgIds } } } }] }, select: { id: true, key: true, name: true } }),
   ]);
 
   const totalContract = contracts.reduce((s, c) => s + Number(c.totalValueVnd), 0);
@@ -85,7 +88,9 @@ export default async function ConsultantOpsPage() {
         </CardBody>
       </Card>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm orgs={myOrgs} projects={myProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Timesheet gần đây ({timesheets.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {timesheets.length === 0 ? (
