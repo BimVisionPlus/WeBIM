@@ -289,6 +289,14 @@ const aecPlatformModules = [
     group: "Thi công",
   },
   {
+    name: "MethodStatement",
+    sub: "Biện pháp thi công",
+    icon: "📋",
+    desc: "Library BPTC 9 hạng mục (cọc/đào/BT khối/MEP/hoàn thiện/cẩu giàn/hàn). Approval NT→TVGS→CĐT ký số. Output VIIIb.4 hồ sơ hoàn công.",
+    href: `${APP}/methods`,
+    group: "Thi công",
+  },
+  {
     name: "Lệnh thay đổi",
     sub: "Change order tracking",
     icon: "🔁",
@@ -348,7 +356,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            41 mô-đun chạy thực — 2 suite, 1 tài khoản
+            42 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -383,7 +391,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 28 mô-đun
+                PM dọc cho nhà thầu VN · 29 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">

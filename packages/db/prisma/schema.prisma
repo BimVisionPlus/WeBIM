@@ -214,6 +214,7 @@ model Project {
   attendance         Attendance[]
   materialLots       MaterialLot[]
   labReports         LabReport[]
+  methodStatements   MethodStatement[]
 }
 
 enum ProjectStatus {
@@ -1565,6 +1566,58 @@ enum LabResult {
   PASS // Đạt
   FAIL // Không đạt
   CONDITIONAL // Đạt có điều kiện
+}
+
+// ============================================================================
+//  METHOD STATEMENT — Biện pháp thi công (BPTC)
+//  Library theo hạng mục (cọc/đất/BT khối lớn/MEP/hoàn thiện) + approval CĐT/TVGS.
+//  Output: VIIIb.4 của hồ sơ hoàn công.
+// ============================================================================
+
+model MethodStatement {
+  id              String          @id @default(cuid())
+  projectId       String?
+  templateId      String? // template gốc nếu có
+  code            String // "BPTC-VHGP-S9-COC-001"
+  category        MethodCategory
+  title           String
+  scope           String // mô tả phạm vi
+  body            String          @db.Text // markdown nội dung BPTC
+  tcvnRefs        String[]
+  riskMatrix      Json? // {risks: [{risk, likelihood, impact, control}]}
+  resources       Json? // {workers, equipment, materials}
+  duration        Int? // số ngày
+  state           String // DRAFT, NT_SUBMITTED, TVGS_REVIEW, CDT_REVIEW, APPROVED, REJECTED, EXECUTING, CLOSED
+  ntSubmittedAt   DateTime?
+  tvgsApprovedAt  DateTime?
+  tvgsCertSerial  String?
+  cdtApprovedAt   DateTime?
+  cdtCertSerial   String?
+  rejectionNote   String?         @db.Text
+  pdfUrl          String?
+  isTemplate      Boolean         @default(false) // true = library
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  project  Project?         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  template MethodStatement? @relation("MethodTemplate", fields: [templateId], references: [id])
+  children MethodStatement[] @relation("MethodTemplate")
+
+  @@index([projectId, state])
+  @@index([category, isTemplate])
+}
+
+enum MethodCategory {
+  COC // Cọc khoan nhồi / cọc ép
+  DAO_DAT // Đào đất, đắp nền
+  BE_TONG_KHOI // Bê tông khối lớn
+  KET_CAU // Kết cấu BTCT
+  KET_CAU_THEP // Kết cấu thép
+  MEP // MEP — cấp thoát/điện/ĐHKK
+  HOAN_THIEN // Hoàn thiện trong/ngoài
+  CAU_GIANG_GIO // Cẩu, giàn giáo
+  HAN_CO_DIEN // Hàn nóng + công tác có nguy cơ cháy nổ
+  KHAC
 }
 
 // ============================================================================
