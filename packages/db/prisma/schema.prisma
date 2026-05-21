@@ -42,6 +42,7 @@ model Organization {
   eiaConsultedApps   EiaApplication[]     @relation("EiaConsultant")
   hseCertsOwned      HseCertificate[]     @relation("HseCertOrg")
   hseCertsTrained    HseCertificate[]     @relation("HseCertTrainer")
+  siteWorkers        SiteWorker[]         @relation("WorkerOrg")
 }
 
 enum OrgType {
@@ -207,6 +208,8 @@ model Project {
   qaqcChecks         QaqcCheck[]
   eiaApplications    EiaApplication[]
   envMeasurements    EnvMeasurement[]
+  siteWorkers        SiteWorker[]
+  attendance         Attendance[]
 }
 
 enum ProjectStatus {
@@ -1296,6 +1299,77 @@ enum HseGroup {
   N4 // Nhóm 4 — Người lao động không thuộc N1/N2/N3/N5/N6
   N5 // Nhóm 5 — Người làm công tác y tế
   N6 // Nhóm 6 — An toàn, vệ sinh viên
+}
+
+// ============================================================================
+//  WORKFORCE HUB — Nhân lực công trường (Luật XD 50/2014 + chứng chỉ HĐXD)
+//  Sổ NLĐ + chứng chỉ hành nghề KTS/KS + thẻ QR + GPS/face check-in.
+// ============================================================================
+
+model SiteWorker {
+  id              String       @id @default(cuid())
+  orgId           String // tổ chức tuyển dụng (NT chính / NT phụ)
+  projectId       String? // gán dự án hiện tại
+  workerCode      String // mã NLĐ nội bộ
+  fullName        String
+  dob             DateTime?
+  gender          String?
+  idNo            String? // CCCD
+  phone           String?
+  hometown        String? // quê quán
+  trade           String // "Thợ sắt", "Thợ điện", "KS XD chính"
+  level           String? // "bậc 3.5/7"
+  isStaff         Boolean      @default(false) // cán bộ vs công nhân thời vụ
+  startedAt       DateTime?
+  endedAt         DateTime?
+  hseGroup        HseGroup? // nhóm ATLĐ đã huấn luyện
+  hseCertNumber   String? // số chứng chỉ ATLĐ
+  hseCertExpiry   DateTime?
+  proLicenseNo    String? // chứng chỉ hành nghề HĐXD (KTS/KS)
+  proLicenseExpiry DateTime?
+  faceEmbedding   Bytes? // 512-dim embedding from InsightFace (compressed Float32 → bytes)
+  badgePhotoUrl   String? // ảnh thẻ
+  badgeQrCode     String? // QR ra vào cổng
+  state           String       @default("ACTIVE") // ACTIVE / SUSPENDED / TERMINATED
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  org       Organization @relation("WorkerOrg", fields: [orgId], references: [id])
+  project   Project?     @relation(fields: [projectId], references: [id])
+  attendance Attendance[]
+
+  @@unique([orgId, workerCode])
+  @@index([projectId, state])
+  @@index([hseCertExpiry])
+}
+
+model Attendance {
+  id          String       @id @default(cuid())
+  workerId    String
+  projectId   String
+  checkInAt   DateTime
+  checkOutAt  DateTime?
+  gateCode    String? // "Cổng A", "Cổng B"
+  gpsLat      Decimal?     @db.Decimal(10, 7)
+  gpsLng      Decimal?     @db.Decimal(10, 7)
+  method      AttendMethod @default(QR)
+  faceMatchScore Decimal?  @db.Decimal(5, 4) // 0.0-1.0 cosine similarity
+  ppeStatus   Json? // {helmet: true, vest: true, boots: true} từ SiteEye YOLO
+  notes       String?
+
+  worker  SiteWorker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  project Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, checkInAt])
+  @@index([workerId, checkInAt])
+}
+
+enum AttendMethod {
+  QR // quét QR thẻ
+  FACE // face recognition
+  GPS // GPS phone
+  MANUAL // bổ sung thủ công
 }
 
 // ============================================================================
