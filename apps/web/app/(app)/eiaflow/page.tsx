@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, RowActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ export default async function EiaFlowPage() {
     OR: [{ ownerOrgId: { in: orgIds } }, { stakeholders: { some: { orgId: { in: orgIds } } } }],
   };
 
-  const [apps, measurements] = await Promise.all([
+  const [apps, measurements, accessibleProjects] = await Promise.all([
     prisma.eiaApplication.findMany({
       where: { project: projectFilter },
       include: { project: { select: { key: true } }, consultantOrg: { select: { name: true } } },
@@ -49,6 +50,7 @@ export default async function EiaFlowPage() {
       orderBy: { sampleDate: "desc" },
       take: 30,
     }),
+    prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } }),
   ]);
 
   const approved = apps.filter((a) => a.state === "APPROVED").length;
@@ -69,7 +71,9 @@ export default async function EiaFlowPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Vượt ngưỡng QCVN</div><div className="mt-1 text-2xl font-bold text-rose-700">{exceeded}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Hồ sơ ĐTM / GPMT ({apps.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {apps.length === 0 ? (
@@ -86,13 +90,14 @@ export default async function EiaFlowPage() {
                   <th className="p-2 text-left">Tham vấn</th>
                   <th className="p-2 text-left">QĐ phê duyệt</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {apps.map((a) => {
                   const meta = stateLabel[a.state] ?? { vn: a.state, variant: "neutral" as const };
                   return (
-                    <tr key={a.id} className="hover:bg-slate-50">
+                    <tr key={a.id} className="hover:bg-slate-50" data-testid={`row-${a.code}`}>
                       <td className="p-2 font-mono text-xs">{a.code}</td>
                       <td className="p-2 text-xs">{typeLabel[a.type]}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{a.project.key}</td>
@@ -100,7 +105,8 @@ export default async function EiaFlowPage() {
                       <td className="p-2 text-xs">{a.consultantOrg?.name ?? "—"}</td>
                       <td className="p-2 text-xs">{a.consultStartAt ? `${formatDateVn(a.consultStartAt)} → ${formatDateVn(a.consultEndAt)}` : "—"}</td>
                       <td className="p-2 text-xs">{a.decisionRef}<div className="text-[10px] text-slate-500">{a.decisionDate ? formatDateVn(a.decisionDate) : ""}</div></td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${a.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><RowActions id={a.id} state={a.state} /></td>
                     </tr>
                   );
                 })}
