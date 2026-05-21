@@ -44,6 +44,7 @@ model Organization {
   hseCertsTrained    HseCertificate[]     @relation("HseCertTrainer")
   siteWorkers        SiteWorker[]         @relation("WorkerOrg")
   contractorProfile  ContractorProfile?   @relation("ContractorProfileOrg")
+  suppliedLots       MaterialLot[]        @relation("MaterialLotSupplier")
 }
 
 enum OrgType {
@@ -211,6 +212,7 @@ model Project {
   envMeasurements    EnvMeasurement[]
   siteWorkers        SiteWorker[]
   attendance         Attendance[]
+  materialLots       MaterialLot[]
 }
 
 enum ProjectStatus {
@@ -1449,6 +1451,65 @@ enum CapabilityClass {
   HANG_II // Hạng II — DA cấp II
   HANG_III // Hạng III — DA cấp III, IV
   CHUA_PHAN_HANG // chưa đủ điều kiện phân hạng
+}
+
+// ============================================================================
+//  MATERIAL TRACE — Truy xuất nguồn gốc VL (CO/CQ + hợp quy CR + QR lot)
+//  TT 28/2012 + TT 19/2019 — VL phải hợp quy (xi măng, thép, kính, gạch).
+// ============================================================================
+
+model MaterialLot {
+  id              String       @id @default(cuid())
+  projectId       String
+  lotCode         String // "LOT-THEP-VHGP-S9-04221"
+  materialName    String // "Thép thanh CB400-V D16"
+  materialCode    String? // mã VL nội bộ
+  category        MaterialCat
+  supplierOrgId   String? // nhà cung cấp
+  manufacturer    String // tên nhà sản xuất
+  origin          String? // "Việt Nam", "Trung Quốc", "Nhật Bản"
+  receivedAt      DateTime
+  quantity        Decimal      @db.Decimal(18, 4)
+  unit            String // "kg", "tấn", "m3", "viên", "m2"
+  coDocUrl        String? // Giấy chứng nhận xuất xứ (Certificate of Origin)
+  cqDocUrl        String? // Chứng nhận chất lượng (Certificate of Quality)
+  crCertNo        String? // Số hợp quy CR (sản phẩm phải hợp quy)
+  crCertExpiry    DateTime?
+  qrCode          String? // QR lot — scan tại công trường
+  testRefs        String[] // LabReport sample IDs
+  state           MaterialState @default(RECEIVED)
+  acceptedAt      DateTime?
+  acceptedByUserId String?
+  rejectedReason  String?
+  notes           String?
+  createdAt       DateTime     @default(now())
+
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplierOrg Organization? @relation("MaterialLotSupplier", fields: [supplierOrgId], references: [id])
+
+  @@unique([projectId, lotCode])
+  @@index([projectId, state])
+  @@index([category])
+}
+
+enum MaterialCat {
+  XI_MANG // Xi măng — QCVN 16:2023
+  THEP // Thép — QCVN 7:2018
+  KINH // Kính XD — QCVN 16:2023
+  GACH // Gạch — QCVN 16:2023
+  BE_TONG_TUOI // BT thương phẩm
+  SON // Sơn
+  PHU_GIA // Phụ gia BT
+  OTHER
+}
+
+enum MaterialState {
+  RECEIVED // Đã nhận, đợi kiểm tra
+  TESTING // Đang lấy mẫu thí nghiệm
+  ACCEPTED // Chấp thuận sử dụng
+  REJECTED // Trả nhà cung cấp
+  PARTIAL_USED
+  USED_UP
 }
 
 // ============================================================================
