@@ -35,8 +35,9 @@ model Organization {
   invites       Invite[]
   auditEvents   AuditEvent[]
   bids          Bid[]
-  paymentApps   PaymentApplication[] @relation("PaymentContractor")
-  contractBonds ContractBond[]       @relation("ContractBondContractor")
+  paymentApps        PaymentApplication[] @relation("PaymentContractor")
+  contractBonds      ContractBond[]       @relation("ContractBondContractor")
+  superviseEntries   SuperviseEntry[]     @relation("SuperviseTvgsOrg")
 }
 
 enum OrgType {
@@ -75,6 +76,7 @@ model User {
   invitesSent    Invite[]             @relation("InvitedBy")
   resetTokens    PasswordResetToken[]
   bidsOwned      Bid[]                @relation("BidOwner")
+  superviseEntries SuperviseEntry[]   @relation("SuperviseTvgsUser")
 }
 
 // ─── NextAuth ────────────────────────────────────────────────────────────────
@@ -196,6 +198,7 @@ model Project {
   takeoffSheets      TakeoffSheet[]
   contractBonds      ContractBond[]
   hoanCongDossier    HoanCongDossier?
+  superviseEntries   SuperviseEntry[]
 }
 
 enum ProjectStatus {
@@ -947,6 +950,58 @@ model HoanCongItem {
 
   @@unique([sectionId, seq])
   @@index([sectionId, status])
+}
+
+// ============================================================================
+//  SUPERVISE LOG — Nhật ký TVGS (NĐ 06/2021 Điều 10)
+//  Bản ghi giám sát công trình hằng ngày: tiến độ, chất lượng, an toàn, ATLĐ,
+//  vật liệu — ký số chuỗi TVGS → NT → CĐT mỗi entry. Drawn từ DailyLog +
+//  SiteEye photos. Output là 1 trong 13 nhóm của HoanCong (VIIIb.6).
+// ============================================================================
+
+model SuperviseEntry {
+  id              String              @id @default(cuid())
+  projectId       String
+  logDate         DateTime
+  shift           SuperviseShift      @default(DAY)
+  supervisorOrgId String? // TVGS org
+  supervisorUserId String? // KS giám sát
+  weather         String? // sync với WeatherSnapshot
+  attendees       String?             @db.Text // CĐT/NT/TVGS có mặt
+  workItems       String              @db.Text // mô tả công việc thi công
+  qualityNotes    String?             @db.Text // quan sát chất lượng
+  safetyNotes     String?             @db.Text // quan sát ATLĐ
+  materialsNotes  String?             @db.Text // VL nhận, kiểm tra CO/CQ
+  testRefs        String[] // mã LabReport tham chiếu
+  ncrIds          String[] // NCR phát sinh trong ca
+  rfiIds          String[] // RFI phát sinh
+  acceptanceIds   String[] // BBNT diễn ra trong ca
+  photoUrls       String[] // S3 keys ảnh
+  voiceNoteUrl    String? // Whisper.cpp transcript source
+  voiceTranscript String?             @db.Text
+  state           String // DRAFT, TVGS_SIGNED, NT_SIGNED, CDT_SIGNED, FINALIZED
+  tvgsSignedAt    DateTime?
+  tvgsCertSerial  String?
+  ntSignedAt      DateTime?
+  ntCertSerial    String?
+  cdtSignedAt     DateTime?
+  cdtCertSerial   String?
+  pdfUrl          String? // PDF render của entry
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supervisorOrg  Organization? @relation("SuperviseTvgsOrg", fields: [supervisorOrgId], references: [id])
+  supervisorUser User?         @relation("SuperviseTvgsUser", fields: [supervisorUserId], references: [id])
+
+  @@unique([projectId, logDate, shift])
+  @@index([projectId, state])
+}
+
+enum SuperviseShift {
+  DAY // ca ngày
+  NIGHT // ca đêm
+  FULL // cả ngày (ghép)
 }
 
 // ============================================================================
