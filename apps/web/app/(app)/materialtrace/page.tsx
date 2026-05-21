@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, RowActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export default async function MaterialTracePage() {
     take: 100,
   });
 
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
+
   const total = lots.length;
   const rejected = lots.filter((l) => l.state === "REJECTED").length;
   const noCo = lots.filter((l) => !l.coDocUrl).length;
@@ -58,7 +61,9 @@ export default async function MaterialTracePage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Thiếu CR hợp quy</div><div className="mt-1 text-2xl font-bold text-amber-700">{noCr}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Lô vật liệu nhận ({total})</CardTitle>
@@ -80,6 +85,7 @@ export default async function MaterialTracePage() {
                   <th className="p-2 text-left">NCC</th>
                   <th className="p-2 text-left">CO/CQ/CR</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -87,7 +93,7 @@ export default async function MaterialTracePage() {
                   const meta = stateLabel[l.state] ?? { vn: l.state, variant: "neutral" as const };
                   const needsCr = ["XI_MANG", "THEP", "KINH", "GACH"].includes(l.category);
                   return (
-                    <tr key={l.id} className="hover:bg-slate-50">
+                    <tr key={l.id} className="hover:bg-slate-50" data-testid={`lot-${l.lotCode}`}>
                       <td className="p-2 font-mono text-xs">{l.lotCode}</td>
                       <td className="p-2 text-xs"><div className="font-medium">{l.materialName}</div><div className="text-[10px] text-slate-500">{l.manufacturer}{l.origin && ` · ${l.origin}`}</div></td>
                       <td className="p-2 text-xs">{catLabel[l.category]}</td>
@@ -99,7 +105,8 @@ export default async function MaterialTracePage() {
                         <span className={l.cqDocUrl ? "text-emerald-700" : "text-amber-700"}>CQ {l.cqDocUrl ? "✓" : "?"}</span>
                         {needsCr && <><br/><span className={l.crCertNo ? "text-emerald-700" : "text-rose-700"}>CR {l.crCertNo ? "✓" : "✗"}</span>{l.crCertNo && <span className="text-slate-500"> · {l.crCertNo}</span>}</>}
                       </td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${l.lotCode}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><RowActions id={l.id} state={l.state} /></td>
                     </tr>
                   );
                 })}
