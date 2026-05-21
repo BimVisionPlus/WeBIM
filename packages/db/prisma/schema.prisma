@@ -35,6 +35,7 @@ model Organization {
   invites       Invite[]
   auditEvents   AuditEvent[]
   bids          Bid[]
+  paymentApps   PaymentApplication[] @relation("PaymentContractor")
 }
 
 enum OrgType {
@@ -190,6 +191,7 @@ model Project {
   scheduleTasks      ScheduleTask[]
   permitApplications PermitApplication[]
   pcccApplications   PcccApplication[]
+  paymentApps        PaymentApplication[]
 }
 
 enum ProjectStatus {
@@ -621,9 +623,75 @@ model ProgressPayment {
   approvedAt    DateTime?
   paidAt        DateTime?
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  applications PaymentApplication[]
 
   @@unique([projectId, period])
+}
+
+// ============================================================================
+//  PAYMENT RAIL — Hồ sơ thanh toán (NĐ 99/2021 + TT 08/2022)
+//  Đề nghị thanh toán = bộ hồ sơ: BBNT KL → Bảng tính giá trị → Phiếu giá →
+//  Đẩy KBNN-DVC (vốn ngân sách) hoặc gửi CĐT (vốn tư).
+// ============================================================================
+
+model PaymentApplication {
+  id                  String                 @id @default(cuid())
+  projectId           String
+  code                String // "TT-VHGP-S9-2026-04-001"
+  period              String // "2026-04"
+  paymentType         PaymentApplicationType
+  fundSource          PaymentFundSource      @default(NGAN_SACH) // NS / DN / FDI / HON_HOP
+  contractorOrgId     String? // nhà thầu nhận tiền
+  contractRef         String? // số HĐ kinh tế
+  contractValueVnd    BigInt? // giá trị HĐ tại thời điểm này (đã gồm điều chỉnh)
+  progressPaymentId   String? // link tới ProgressPayment kỳ tương ứng (optional)
+  workDoneVnd         BigInt // KL hoàn thành kỳ này
+  cumulativeWorkVnd   BigInt // luỹ kế KL đã thực hiện
+  advanceDeductionVnd BigInt                 @default(0) // khấu trừ tạm ứng
+  retentionVnd        BigInt                 @default(0) // bảo lưu 5%
+  vatRate             Int                    @default(8)
+  vatVnd              BigInt                 @default(0)
+  netPayableVnd       BigInt // = (workDone - retention - adv) + vat
+  acceptanceIds       String[] // BBNT KL nghiệm thu kỳ này
+  changeOrderIds      String[] // CO đã duyệt cộng vào
+  attachmentIds       String[] // file đính kèm (Bảng tính, Phiếu giá PDF)
+  state               String // DRAFT, NT_SIGNED, TVGS_SIGNED, CDT_APPROVED, KBNN_SUBMITTED, PAID, REJECTED
+  ntSignedAt          DateTime?
+  tvgsSignedAt        DateTime?
+  cdtApprovedAt       DateTime?
+  kbnnSubmittedAt     DateTime?
+  kbnnTxId            String? // mã giao dịch DVC-KBNN
+  kbnnStatus          String? // PENDING / ACCEPTED / RETURNED / PAID
+  kbnnResponseJson    Json?
+  paidAt              DateTime?
+  paidVnd             BigInt?
+  rejectionNote       String?                @db.Text
+  notes               String?                @db.Text
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  progressPayment ProgressPayment? @relation(fields: [progressPaymentId], references: [id])
+  contractorOrg   Organization?    @relation("PaymentContractor", fields: [contractorOrgId], references: [id])
+
+  @@unique([projectId, code])
+  @@index([projectId, period])
+  @@index([state])
+}
+
+enum PaymentApplicationType {
+  TAM_UNG // Tạm ứng hợp đồng (TT 08/2022 Đ.7)
+  GIAI_DOAN // Thanh toán giai đoạn (theo BBNT KL)
+  HOAN_THANH // Thanh toán khi hoàn thành công trình
+  QUYET_TOAN // Quyết toán hợp đồng
+}
+
+enum PaymentFundSource {
+  NGAN_SACH // Vốn ngân sách (đi KBNN-DVC)
+  DOANH_NGHIEP // Vốn doanh nghiệp tư nhân
+  FDI // Vốn đầu tư nước ngoài
+  HON_HOP // Hỗn hợp
 }
 
 // ============================================================================
