@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, DossierActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export default async function HoanCongPage() {
     take: 20,
   });
 
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
+
   return (
     <AecModuleShell
       group="Bàn giao"
@@ -51,8 +54,10 @@ export default async function HoanCongPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang xử lý</div><div className="mt-1 text-2xl font-bold text-amber-700">{dossiers.filter((d) => !["COMPILED", "SUBMITTED_QLNN", "ACCEPTED"].includes(d.state)).length}</div></CardBody></Card>
       </div>
 
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
       {dossiers.length === 0 ? (
-        <Card className="mt-6"><CardBody><div className="p-8 text-center text-sm text-slate-500">
+        <Card className="mt-4"><CardBody><div className="p-8 text-center text-sm text-slate-500">
           Chưa có hồ sơ hoàn công nào. Khi DA gần hoàn thành, tạo HoanCongDossier để khởi tạo 13 nhóm theo VIIIb.
         </div></CardBody></Card>
       ) : (
@@ -62,15 +67,16 @@ export default async function HoanCongPage() {
           const signedItems = d.sections.reduce((s, sec) => s + sec.signedCount, 0);
           const progress = totalItems > 0 ? Math.round((signedItems / totalItems) * 100) : 0;
           return (
-            <Card key={d.id} className="mt-6">
+            <Card key={d.id} className="mt-6" data-testid={`dossier-${d.code}`}>
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <CardTitle>{d.code} — {d.project.name}</CardTitle>
                     <div className="text-xs text-slate-500">{d.title}</div>
                   </div>
-                  <Badge variant={meta.variant}>{meta.vn}</Badge>
+                  <div data-testid={`state-${d.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></div>
                 </div>
+                <DossierActions id={d.id} state={d.state} />
               </CardHeader>
               <CardBody>
                 <div className="mb-4">
