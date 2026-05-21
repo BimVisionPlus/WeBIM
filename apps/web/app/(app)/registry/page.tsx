@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, RowActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
     take: 100,
   });
 
+  const allOrgs = await prisma.organization.findMany({ where: { type: { in: ["NHA_THAU_CHINH", "NHA_THAU_PHU", "TU_VAN_GIAM_SAT", "TU_VAN_THIET_KE", "NHA_CUNG_CAP"] } }, select: { id: true, name: true, mst: true }, orderBy: { name: "asc" } });
   const total = await prisma.contractorProfile.count();
   const blacklisted = await prisma.contractorProfile.count({ where: { blacklisted: true } });
   const hangI = await prisma.contractorProfile.count({ where: { capabilityClass: "HANG_I" } });
@@ -72,6 +74,8 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
         </CardBody>
       </Card>
 
+      <div className="mt-4"><CreateForm orgs={allOrgs} /></div>
+
       <Card className="mt-4">
         <CardHeader><CardTitle>Sổ năng lực ({profiles.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
@@ -89,13 +93,14 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
                   <th className="p-2 text-right">Tổng giá trị</th>
                   <th className="p-2 text-right">Rating</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {profiles.map((p) => {
                   const meta = classLabel[p.capabilityClass] ?? { vn: p.capabilityClass, variant: "neutral" as const };
                   return (
-                    <tr key={p.id} className={`hover:bg-slate-50 ${p.blacklisted ? "bg-rose-50" : ""}`}>
+                    <tr key={p.id} className={`hover:bg-slate-50 ${p.blacklisted ? "bg-rose-50" : ""}`} data-testid={`profile-${p.id}`}>
                       <td className="p-2 text-xs"><div className="font-medium">{p.legalName}</div><div className="text-[10px] text-slate-500">MST: {p.mst ?? "—"} · {p.org.name}</div></td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge>{p.capabilityNo && <div className="text-[10px] font-mono text-slate-500 mt-0.5">{p.capabilityNo}</div>}{p.capabilityExpiry && <div className="text-[10px] text-slate-500">đến {formatDateVn(p.capabilityExpiry)}</div>}</td>
                       <td className="p-2 text-[11px] text-slate-700">{p.capabilityScope.slice(0, 2).join(" · ")}{p.capabilityScope.length > 2 && ` +${p.capabilityScope.length - 2}`}</td>
@@ -103,7 +108,8 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
                       <td className="p-2 text-right text-xs">{p.pastProjects}</td>
                       <td className="p-2 text-right text-xs">{p.pastValueVnd ? formatVnd(p.pastValueVnd) : "—"}</td>
                       <td className="p-2 text-right text-xs">{p.rating ? <span className="font-bold">{p.rating.toString()}<span className="text-[10px] text-slate-500">/5</span></span> : "—"}</td>
-                      <td className="p-2">{p.blacklisted ? <Badge variant="danger">Blacklist</Badge> : <Badge variant="success">OK</Badge>}{p.blacklisted && p.blacklistReason && <div className="text-[10px] text-rose-700 mt-1 line-clamp-2">{p.blacklistReason}</div>}</td>
+                      <td className="p-2" data-testid={`status-${p.id}`}>{p.blacklisted ? <Badge variant="danger">Blacklist</Badge> : <Badge variant="success">OK</Badge>}{p.blacklisted && p.blacklistReason && <div className="text-[10px] text-rose-700 mt-1 line-clamp-2">{p.blacklistReason}</div>}</td>
+                      <td className="p-2"><RowActions id={p.id} blacklisted={p.blacklisted} /></td>
                     </tr>
                   );
                 })}
