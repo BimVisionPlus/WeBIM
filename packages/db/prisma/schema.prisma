@@ -213,6 +213,7 @@ model Project {
   siteWorkers        SiteWorker[]
   attendance         Attendance[]
   materialLots       MaterialLot[]
+  labReports         LabReport[]
 }
 
 enum ProjectStatus {
@@ -1486,6 +1487,7 @@ model MaterialLot {
 
   project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   supplierOrg Organization? @relation("MaterialLotSupplier", fields: [supplierOrgId], references: [id])
+  labReports  LabReport[]
 
   @@unique([projectId, lotCode])
   @@index([projectId, state])
@@ -1510,6 +1512,59 @@ enum MaterialState {
   REJECTED // Trả nhà cung cấp
   PARTIAL_USED
   USED_UP
+}
+
+// ============================================================================
+//  LAB REPORTS — Thí nghiệm vật liệu LAS-XD
+//  Phòng LAS được cấp phép (Bộ XD) thí nghiệm BT/thép/đất/cấp phối.
+//  Auto-compare actual vs TCVN spec; FAIL → tạo NCR trong Site.
+// ============================================================================
+
+model LabReport {
+  id              String       @id @default(cuid())
+  projectId       String
+  sampleCode      String // "LAB-VHGP-S9-BT-2026-052"
+  sampleType      LabSampleType
+  materialLotId   String? // link MaterialTrace lot
+  sampledAt       DateTime
+  sampledBy       String? // tên người lấy mẫu
+  receivedAt      DateTime? // ngày phòng LAS nhận mẫu
+  testedAt        DateTime?
+  labCode         String // mã LAS — "LAS-XD 1234"
+  labOrgName      String? // tên phòng LAS
+  testMethod      String // "Nén mẫu BT", "Kéo thép", "Cấp phối hạt"
+  tcvnRef         String // "TCVN 3118:1993"
+  parameters      Json // {ngay7: 28.5, ngay28: 38.2, ...} kết quả từng chỉ tiêu
+  specRequired    Json? // {ngay28: ">=30"} yêu cầu spec
+  result          LabResult    @default(PENDING)
+  ncrId           String? // tự tạo NCR nếu FAIL
+  reportFileUrl   String? // PDF báo cáo thí nghiệm
+  reportNo        String? // số báo cáo phòng LAS
+  notes           String?      @db.Text
+  createdAt       DateTime     @default(now())
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  materialLot MaterialLot? @relation(fields: [materialLotId], references: [id])
+
+  @@unique([projectId, sampleCode])
+  @@index([projectId, sampleType, result])
+}
+
+enum LabSampleType {
+  BE_TONG // Bê tông — TCVN 3105/3118
+  THEP // Thép — TCVN 1651/197
+  XI_MANG // Xi măng — TCVN 6017/4030
+  CAT_DA // Cát đá cấp phối — TCVN 7572
+  DAT_NEN // Đất nền — TCVN 4198/4202
+  COC_NEN // Thử tải cọc — TCVN 9393/9394
+  KHAC
+}
+
+enum LabResult {
+  PENDING // Đang thí nghiệm
+  PASS // Đạt
+  FAIL // Không đạt
+  CONDITIONAL // Đạt có điều kiện
 }
 
 // ============================================================================
