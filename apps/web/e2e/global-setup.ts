@@ -17,6 +17,20 @@ async function globalSetup(_config: FullConfig) {
   await page.locator('input[type="password"]').fill(DEMO_PASSWORD);
   await page.getByRole("button", { name: /Đăng nhập/i }).click();
   await page.waitForURL((url) => !url.toString().includes("/signin"), { timeout: 15_000 });
+  // Wait for next-auth session cookie before persisting — page can redirect
+  // before the Set-Cookie response is processed, leading to empty storage.
+  await page.waitForFunction(
+    () => document.cookie.includes("next-auth.session-token") ||
+          (window as unknown as { sessionTokenPresent?: boolean }).sessionTokenPresent === true,
+    { timeout: 5_000 },
+  ).catch(async () => {
+    // Fall back: hit a protected route and rely on server-set cookie roundtrip.
+    await page.goto(`${baseURL}/paymentrail`);
+  });
+  const state = await ctx.storageState();
+  if (!state.cookies.some((c) => c.name === "next-auth.session-token")) {
+    throw new Error("globalSetup: next-auth.session-token cookie not set — login likely failed");
+  }
   await ctx.storageState({ path: STORAGE });
   await browser.close();
   process.env.E2E_STORAGE = STORAGE;

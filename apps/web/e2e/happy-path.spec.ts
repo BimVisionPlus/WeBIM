@@ -8,6 +8,10 @@
 
 import { test, expect } from "@playwright/test";
 
+// Signup path needs a fresh anonymous browser context — opt out of the global
+// demo-user storageState set by playwright.config.ts.
+test.use({ storageState: { cookies: [], origins: [] } });
+
 const TS = Date.now();
 const EMAIL = `e2e-${TS}@example.com`;
 const PASSWORD = "Pilot2026!";

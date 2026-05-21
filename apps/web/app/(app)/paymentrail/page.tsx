@@ -4,6 +4,8 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +50,12 @@ export default async function PaymentRailOrgPage() {
     take: 200,
   });
 
+  const accessibleProjects = await prisma.project.findMany({
+    where: projectFilter,
+    select: { id: true, key: true, name: true },
+    orderBy: { key: "asc" },
+  });
+
   const totalRequested = apps.reduce((s, a) => s + Number(a.netPayableVnd), 0);
   const paid = apps.filter((a) => a.paidAt);
   const totalPaid = paid.reduce((s, a) => s + Number(a.paidVnd ?? 0n), 0);
@@ -67,7 +75,11 @@ export default async function PaymentRailOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã thanh toán</div><div className="mt-1 text-2xl font-bold text-emerald-700">{formatVnd(BigInt(totalPaid))}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6">
+        <CreateForm projects={accessibleProjects} />
+      </div>
+
+      <Card className="mt-4">
         <CardHeader>
           <CardTitle>Danh sách hồ sơ thanh toán ({apps.length})</CardTitle>
         </CardHeader>
@@ -89,13 +101,14 @@ export default async function PaymentRailOrgPage() {
                   <th className="p-2 text-right">KL kỳ này</th>
                   <th className="p-2 text-right">Thanh toán ròng</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {apps.map((a) => {
                   const meta = stateLabel[a.state] ?? { vn: a.state, variant: "neutral" as const };
                   return (
-                    <tr key={a.id} className="hover:bg-slate-50">
+                    <tr key={a.id} className="hover:bg-slate-50" data-testid={`row-${a.code}`}>
                       <td className="p-2 font-mono text-xs">{a.code}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{a.project.key}</td>
                       <td className="p-2 text-xs">{a.period}</td>
@@ -104,10 +117,11 @@ export default async function PaymentRailOrgPage() {
                       <td className="p-2 text-xs">{a.contractorOrg?.name ?? "—"}</td>
                       <td className="p-2 text-right text-xs">{formatVnd(a.workDoneVnd)}</td>
                       <td className="p-2 text-right text-xs font-medium text-emerald-700">{formatVnd(a.netPayableVnd)}</td>
-                      <td className="p-2">
+                      <td className="p-2" data-testid={`state-${a.code}`}>
                         <Badge variant={meta.variant}>{meta.vn}</Badge>
                         {a.paidAt && <div className="mt-0.5 text-[10px] text-slate-500">{formatDateVn(a.paidAt)}</div>}
                       </td>
+                      <td className="p-2"><RowActions id={a.id} state={a.state} /></td>
                     </tr>
                   );
                 })}
