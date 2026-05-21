@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, ResultActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,8 @@ export default async function LabReportsPage() {
     take: 100,
   });
 
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
+
   const total = reports.length;
   const pass = reports.filter((r) => r.result === "PASS").length;
   const fail = reports.filter((r) => r.result === "FAIL").length;
@@ -55,7 +58,9 @@ export default async function LabReportsPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Không đạt → NCR</div><div className="mt-1 text-2xl font-bold text-rose-700">{fail}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Kết quả thí nghiệm ({total})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {total === 0 ? (
@@ -72,6 +77,7 @@ export default async function LabReportsPage() {
                   <th className="p-2 text-left">Kết quả vs spec</th>
                   <th className="p-2 text-left">Lot</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -80,7 +86,7 @@ export default async function LabReportsPage() {
                   const params = r.parameters as Record<string, number> | null;
                   const spec = r.specRequired as Record<string, string> | null;
                   return (
-                    <tr key={r.id} className={`hover:bg-slate-50 align-top ${r.result === "FAIL" ? "bg-rose-50" : ""}`}>
+                    <tr key={r.id} className={`hover:bg-slate-50 align-top ${r.result === "FAIL" ? "bg-rose-50" : ""}`} data-testid={`sample-${r.sampleCode}`}>
                       <td className="p-2 font-mono text-xs">{r.sampleCode}</td>
                       <td className="p-2 text-xs">{typeLabel[r.sampleType]}<div className="text-[10px] text-slate-500">{r.testMethod}</div></td>
                       <td className="p-2 text-xs">{formatDateVn(r.sampledAt)}<div className="text-[10px] text-slate-500">{r.sampledBy}</div></td>
@@ -95,7 +101,8 @@ export default async function LabReportsPage() {
                         ))}
                       </td>
                       <td className="p-2 text-xs">{r.materialLot ? <span className="font-mono">{r.materialLot.lotCode}</span> : "—"}</td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge>{r.ncrId && <div className="text-[10px] text-rose-700 mt-0.5">NCR auto-tạo</div>}</td>
+                      <td className="p-2" data-testid={`state-${r.sampleCode}`}><Badge variant={meta.variant}>{meta.vn}</Badge>{r.ncrId && <div className="text-[10px] text-rose-700 mt-0.5">NCR auto-tạo</div>}</td>
+                      <td className="p-2"><ResultActions id={r.id} result={r.result} /></td>
                     </tr>
                   );
                 })}
