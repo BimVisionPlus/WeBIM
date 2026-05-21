@@ -169,6 +169,14 @@ const aecPlatformModules = [
     group: "Pháp lý",
   },
   {
+    name: "BondVault",
+    sub: "Bảo lãnh hợp đồng",
+    icon: "🏦",
+    desc: "BLTHHĐ + BL Tạm ứng + BLBH. Sync API BIDV/VCB/Techcombank/MB. Alert T-30 expiry, auto-release theo NĐ 06/2021 (12/24/60 tháng).",
+    href: `${APP}/bondvault`,
+    group: "Pháp lý",
+  },
+  {
     name: "PCCC",
     sub: "Phòng cháy chữa cháy",
     icon: "🧯",
@@ -260,7 +268,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            30 mô-đun chạy thực — 2 suite, 1 tài khoản
+            31 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -295,7 +303,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 17 mô-đun
+                PM dọc cho nhà thầu VN · 18 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">

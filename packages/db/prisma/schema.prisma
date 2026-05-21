@@ -36,6 +36,7 @@ model Organization {
   auditEvents   AuditEvent[]
   bids          Bid[]
   paymentApps   PaymentApplication[] @relation("PaymentContractor")
+  contractBonds ContractBond[]       @relation("ContractBondContractor")
 }
 
 enum OrgType {
@@ -193,6 +194,7 @@ model Project {
   pcccApplications   PcccApplication[]
   paymentApps        PaymentApplication[]
   takeoffSheets      TakeoffSheet[]
+  contractBonds      ContractBond[]
 }
 
 enum ProjectStatus {
@@ -831,6 +833,50 @@ enum ResourceType {
   VL // Vật liệu
   NC // Nhân công
   M // Máy thi công
+}
+
+// ============================================================================
+//  BOND VAULT — Bảo lãnh hợp đồng (thực hiện HĐ + tạm ứng + bảo hành)
+//  Tách khỏi BidBond (gắn với Bid) — ContractBond gắn với Project sau khi
+//  ký HĐ. Sync API ngân hàng BIDV/VCB/Techcom + auto-release theo lịch
+//  warrantyMonths (NĐ 06/2021: 12 phụ / 24 chính / 60 hạ tầng).
+// ============================================================================
+
+model ContractBond {
+  id              String        @id @default(cuid())
+  projectId       String
+  contractorOrgId String? // bên được bảo lãnh
+  type            BondType // BAO_LANH_THUC_HIEN / BAO_LANH_TAM_UNG / BAO_LANH_BAO_HANH
+  bondNumber      String // "BL-VCB-2026-04221"
+  issuerBank      String // "Vietcombank", "BIDV", "Techcombank", "MB"
+  beneficiary     String // "Công ty CP Vinhomes" — bên thụ hưởng
+  amountVnd       BigInt
+  pctOfContract   Decimal?      @db.Decimal(6, 3) // 5%, 10%, 30% etc
+  contractRef     String? // số HĐ kinh tế
+  contractValueVnd BigInt?
+  issuedAt        DateTime
+  effectiveFrom   DateTime
+  expiresAt       DateTime // ngày hết hạn tự động — alert T-30/T-7
+  status          BondStatus    @default(ACTIVE)
+  releasedAt      DateTime?
+  releasedNote    String?
+  claimedAt       DateTime? // bị bồi thường (call bond)
+  claimedAmountVnd BigInt?
+  feeVnd          BigInt? // phí bảo lãnh (NT trả ngân hàng)
+  feeRate         Decimal?      @db.Decimal(6, 4) // %/năm
+  bankApiSyncedAt DateTime? // lần sync cuối với API ngân hàng
+  bankApiStatus   String? // ACTIVE / VOIDED / CALLED
+  fileUrl         String? // PDF cam kết bảo lãnh
+  notes           String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contractorOrg Organization? @relation("ContractBondContractor", fields: [contractorOrgId], references: [id])
+
+  @@unique([projectId, bondNumber])
+  @@index([projectId, type, status])
+  @@index([status, expiresAt]) // alert T-30 expiry sweep
 }
 
 // ============================================================================
