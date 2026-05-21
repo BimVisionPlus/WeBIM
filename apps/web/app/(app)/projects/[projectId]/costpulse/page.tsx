@@ -1,6 +1,7 @@
 import { prisma } from "@atlas/db";
 import { Card, CardBody, CardHeader, CardTitle, Badge, stateBadgeVariant } from "@atlas/ui";
 import { formatVnd, formatVndShort, formatDateVn, computeEvm, severityFromEvm } from "@atlas/lib";
+import { BoQLineEdit } from "@/components/boq-line-edit";
 
 export const dynamic = "force-dynamic";
 
@@ -115,13 +116,14 @@ export default async function CostPulsePage({ params }: { params: { projectId: s
                   <th className="p-2 text-right">Đơn giá</th>
                   <th className="p-2 text-right">Thành tiền</th>
                   <th className="p-2 text-center">% xong</th>
+                  <th className="p-2 text-right">Sửa</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {boq.lines.map((l) => {
                   const pct = l.qty > 0 ? Math.round((l.qtyCompleted / l.qty) * 100) : 0;
                   return (
-                    <tr key={l.id} className="hover:bg-slate-50">
+                    <tr key={l.id} className="relative hover:bg-slate-50">
                       <td className="p-2 font-mono text-xs">{l.code}</td>
                       <td className="p-2">{l.description}</td>
                       <td className="p-2 text-center">{l.unit}</td>
@@ -138,6 +140,20 @@ export default async function CostPulsePage({ params }: { params: { projectId: s
                           </div>
                           <span className="text-[11px] text-slate-500">{pct}%</span>
                         </div>
+                      </td>
+                      <td className="relative p-2 text-right">
+                        <BoQLineEdit
+                          line={{
+                            id: l.id,
+                            code: l.code,
+                            description: l.description,
+                            unit: l.unit,
+                            qty: l.qty,
+                            qtyCompleted: l.qtyCompleted,
+                            unitPriceVnd: l.unitPriceVnd.toString(),
+                            category: l.category,
+                          }}
+                        />
                       </td>
                     </tr>
                   );

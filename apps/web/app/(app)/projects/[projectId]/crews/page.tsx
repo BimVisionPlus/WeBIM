@@ -1,6 +1,7 @@
 import { prisma } from "@atlas/db";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
+import { CrewCreateButton, CrewRowEdit } from "@/components/crew-edit";
 
 export const dynamic = "force-dynamic";
 
@@ -42,11 +43,14 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Crews — Look-ahead 2 tuần</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Phân công tổ đội theo ca/ngày. Kanban-style: kéo card sang trạng thái mới (UI sắp tới).
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Crews — Look-ahead 2 tuần</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Phân công tổ đội theo ca/ngày. Kanban-style: kéo card sang trạng thái mới (UI sắp tới).
+          </p>
+        </div>
+        <CrewCreateButton projectId={params.projectId} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -96,16 +100,29 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
                   <th className="p-3 text-left">Tổ trưởng</th>
                   <th className="p-3 text-center">Quân số</th>
                   <th className="p-3 text-center">Việc 2 tuần</th>
+                  <th className="p-3 text-right">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {crews.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50">
-                    <td className="p-3 font-medium">{c.name}</td>
-                    <td className="p-3"><Badge variant="neutral">{c.trade}</Badge></td>
-                    <td className="p-3 text-slate-700">{c.foremanName ?? "—"}</td>
-                    <td className="p-3 text-center">{c.headcount}</td>
-                    <td className="p-3 text-center">{assignments.filter((a) => a.crewId === c.id).length}</td>
+                    <td className="p-3 align-top font-medium">{c.name}</td>
+                    <td className="p-3 align-top"><Badge variant="neutral">{c.trade}</Badge></td>
+                    <td className="p-3 align-top text-slate-700">{c.foremanName ?? "—"}</td>
+                    <td className="p-3 align-top text-center">{c.headcount}</td>
+                    <td className="p-3 align-top text-center">{assignments.filter((a) => a.crewId === c.id).length}</td>
+                    <td className="p-3 align-top text-right">
+                      <CrewRowEdit
+                        crew={{
+                          id: c.id,
+                          name: c.name,
+                          trade: c.trade,
+                          foremanName: c.foremanName,
+                          headcount: c.headcount,
+                          active: c.active,
+                        }}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

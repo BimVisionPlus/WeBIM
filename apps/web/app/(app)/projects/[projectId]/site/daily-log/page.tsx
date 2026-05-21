@@ -2,6 +2,7 @@ import { prisma } from "@atlas/db";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { DailyLogForm } from "./form";
+import { DailyLogControls } from "@/components/daily-log-controls";
 
 export default async function DailyLogPage({ params }: { params: { projectId: string } }) {
   const logs = await prisma.dailyLog.findMany({
@@ -32,9 +33,19 @@ export default async function DailyLogPage({ params }: { params: { projectId: st
                 </CardTitle>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <span>{l.weather}</span>
-                  <Badge variant={l.signedAt ? "success" : "warning"}>
-                    {l.signedAt ? "Đã ký" : "Chưa ký"}
-                  </Badge>
+                  <DailyLogControls
+                    log={{
+                      id: l.id,
+                      weather: l.weather,
+                      workforce: Array.isArray(l.workforce) ? (l.workforce as { trade: string; count: number }[]) : [],
+                      workDone: l.workDone,
+                      workTomorrow: l.workTomorrow,
+                      safetyNotes: l.safetyNotes,
+                      signoffByCdtId: l.signoffByCdtId,
+                      signoffByGsId: l.signoffByGsId,
+                      signedAt: l.signedAt ? l.signedAt.toISOString() : null,
+                    }}
+                  />
                 </div>
               </div>
             </CardHeader>

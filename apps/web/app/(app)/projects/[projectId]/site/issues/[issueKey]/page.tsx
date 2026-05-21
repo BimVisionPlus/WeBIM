@@ -8,6 +8,7 @@ import { CommentForm } from "@/components/comment-form";
 import { AiRfiPanel } from "@/components/ai-rfi-panel";
 import { RfiAnswerForm } from "@/components/rfi-answer-form";
 import { AiNcrPanel } from "@/components/ai-ncr-panel";
+import { IssueEditForm } from "@/components/issue-edit-form";
 
 const TYPE_TO_WF: Partial<Record<string, WorkflowKey>> = {
   RFI: "RFI",
@@ -231,6 +232,19 @@ export default async function IssueDetail({
             <Field label="Phụ trách" value={issue.assignee?.name} />
             <Field label="Vị trí" value={issue.locationZone} />
             <Field label="Hạn xử lý" value={issue.dueDate ? formatDateTimeVn(issue.dueDate) : null} />
+            <IssueEditForm
+              issue={{
+                key: issue.key,
+                title: issue.title,
+                description: issue.description,
+                priority: issue.priority as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+                assigneeId: issue.assigneeId,
+                assigneeName: issue.assignee?.name ?? null,
+                dueDate: issue.dueDate ? issue.dueDate.toISOString() : null,
+                locationZone: issue.locationZone,
+              }}
+              members={await loadProjectMembers(issue.projectId)}
+            />
           </CardBody>
         </Card>
 
@@ -258,4 +272,23 @@ function Field({ label, value }: { label: string; value: string | null | undefin
       <div className="col-span-2 text-sm text-slate-700">{value ?? "—"}</div>
     </div>
   );
+}
+
+// Members of the project's owning org — used to populate the IssueEditForm
+// assignee dropdown. Goes through Membership (User has no direct orgId;
+// it's a many-to-many). Cap at 200 (a single-org dropdown above that
+// needs a search box, which is a different UX problem).
+async function loadProjectMembers(projectId: string): Promise<{ id: string; name: string }[]> {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { ownerOrgId: true },
+  });
+  if (!project) return [];
+  const memberships = await prisma.membership.findMany({
+    where: { orgId: project.ownerOrgId },
+    include: { user: { select: { id: true, name: true } } },
+    orderBy: { user: { name: "asc" } },
+    take: 200,
+  });
+  return memberships.map((m) => ({ id: m.user.id, name: m.user.name ?? "(không tên)" }));
 }

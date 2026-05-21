@@ -1,6 +1,7 @@
 import { prisma } from "@atlas/db";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn, relativeDateVn } from "@atlas/lib";
+import { HandoverStateEdit } from "@/components/handover-state-edit";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +130,7 @@ export default async function HandoverPage({ params }: { params: { projectId: st
                   <th className="p-2 text-left">Trạng thái</th>
                   <th className="p-2 text-left">SLA</th>
                   <th className="p-2 text-left">Bảo hành</th>
+                  <th className="p-2 text-left">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -136,23 +138,35 @@ export default async function HandoverPage({ params }: { params: { projectId: st
                   const slaOverdue = t.slaDueAt && t.slaDueAt.getTime() < now && !["VERIFIED", "REJECTED", "CLOSED"].includes(t.state);
                   return (
                     <tr key={t.id} className="hover:bg-slate-50">
-                      <td className="p-2 font-mono text-xs">{t.ticketNumber}</td>
-                      <td className="p-2 text-xs">{t.unitCode ?? "—"}</td>
-                      <td className="p-2 text-xs"><Badge variant="neutral">{categoryLabel[t.category]}</Badge></td>
-                      <td className="p-2 text-center"><Badge variant={sevVariant[t.severity]}>{t.severity}</Badge></td>
-                      <td className="p-2">
+                      <td className="p-2 align-top font-mono text-xs">{t.ticketNumber}</td>
+                      <td className="p-2 align-top text-xs">{t.unitCode ?? "—"}</td>
+                      <td className="p-2 align-top text-xs"><Badge variant="neutral">{categoryLabel[t.category]}</Badge></td>
+                      <td className="p-2 align-top text-center"><Badge variant={sevVariant[t.severity]}>{t.severity}</Badge></td>
+                      <td className="p-2 align-top">
                         <div className="font-medium">{t.title}</div>
                         <div className="text-[11px] text-slate-500">Báo: {t.reporterName}{t.reporterPhone ? ` · ${t.reporterPhone}` : ""}</div>
                       </td>
-                      <td className="p-2"><Badge variant={stateLabel[t.state]?.variant}>{stateLabel[t.state]?.vn}</Badge></td>
-                      <td className="p-2 text-xs">
+                      <td className="p-2 align-top"><Badge variant={stateLabel[t.state]?.variant}>{stateLabel[t.state]?.vn}</Badge></td>
+                      <td className="p-2 align-top text-xs">
                         {t.slaDueAt ? (
                           <span className={slaOverdue ? "text-rose-700" : "text-slate-600"}>
                             {relativeDateVn(t.slaDueAt)}
                           </span>
                         ) : "—"}
                       </td>
-                      <td className="p-2 text-[11px] text-slate-500">{warrantyLabel[t.warrantyType]}</td>
+                      <td className="p-2 align-top text-[11px] text-slate-500">{warrantyLabel[t.warrantyType]}</td>
+                      <td className="p-2 align-top">
+                        <HandoverStateEdit
+                          ticket={{
+                            id: t.id,
+                            ticketNumber: t.ticketNumber,
+                            state: t.state as any,
+                            severity: t.severity as any,
+                            title: t.title,
+                            description: t.description,
+                          }}
+                        />
+                      </td>
                     </tr>
                   );
                 })}
