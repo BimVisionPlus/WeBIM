@@ -16,6 +16,11 @@ COPY packages/lib/package.json packages/lib/
 COPY packages/ui/package.json packages/ui/
 COPY packages/auth/package.json packages/auth/
 COPY packages/workflows/package.json packages/workflows/
+# `@atlas/ai` is pulled transitively by apps/web. Without its package.json
+# in this stage, pnpm install doesn't register the workspace symlink, so
+# the builder stage fails with "Cannot find module '@atlas/lib'" the first
+# time @atlas/ai's source files (which import @atlas/lib) are type-checked.
+COPY packages/ai/package.json packages/ai/
 RUN pnpm install --frozen-lockfile
 
 # ─── builder ───
