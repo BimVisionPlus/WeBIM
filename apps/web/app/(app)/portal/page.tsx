@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, DecideActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,8 @@ export default async function ClientPortalPage() {
     take: 30,
   });
 
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
+
   const pending = requests.filter((r) => r.state === "PENDING" || r.state === "IN_REVIEW").length;
   const urgent = requests.filter((r) => (r.state === "PENDING" || r.state === "IN_REVIEW") && r.priority === "URGENT").length;
   const approved7d = requests.filter((r) => r.state === "APPROVED" && r.decidedAt && (Date.now() - r.decidedAt.getTime()) < 7 * 86400000).length;
@@ -117,7 +120,9 @@ export default async function ClientPortalPage() {
         </CardBody>
       </Card>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Hàng đợi duyệt ({pending} chờ / {requests.length} tổng)</CardTitle></CardHeader>
         <CardBody className="p-0">
           {requests.length === 0 ? (
@@ -133,6 +138,7 @@ export default async function ClientPortalPage() {
                   <th className="p-2 text-left">Ưu tiên</th>
                   <th className="p-2 text-left">Hạn</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -141,14 +147,15 @@ export default async function ClientPortalPage() {
                   const pm = priorityLabel[r.priority] ?? { vn: r.priority, variant: "neutral" as const };
                   const stm = stateLabel[r.state] ?? { vn: r.state, variant: "neutral" as const };
                   return (
-                    <tr key={r.id} className={`hover:bg-slate-50 ${r.priority === "URGENT" && r.state === "PENDING" ? "bg-rose-50" : ""}`}>
+                    <tr key={r.id} className={`hover:bg-slate-50 ${r.priority === "URGENT" && r.state === "PENDING" ? "bg-rose-50" : ""}`} data-testid={`req-${r.id}`}>
                       <td className="p-2 text-xs">{sm.icon} {sm.vn}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{r.project.key}</td>
                       <td className="p-2 text-xs"><div className="font-medium">{r.title}</div><div className="text-[10px] text-slate-500 line-clamp-1">{r.summary}</div></td>
                       <td className="p-2 text-right text-xs">{r.amountVnd ? formatVnd(r.amountVnd) : "—"}</td>
                       <td className="p-2"><Badge variant={pm.variant}>{pm.vn}</Badge></td>
                       <td className="p-2 text-xs">{r.dueAt ? formatDateVn(r.dueAt) : "—"}</td>
-                      <td className="p-2"><Badge variant={stm.variant}>{stm.vn}</Badge></td>
+                      <td className="p-2" data-testid={`state-${r.id}`}><Badge variant={stm.variant}>{stm.vn}</Badge></td>
+                      <td className="p-2"><DecideActions id={r.id} state={r.state} /></td>
                     </tr>
                   );
                 })}
