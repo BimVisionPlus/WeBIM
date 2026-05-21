@@ -217,6 +217,14 @@ const aecPlatformModules = [
     group: "Thi công",
   },
   {
+    name: "VolumeMeter",
+    sub: "Bóc khối lượng QTO",
+    icon: "📐",
+    desc: "Bóc khối lượng theo TT 13/2021 — auto-takeoff IFC/Revit qua IfcOpenShell. So sánh 3 cột: dự toán ↔ thi công ↔ hoàn công.",
+    href: `${APP}/volumemeter`,
+    group: "Thi công",
+  },
+  {
     name: "Handover",
     sub: "Bàn giao + sổ tay vận hành",
     icon: "🛠",
@@ -244,7 +252,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            28 mô-đun chạy thực — 2 suite, 1 tài khoản
+            29 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -279,7 +287,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 15 mô-đun
+                PM dọc cho nhà thầu VN · 16 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">

@@ -192,6 +192,7 @@ model Project {
   permitApplications PermitApplication[]
   pcccApplications   PcccApplication[]
   paymentApps        PaymentApplication[]
+  takeoffSheets      TakeoffSheet[]
 }
 
 enum ProjectStatus {
@@ -522,8 +523,9 @@ model Model {
   uploadedByUserId       String
   uploadedAt             DateTime          @default(now())
 
-  project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  elements ModelElement[]
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  elements      ModelElement[]
+  takeoffSheets TakeoffSheet[]
 
   @@index([projectId, discipline])
 }
@@ -692,6 +694,66 @@ enum PaymentFundSource {
   DOANH_NGHIEP // Vốn doanh nghiệp tư nhân
   FDI // Vốn đầu tư nước ngoài
   HON_HOP // Hỗn hợp
+}
+
+// ============================================================================
+//  VOLUME METER — Bóc khối lượng (TT 13/2021/TT-BXD)
+//  3-cột so sánh: dự toán (BoQ) ↔ thi công (đo thực) ↔ hoàn công (as-built).
+//  Auto-takeoff từ IFC/RVT khi có Forge; bổ sung thủ công khi không.
+// ============================================================================
+
+model TakeoffSheet {
+  id          String           @id @default(cuid())
+  projectId   String
+  code        String // "QTO-VHGP-S9-MONG-001"
+  title       String
+  scope       String // "Móng cọc trục A-F", "Cốt thép tầng 12"
+  source      TakeoffSource    @default(MANUAL)
+  modelId     String? // link Model nếu auto từ IFC
+  state       String // DRAFT, NT_SUBMITTED, TVGS_VERIFIED, CDT_APPROVED
+  totalLines  Int              @default(0)
+  totalValue  BigInt           @default(0) // tổng giá trị (VND) = sum(qtyExecuted * unitPriceVnd)
+  ntSubmittedAt   DateTime?
+  tvgsVerifiedAt  DateTime?
+  cdtApprovedAt   DateTime?
+  notes       String?          @db.Text
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  model   Model?         @relation(fields: [modelId], references: [id])
+  lines   TakeoffLine[]
+
+  @@unique([projectId, code])
+  @@index([projectId, state])
+}
+
+model TakeoffLine {
+  id              String         @id @default(cuid())
+  sheetId         String
+  seq             Int // số thứ tự
+  workCode        String? // mã định mức AB.xxxxx theo định mức 10/2019
+  description     String         @db.Text
+  unit            String // "m3", "m2", "kg", "tấn", "cái"
+  qtyEstimated    Decimal        @db.Decimal(18, 4) // KL dự toán (BoQ)
+  qtyExecuted     Decimal        @db.Decimal(18, 4) // KL thi công đo thực
+  qtyAsBuilt      Decimal?       @db.Decimal(18, 4) // KL hoàn công (sau bàn giao)
+  unitPriceVnd    BigInt // đơn giá VND/đơn vị
+  ifcElementId    String? // GlobalId IFC nếu auto-takeoff
+  csiCode         String? // MasterFormat CSI (cross-reference)
+  notes           String?
+
+  sheet TakeoffSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+
+  @@unique([sheetId, seq])
+  @@index([workCode])
+}
+
+enum TakeoffSource {
+  MANUAL // Bóc thủ công từ bản vẽ
+  IFC_AUTO // Auto-takeoff từ IFC (Forge / IfcOpenShell)
+  HYBRID // IFC + bổ sung thủ công
+  IMPORTED // Import từ Excel/CSV
 }
 
 // ============================================================================
