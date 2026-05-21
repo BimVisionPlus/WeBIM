@@ -25,6 +25,12 @@ jobs:
       DATABASE_URL: postgresql://atlas:atlas@localhost:5432/atlas_aec?schema=public
       AUTH_SECRET: test-secret-test-secret-test-secret-32x
       AUTH_URL: http://localhost:3000
+      # NextAuth refuses to set cookies / generate csrf tokens when host
+      # mismatches AUTH_URL unless told to trust the host. CI uses plain
+      # http://localhost:3000 (no proxy), which v5 flags as suspicious in
+      # production builds — leading to a 301 on /api/auth/csrf and a
+      # cascade failure across the entire smoke-flow.
+      AUTH_TRUST_HOST: "true"
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
       S3_ENDPOINT: http://localhost:9000
       S3_ACCESS_KEY: test

@@ -18,15 +18,27 @@ export function middleware(req: NextRequest) {
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
 
-  // Force HTTPS in prod.
+  // Force HTTPS in prod — but only for real public hosts. Localhost and
+  // private/loopback ranges are never reachable from the internet, so
+  // redirecting them to https just breaks `next start` smoke tests in CI
+  // (which run NODE_ENV=production on http://localhost:3000 and otherwise
+  // get a 301 chain on every request, breaking NextAuth's csrf bootstrap).
   if (process.env.NODE_ENV === "production") {
-    const proto = req.headers.get("x-forwarded-proto");
-    if (proto && proto !== "https") {
-      const url = req.nextUrl.clone();
-      url.protocol = "https:";
-      return NextResponse.redirect(url, 301);
+    const host = req.headers.get("host") ?? "";
+    const isLocal =
+      host.startsWith("localhost") ||
+      host.startsWith("127.0.0.1") ||
+      host.startsWith("0.0.0.0") ||
+      host.startsWith("[::1]");
+    if (!isLocal) {
+      const proto = req.headers.get("x-forwarded-proto");
+      if (proto && proto !== "https") {
+        const url = req.nextUrl.clone();
+        url.protocol = "https:";
+        return NextResponse.redirect(url, 301);
+      }
+      res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
     }
-    res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
   }
 
   return res;
