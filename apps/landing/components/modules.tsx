@@ -225,6 +225,14 @@ const aecPlatformModules = [
     group: "Pháp lý",
   },
   {
+    name: "DocChat-VN",
+    sub: "RAG bge-m3 + Qwen2.5",
+    icon: "🤖",
+    desc: "Q&A tiếng Việt qua hồ sơ DA (HĐ/BBNT/CV QLNN/TCVN/BPTC). 100% OSS local: bge-m3 + Qwen2.5-14B Ollama + pgvector. Citation về điều khoản.",
+    href: `${APP}/docchat`,
+    group: "Pháp lý",
+  },
+  {
     name: "WorkforceHub",
     sub: "Nhân lực + face match",
     icon: "🪪",
@@ -380,7 +388,7 @@ export function Modules() {
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            45 mô-đun chạy thực — 2 suite, 1 tài khoản
+            46 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-400">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
@@ -415,7 +423,7 @@ export function Modules() {
             <h3 className="text-xl font-semibold text-white">
               aec-platform{" "}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                PM dọc cho nhà thầu VN · 32 mô-đun
+                PM dọc cho nhà thầu VN · 33 mô-đun
               </span>
             </h3>
             <span className="text-[11px] font-medium text-blue-400">

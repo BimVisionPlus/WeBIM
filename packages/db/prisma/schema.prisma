@@ -224,6 +224,7 @@ model Project {
   consultantContracts ConsultantContract[]
   agencyDocs         AgencyDocument[]
   agencyAppts        AgencyAppointment[]
+  docCorpus          DocCorpus[]
 }
 
 enum ProjectStatus {
@@ -1839,6 +1840,82 @@ enum AgencyType {
 enum DocDirection {
   INCOMING // Văn bản đến (từ QLNN gửi cho DA)
   OUTGOING // Văn bản đi (DA gửi cho QLNN)
+}
+
+// ============================================================================
+//  DOC CHAT VN — RAG Q&A tiếng Việt cho toàn bộ hồ sơ dự án
+//  Stack OSS: bge-m3 embedding (1024-dim) + Qwen2.5-14B-Instruct local +
+//  Postgres pgvector (sau khi corpus đủ lớn). Citation về điều khoản gốc.
+// ============================================================================
+
+model DocCorpus {
+  id          String        @id @default(cuid())
+  projectId   String?
+  orgId       String? // global vs project vs org
+  sourceType  CorpusSource
+  sourceId    String? // ID bản ghi gốc (SpecPage, RFI, BBNT, công văn…)
+  sourceUrl   String? // S3 key của file gốc
+  title       String
+  body        String        @db.Text // full text (sau OCR nếu PDF)
+  language    String        @default("vi")
+  chunkCount  Int           @default(0)
+  indexed     Boolean       @default(false)
+  indexedAt   DateTime?
+  embedModel  String? // "bge-m3"
+  llmRedacted Boolean       @default(false) // đã redact PII
+  metadata    Json? // {docNo, docDate, tcvnRefs, ...}
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  project Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chunks  DocChunk[]
+
+  @@index([projectId, sourceType])
+  @@index([indexed])
+}
+
+model DocChunk {
+  id          String     @id @default(cuid())
+  corpusId    String
+  seq         Int
+  text        String     @db.Text
+  embedding   Bytes? // bge-m3 1024-dim Float32 → 4096 bytes. Migrate pgvector when corpus > 10k.
+  tokenCount  Int?
+  pageNo      Int?
+  spanStart   Int? // ký tự start trong body gốc
+  spanEnd     Int?
+
+  corpus DocCorpus @relation(fields: [corpusId], references: [id], onDelete: Cascade)
+
+  @@index([corpusId])
+}
+
+model DocChatQuery {
+  id          String       @id @default(cuid())
+  projectId   String?
+  userId      String? // người hỏi
+  question    String       @db.Text
+  answer      String?      @db.Text
+  citations   Json? // [{corpusId, chunkId, score, snippet}]
+  modelUsed   String? // "qwen2.5-14b-instruct"
+  latencyMs   Int?
+  feedback    Int? // -1, 0, +1
+  createdAt   DateTime     @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([userId, createdAt])
+}
+
+enum CorpusSource {
+  HOP_DONG // Hợp đồng
+  BBNT // Biên bản nghiệm thu
+  CV_QLNN // Công văn QLNN
+  THIET_KE // Hồ sơ thiết kế
+  TCVN // TCVN/QCVN
+  BPTC // Biện pháp thi công
+  RFI // RFI
+  EMAIL // Email
+  KHAC
 }
 
 // ============================================================================
