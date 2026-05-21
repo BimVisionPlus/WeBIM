@@ -222,6 +222,8 @@ model Project {
   approvalRequests   ApprovalRequest[]
   consultantTimes    ConsultantTimesheet[]
   consultantContracts ConsultantContract[]
+  agencyDocs         AgencyDocument[]
+  agencyAppts        AgencyAppointment[]
 }
 
 enum ProjectStatus {
@@ -1755,6 +1757,88 @@ enum ConsultantType {
   TVTM // Tư vấn thẩm tra
   TVDT // Tư vấn đấu thầu
   KHAC
+}
+
+// ============================================================================
+//  STAKEHOLDER MAP — Đối ngoại cơ quan QLNN
+//  Sở XD / QHKT / KBNN / PC07 / UBND — lịch hẹn + văn bản đi-đến + hồ sơ pháp lý.
+// ============================================================================
+
+model GovAgency {
+  id          String   @id @default(cuid())
+  code        String   @unique // "SXD-HCM", "PC07-HCM"
+  name        String
+  agencyType  AgencyType
+  level       String? // "Trung ương", "Tỉnh/TP", "Quận/Huyện"
+  province    String?
+  address     String?
+  contactPhone String?
+  contactEmail String?
+  notes       String? @db.Text
+
+  documents    AgencyDocument[]
+  appointments AgencyAppointment[]
+}
+
+model AgencyDocument {
+  id          String         @id @default(cuid())
+  agencyId    String
+  projectId   String?
+  direction   DocDirection // INCOMING (from agency) / OUTGOING (to agency)
+  docNo       String // "VB 1234/SXD-CCXD"
+  docDate     DateTime
+  subject     String
+  body        String?        @db.Text
+  category    String? // "Giấy phép", "Văn bản chỉ đạo", "Yêu cầu báo cáo"
+  fileUrl     String?
+  status      String? // "Đang xử lý", "Đã trả lời", "Đã hoàn thành"
+  dueAt       DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime       @default(now())
+
+  agency  GovAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  project Project?  @relation(fields: [projectId], references: [id])
+
+  @@index([agencyId, docDate])
+  @@index([projectId])
+  @@index([status])
+}
+
+model AgencyAppointment {
+  id        String   @id @default(cuid())
+  agencyId  String
+  projectId String?
+  scheduledAt DateTime
+  duration  Int      @default(60) // phút
+  purpose   String
+  attendees String?  @db.Text
+  location  String?
+  status    String   @default("SCHEDULED") // SCHEDULED / DONE / CANCELLED
+  outcome   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  agency  GovAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  project Project?  @relation(fields: [projectId], references: [id])
+
+  @@index([agencyId, scheduledAt])
+}
+
+enum AgencyType {
+  BO_XAY_DUNG // Bộ XD
+  SO_XAY_DUNG // Sở XD
+  SO_QHKT // Sở Quy hoạch Kiến trúc
+  SO_TNMT // Sở TNMT
+  SO_CONG_THUONG // Sở CT
+  KBNN // Kho bạc NN
+  CONG_AN_PCCC // PC07 phòng cháy
+  UBND // UBND tỉnh/quận/huyện/xã
+  CO_QUAN_THUE
+  KHAC
+}
+
+enum DocDirection {
+  INCOMING // Văn bản đến (từ QLNN gửi cho DA)
+  OUTGOING // Văn bản đi (DA gửi cho QLNN)
 }
 
 // ============================================================================
