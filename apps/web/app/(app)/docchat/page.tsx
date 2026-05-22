@@ -3,6 +3,7 @@ import { prisma } from "@atlas/db";
 import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { IndexForm } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,9 @@ export default async function DocChatPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Câu hỏi 7 ngày</div><div className="mt-1 text-2xl font-bold text-violet-700">{recentQueries.length}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><IndexForm /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Hỏi tài liệu bằng tiếng Việt</CardTitle></CardHeader>
         <CardBody>
           <form action="/api/docchat" method="post" className="space-y-3">
