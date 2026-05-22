@@ -11,6 +11,9 @@ test("dinhmuc: create custom norm + update price via API", async ({ page, reques
   await form.locator('input[name="title"]').fill(`E2E custom norm ${TS}`);
   await page.getByTestId("submit-create").click();
 
+  // Wait for the create POST to fully complete — form closes on success.
+  await expect(page.getByTestId("dinhmuc-create-form")).toBeHidden({ timeout: 10_000 });
+
   // Verify via API: norm exists with correct code + source = CUSTOM
   const lookup = await request.get(`/api/dinhmuc?code=${CODE}`);
   expect(lookup.ok()).toBe(true);
