@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm, MeasureAction } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export default async function MonitorWatchPage() {
     orderBy: [{ monitorType: "asc" }, { pointCode: "asc" }],
     take: 100,
   });
+
+  const accessibleProjects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } });
 
   const recentAlerts = await prisma.monitorMeasurement.findMany({
     where: { alertLevel: { in: ["WARN", "ALERT"] }, point: { project: projectFilter } },
@@ -92,7 +95,9 @@ export default async function MonitorWatchPage() {
         </Card>
       )}
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Điểm quan trắc ({totalPoints})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {totalPoints === 0 ? (
@@ -108,6 +113,7 @@ export default async function MonitorWatchPage() {
                   <th className="p-2 text-right">Giá trị hiện tại</th>
                   <th className="p-2 text-right">Ngưỡng cảnh báo</th>
                   <th className="p-2 text-left">Mức</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -116,14 +122,15 @@ export default async function MonitorWatchPage() {
                   const level = last?.alertLevel ?? "NORMAL";
                   const lm = levelLabel[level] ?? { vn: level, variant: "neutral" as const };
                   return (
-                    <tr key={p.id} className={`hover:bg-slate-50 ${level === "ALERT" ? "bg-rose-50" : level === "WARN" ? "bg-amber-50" : ""}`}>
+                    <tr key={p.id} className={`hover:bg-slate-50 ${level === "ALERT" ? "bg-rose-50" : level === "WARN" ? "bg-amber-50" : ""}`} data-testid={`point-${p.pointCode}`}>
                       <td className="p-2 font-mono text-xs">{p.pointCode}</td>
                       <td className="p-2 text-xs">{typeLabel[p.monitorType]}</td>
                       <td className="p-2 text-xs font-mono text-slate-600">{p.project.key}</td>
                       <td className="p-2 text-xs">{p.description ?? "—"}</td>
                       <td className="p-2 text-right text-xs font-medium">{last ? `${Number(last.value).toFixed(2)} ${p.unit}` : "—"}{last && <div className="text-[10px] text-slate-500">{formatDateVn(last.measuredAt)}</div>}</td>
                       <td className="p-2 text-right text-xs text-slate-500">{p.thresholdWarn ? `W ${Number(p.thresholdWarn).toFixed(1)} / A ${Number(p.thresholdAlert).toFixed(1)} ${p.unit}` : "—"}</td>
-                      <td className="p-2"><Badge variant={lm.variant}>{lm.vn}</Badge></td>
+                      <td className="p-2" data-testid={`level-${p.pointCode}`}><Badge variant={lm.variant}>{lm.vn}</Badge></td>
+                      <td className="p-2"><MeasureAction id={p.id} /></td>
                     </tr>
                   );
                 })}
