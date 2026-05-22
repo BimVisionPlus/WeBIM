@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateDocForm, RespondAction } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function StakeholdersPage() {
     OR: [{ ownerOrgId: { in: orgIds } }, { stakeholders: { some: { orgId: { in: orgIds } } } }],
   };
 
-  const [agencies, docs, appts] = await Promise.all([
+  const [agencies, docs, appts, allProjects] = await Promise.all([
     prisma.govAgency.findMany({ include: { _count: { select: { documents: true, appointments: true } } }, orderBy: { name: "asc" } }),
     prisma.agencyDocument.findMany({
       where: { OR: [{ projectId: null }, { project: projectFilter }] },
@@ -42,7 +43,9 @@ export default async function StakeholdersPage() {
       orderBy: { scheduledAt: "asc" },
       take: 15,
     }),
+    prisma.project.findMany({ where: projectFilter, select: { id: true, key: true, name: true }, orderBy: { key: "asc" } }),
   ]);
+  const agencyOpts = agencies.map((a) => ({ id: a.id, code: a.code, name: a.name }));
 
   const pendingDocs = docs.filter((d) => d.status === "Đang xử lý" || (d.direction === "INCOMING" && !d.respondedAt)).length;
   const overdueDocs = docs.filter((d) => d.dueAt && d.dueAt < new Date() && !d.respondedAt).length;
@@ -61,7 +64,9 @@ export default async function StakeholdersPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Lịch hẹn sắp tới</div><div className="mt-1 text-2xl font-bold text-violet-700">{upcomingAppts}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateDocForm agencies={agencyOpts} projects={allProjects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Cơ quan QLNN ({agencies.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {agencies.length === 0 ? (
@@ -102,18 +107,19 @@ export default async function StakeholdersPage() {
             {docs.length === 0 ? <div className="p-6 text-center text-sm text-slate-500">Chưa có văn bản.</div> : (
               <table className="w-full text-sm">
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                  <tr><th className="p-2 text-left">Số</th><th className="p-2 text-left">Hướng</th><th className="p-2 text-left">Chủ đề</th><th className="p-2 text-left">Hạn</th></tr>
+                  <tr><th className="p-2 text-left">Số</th><th className="p-2 text-left">Hướng</th><th className="p-2 text-left">Chủ đề</th><th className="p-2 text-left">Hạn</th><th className="p-2 text-left">Thao tác</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {docs.map((d) => {
                     const dm = dirLabel[d.direction] ?? { vn: d.direction, variant: "neutral" as const };
                     const overdue = d.dueAt && d.dueAt < new Date() && !d.respondedAt;
                     return (
-                      <tr key={d.id} className={`hover:bg-slate-50 ${overdue ? "bg-rose-50" : ""}`}>
+                      <tr key={d.id} className={`hover:bg-slate-50 ${overdue ? "bg-rose-50" : ""}`} data-testid={`doc-${d.docNo}`}>
                         <td className="p-2 font-mono text-xs">{d.docNo}<div className="text-[10px] text-slate-500">{formatDateVn(d.docDate)}</div></td>
                         <td className="p-2"><Badge variant={dm.variant}>{dm.vn}</Badge></td>
                         <td className="p-2 text-xs"><div className="font-medium line-clamp-1">{d.subject}</div><div className="text-[10px] text-slate-500">{d.agency.name}</div></td>
                         <td className="p-2 text-xs">{d.dueAt ? <span className={overdue ? "text-rose-700" : ""}>{formatDateVn(d.dueAt)}</span> : "—"}</td>
+                        <td className="p-2"><RespondAction id={d.id} hasResponded={!!d.respondedAt} /></td>
                       </tr>
                     );
                   })}
