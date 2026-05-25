@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@atlas/db", "@atlas/ui", "@atlas/lib"],
+  // `output: standalone` builds the app into .next/standalone for Docker.
+  // Toggled via STANDALONE_BUILD=1 so Vercel/non-Docker hosts use the default.
+  ...(process.env.STANDALONE_BUILD === "1" ? { output: "standalone" } : {}),
   experimental: {
     // Same packages we mark external in @atlas/web — keeps Prisma's native
     // Query Engine binary out of Next's bundler and avoids the

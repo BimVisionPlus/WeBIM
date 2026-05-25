@@ -1,27 +1,48 @@
-# Atlas AEC — production docker-compose.
+# Atlas AEC — production docker-compose for aecplatform.vn.
 #
 # Boot with:
-#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+#   ./scripts/deploy.sh
+# or manually:
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 #
 # Assumes:
 #   - Managed Postgres + Redis (host names in DATABASE_URL / REDIS_URL)
-#   - S3 (AWS) bucket already provisioned, IAM creds in env
-#   - Caddy (or another TLS-terminating proxy) in front of :3000
+#   - S3 (AWS / R2 / DigitalOcean Spaces) bucket already provisioned
+#   - DNS A records: aecplatform.vn + app.aecplatform.vn + status.aecplatform.vn → VPS public IP
+#   - Ports 80 + 443 open on the VPS (Caddy terminates TLS via Let's Encrypt)
 #
-# Includes:
-#   - web      → Next.js (Layer 1-8 app)
-#   - worker   → cron jobs (scrape · bond-expiry · drift-snapshot)
-#   - scraper  → Python sidecar that POSTs to web/api/winwork/tenders/scrape
+# Services:
+#   - landing  → marketing site on aecplatform.vn (Next.js)
+#   - web      → Next.js app on app.aecplatform.vn (auth + 47 modules)
+#   - worker   → cron (bond-expiry · scrape · drift-snapshot)
+#   - scraper  → Python sidecar → muasamcong / dauthau.asia
+#   - caddy    → TLS reverse proxy (auto Let's Encrypt for 3 hostnames)
 
 services:
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    image: atlas-aec/landing:${VERSION:-latest}
+    env_file: .env.production
+    expose:
+      - "3001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
     image: atlas-aec/web:${VERSION:-latest}
     env_file: .env.production
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
@@ -53,3 +74,23 @@ services:
     depends_on:
       web:
         condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      landing:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:
