@@ -32,11 +32,12 @@ services:
       - "9001"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:9000/minio/health/live"]
-      interval: 30s
+      # MinIO image has curl, not wget. Unauth liveness endpoint.
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/minio/health/live"]
+      interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 20s
+      retries: 6
+      start_period: 10s
 
   # One-shot: create the 4 buckets on first boot if they don't exist.
   minio-init:

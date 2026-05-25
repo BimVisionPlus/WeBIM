@@ -6,7 +6,7 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@atlas/db", "@atlas/lib", "@atlas/ui", "@atlas/workflows", "@atlas/auth"],
   experimental: {
-    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs", "pino", "pino-pretty"],
+    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs", "pino", "pino-pretty", "ioredis"],
     outputFileTracingRoot: "../../",
     outputFileTracingIncludes: {
       "/**/*": [

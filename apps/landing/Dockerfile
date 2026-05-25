@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1.7
 # Multi-stage build for Atlas AEC landing (aecplatform.vn). Slim runtime (~220 MB).
 
-FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+FROM node:20-bookworm-slim AS base
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate && \
+    apt-get update && apt-get install -y --no-install-recommends wget && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # ─── deps ───
@@ -26,12 +28,13 @@ COPY --from=deps /app/packages ./packages
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV STANDALONE_BUILD=1
-RUN pnpm --filter @atlas/db generate
+RUN NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter @atlas/db generate
 RUN pnpm --filter @atlas/landing build
 
 # ─── runner ───
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates wget && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs

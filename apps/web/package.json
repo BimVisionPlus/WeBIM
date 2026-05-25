@@ -19,6 +19,7 @@
     "@atlas/workflows": "workspace:*",
     "@auth/prisma-adapter": "^2.7.0",
     "bcryptjs": "^2.4.3",
+    "ioredis": "^5.10.0",
     "next": "^14.2.0",
     "next-auth": "^4.24.7",
     "react": "^18.3.0",

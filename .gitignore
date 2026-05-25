@@ -13,3 +13,5 @@ playwright-report/
 test-results/
 apps/web/e2e/.auth.json
 e2e-screenshots/
+.env.production
+apps/web/tsconfig.tsbuildinfo
