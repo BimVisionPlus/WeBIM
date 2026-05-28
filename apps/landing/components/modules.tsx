@@ -90,7 +90,7 @@ const atlasModules = [
     sub: "Trello",
     icon: "👷",
     desc: "Kanban look-ahead 1-2 tuần. Phân công tổ đội, theo dõi tiến độ ca/ngày, tích hợp Daily Log.",
-    href: `${APP}/`,
+    href: `${APP}/crews`,
   },
   {
     name: "Catalog",

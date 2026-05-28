@@ -72,7 +72,7 @@ export default async function CostPulseOrgPage() {
           <CardHeader><CardTitle>BoQ đang dùng ({boqs.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {boqs.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa có BoQ. Tải lên qua /winwork hoặc API.</div>
+              <div className="p-8 text-center text-sm text-slate-500">Chưa có bảng khối lượng (BoQ). Tạo BoQ từ mục Đấu thầu (WinWork) hoặc bóc khối lượng từ mục VolumeMeter.</div>
             ) : (
               <ul className="divide-y divide-slate-100">
                 {boqs.map((b) => {

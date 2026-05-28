@@ -76,8 +76,8 @@ export default async function HandoverOrgPage() {
         <CardBody className="p-0">
           {tickets.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
-              Chưa có ticket bảo hành ở các dự án bạn truy cập. Cư dân/CĐT có thể POST{" "}
-              <code className="rounded bg-slate-100 px-1">/api/handover</code>.
+              Chưa có yêu cầu bảo hành ở các dự án bạn truy cập. Sau bàn giao, cư dân/CĐT gửi yêu cầu
+              bảo hành (12/24/60 tháng theo NĐ 06/2021) và sẽ hiển thị tại đây để xử lý theo SLA.
             </div>
           ) : (
             <table className="w-full text-sm">

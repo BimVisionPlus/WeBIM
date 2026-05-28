@@ -74,7 +74,7 @@ export default async function DrawBridgeOrgPage() {
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Bộ bản vẽ</div><div className="mt-1 text-2xl font-bold">{drawingSets.length}</div><div className="text-[10px] text-slate-500">{currentSets} đang dùng (IFC)</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">BIM models</div><div className="mt-1 text-2xl font-bold">{models.length}</div><div className="text-[10px] text-slate-500">{apsReady} đã translate APS</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Mô hình BIM</div><div className="mt-1 text-2xl font-bold">{models.length}</div><div className="text-[10px] text-slate-500">{apsReady} sẵn sàng xem 3D</div></CardBody></Card>
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Phần tử BIM</div><div className="mt-1 text-2xl font-bold">{elementCount.toLocaleString("vi-VN")}</div></CardBody></Card>
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Clash đang mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openClashes}</div></CardBody></Card>
       </div>
@@ -109,7 +109,8 @@ export default async function DrawBridgeOrgPage() {
           <CardBody className="p-0">
             {clashes.length === 0 ? (
               <div className="p-8 text-center text-sm text-slate-500">
-                Chưa phát hiện clash nào. Chạy <code className="rounded bg-slate-100 px-1">POST /api/drawbridge/clashes/detect</code>.
+                Chưa phát hiện xung đột (clash) nào. Tải mô hình BIM lên mục Models rồi bấm
+                “Kiểm tra xung đột” để hệ thống tự dò va chạm giữa các bộ môn (kết cấu · MEP · kiến trúc).
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">

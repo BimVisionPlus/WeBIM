@@ -80,7 +80,7 @@ export default async function SiteEyeOrgPage() {
           <CardHeader><CardTitle>Sự cố ATVSLĐ — Luật 84/2015 ({incidents.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {incidents.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa có sự cố. POST <code className="rounded bg-slate-100 px-1">/api/siteeye/incidents</code>.</div>
+              <div className="p-8 text-center text-sm text-slate-500">Chưa ghi nhận sự cố ATVSLĐ nào. Khi có tai nạn/sự cố trên công trường, ghi nhận tại đây để lập biên bản theo Luật ATVSLĐ 84/2015.</div>
             ) : (
               <ul className="divide-y divide-slate-100">
                 {incidents.slice(0, 20).map((i) => (
