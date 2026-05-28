@@ -6,10 +6,32 @@ import { postJson } from "./http";
 import type { AiResult } from "./types";
 
 type EmbedResp = { embedding: number[] } | { embeddings: number[][] };
+// Cloudflare Workers AI run response: { result: { data: number[][] } }
+type CfEmbedResp = { result?: { data?: number[][] } };
 
 export async function embed(text: string): Promise<AiResult<number[]>> {
   const cfg = aiConfig();
   if (!cfg.enabled) return { ok: false, reason: "disabled", latencyMs: 0 };
+
+  // ─── Cloudflare Workers AI (bge-m3) ─────────────────────────────────────
+  if (cfg.embedProvider === "cloudflare") {
+    if (!cfg.cloudflare.accountId || !cfg.cloudflare.apiToken) {
+      return { ok: false, reason: "disabled", latencyMs: 0, error: "CF_ACCOUNT_ID / CF_API_TOKEN unset" };
+    }
+    const started = Date.now();
+    const r = await postJson<CfEmbedResp>(
+      `https://api.cloudflare.com/client/v4/accounts/${cfg.cloudflare.accountId}/ai/run/${cfg.cloudflare.embedModel}`,
+      { text: [text] },
+      { timeoutMs: cfg.cloudflare.timeoutMs, headers: { Authorization: `Bearer ${cfg.cloudflare.apiToken}` } },
+    );
+    const latencyMs = Date.now() - started;
+    if (!r.ok) return { ok: false, reason: r.reason, error: r.error, latencyMs };
+    const vec = r.data.result?.data?.[0];
+    if (!vec || !vec.length) return { ok: false, reason: "invalid_response", latencyMs };
+    return { ok: true, data: vec, model: cfg.cloudflare.embedModel, latencyMs };
+  }
+
+  // ─── Ollama (default, self-host) ────────────────────────────────────────
   const started = Date.now();
   const r = await postJson<EmbedResp>(
     `${cfg.ollama.baseUrl}/api/embeddings`,

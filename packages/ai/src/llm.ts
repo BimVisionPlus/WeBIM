@@ -21,6 +21,11 @@ type OllamaChatResp = {
   eval_count?: number;
 };
 
+// Groq / any OpenAI-compatible chat completion response.
+type OpenAIChatResp = {
+  choices?: Array<{ message?: { content?: string } }>;
+};
+
 export async function chat(
   messages: ChatMessage[],
   opts: {
@@ -33,6 +38,31 @@ export async function chat(
   const cfg = aiConfig();
   if (!cfg.enabled) return { ok: false, reason: "disabled", latencyMs: 0 };
 
+  // ─── Groq (OpenAI-compatible) ───────────────────────────────────────────
+  if (cfg.llmProvider === "groq") {
+    if (!cfg.groq.apiKey) return { ok: false, reason: "disabled", latencyMs: 0, error: "GROQ_API_KEY unset" };
+    const model = opts.model ?? cfg.groq.llmModel;
+    const started = Date.now();
+    const r = await postJson<OpenAIChatResp>(
+      `${cfg.groq.baseUrl}/chat/completions`,
+      {
+        model,
+        // Groq rejects Ollama's `images` field on text messages — strip to role+content.
+        messages: messages.map(({ role, content }) => ({ role, content })),
+        stream: false,
+        temperature: opts.temperature ?? 0.2,
+        ...(opts.format === "json" ? { response_format: { type: "json_object" } } : {}),
+      },
+      { timeoutMs: opts.timeoutMs ?? cfg.groq.timeoutMs, headers: { Authorization: `Bearer ${cfg.groq.apiKey}` } },
+    );
+    const latencyMs = Date.now() - started;
+    if (!r.ok) return { ok: false, reason: r.reason, error: r.error, latencyMs };
+    const content = r.data.choices?.[0]?.message?.content?.trim();
+    if (!content) return { ok: false, reason: "invalid_response", latencyMs, error: "empty content" };
+    return { ok: true, data: content, model, latencyMs };
+  }
+
+  // ─── Ollama (default, self-host) ────────────────────────────────────────
   const model = opts.model ?? cfg.ollama.llmModel;
   const started = Date.now();
   const r = await postJson<OllamaChatResp>(
