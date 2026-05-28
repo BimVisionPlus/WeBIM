@@ -70,7 +70,7 @@ export default async function StakeholdersPage() {
         <CardHeader><CardTitle>Cơ quan QLNN ({agencies.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {agencies.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Seed: <code>scripts/seed-stakeholders.ts</code></div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có cơ quan QLNN nào. Bấm “Ghi nhận văn bản” để thêm liên hệ Sở XD / KBNN / PC07…</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">

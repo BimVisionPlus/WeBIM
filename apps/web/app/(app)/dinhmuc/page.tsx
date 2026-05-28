@@ -91,7 +91,7 @@ export default async function DinhMucPage({ searchParams }: { searchParams: Prom
         <CardBody className="p-0">
           {norms.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
-              Chưa có định mức nào khớp. Thử bỏ filter hoặc seed thêm bằng <code>scripts/seed-dinhmuc.ts</code>.
+              Chưa có định mức nào khớp. Thử bỏ bộ lọc, hoặc bấm “Thêm mã định mức” để tạo mới.
             </div>
           ) : (
             <table className="w-full text-sm">
@@ -136,7 +136,7 @@ export default async function DinhMucPage({ searchParams }: { searchParams: Prom
 
       <p className="mt-4 text-[11px] text-slate-500">
         DinhMucDB feed: <code>CostPulse</code> (BoQ pricing), <code>VolumeMeter</code> (mã định mức trên TakeoffLine),
-        <code>TenderForge</code> (giá dự thầu auto-suggest). API: <code>GET /api/dinhmuc?code=AB.13211&amp;province=HCM</code>.
+        <code>TenderForge</code> (giá dự thầu auto-suggest). dùng chung cho toàn bộ nền tảng.
       </p>
     </AecModuleShell>
   );

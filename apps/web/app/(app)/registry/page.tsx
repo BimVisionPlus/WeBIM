@@ -80,7 +80,7 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
         <CardHeader><CardTitle>Sổ năng lực ({profiles.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {profiles.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có hồ sơ DN. Seed: <code>scripts/seed-registry.ts</code></div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có hồ sơ doanh nghiệp. Bấm “Đăng ký năng lực” để thêm.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">

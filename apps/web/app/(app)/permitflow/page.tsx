@@ -85,7 +85,7 @@ export default async function PermitFlowOrgPage() {
           {applications.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
               Chưa có hồ sơ xin phép nào trong các dự án bạn truy cập. Tạo qua{" "}
-              <code className="rounded bg-slate-100 px-1">POST /api/permitflow/applications</code>.
+              tạo hồ sơ xin giấy phép xây dựng theo NĐ 15/2021.
             </div>
           ) : (
             <table className="w-full text-sm">

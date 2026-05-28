@@ -79,7 +79,7 @@ export default async function QaqcPage() {
         <CardHeader><CardTitle>Thư viện ITP ({templates.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {templates.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có ITP nào. Seed library bằng <code>scripts/seed-qaqc.ts</code>.</div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có ITP nào. Bấm “Lên lịch check ITP” để bắt đầu.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">

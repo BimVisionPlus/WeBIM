@@ -80,7 +80,7 @@ export default async function PcccOrgPage() {
           {apps.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
               Chưa có hồ sơ PCCC nào. Tạo qua{" "}
-              <code className="rounded bg-slate-100 px-1">POST /api/pccc/applications</code>.
+              tạo hồ sơ thẩm duyệt PCCC theo NĐ 136/2020.
             </div>
           ) : (
             <table className="w-full text-sm">

@@ -56,7 +56,7 @@ export default async function ConsultantOpsPage() {
         <CardHeader><CardTitle>Hợp đồng tư vấn ({contracts.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {contracts.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có hợp đồng nào. Seed: <code>scripts/seed-consult.ts</code></div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có hợp đồng tư vấn. Bấm “Chấm công tư vấn” để thêm timesheet đầu tiên.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">

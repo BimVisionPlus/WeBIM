@@ -64,7 +64,7 @@ export default async function LabReportsPage() {
         <CardHeader><CardTitle>Kết quả thí nghiệm ({total})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {total === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có báo cáo. Seed: <code>scripts/seed-labreports.ts</code></div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có báo cáo thí nghiệm. Bấm “Lấy mẫu thí nghiệm” để thêm.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">

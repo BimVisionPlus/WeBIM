@@ -86,7 +86,7 @@ export default async function BidRadarPage() {
             {recent.length === 0 ? (
               <div className="p-8 text-center text-sm text-slate-500">
                 Chưa có gói thầu nào. Chạy scraper:{" "}
-                <code className="rounded bg-slate-100 px-1">POST /api/winwork/tenders/scrape</code>
+                hệ thống tự quét muasamcong.mpi.gov.vn theo lịch
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">

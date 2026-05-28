@@ -68,7 +68,7 @@ export default async function MethodStatementsPage() {
         <CardHeader><CardTitle>BPTC library ({templates.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {templates.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có template. Seed: <code>scripts/seed-methods.ts</code></div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có biện pháp thi công mẫu. Bấm “Tạo BPTC” để thêm mới.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">

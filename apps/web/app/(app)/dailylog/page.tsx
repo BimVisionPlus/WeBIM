@@ -57,7 +57,7 @@ export default async function DailyLogOrgPage() {
           {logs.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
               Chưa có nhật ký công trình. App mobile (Capacitor) gửi qua{" "}
-              <code className="rounded bg-slate-100 px-1">POST /api/daily-logs</code>.
+              ghi nhật ký thi công hằng ngày từ điện thoại tại công trường.
             </div>
           ) : (
             <ul className="divide-y divide-slate-100">

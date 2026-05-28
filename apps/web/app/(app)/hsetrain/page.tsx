@@ -68,7 +68,7 @@ export default async function HseTrainPage() {
         <CardHeader><CardTitle>Khoá huấn luyện ({courses.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {courses.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có khoá nào. Seed: <code>scripts/seed-hsetrain.ts</code></div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có khoá huấn luyện. Bấm “Cấp chứng chỉ ATLĐ” để bắt đầu.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">

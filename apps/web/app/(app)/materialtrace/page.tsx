@@ -72,7 +72,7 @@ export default async function MaterialTracePage() {
         </CardHeader>
         <CardBody className="p-0">
           {lots.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có lô VL. Seed: <code>scripts/seed-materialtrace.ts</code></div>
+            <div className="p-6 text-center text-sm text-slate-500">Chưa có lô vật liệu. Bấm “Nhận lô VL” để ghi nhận lô đầu tiên.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
