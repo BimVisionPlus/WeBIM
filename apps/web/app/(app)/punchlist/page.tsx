@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,8 @@ export default async function PunchListOrgPage() {
     },
     take: 200,
   });
+
+  const projects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true }, orderBy: { key: "asc" } });
 
   const accepted = punchItems.filter((p) => p.acceptedAt).length;
   const withAfter = punchItems.filter((p) => p.photoAfterUrl).length;
@@ -60,7 +63,9 @@ export default async function PunchListOrgPage() {
         </Card>
       )}
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={projects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Danh sách ({punchItems.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {punchItems.length === 0 ? (

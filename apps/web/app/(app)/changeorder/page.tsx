@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,8 @@ export default async function ChangeOrderOrgPage() {
     take: 200,
   });
 
+  const projects = await prisma.project.findMany({ where: projectFilter, select: { id: true, key: true }, orderBy: { key: "asc" } });
+
   // Totals
   const totalDelta = cos.reduce((s, co) => s + Number(co.costDeltaVnd), 0);
   const approved = cos.filter((co) => co.approvedAt);
@@ -56,7 +59,9 @@ export default async function ChangeOrderOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Δ tiến độ tổng</div><div className={`mt-1 text-2xl font-bold ${totalScheduleDays >= 0 ? "text-rose-700" : "text-emerald-700"}`}>{totalScheduleDays >= 0 ? "+" : ""}{totalScheduleDays} ngày</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={projects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Danh sách lệnh thay đổi ({cos.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {cos.length === 0 ? (

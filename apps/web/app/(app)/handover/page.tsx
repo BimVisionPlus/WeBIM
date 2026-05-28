@@ -5,6 +5,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { relativeDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,9 @@ export default async function HandoverOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Dự án có ticket</div><div className="mt-1 text-2xl font-bold">{projectsWithTickets}</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={projects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Tất cả ticket bảo hành ({tickets.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {tickets.length === 0 ? (
