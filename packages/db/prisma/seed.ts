@@ -90,6 +90,15 @@ async function main() {
   await prisma.permitChecklist.deleteMany();
   await prisma.permitApplication.deleteMany();
   await prisma.pcccApplication.deleteMany();
+  // Org/User-scoped modules added after this cleanup was last updated. Each has a
+  // REQUIRED FK with no onDelete: Cascade (Prisma default = Restrict), so the parent
+  // delete throws P2003 when rows exist. Clear them before their parents below.
+  // Children (TenderSection, Attendance) cascade via these, so no explicit delete.
+  await prisma.tenderPackage.deleteMany(); // → Organization (TenderPackageOrg)
+  await prisma.siteWorker.deleteMany(); // → Organization (WorkerOrg); cascades Attendance
+  await prisma.consultantContract.deleteMany(); // → Organization (ConsultantContractTvOrg)
+  await prisma.consultantTimesheet.deleteMany(); // → Organization (ConsultantTimeOrg)
+  await prisma.invite.deleteMany(); // → User (InvitedBy)
   await prisma.projectStakeholder.deleteMany();
   await prisma.project.deleteMany();
   await prisma.membership.deleteMany();
