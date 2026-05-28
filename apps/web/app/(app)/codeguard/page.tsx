@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { SeedDossier } from "./SeedDossier";
 
 export const dynamic = "force-dynamic";
 
@@ -81,12 +82,14 @@ export default async function CodeGuardOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Vi phạm BLOCKING</div><div className="mt-1 text-2xl font-bold text-rose-700">{blockingFindings}</div></CardBody></Card>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mt-6"><SeedDossier projects={projects} /></div>
+
+      <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Hồ sơ chất lượng — NĐ 15/2021 ({dossierItems.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {dossierItems.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa khởi tạo dossier cho dự án nào.</div>
+              <div className="p-8 text-center text-sm text-slate-500">Chưa khởi tạo hồ sơ chất lượng cho dự án nào. Chọn dự án và bấm “Khởi tạo hồ sơ” ở trên.</div>
             ) : (
               <ul className="divide-y divide-slate-100">
                 {dossierItems.slice(0, 40).map((d) => {

@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -79,13 +80,14 @@ export default async function PermitFlowOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Cơ quan cấp</div><div className="mt-1 text-sm font-semibold leading-tight">Sở XD tỉnh/TP<br/>Bộ XD (cấp 1)</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={projects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Hồ sơ xin phép ({applications.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {applications.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
-              Chưa có hồ sơ xin phép nào trong các dự án bạn truy cập. Tạo qua{" "}
-              tạo hồ sơ xin giấy phép xây dựng theo NĐ 15/2021.
+              Chưa có hồ sơ xin phép nào trong các dự án bạn truy cập. Bấm “Tạo hồ sơ xin GPXD” ở trên để bắt đầu (NĐ 15/2021).
             </div>
           ) : (
             <table className="w-full text-sm">

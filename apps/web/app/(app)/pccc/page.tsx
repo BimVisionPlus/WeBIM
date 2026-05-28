@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { CreateForm } from "./CreateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -74,13 +75,14 @@ export default async function PcccOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Cơ quan thẩm duyệt</div><div className="mt-1 text-sm font-semibold leading-tight">PC07 Công an<br/>Cục C06 (cấp 1)</div></CardBody></Card>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-6"><CreateForm projects={projects} /></div>
+
+      <Card className="mt-4">
         <CardHeader><CardTitle>Hồ sơ PCCC ({apps.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {apps.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
-              Chưa có hồ sơ PCCC nào. Tạo qua{" "}
-              tạo hồ sơ thẩm duyệt PCCC theo NĐ 136/2020.
+              Chưa có hồ sơ PCCC nào. Bấm “Tạo hồ sơ PCCC” ở trên để bắt đầu (NĐ 136/2020).
             </div>
           ) : (
             <table className="w-full text-sm">

@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { TenderCreateButton } from "@/components/winwork-tender-create";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,8 @@ export default async function BidRadarPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Watchlist của bạn</div><div className="mt-1 text-2xl font-bold text-slate-400">—</div><div className="text-[10px] text-slate-400">Coming soon</div></CardBody></Card>
       </div>
 
+      <div className="mt-6 flex justify-end"><TenderCreateButton /></div>
+
       {closingSoon.length > 0 && (
         <Card className="mt-6">
           <CardHeader><CardTitle className="text-amber-800">⏰ Sắp đóng thầu — {closingSoon.length} gói</CardTitle></CardHeader>
@@ -85,8 +88,7 @@ export default async function BidRadarPage() {
           <CardBody className="p-0">
             {recent.length === 0 ? (
               <div className="p-8 text-center text-sm text-slate-500">
-                Chưa có gói thầu nào. Chạy scraper:{" "}
-                hệ thống tự quét muasamcong.mpi.gov.vn theo lịch
+                Chưa có gói thầu nào. Bấm “Thêm cơ hội” để nhập tay, hoặc hệ thống tự quét muasamcong.mpi.gov.vn theo lịch.
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">
