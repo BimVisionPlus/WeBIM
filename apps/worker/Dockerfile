@@ -36,4 +36,7 @@ COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=worker:nodejs /app/packages ./packages
 COPY --from=builder --chown=worker:nodejs /app/apps/worker ./apps/worker
 USER worker
-CMD ["node", "--import=tsx/esm", "apps/worker/src/index.ts"]
+WORKDIR /app/apps/worker
+# Use the tsx CLI directly (not node --import) — it sets up the TS loader for
+# workspace deps (@atlas/db has `declare global`, needs full TS transpilation).
+CMD ["node", "node_modules/tsx/dist/cli.mjs", "src/index.ts"]
