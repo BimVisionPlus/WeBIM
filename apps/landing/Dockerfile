@@ -28,6 +28,14 @@ COPY --from=deps /app/packages ./packages
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV STANDALONE_BUILD=1
+# NEXT_PUBLIC_* are inlined at build time by Next.js — must be present here,
+# not just at runtime. Passed via --build-arg from docker compose.
+ARG NEXT_PUBLIC_INDEXABLE=true
+ARG NEXT_PUBLIC_LANDING_URL=https://aecplatform.vn
+ARG NEXT_PUBLIC_APP_NAME="AEC Platform"
+ENV NEXT_PUBLIC_INDEXABLE=$NEXT_PUBLIC_INDEXABLE
+ENV NEXT_PUBLIC_LANDING_URL=$NEXT_PUBLIC_LANDING_URL
+ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
 RUN NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter @atlas/db generate
 RUN pnpm --filter @atlas/landing build
 
