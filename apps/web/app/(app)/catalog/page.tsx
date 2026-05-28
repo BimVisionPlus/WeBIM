@@ -1,6 +1,7 @@
 import { prisma } from "@atlas/db";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd } from "@atlas/lib";
+import { CreateForm } from "./CreateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -78,13 +79,15 @@ export default async function CatalogPage() {
         </Card>
       </div>
 
+      <CreateForm />
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader><CardTitle>Cấu kiện ({items.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {items.length === 0 ? (
               <div className="p-8 text-center text-sm text-slate-500">
-                Chưa có cấu kiện. POST <code className="rounded bg-slate-100 px-1">/api/catalog/items</code> để thêm.
+                Chưa có cấu kiện. Bấm “Thêm cấu kiện” ở trên để bổ sung vào thư viện.
               </div>
             ) : (
               <div className="divide-y divide-slate-200">

@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
+import { ClashScan } from "./ClashScan";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +80,9 @@ export default async function DrawBridgeOrgPage() {
         <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Clash đang mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openClashes}</div></CardBody></Card>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mt-6"><ClashScan projects={projects} /></div>
+
+      <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Bộ bản vẽ ({drawingSets.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
