@@ -36,8 +36,9 @@ echo
 echo "=== App ($APP) ==="
 check "root → signin"    "$APP/"                   307
 check "/api/health"      "$APP/api/health"         200 "\"ok\":true"
-check "/signin"          "$APP/signin"             200 "Đăng nhập"
-check "/signup"          "$APP/signup"             200 "Tạo tài khoản"
+# signin/signup forms are client components — assert SSR title shell, not button text
+check "/signin"          "$APP/signin"             200 "AEC Platform"
+check "/signup"          "$APP/signup"             200 "AEC Platform"
 check "/pricing"         "$APP/pricing"            200
 check "/trust"           "$APP/trust"              200
 
