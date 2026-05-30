@@ -5,13 +5,13 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.aecplatform.vn"),
   title: {
-    default: "Atlas AEC — Module #1 của AEC Platform",
-    template: "%s · Atlas AEC",
+    default: "Viwase Quản lý công việc — Module #1 của AEC Platform",
+    template: "%s · Viwase Quản lý công việc",
   },
   description:
-    "Atlas AEC là module đầu tiên của AEC Platform — Atlassian-style PM cho ngành Kiến trúc Xây dựng VN. Gắn chặt NĐ 06/2021, Luật ĐT 22/2023, chữ ký số VNPT/Viettel-CA.",
+    "Viwase Quản lý công việc là module đầu tiên của AEC Platform — Atlassian-style PM cho ngành Kiến trúc Xây dựng VN. Gắn chặt NĐ 06/2021, Luật ĐT 22/2023, chữ ký số VNPT/Viettel-CA.",
   openGraph: {
-    title: "Atlas AEC — Module #1 của AEC Platform",
+    title: "Viwase Quản lý công việc — Module #1 của AEC Platform",
     siteName: "AEC Platform",
     locale: "vi_VN",
     type: "website",

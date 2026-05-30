@@ -15,7 +15,7 @@ export default async function CatalogLayout({ children }: { children: React.Reac
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <a href="https://aecplatform.vn" className="hover:text-slate-900">AEC Platform</a>
             <span>/</span>
-            <Link href="/" className="hover:text-slate-900">Atlas AEC</Link>
+            <Link href="/" className="hover:text-slate-900">Viwase Quản lý công việc</Link>
             <span>/</span>
             <span className="font-semibold text-slate-900">Catalog</span>
           </div>

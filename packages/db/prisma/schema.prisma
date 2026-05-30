@@ -181,6 +181,7 @@ model Project {
   startDate        DateTime?
   endDate          DateTime?
   status           ProjectStatus @default(PLANNING)
+  department       ProjectDepartment @default(CONG_VIEC_KHAC) // phòng ban phụ trách (Viwase QLCV)
   permitNumber     String? // Số giấy phép xây dựng
   permitDate       DateTime?
   warrantyMonths   Int           @default(24) // NĐ 06/2021: 12 tháng phần phụ, 24 tháng phần chính, 60 tháng hạ tầng
@@ -235,6 +236,16 @@ enum ProjectStatus {
   HANDOVER // Bàn giao
   WARRANTY // Bảo hành
   CLOSED // Đã đóng hồ sơ
+}
+
+// Phân loại dự án theo phòng ban phụ trách (Viwase QLCV)
+enum ProjectDepartment {
+  CONG_VIEC // Phòng công việc chung
+  DAU_THAU // Phòng đấu thầu
+  HANH_CHINH // Phòng hành chính
+  TAI_CHINH_KE_TOAN // Phòng tài chính - kế toán
+  PHAT_TRIEN_THI_TRUONG // Phòng phát triển thị trường
+  CONG_VIEC_KHAC // Công việc khác (catch-all)
 }
 
 model ProjectStakeholder {

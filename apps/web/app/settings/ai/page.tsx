@@ -18,7 +18,7 @@ export default async function AiSettingsPage() {
         <div>
           <h1 className="text-xl font-semibold text-slate-900">AI — trạng thái mô hình OSS</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Atlas AEC chỉ dùng mô hình mã nguồn mở, tự host trên hạ tầng của bạn. Không gửi
+            Viwase Quản lý công việc chỉ dùng mô hình mã nguồn mở, tự host trên hạ tầng của bạn. Không gửi
             dữ liệu công trình ra bên ngoài.
           </p>
         </div>

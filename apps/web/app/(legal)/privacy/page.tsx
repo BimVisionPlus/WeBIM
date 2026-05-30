@@ -1,4 +1,4 @@
-export const metadata = { title: "Chính sách bảo mật — Atlas AEC" };
+export const metadata = { title: "Chính sách bảo mật — Viwase Quản lý công việc" };
 
 export default function PrivacyPage() {
   return (

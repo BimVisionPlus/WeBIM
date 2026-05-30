@@ -140,7 +140,7 @@ export default async function SiteStatusPage({ params }: { params: { projectKey:
         </Card>
 
         <p className="text-center text-xs text-slate-500">
-          Trang công khai — dữ liệu cập nhật trực tiếp từ Atlas AEC. Không yêu cầu đăng nhập.
+          Trang công khai — dữ liệu cập nhật trực tiếp từ Viwase Quản lý công việc. Không yêu cầu đăng nhập.
         </p>
       </main>
     </div>

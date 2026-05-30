@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       after: { planCode: d.planCode, contactEmail: d.contactEmail, contactPhone: d.contactPhone },
     });
 
-    const subject = `[Atlas AEC] Yêu cầu nâng cấp ${PLAN_LABEL[d.planCode] ?? d.planCode} — ${org.name}`;
+    const subject = `[Viwase Quản lý công việc] Yêu cầu nâng cấp ${PLAN_LABEL[d.planCode] ?? d.planCode} — ${org.name}`;
     const html = `
       <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 640px; padding: 24px;">
         <h2>Yêu cầu nâng cấp gói</h2>
@@ -92,12 +92,12 @@ export async function POST(req: NextRequest) {
     // Bank account info pulled from env so finance can rotate without redeploy
     const BANK_NAME = process.env.BANK_NAME ?? "Vietcombank";
     const BANK_ACCOUNT = process.env.BANK_ACCOUNT ?? "0011 002 345 678";
-    const BANK_HOLDER = process.env.BANK_HOLDER ?? "CTCP Atlas AEC";
+    const BANK_HOLDER = process.env.BANK_HOLDER ?? "CTCP Viwase";
 
     // Reply to the customer too (best-effort)
     await sendEmail({
       to: d.contactEmail,
-      subject: "Atlas AEC — đã nhận yêu cầu nâng cấp",
+      subject: "Viwase Quản lý công việc — đã nhận yêu cầu nâng cấp",
       html: `<div style="font-family: -apple-system, system-ui, sans-serif; padding: 24px;">
         <h2>Cảm ơn ${me?.name ?? "bạn"}!</h2>
         <p>Đã nhận yêu cầu nâng cấp tổ chức <strong>${org.name}</strong> sang gói <strong>${PLAN_LABEL[d.planCode]}</strong>.</p>
