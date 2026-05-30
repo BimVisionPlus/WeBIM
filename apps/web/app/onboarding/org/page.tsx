@@ -49,10 +49,13 @@ export default function CreateOrgPage() {
     e.preventDefault();
     setBusy(true);
     setErr(null);
+    // Strip empty optional fields so Zod's .email() / .url() don't reject
+    // "" — z.string().email().optional() treats "" as a failed string, not missing.
+    const payload = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ""));
     const r = await fetch("/api/orgs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     setBusy(false);
     if (!r.ok) {

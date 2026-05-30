@@ -67,7 +67,7 @@ function header(slide, sectionLabel, slideNum) {
     });
   }
   if (slideNum != null) {
-    slide.addText(`${slideNum} / 21`, {
+    slide.addText(`${slideNum} / 32`, {
       x: W - 1.4, y: 0.35, w: 0.9, h: 0.32,
       fontSize: 11, color: C.muted, align: "right", fontFace: "Calibri", margin: 0, valign: "middle",
     });
@@ -661,6 +661,51 @@ const shots = [
       "bảng cảnh báo vàng.",
     ],
   },
+  // ── Viwase QLCV: dept-tab widgets + drill-down + 7 mini-modules ───────────
+  { num: 21, section: "Viwase — Tab Hành chính", file: "20-home-hanh-chinh.png",
+    title: "Tab Hành chính · 4 widget gọn",
+    subtitle: "Công văn · Văn bản nội bộ · Theo dõi BHXH · Điều phối xe — count + 3 entry mới nhất",
+    bullets: ["4 widget cards live:", "  Công văn → /stakeholders", "  Văn bản → /internaldocs", "  BHXH → /bhxh", "  Xe → /vehicledispatch", "", "Project table phía dưới", "lọc projects dept=", "HANH_CHINH (2 dự án)."] },
+  { num: 22, section: "Viwase — Tab Tài chính kế toán", file: "21-home-tckt.png",
+    title: "Tab Tài chính KT · Tạm ứng + Giao khoán",
+    subtitle: "AdvanceTransaction (TAM_UNG / THANH_TOAN / HOAN_UNG) · ContractorAssignment khoán gọn theo DA",
+    bullets: ["Widget cards:", "  Tạm ứng/Thanh toán", "  Bảng giao khoán", "", "Hoàn ứng có parentTxnId", "→ lineage tạm ứng gốc", "cho quyết toán."] },
+  { num: 23, section: "Viwase — Tab Phát triển thị trường", file: "22-home-pttt.png",
+    title: "Tab PTTT · Địa bàn + Pipeline",
+    subtitle: "MarketTerritory phân vùng + ProjectLead pipeline POTENTIAL → TRACKING → WON/LOST",
+    bullets: ["Widget cards:", "  Địa bàn + lead count", "  Pipeline (Track+Pot.)", "", "Khi WON → có thể chuyển", "thành Project chính thức."] },
+  { num: 24, section: "Viwase — Tình hình thực hiện", file: "23-tinh-hinh.png",
+    title: "Per-project drill-down · Tab 1 detail (handwritten spec)",
+    subtitle: "Tên · Nội dung công việc theo HĐ (inline-edit) · Các đơn vị thực hiện · Timeline cập nhật",
+    bullets: ["4 mục theo ghi chú:", "  Tên dự án (header)", "  Nội dung HĐ (textarea", "    inline-edit PATCH)", "  Đơn vị (stakeholders)", "  Tình hình (timeline)", "", "ProjectNav dept-aware:", "chỉ AEC tabs cho", "CONG_VIEC; ẩn cho phòng", "khác (HANH_CHINH/TCKT/", "PTTT/CONG_VIEC_KHAC)."] },
+  { num: 25, section: "Hành chính — Văn bản nội bộ", file: "24-internaldocs.png",
+    title: "Văn bản nội bộ · Quyết định · Thông báo · Quy chế",
+    subtitle: "InternalDocument · 6 category (QUYET_DINH/THONG_BAO/QUY_CHE/QUY_TRINH/BIEN_BAN/KHAC)",
+    bullets: ["KPI: Tổng / QĐ / Thông", "báo / 30d qua", "", "Form CRUD:", "  + Thêm văn bản nội bộ", "  Số · Loại · Tiêu đề", "  Ngày BH · Nội dung", "", "requireOrgMember chặn", "cross-org write."] },
+  { num: 26, section: "Hành chính — Theo dõi BHXH", file: "25-bhxh.png",
+    title: "Theo dõi BHXH · Sổ NLĐ tham gia bảo hiểm XH",
+    subtitle: "SocialInsuranceRecord · 5 trạng thái (Đang đóng / Tạm dừng / Chờ đăng ký / Đã nghỉ / Khác)",
+    bullets: ["KPI: Tổng / Đang đóng /", "Chờ ĐK / Mức/tháng", "", "Form CRUD:", "  + Thêm bản ghi BHXH", "  Họ tên · CCCD · Số sổ", "  Mức đóng · Bắt đầu", "", "Track nội bộ, không", "thay BHXH gov system."] },
+  { num: 27, section: "Hành chính — Điều phối xe", file: "26-vehicledispatch.png",
+    title: "Điều phối xe · Sổ lệnh điều xe công ty",
+    subtitle: "VehicleDispatch · 4 trạng thái (Đặt lịch / Đang dùng / Đã trả / Huỷ)",
+    bullets: ["KPI: Tổng / Đang dùng /", "Đặt lịch / Đã trả 7d", "", "Form CRUD:", "  + Điều xe", "  Biển số · Tài xế", "  Mục đích", "  Bắt đầu · Kết thúc", "", "Datetime-local picker,", "badge màu theo trạng."] },
+  { num: 28, section: "TC-KT — Tạm ứng/Thanh toán/Hoàn ứng", file: "27-advances.png",
+    title: "Sổ tài chính · 3 loại GD · Lineage hoàn ứng",
+    subtitle: "AdvanceTransaction · type TAM_UNG/THANH_TOAN/HOAN_UNG · status PENDING→APPROVED→SETTLED",
+    bullets: ["KPI: Tổng GD / Tạm ứng", "chưa hoàn / Đã thanh", "toán / Đã hoàn ứng", "", "Form CRUD:", "  + Tạm ứng/Thanh toán", "  Số phiếu · Người nhận", "  Số tiền · Mục đích", "  Gắn dự án (optional)", "", "parentTxnId → lineage."] },
+  { num: 29, section: "TC-KT — Bảng giao khoán", file: "28-contractorassigns.png",
+    title: "Bảng giao khoán cho đơn vị · Khoán gọn theo DA",
+    subtitle: "ContractorAssignment · phạm vi + giá trị + tiến độ + mốc bàn giao",
+    bullets: ["Project-scoped (FK", "Project + requireProject).", "", "KPI: Tổng / Đang khoán /", "Giá trị / TB % HT", "", "Form CRUD:", "  + Giao khoán", "  Tên ĐV · Phạm vi", "  Giá trị · NgàyBắt/Kết", "  % HT · Trạng thái"] },
+  { num: 30, section: "PTTT — Địa bàn", file: "29-territories.png",
+    title: "Địa bàn · Phân vùng phát triển thị trường",
+    subtitle: "MarketTerritory · tỉnh trọng tâm + người phụ trách (chủ địa bàn) + count leads",
+    bullets: ["KPI: Tổng / Hoạt động /", "Có chủ ĐB / Tổng leads", "", "Form CRUD:", "  + Thêm địa bàn", "  Tên · Tỉnh · Phạm vi", "", "Lead có territoryId FK →", "địa bàn cho BD planning."] },
+  { num: 31, section: "PTTT — Dự án đang theo & tiềm năng", file: "30-leads.png",
+    title: "Pipeline cơ hội · Tiềm năng → Đang theo → Trúng / Không trúng",
+    subtitle: "ProjectLead · 5 status (POTENTIAL/TRACKING/WON/LOST/ARCHIVED) · pipeline value",
+    bullets: ["KPI: Tổng / Tiềm năng /", "Đang theo / Pipeline VND", "", "Form CRUD:", "  + Thêm cơ hội", "  Tên · Khách hàng", "  Tỉnh · Giá trị dự kiến", "  Nguồn · Next action", "", "WON → chuyển thành", "Project chính thức."] },
 ];
 
 for (const sc of shots) {
@@ -674,11 +719,11 @@ for (const sc of shots) {
   });
 }
 
-// ── Slide 21: Closing ──────────────────────────────────────────────────────
+// ── Slide 32: Closing ──────────────────────────────────────────────────────
 {
   const s = pres.addSlide();
   darkBackground(s);
-  header(s, "Shipping evidence", 21);
+  header(s, "Shipping evidence", 32);
 
   s.addText("Atlas AEC · v2 shipped 19/05/2026", {
     x: 0.6, y: 1.0, w: W - 1.2, h: 0.7,

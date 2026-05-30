@@ -48,7 +48,7 @@ export default async function ProjectLayout({
         </div>
       </header>
 
-      <ProjectNav projectId={project.id} />
+      <ProjectNav projectId={project.id} department={project.department} />
       <AiOfflineBanner />
 
       <main className="mx-auto max-w-7xl px-6 py-6">{children}</main>

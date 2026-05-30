@@ -13,6 +13,9 @@ async function globalSetup(_config: FullConfig) {
   const page = await ctx.newPage();
   const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3170";
   await page.goto(`${baseURL}/signin`);
+  // Wait for React hydration before clicking — otherwise the form HTTP-
+  // submits with query params and signIn() never fires.
+  await page.waitForLoadState("networkidle");
   await page.locator('input[type="email"]').fill(DEMO_EMAIL);
   await page.locator('input[type="password"]').fill(DEMO_PASSWORD);
   await page.getByRole("button", { name: /Đăng nhập/i }).click();

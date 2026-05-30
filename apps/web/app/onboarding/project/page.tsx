@@ -19,7 +19,7 @@ function CreateProjectInner() {
     endDate: "",
     permitNumber: "",
     warrantyMonths: 24,
-    department: "CONG_VIEC_KHAC",
+    department: "CONG_VIEC",
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);

@@ -154,6 +154,20 @@ const scenes: Scene[] = [
       await page.waitForTimeout(600);
     },
   },
+  // ── Viwase QLCV: dept-tab widgets (Tab 3/4/5) ────────────────────────────
+  { id: "20-home-hanh-chinh", title: "Viwase — Tab Hành chính (widgets: công văn · văn bản nội bộ · BHXH · xe)", url: () => "/?tab=HANH_CHINH" },
+  { id: "21-home-tckt", title: "Viwase — Tab Tài chính kế toán (tạm ứng · giao khoán)", url: () => "/?tab=TAI_CHINH_KE_TOAN" },
+  { id: "22-home-pttt", title: "Viwase — Tab Phát triển thị trường (địa bàn · pipeline)", url: () => "/?tab=PHAT_TRIEN_THI_TRUONG" },
+  // Per-project drill-down (Tab 1 detail per handwritten spec)
+  { id: "23-tinh-hinh", title: "Tình hình thực hiện — drill-down 4 mục: Tên · Nội dung HĐ · Đơn vị · Timeline", url: (p) => `/projects/${p}/tinh-hinh` },
+  // 7 mini-modules backing the dept tabs
+  { id: "24-internaldocs", title: "Văn bản nội bộ — Quyết định · Thông báo · Quy chế", url: () => "/internaldocs" },
+  { id: "25-bhxh", title: "Theo dõi BHXH — sổ NLĐ tham gia bảo hiểm XH", url: () => "/bhxh" },
+  { id: "26-vehicledispatch", title: "Điều phối xe — sổ lệnh điều xe + tài xế + mục đích", url: () => "/vehicledispatch" },
+  { id: "27-advances", title: "Tạm ứng / Thanh toán / Hoàn ứng — sổ tài chính theo dự án + đơn vị", url: () => "/advances" },
+  { id: "28-contractorassigns", title: "Bảng giao khoán — khoán gọn hạng mục cho đội/NTP + tiến độ", url: () => "/contractorassigns" },
+  { id: "29-territories", title: "Địa bàn — phân vùng phát triển thị trường + người phụ trách", url: () => "/territories" },
+  { id: "30-leads", title: "Dự án đang theo & tiềm năng — pipeline cơ hội đấu thầu", url: () => "/leads" },
 ];
 
 async function main() {
