@@ -1,5 +1,5 @@
 /**
- * Atlas AEC — 16-slide demo deck builder.
+ * Atlas AEC — 21-slide demo deck builder.
  *
  * Usage:
  *   node scripts/build-pptx.js
@@ -67,7 +67,7 @@ function header(slide, sectionLabel, slideNum) {
     });
   }
   if (slideNum != null) {
-    slide.addText(`${slideNum} / 16`, {
+    slide.addText(`${slideNum} / 21`, {
       x: W - 1.4, y: 0.35, w: 0.9, h: 0.32,
       fontSize: 11, color: C.muted, align: "right", fontFace: "Calibri", margin: 0, valign: "middle",
     });
@@ -562,6 +562,105 @@ const shots = [
       "  on-prem VN · ISO 27001",
     ],
   },
+  {
+    num: 16, section: "Catalog", file: "15-catalog.png",
+    title: "Catalog · Cấu kiện · vật tư · NCC",
+    subtitle: "Thư viện chuẩn hoá cho công ty — link Submittal (vật liệu) + BoQ (giá đơn vị) · form Thêm cấu kiện mở sẵn",
+    bullets: [
+      "Cấu kiện chia 12 nhóm:",
+      "  Bê tông · Cốt thép",
+      "  Gạch đá · Xi măng",
+      "  Sơn · M&E · PCCC",
+      "  Cửa kính · Thiết bị",
+      "",
+      "Form CRUD:",
+      "  + Thêm cấu kiện",
+      "  + Thêm NCC (MST)",
+      "  + Quan hệ giá",
+      "",
+      "Mỗi cấu kiện có giá",
+      "baseline · qty NCC · đơn vị.",
+    ],
+  },
+  {
+    num: 17, section: "Thi công — Schedule", file: "16-schedule.png",
+    title: "Schedule · Tiến độ + đường găng (CPM)",
+    subtitle: "Gantt-ready · AI rủi ro chậm từ daily log + thời tiết · form Thêm công việc mở sẵn",
+    bullets: [
+      "KPI cấp công ty:",
+      "  Tổng task · Đang thi công",
+      "  Quá hạn · Đường găng",
+      "",
+      "Form CRUD:",
+      "  + Thêm công việc (task)",
+      "  WBS · Discipline · Zone",
+      "  Plan start/end · % xong",
+      "",
+      "Critical Path đánh dấu",
+      "tím — chậm 1 ngày =",
+      "dự án chậm 1 ngày.",
+    ],
+  },
+  {
+    num: 18, section: "Pháp lý — PermitFlow", file: "17-permitflow.png",
+    title: "PermitFlow · Xin GPXD NĐ 15/2021",
+    subtitle: "Tự sinh checklist Phụ lục I từ profile dự án · 6 loại GPXD · form Tạo hồ sơ mở sẵn",
+    bullets: [
+      "6 loại GPXD:",
+      "  Mới · Điều chỉnh",
+      "  Sửa chữa · Tạm",
+      "  Hạ tầng · Thông báo",
+      "",
+      "Form CRUD:",
+      "  + Tạo hồ sơ xin GPXD",
+      "  Dự án · Đơn vị nộp",
+      "  Cơ quan cấp (Sở XD)",
+      "",
+      "Auto-checklist 8 mục",
+      "PL-I.A.1 → PL-I.A.8",
+      "(GCN đất · bản vẽ · PCCC).",
+    ],
+  },
+  {
+    num: 19, section: "Pháp lý — PCCC", file: "18-pccc.png",
+    title: "PCCC · Thẩm duyệt NĐ 136/2020",
+    subtitle: "QCVN 06:2022/BXD · TCVN 5738 · 3 giai đoạn từ thẩm duyệt → cấp Giấy đủ điều kiện · form mở sẵn",
+    bullets: [
+      "3 giai đoạn:",
+      "  Thẩm duyệt thiết kế",
+      "  Nghiệm thu PCCC",
+      "  Cấp Giấy đủ điều kiện",
+      "",
+      "Form CRUD:",
+      "  + Tạo hồ sơ PCCC",
+      "  Cấp PC07 / C06",
+      "",
+      "Checklist PC-1 → PC-8",
+      "(bản vẽ · tính nước",
+      "thuyết minh · thí nghiệm",
+      "vật liệu chống cháy).",
+    ],
+  },
+  {
+    num: 20, section: "Đấu thầu — BidRadar", file: "19-bidradar.png",
+    title: "BidRadar · Săn gói thầu nhà nước",
+    subtitle: "muasamcong.mpi.gov.vn + dauthau.asia · alert email theo NACE · reuses TenderCreateButton",
+    bullets: [
+      "Top-level cho org:",
+      "  Tổng gói · Đóng 7d",
+      "  Ngân sách top 30",
+      "  Watchlist (sắp tới)",
+      "",
+      "Form CRUD (reuse):",
+      "  + Thêm cơ hội",
+      "  Bên mời · MST",
+      "  Giá gói · Nguồn vốn",
+      "  Tỉnh · Hình thức",
+      "",
+      "Sắp đóng thầu hiện",
+      "bảng cảnh báo vàng.",
+    ],
+  },
 ];
 
 for (const sc of shots) {
@@ -575,11 +674,11 @@ for (const sc of shots) {
   });
 }
 
-// ── Slide 16: Closing ──────────────────────────────────────────────────────
+// ── Slide 21: Closing ──────────────────────────────────────────────────────
 {
   const s = pres.addSlide();
   darkBackground(s);
-  header(s, "Shipping evidence", 16);
+  header(s, "Shipping evidence", 21);
 
   s.addText("Atlas AEC · v2 shipped 19/05/2026", {
     x: 0.6, y: 1.0, w: W - 1.2, h: 0.7,
@@ -596,7 +695,7 @@ for (const sc of shots) {
     { stat: "10 / 10", label: "Vitest FSM tests pass", cmd: "pnpm test", color: C.success },
     { stat: "58 routes", label: "Production build OK", cmd: "pnpm build", color: C.success },
     { stat: "35+ models", label: "Prisma schema applied", cmd: "pnpm db:push", color: C.accentSoft },
-    { stat: "14 PNGs", label: "Live screenshots regenerated", cmd: "tsx scripts/capture-demo.ts", color: C.accentSoft },
+    { stat: "19 PNGs", label: "Live screenshots regenerated", cmd: "tsx scripts/capture-demo.ts", color: C.accentSoft },
   ];
 
   const cardW = 4.0, cardH = 1.4, gap = 0.2;

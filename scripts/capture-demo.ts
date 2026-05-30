@@ -94,6 +94,66 @@ const scenes: Scene[] = [
   { id: "12-portfolio", title: "ProjectPulse — 5-dim risk heatmap", url: () => "/portfolio" },
   { id: "13-trust", title: "Trust — public model cards (Layer 4)", url: () => "/trust" },
   { id: "14-pricing", title: "Pricing — 4 self-serve plans (Layer 8)", url: () => "/pricing" },
+  {
+    id: "15-catalog",
+    title: "Catalog — Cấu kiện · vật tư · NCC + form thêm cấu kiện",
+    url: () => "/catalog",
+    before: async (page) => {
+      await page.waitForLoadState("networkidle").catch(() => undefined);
+      const btn = page.locator('[data-testid="open-create-form"]').first();
+      await btn.waitFor({ state: "visible", timeout: 8000 }).catch(() => undefined);
+      await btn.click({ force: true }).catch(() => undefined);
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    id: "16-schedule",
+    title: "Schedule — Tiến độ + đường găng + form thêm task",
+    url: () => "/schedule",
+    before: async (page) => {
+      await page.waitForLoadState("networkidle").catch(() => undefined);
+      const btn = page.locator('[data-testid="open-create-form"]').first();
+      await btn.waitFor({ state: "visible", timeout: 8000 }).catch(() => undefined);
+      await btn.click({ force: true }).catch(() => undefined);
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    id: "17-permitflow",
+    title: "PermitFlow — Xin GPXD NĐ 15/2021 + form tạo hồ sơ",
+    url: () => "/permitflow",
+    before: async (page) => {
+      await page.waitForLoadState("networkidle").catch(() => undefined);
+      const btn = page.locator('[data-testid="open-create-form"]').first();
+      await btn.waitFor({ state: "visible", timeout: 8000 }).catch(() => undefined);
+      await btn.click({ force: true }).catch(() => undefined);
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    id: "18-pccc",
+    title: "PCCC — Thẩm duyệt NĐ 136/2020 + form tạo hồ sơ",
+    url: () => "/pccc",
+    before: async (page) => {
+      await page.waitForLoadState("networkidle").catch(() => undefined);
+      const btn = page.locator('[data-testid="open-create-form"]').first();
+      await btn.waitFor({ state: "visible", timeout: 8000 }).catch(() => undefined);
+      await btn.click({ force: true }).catch(() => undefined);
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    id: "19-bidradar",
+    title: "BidRadar — Săn gói thầu + form thêm cơ hội",
+    url: () => "/bidradar",
+    before: async (page) => {
+      await page.waitForLoadState("networkidle").catch(() => undefined);
+      const btn = page.locator('[data-testid="open-create-form"]').first();
+      await btn.waitFor({ state: "visible", timeout: 8000 }).catch(() => undefined);
+      await btn.click({ force: true }).catch(() => undefined);
+      await page.waitForTimeout(600);
+    },
+  },
 ];
 
 async function main() {
@@ -109,12 +169,13 @@ async function main() {
   const page = await ctx.newPage();
 
   // Sign in
-  await page.goto(`${BASE}/signin`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/signin`, { waitUntil: "networkidle" });
   await page.screenshot({ path: path.join(OUT, "01-signin.png"), fullPage: false });
-  await page.fill("input[type=email]", EMAIL);
-  await page.fill("input[type=password]", PASSWORD);
-  await page.click("button[type=submit]");
-  await page.waitForURL((u) => !u.toString().includes("/signin"), { timeout: 10_000 });
+  await page.locator("input[type=email]").fill(EMAIL);
+  await page.locator("input[type=password]").fill(PASSWORD);
+  await page.locator("button[type=submit]").click();
+  await page.waitForURL((u) => !u.toString().includes("/signin"), { timeout: 15_000 });
+  await page.waitForLoadState("networkidle").catch(() => undefined);
 
   // Resolve the seeded project id once
   const projectId = await page.evaluate(async () => {
