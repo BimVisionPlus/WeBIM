@@ -6,6 +6,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { OrgSwitcher } from "@/components/org-switcher";
+import { DepartmentSelect } from "./DepartmentSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -212,12 +213,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                   {visible.map((p) => {
                     const extras = Math.max(0, p.stakeholders.length - 1);
                     const firstName = p.stakeholders[0]?.org.name ?? "—";
-                    const deptLabel = TABS.find((t) => t.dept === p.department)?.label ?? "—";
                     return (
                       <tr key={p.id} className="hover:bg-slate-50" data-testid={`row-project-${p.id}`}>
                         <td className="p-3">
                           <Link href={`/projects/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700">{p.name}</Link>
-                          <div className="text-[11px] font-mono text-slate-500">{p.key} · {deptLabel}</div>
+                          <div className="mt-0.5 flex items-center gap-2 text-[11px] font-mono text-slate-500">
+                            <span>{p.key}</span>
+                            <DepartmentSelect projectId={p.id} value={p.department} />
+                          </div>
                         </td>
                         <td className="p-3 text-xs text-slate-700">
                           {firstName}

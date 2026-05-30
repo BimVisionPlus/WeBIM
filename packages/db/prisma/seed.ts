@@ -156,6 +156,7 @@ async function main() {
       startDate: new Date("2025-09-01"),
       endDate: new Date("2027-12-31"),
       status: "IN_PROGRESS",
+      department: "CONG_VIEC", // Viwase QLCV: dự án công việc của công ty
       permitNumber: "92/GPXD-SXD",
       permitDate: new Date("2025-07-15"),
       warrantyMonths: 24,
@@ -170,6 +171,37 @@ async function main() {
       { projectId: project.id, orgId: aaCorp.id, role: "TU_VAN_THIET_KE" },
     ],
   });
+
+  // ─── Extra demo projects spread across 6 departments (Viwase QLCV) ────────
+  // So all 7 tabs on the home page have visible content. ownerOrgId = cofico
+  // so the demo user (Anh @cofico) sees them via the access filter.
+  const extraProjects = [
+    { key: "HLX-CC1", name: "Khu đô thị Hạ Long Xanh", dept: "CONG_VIEC", province: "Quảng Ninh", endDate: "2026-07-15", contractValueVnd: BigInt("980000000000") },
+    { key: "VMM-Q9", name: "Vincom Mega Mall Q.9", dept: "CONG_VIEC", province: "TP. HCM", endDate: "2026-06-25", contractValueVnd: BigInt("520000000000") },
+    { key: "BID-CC1-2026", name: "Gói thầu thi công CC1", dept: "DAU_THAU", province: "TP. HCM", endDate: "2026-06-10", contractValueVnd: BigInt("450000000000") },
+    { key: "BID-IT-2026", name: "Cung cấp thiết bị IT 2026", dept: "DAU_THAU", province: "Hà Nội", endDate: "2026-07-01", contractValueVnd: BigInt("12000000000") },
+    { key: "HC-HR-Q2", name: "Tuyển dụng & onboarding Q2", dept: "HANH_CHINH", province: "TP. HCM", endDate: "2026-06-30", contractValueVnd: null },
+    { key: "HC-XE-2026", name: "Hệ thống điều phối xe", dept: "HANH_CHINH", province: "TP. HCM", endDate: "2026-08-15", contractValueVnd: null },
+    { key: "TCKT-QTT-2025", name: "Quyết toán thuế năm 2025", dept: "TAI_CHINH_KE_TOAN", province: "TP. HCM", endDate: "2026-05-31", contractValueVnd: null },
+    { key: "PTTT-MT-2026", name: "Phát triển thị trường miền Trung", dept: "PHAT_TRIEN_THI_TRUONG", province: "Đà Nẵng", endDate: "2026-09-30", contractValueVnd: BigInt("8000000000") },
+    { key: "CVK-DHCD-2026", name: "Đại hội cổ đông thường niên 2026", dept: "CONG_VIEC_KHAC", province: "TP. HCM", endDate: "2026-06-20", contractValueVnd: null },
+  ];
+  for (const ep of extraProjects) {
+    await prisma.project.create({
+      data: {
+        key: ep.key,
+        name: ep.name,
+        ownerOrgId: cofico.id,
+        province: ep.province,
+        contractValueVnd: ep.contractValueVnd ?? undefined,
+        startDate: new Date("2026-01-15"),
+        endDate: new Date(ep.endDate),
+        status: "IN_PROGRESS",
+        department: ep.dept as any,
+        warrantyMonths: 12,
+      },
+    });
+  }
 
   // ─── Drawing set & sheets ────────────────────────────────────────────────
   const ktSet = await prisma.drawingSet.create({

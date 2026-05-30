@@ -21,6 +21,9 @@ const Body = z.object({
   permitNumber: z.string().max(80).optional(),
   permitDate: z.string().optional(),
   warrantyMonths: z.number().int().min(0).max(120).optional(),
+  department: z
+    .enum(["CONG_VIEC", "DAU_THAU", "HANH_CHINH", "TAI_CHINH_KE_TOAN", "PHAT_TRIEN_THI_TRUONG", "CONG_VIEC_KHAC"])
+    .optional(),
   stakeholders: z
     .array(
       z.object({
@@ -69,6 +72,7 @@ try {
           permitNumber: data.permitNumber,
           permitDate: data.permitDate ? new Date(data.permitDate) : null,
           warrantyMonths: data.warrantyMonths ?? 24,
+          ...(data.department ? { department: data.department } : {}),
         },
       });
       // owner org is always stakeholder as CHU_DAU_TU if its type is that;

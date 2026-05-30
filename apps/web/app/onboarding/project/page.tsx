@@ -19,6 +19,7 @@ function CreateProjectInner() {
     endDate: "",
     permitNumber: "",
     warrantyMonths: 24,
+    department: "CONG_VIEC_KHAC",
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -46,6 +47,7 @@ function CreateProjectInner() {
         endDate: form.endDate || undefined,
         permitNumber: form.permitNumber || undefined,
         warrantyMonths: form.warrantyMonths,
+        department: form.department,
       }),
     });
     setBusy(false);
@@ -129,6 +131,21 @@ function CreateProjectInner() {
               value={form.permitNumber}
               onChange={(e) => setForm({ ...form, permitNumber: e.target.value })}
             />
+          </label>
+          <label className="block">
+            <span className="block text-xs font-medium text-slate-700">Phòng phụ trách</span>
+            <select
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              value={form.department}
+              onChange={(e) => setForm({ ...form, department: e.target.value })}
+            >
+              <option value="CONG_VIEC">Công việc</option>
+              <option value="DAU_THAU">Đấu thầu</option>
+              <option value="HANH_CHINH">Hành chính</option>
+              <option value="TAI_CHINH_KE_TOAN">Tài chính kế toán</option>
+              <option value="PHAT_TRIEN_THI_TRUONG">Phát triển thị trường</option>
+              <option value="CONG_VIEC_KHAC">Công việc khác</option>
+            </select>
           </label>
           <label className="block">
             <span className="block text-xs font-medium text-slate-700">Ngày khởi công</span>
