@@ -113,6 +113,62 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
   };
   const distTotal = dist["Đúng tiến độ"] + dist["Cảnh báo"] + dist["Chậm"];
 
+  // ─── Dept-tab content (Hành chính / TC-KT / PTTT) ────────────────────────────
+  // Each tab gets its own widget grid above the project table.
+  let deptWidgets: React.ReactNode = null;
+  if (activeTab.key === "HANH_CHINH") {
+    const [agencyDocs, internalDocs, bhxh, dispatches] = await Promise.all([
+      prisma.agencyDocument.findMany({ where: { OR: [{ projectId: null }, { project: accessFilter }] }, orderBy: { docDate: "desc" }, take: 3 }),
+      prisma.internalDocument.findMany({ where: { orgId: { in: orgIds } }, orderBy: { issuedAt: "desc" }, take: 3 }),
+      prisma.socialInsuranceRecord.findMany({ where: { orgId: { in: orgIds } }, orderBy: { createdAt: "desc" }, take: 3 }),
+      prisma.vehicleDispatch.findMany({ where: { orgId: { in: orgIds } }, orderBy: { startAt: "desc" }, take: 3 }),
+    ]);
+    const [agencyCount, internalCount, bhxhCount, dispatchCount] = await Promise.all([
+      prisma.agencyDocument.count({ where: { OR: [{ projectId: null }, { project: accessFilter }] } }),
+      prisma.internalDocument.count({ where: { orgId: { in: orgIds } } }),
+      prisma.socialInsuranceRecord.count({ where: { orgId: { in: orgIds } } }),
+      prisma.vehicleDispatch.count({ where: { orgId: { in: orgIds } } }),
+    ]);
+    deptWidgets = (
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4" data-testid="dept-widgets-hanh-chinh">
+        <DeptCard title="Công văn đến/đi" count={agencyCount} href="/stakeholders" items={agencyDocs.map((d) => ({ key: d.id, primary: d.docNo, secondary: d.subject }))} />
+        <DeptCard title="Văn bản nội bộ" count={internalCount} href="/internaldocs" items={internalDocs.map((d) => ({ key: d.id, primary: d.docNo, secondary: d.title }))} />
+        <DeptCard title="Theo dõi BHXH" count={bhxhCount} href="/bhxh" items={bhxh.map((r) => ({ key: r.id, primary: r.employeeName, secondary: r.status }))} />
+        <DeptCard title="Điều phối xe" count={dispatchCount} href="/vehicledispatch" items={dispatches.map((d) => ({ key: d.id, primary: d.vehiclePlate, secondary: d.purpose }))} />
+      </div>
+    );
+  } else if (activeTab.key === "TAI_CHINH_KE_TOAN") {
+    const [advances, assignments] = await Promise.all([
+      prisma.advanceTransaction.findMany({ where: { orgId: { in: orgIds } }, orderBy: { txnDate: "desc" }, take: 3 }),
+      prisma.contractorAssignment.findMany({ where: { project: accessFilter }, orderBy: { createdAt: "desc" }, take: 3 }),
+    ]);
+    const [advanceCount, assignmentCount] = await Promise.all([
+      prisma.advanceTransaction.count({ where: { orgId: { in: orgIds } } }),
+      prisma.contractorAssignment.count({ where: { project: accessFilter } }),
+    ]);
+    deptWidgets = (
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="dept-widgets-tckt">
+        <DeptCard title="Tạm ứng / Thanh toán / Hoàn ứng" count={advanceCount} href="/advances" items={advances.map((t) => ({ key: t.id, primary: t.payeeName, secondary: `${t.type} · ${t.amountVnd.toString().slice(0,-6)}M` }))} />
+        <DeptCard title="Bảng giao khoán cho đơn vị" count={assignmentCount} href="/contractorassigns" items={assignments.map((a) => ({ key: a.id, primary: a.contractorName, secondary: `${a.pctComplete}% hoàn thành` }))} />
+      </div>
+    );
+  } else if (activeTab.key === "PHAT_TRIEN_THI_TRUONG") {
+    const [territories, leads] = await Promise.all([
+      prisma.marketTerritory.findMany({ where: { orgId: { in: orgIds } }, include: { _count: { select: { leads: true } } }, orderBy: { createdAt: "desc" }, take: 3 }),
+      prisma.projectLead.findMany({ where: { orgId: { in: orgIds }, status: { in: ["TRACKING", "POTENTIAL"] } }, orderBy: { createdAt: "desc" }, take: 3 }),
+    ]);
+    const [territoryCount, leadCount] = await Promise.all([
+      prisma.marketTerritory.count({ where: { orgId: { in: orgIds } } }),
+      prisma.projectLead.count({ where: { orgId: { in: orgIds }, status: { in: ["TRACKING", "POTENTIAL"] } } }),
+    ]);
+    deptWidgets = (
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="dept-widgets-pttt">
+        <DeptCard title="Địa bàn" count={territoryCount} href="/territories" items={territories.map((t) => ({ key: t.id, primary: t.name, secondary: `${t._count.leads} cơ hội · ${t.province ?? "—"}` }))} />
+        <DeptCard title="Dự án đang theo & tiềm năng" count={leadCount} href="/leads" items={leads.map((l) => ({ key: l.id, primary: l.name, secondary: `${l.status} · ${l.province ?? "—"}` }))} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
@@ -165,6 +221,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
             );
           })}
         </nav>
+
+        {deptWidgets}
 
         <Card className="mt-4">
           <CardHeader>
@@ -312,5 +370,29 @@ function Donut({ total, parts }: { total: number; parts: { label: string; value:
       <text x="90" y="92" textAnchor="middle" fontSize="22" fontWeight="700" fill="#0f172a">{total}</text>
       <text x="90" y="110" textAnchor="middle" fontSize="10" fill="#64748b">dự án</text>
     </svg>
+  );
+}
+
+function DeptCard({ title, count, href, items }: { title: string; count: number; href: string; items: { key: string; primary: string; secondary?: string | null }[] }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+        <div className="text-sm font-semibold text-slate-900">{title}</div>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">{count}</span>
+      </div>
+      <div className="divide-y divide-slate-100">
+        {items.length === 0 ? (
+          <div className="px-3 py-4 text-center text-xs text-slate-400">Chưa có dữ liệu.</div>
+        ) : (
+          items.map((it) => (
+            <div key={it.key} className="px-3 py-2 text-xs">
+              <div className="font-medium text-slate-900 line-clamp-1">{it.primary}</div>
+              {it.secondary && <div className="text-[11px] text-slate-500 line-clamp-1">{it.secondary}</div>}
+            </div>
+          ))
+        )}
+      </div>
+      <a href={href} className="block border-t border-slate-100 px-3 py-2 text-right text-[11px] font-medium text-blue-600 hover:text-blue-700">Xem chi tiết →</a>
+    </div>
   );
 }

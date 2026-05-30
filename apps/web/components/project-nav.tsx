@@ -6,6 +6,7 @@ import { cn } from "@atlas/ui";
 
 const tabs = [
   { href: "", label: "Tổng quan" },
+  { href: "/tinh-hinh", label: "Tình hình" },
   { href: "/site/issues", label: "Issues" },
   { href: "/site/rfi", label: "RFI" },
   { href: "/site/submittals", label: "Submittal" },

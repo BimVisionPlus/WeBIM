@@ -49,6 +49,14 @@ model Organization {
   consultantTimes    ConsultantTimesheet[] @relation("ConsultantTimeOrg")
   consultantContracts ConsultantContract[]  @relation("ConsultantContractTvOrg")
   consultantClients  ConsultantContract[]   @relation("ConsultantContractClientOrg")
+  // Viwase QLCV — dept content
+  internalDocs        InternalDocument[]
+  bhxhRecords         SocialInsuranceRecord[]
+  vehicleDispatches   VehicleDispatch[]
+  advanceTxns         AdvanceTransaction[]
+  contractorAssigns   ContractorAssignment[]
+  marketTerritories   MarketTerritory[]
+  projectLeads        ProjectLead[]
 }
 
 enum OrgType {
@@ -90,6 +98,10 @@ model User {
   superviseEntries SuperviseEntry[]   @relation("SuperviseTvgsUser")
   hseCerts       HseCertificate[]     @relation("HseCertUser")
   consultantTimes ConsultantTimesheet[] @relation("ConsultantTimeUser")
+  // Viwase QLCV
+  statusUpdates  ProjectStatusUpdate[]
+  internalDocs   InternalDocument[]
+  marketTerritories MarketTerritory[]
 }
 
 // ─── NextAuth ────────────────────────────────────────────────────────────────
@@ -182,6 +194,7 @@ model Project {
   endDate          DateTime?
   status           ProjectStatus @default(PLANNING)
   department       ProjectDepartment @default(CONG_VIEC_KHAC) // phòng ban phụ trách (Viwase QLCV)
+  contractScope    String?           @db.Text // Nội dung công việc theo hợp đồng (Viwase: tab Tổng thể drill-down)
   permitNumber     String? // Số giấy phép xây dựng
   permitDate       DateTime?
   warrantyMonths   Int           @default(24) // NĐ 06/2021: 12 tháng phần phụ, 24 tháng phần chính, 60 tháng hạ tầng
@@ -228,6 +241,13 @@ model Project {
   agencyAppts        AgencyAppointment[]
   docCorpus          DocCorpus[]
   monitorPoints      MonitorPoint[]
+  // Viwase QLCV — drill-down + dept-tab content
+  statusUpdates      ProjectStatusUpdate[]
+  internalDocs       InternalDocument[]
+  bhxhRecords        SocialInsuranceRecord[]
+  vehicleDispatches  VehicleDispatch[]
+  advanceTxns        AdvanceTransaction[]
+  contractorAssigns  ContractorAssignment[]
 }
 
 enum ProjectStatus {
@@ -3719,4 +3739,231 @@ enum PcccApplicationState {
   APPROVED
   REJECTED
   WITHDRAWN
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Viwase QLCV — dept-tab content models (Tab 3/4/5) + per-project drill-down
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Per-project status timeline shown in /projects/[id]/tinh-hinh
+model ProjectStatusUpdate {
+  id        String   @id @default(cuid())
+  projectId String
+  title     String
+  body      String   @db.Text
+  pctComplete Float? // optional snapshot of progress at the time of the update
+  reportedAt DateTime @default(now())
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  User?   @relation(fields: [authorId], references: [id])
+
+  @@index([projectId, reportedAt])
+}
+
+// ─── Tab 3 Hành chính ─────────────────────────────────────────────────────────
+
+// Văn bản nội bộ (internal memos / circulars within the company)
+model InternalDocument {
+  id          String   @id @default(cuid())
+  orgId       String
+  projectId   String?
+  docNo       String // số văn bản
+  category    InternalDocCategory @default(KHAC)
+  title       String
+  body        String?  @db.Text
+  issuedAt    DateTime @default(now())
+  effectiveAt DateTime?
+  createdAt   DateTime @default(now())
+  authorId    String?
+
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  project Project?     @relation(fields: [projectId], references: [id])
+  author  User?        @relation(fields: [authorId], references: [id])
+
+  @@index([orgId, issuedAt])
+  @@index([projectId])
+}
+
+enum InternalDocCategory {
+  QUYET_DINH // Quyết định
+  THONG_BAO // Thông báo
+  QUY_CHE // Quy chế
+  QUY_TRINH // Quy trình
+  BIEN_BAN // Biên bản nội bộ
+  KHAC
+}
+
+// Theo dõi bảo hiểm xã hội (BHXH) cho nhân viên
+model SocialInsuranceRecord {
+  id          String   @id @default(cuid())
+  orgId       String
+  projectId   String?
+  employeeName String
+  employeeIdNo String? // CCCD
+  bhxhNumber   String? // Số sổ BHXH
+  status       BhxhStatus @default(DANG_DONG)
+  monthlyBaseVnd BigInt? // Mức đóng / tháng
+  startedAt    DateTime?
+  stoppedAt    DateTime?
+  note         String? @db.Text
+  createdAt    DateTime @default(now())
+
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  project Project?     @relation(fields: [projectId], references: [id])
+
+  @@index([orgId, status])
+}
+
+enum BhxhStatus {
+  DANG_DONG // Đang đóng BHXH
+  TAM_DUNG // Tạm dừng
+  CHO_DANG_KY // Chờ đăng ký
+  DA_NGHI // Đã nghỉ việc
+  KHAC
+}
+
+// Điều phối xe — vehicle dispatch / motor pool
+model VehicleDispatch {
+  id           String   @id @default(cuid())
+  orgId        String
+  projectId    String?
+  vehiclePlate String // Biển số
+  driverName   String
+  purpose      String
+  startAt      DateTime
+  endAt        DateTime?
+  status       DispatchStatus @default(SCHEDULED)
+  note         String? @db.Text
+  createdAt    DateTime @default(now())
+
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  project Project?     @relation(fields: [projectId], references: [id])
+
+  @@index([orgId, startAt])
+  @@index([status, startAt])
+}
+
+enum DispatchStatus {
+  SCHEDULED // Đã đặt lịch
+  IN_USE // Đang sử dụng
+  RETURNED // Đã trả xe
+  CANCELLED
+}
+
+// ─── Tab 4 Tài chính kế toán ──────────────────────────────────────────────────
+
+// Tạm ứng / Thanh toán / Hoàn ứng — single ledger by type
+model AdvanceTransaction {
+  id          String   @id @default(cuid())
+  orgId       String
+  projectId   String?
+  type        AdvanceType
+  txnNo       String? // Số phiếu
+  payeeName   String // Người/đơn vị nhận
+  amountVnd   BigInt
+  purpose     String
+  txnDate     DateTime @default(now())
+  status      AdvanceTxnStatus @default(PENDING)
+  parentTxnId String? // dùng cho HOAN_UNG để link về tạm ứng gốc
+  note        String? @db.Text
+  createdAt   DateTime @default(now())
+
+  org       Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  project   Project?             @relation(fields: [projectId], references: [id])
+  parentTxn AdvanceTransaction?  @relation("AdvanceLineage", fields: [parentTxnId], references: [id])
+  returns   AdvanceTransaction[] @relation("AdvanceLineage")
+
+  @@index([orgId, type, txnDate])
+  @@index([projectId])
+}
+
+enum AdvanceType {
+  TAM_UNG // Tạm ứng
+  THANH_TOAN // Thanh toán
+  HOAN_UNG // Hoàn ứng (về phần tạm ứng chưa dùng hết)
+}
+
+enum AdvanceTxnStatus {
+  PENDING // Chờ duyệt
+  APPROVED // Đã duyệt / đã chi
+  SETTLED // Đã quyết toán / hoàn ứng đầy đủ
+  CANCELLED
+}
+
+// Bảng giao khoán cho các đơn vị (DV = đội nhóm hoặc nhà thầu phụ)
+model ContractorAssignment {
+  id           String   @id @default(cuid())
+  projectId    String
+  contractorName String // Tên đơn vị nhận khoán
+  contractorOrgId String? // (optional) FK nếu DV có trong Organization
+  scope        String   @db.Text // Phạm vi công việc giao khoán
+  amountVnd    BigInt
+  startDate    DateTime
+  endDate      DateTime
+  pctComplete  Float    @default(0) // 0..100
+  status       AssignmentStatus @default(ACTIVE)
+  createdAt    DateTime @default(now())
+
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contractorOrg  Organization? @relation(fields: [contractorOrgId], references: [id])
+
+  @@index([projectId, status])
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+// ─── Tab 5 Phát triển thị trường ──────────────────────────────────────────────
+
+// Địa bàn — geographic territory the BD team is covering
+model MarketTerritory {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String // VD: "Miền Trung", "Tỉnh Đắk Lắk"
+  province  String?
+  scope     String?  @db.Text // Phạm vi hoạt động
+  ownerUserId String? // Trưởng địa bàn
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  owner User?        @relation(fields: [ownerUserId], references: [id])
+  leads ProjectLead[]
+
+  @@index([orgId, active])
+}
+
+// Dự án đang theo + Dự án tiềm năng (status discriminates)
+model ProjectLead {
+  id            String   @id @default(cuid())
+  orgId         String
+  territoryId   String?
+  name          String // tên gói thầu / khách hàng / dự án dự kiến
+  clientName    String?
+  province      String?
+  estValueVnd   BigInt?
+  source        String?
+  status        LeadStatus @default(POTENTIAL)
+  nextActionAt  DateTime?
+  note          String? @db.Text
+  createdAt     DateTime @default(now())
+
+  org       Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  territory MarketTerritory? @relation(fields: [territoryId], references: [id])
+
+  @@index([orgId, status])
+}
+
+enum LeadStatus {
+  POTENTIAL // Dự án tiềm năng (chưa chính thức theo dõi)
+  TRACKING // Đang theo dõi
+  WON // Đã trúng / chuyển thành Project
+  LOST // Không trúng / bỏ qua
+  ARCHIVED
 }

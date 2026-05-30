@@ -99,6 +99,24 @@ async function main() {
   await prisma.consultantContract.deleteMany(); // → Organization (ConsultantContractTvOrg)
   await prisma.consultantTimesheet.deleteMany(); // → Organization (ConsultantTimeOrg)
   await prisma.invite.deleteMany(); // → User (InvitedBy)
+  // Viwase QLCV — dept content + drill-down
+  await prisma.projectStatusUpdate.deleteMany();
+  await prisma.internalDocument.deleteMany();
+  await prisma.socialInsuranceRecord.deleteMany();
+  await prisma.vehicleDispatch.deleteMany();
+  await prisma.advanceTransaction.deleteMany();
+  await prisma.contractorAssignment.deleteMany();
+  await prisma.projectLead.deleteMany();
+  await prisma.marketTerritory.deleteMany();
+  // E2E unblock seeds (children before parents)
+  await prisma.contractorReference.deleteMany();
+  await prisma.contractorPerformance.deleteMany();
+  await prisma.contractorProfile.deleteMany();
+  await prisma.hseCertificate.deleteMany();
+  await prisma.hseCourse.deleteMany();
+  await prisma.agencyAppointment.deleteMany();
+  await prisma.agencyDocument.deleteMany();
+  await prisma.govAgency.deleteMany();
   await prisma.projectStakeholder.deleteMany();
   await prisma.project.deleteMany();
   await prisma.membership.deleteMany();
@@ -202,6 +220,31 @@ async function main() {
       },
     });
   }
+
+  // ─── E2E seed prerequisites (unblock stakeholders/hsetrain/registry specs) ─
+  // GovAgency (≥1) so stakeholders' "Ghi nhận văn bản" form has a default option.
+  await prisma.govAgency.createMany({
+    data: [
+      { code: "SXD-HCM", name: "Sở Xây dựng TP. HCM", agencyType: "SO_XAY_DUNG", level: "Tỉnh/TP", province: "TP. HCM" },
+      { code: "PC07-HCM", name: "Phòng Cảnh sát PCCC - CATP HCM", agencyType: "CONG_AN_PCCC", level: "Tỉnh/TP", province: "TP. HCM" },
+      { code: "KBNN-HCM", name: "Kho bạc Nhà nước TP. HCM", agencyType: "KBNN", level: "Tỉnh/TP", province: "TP. HCM" },
+    ],
+  });
+  // HseCourse (≥1) so hsetrain's "Cấp chứng chỉ ATLĐ" form has a default course.
+  await prisma.hseCourse.createMany({
+    data: [
+      { code: "ATLD-N3-2026", group: "N3", title: "Huấn luyện ATVSLĐ Nhóm 3 (NLĐ trực tiếp)", durationHours: 24, syllabus: "Nội dung theo NĐ 44/2016 — nhận diện rủi ro, sử dụng PPE, sơ cứu, thoát hiểm.", validityMonths: 24, passScore: 80 },
+      { code: "ATLD-N4-2026", group: "N4", title: "Huấn luyện ATVSLĐ Nhóm 4 (NLĐ làm việc không có yêu cầu nghiêm ngặt)", durationHours: 16, syllabus: "Nội dung theo NĐ 44/2016 — quy tắc chung tại công trường.", validityMonths: 24, passScore: 80 },
+    ],
+  });
+  // ContractorProfile (≥1, blacklisted=false) so registry's blacklist round-trip
+  // spec can find an "OK" profile to flip.
+  await prisma.contractorProfile.createMany({
+    data: [
+      { orgId: cofico.id, legalName: cofico.name, mst: cofico.mst, capabilityClass: "HANG_I", capabilityNo: "BXD-001/2024", capabilityScope: ["Thi công dân dụng", "Thi công công nghiệp"], charteredEng: 8, totalStaff: 240, pastProjects: 32, blacklisted: false },
+      { orgId: aaCorp.id, legalName: aaCorp.name, mst: aaCorp.mst, capabilityClass: "HANG_II", capabilityNo: "BXD-002/2024", capabilityScope: ["Tư vấn thiết kế kiến trúc"], charteredEng: 4, totalStaff: 60, pastProjects: 18, blacklisted: false },
+    ],
+  });
 
   // ─── Drawing set & sheets ────────────────────────────────────────────────
   const ktSet = await prisma.drawingSet.create({
