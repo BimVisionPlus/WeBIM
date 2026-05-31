@@ -7,7 +7,12 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // The test suite shares one Postgres + one dev server. Heavy parallel
+  // load causes transient flakes in monitor/paymentrail/portal/qaqc as
+  // workers step on each other's seed state. Cap local workers + one retry
+  // (CI keeps its two retries). Each spec passes 100% in isolation.
+  retries: process.env.CI ? 2 : 1,
+  workers: process.env.CI ? undefined : 2,
   reporter: process.env.CI ? "github" : "list",
   globalSetup: "./e2e/global-setup.ts",
   use: {
