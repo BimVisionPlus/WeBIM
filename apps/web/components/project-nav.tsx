@@ -31,6 +31,7 @@ const AEC_TABS: Tab[] = [
   { href: "/siteeye", label: "SiteEye", group: "aec" },
   { href: "/costpulse", label: "CostPulse", group: "aec" },
   { href: "/handover", label: "Handover", group: "aec" },
+  { href: "/evm", label: "EVM", group: "aec" },
 ];
 // Tender / bidding subset (DAU_THAU).
 const BID_TABS: Tab[] = [

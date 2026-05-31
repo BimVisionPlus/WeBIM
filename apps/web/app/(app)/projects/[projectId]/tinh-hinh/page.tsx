@@ -3,7 +3,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn, formatVndShort } from "@atlas/lib";
 import { redirect } from "next/navigation";
 import { requireProject, AuthError } from "@atlas/auth";
-import { StatusUpdateForm, ContractScopeEditor } from "./Actions";
+import { StatusUpdateForm, ContractScopeEditor, SummarizeButton } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +102,7 @@ export default async function TinhHinhPage({ params }: { params: Promise<{ proje
               <StatusUpdateForm projectId={project.id} />
             </div>
           </div>
+          {updates.length >= 2 && <div className="mt-3"><SummarizeButton projectId={project.id} /></div>}
         </CardHeader>
         <CardBody className="p-0">
           {updates.length === 0 ? (

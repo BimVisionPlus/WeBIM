@@ -66,14 +66,16 @@ export default async function AdvancesPage() {
                 {txns.map((t) => {
                   const tm = typeMeta[t.type] ?? { vn: t.type, variant: "neutral" as const };
                   const sm = statusMeta[t.status] ?? { vn: t.status, variant: "neutral" as const };
+                  const days = Math.floor((Date.now() - t.txnDate.getTime()) / 86400000);
+                  const overdue = t.type === "TAM_UNG" && ["PENDING", "APPROVED"].includes(t.status) && days >= 30;
                   return (
-                    <tr key={t.id} className="hover:bg-slate-50" data-testid={`row-advance-${t.id}`}>
-                      <td className="p-2 text-xs">{formatDateVn(t.txnDate)}</td>
+                    <tr key={t.id} className={`hover:bg-slate-50 ${overdue ? "bg-amber-50/50" : ""}`} data-testid={`row-advance-${t.id}`}>
+                      <td className="p-2 text-xs">{formatDateVn(t.txnDate)}{overdue && <div className="text-[10px] font-medium text-amber-700">{days} ngày — cần hoàn ứng</div>}</td>
                       <td className="p-2 font-mono text-xs">{t.txnNo ?? "—"}{t.project && <div className="text-[10px] text-slate-500">{t.project.key}</div>}</td>
                       <td className="p-2"><Badge variant={tm.variant}>{tm.vn}</Badge></td>
                       <td className="p-2"><div className="font-medium">{t.payeeName}</div><div className="text-[11px] text-slate-500 line-clamp-1">{t.purpose}</div></td>
                       <td className="p-2 text-right font-medium">{formatVnd(t.amountVnd)}</td>
-                      <td className="p-2"><Badge variant={sm.variant}>{sm.vn}</Badge></td>
+                      <td className="p-2"><Badge variant={sm.variant}>{sm.vn}</Badge>{overdue && <Badge variant="warning" className="ml-1">Quá hạn</Badge>}</td>
                     </tr>
                   );
                 })}

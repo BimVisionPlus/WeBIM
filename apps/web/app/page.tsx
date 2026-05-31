@@ -7,6 +7,8 @@ import { Card, CardBody, CardHeader, CardTitle } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { DepartmentSelect } from "./DepartmentSelect";
+import { RiskBanner } from "@/components/risk-banner";
+import { DigestButton } from "@/components/digest-button";
 
 export const dynamic = "force-dynamic";
 
@@ -130,12 +132,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
       prisma.vehicleDispatch.count({ where: { orgId: { in: orgIds } } }),
     ]);
     deptWidgets = (
-      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4" data-testid="dept-widgets-hanh-chinh">
+      <>
+      <div className="mt-4 flex justify-end"><DigestButton dept="HANH_CHINH" label="Hành chính" /></div>
+      <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4" data-testid="dept-widgets-hanh-chinh">
         <DeptCard title="Công văn đến/đi" count={agencyCount} href="/stakeholders" items={agencyDocs.map((d) => ({ key: d.id, primary: d.docNo, secondary: d.subject }))} />
         <DeptCard title="Văn bản nội bộ" count={internalCount} href="/internaldocs" items={internalDocs.map((d) => ({ key: d.id, primary: d.docNo, secondary: d.title }))} />
         <DeptCard title="Theo dõi BHXH" count={bhxhCount} href="/bhxh" items={bhxh.map((r) => ({ key: r.id, primary: r.employeeName, secondary: r.status }))} />
         <DeptCard title="Điều phối xe" count={dispatchCount} href="/vehicledispatch" items={dispatches.map((d) => ({ key: d.id, primary: d.vehiclePlate, secondary: d.purpose }))} />
       </div>
+      </>
     );
   } else if (activeTab.key === "TAI_CHINH_KE_TOAN") {
     const [advances, assignments] = await Promise.all([
@@ -147,10 +152,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
       prisma.contractorAssignment.count({ where: { project: accessFilter } }),
     ]);
     deptWidgets = (
-      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="dept-widgets-tckt">
+      <>
+      <div className="mt-4 flex justify-end"><DigestButton dept="TAI_CHINH_KE_TOAN" label="TC-KT" /></div>
+      <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="dept-widgets-tckt">
         <DeptCard title="Tạm ứng / Thanh toán / Hoàn ứng" count={advanceCount} href="/advances" items={advances.map((t) => ({ key: t.id, primary: t.payeeName, secondary: `${t.type} · ${t.amountVnd.toString().slice(0,-6)}M` }))} />
         <DeptCard title="Bảng giao khoán cho đơn vị" count={assignmentCount} href="/contractorassigns" items={assignments.map((a) => ({ key: a.id, primary: a.contractorName, secondary: `${a.pctComplete}% hoàn thành` }))} />
       </div>
+      </>
     );
   } else if (activeTab.key === "PHAT_TRIEN_THI_TRUONG") {
     const [territories, leads] = await Promise.all([
@@ -162,10 +170,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
       prisma.projectLead.count({ where: { orgId: { in: orgIds }, status: { in: ["TRACKING", "POTENTIAL"] } } }),
     ]);
     deptWidgets = (
-      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="dept-widgets-pttt">
+      <>
+      <div className="mt-4 flex justify-end"><DigestButton dept="PHAT_TRIEN_THI_TRUONG" label="PTTT" /></div>
+      <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="dept-widgets-pttt">
         <DeptCard title="Địa bàn" count={territoryCount} href="/territories" items={territories.map((t) => ({ key: t.id, primary: t.name, secondary: `${t._count.leads} cơ hội · ${t.province ?? "—"}` }))} />
         <DeptCard title="Dự án đang theo & tiềm năng" count={leadCount} href="/leads" items={leads.map((l) => ({ key: l.id, primary: l.name, secondary: `${l.status} · ${l.province ?? "—"}` }))} />
       </div>
+      </>
     );
   }
 
@@ -200,6 +211,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
+        <RiskBanner orgIds={orgIds} accessFilter={accessFilter} />
+
         <nav className="flex flex-wrap gap-1 border-b border-slate-200" data-testid="dept-tabs">
           {TABS.map((t) => {
             const isActive = t.key === activeTabKey;

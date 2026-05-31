@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { TenderCreateButton } from "@/components/winwork-tender-create";
+import { TrackAction } from "./TrackAction";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,8 @@ export default async function BidRadarPage() {
 
   const now = new Date();
   const in7d = new Date(now.getTime() + 7 * 86400_000);
+  const memberships = await prisma.membership.findMany({ where: { userId: session.userId }, select: { orgId: true } });
+  const activeOrgId = memberships[0]?.orgId ?? "";
 
   const [recent, closingSoon, byProvince, total] = await Promise.all([
     prisma.tenderOpportunity.findMany({
@@ -99,7 +102,10 @@ export default async function BidRadarPage() {
                       {t.bidMethod && <Badge variant="info">{t.bidMethod}</Badge>}
                       {t.province && <span className="text-xs text-slate-500">{t.province}</span>}
                     </div>
-                    <div className="mt-1 font-medium text-slate-900">{t.title}</div>
+                    <div className="mt-1 flex items-start justify-between gap-2">
+                      <div className="font-medium text-slate-900">{t.title}</div>
+                      {activeOrgId && <TrackAction opportunityId={t.id} orgId={activeOrgId} />}
+                    </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <span>{t.invitor ?? "—"}</span>
                       <span>{t.budgetVnd ? formatVnd(t.budgetVnd) : "—"}</span>

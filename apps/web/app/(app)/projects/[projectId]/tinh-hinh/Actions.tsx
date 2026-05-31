@@ -67,3 +67,27 @@ export function ContractScopeEditor({ projectId, initial }: { projectId: string;
     </div>
   );
 }
+
+export function SummarizeButton({ projectId }: { projectId: string }) {
+  const [busy, setBusy] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [model, setModel] = useState<string | null>(null);
+  async function run() {
+    setBusy(true); setSummary(null);
+    const r = await fetch("/api/ai/summarize-status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId }) });
+    setBusy(false);
+    const j = await r.json();
+    if (j.ok) { setSummary(j.summary); setModel(j.model ?? null); }
+    else setSummary(j.summary ?? "AI không phản hồi.");
+  }
+  return (
+    <div className="rounded-lg border border-violet-200 bg-violet-50/40 p-3" data-testid="status-summary">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-violet-800">Tóm tắt AI từ 5 cập nhật gần nhất</span>
+        <button onClick={run} disabled={busy} className="rounded border border-violet-300 bg-white px-2 py-1 text-[11px] font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-50" data-testid="summary-run">{busy ? "AI đang viết…" : summary ? "Tóm tắt lại" : "✨ Tóm tắt"}</button>
+      </div>
+      {summary && <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-800" data-testid="summary-text">{summary}</pre>}
+      {model && <div className="mt-1 text-[10px] text-slate-500">Mô hình: {model}</div>}
+    </div>
+  );
+}
