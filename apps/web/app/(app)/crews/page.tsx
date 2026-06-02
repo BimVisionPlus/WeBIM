@@ -94,6 +94,7 @@ export default async function CrewsOrgPage() {
                   <th className="p-2 text-right">Quân số</th>
                   <th className="p-2 text-right">Phân công</th>
                   <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -106,6 +107,7 @@ export default async function CrewsOrgPage() {
                     <td className="p-2 text-right text-xs">{c.headcount}</td>
                     <td className="p-2 text-right text-xs">{c._count.assignments}</td>
                     <td className="p-2">{c.active ? <Badge variant="success">Hoạt động</Badge> : <Badge variant="neutral">Tạm nghỉ</Badge>}</td>
+                    <td className="p-2"><RowActions id={c.id} hasAssignments={c._count.assignments > 0} /></td>
                   </tr>
                 ))}
               </tbody>

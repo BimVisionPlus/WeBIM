@@ -85,6 +85,7 @@ export default async function PunchListOrgPage() {
                   <th className="p-2 text-left">Mô tả</th>
                   <th className="p-2 text-left">Trạng thái</th>
                   <th className="p-2 text-left">Hạn</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -103,6 +104,7 @@ export default async function PunchListOrgPage() {
                           : <Badge variant="warning">Đang xử lý</Badge>}
                     </td>
                     <td className="p-2 text-xs text-slate-500">{p.issue.dueDate ? formatDateVn(p.issue.dueDate) : "—"}</td>
+                    <td className="p-2"><RowActions issueId={p.issueId} accepted={!!p.acceptedAt} /></td>
                   </tr>
                 ))}
               </tbody>

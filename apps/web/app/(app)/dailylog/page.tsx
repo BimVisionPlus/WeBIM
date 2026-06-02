@@ -78,7 +78,7 @@ export default async function DailyLogOrgPage() {
                   {l.safetyNotes && (
                     <div className="mt-1 rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-800">⚠ {l.safetyNotes.slice(0, 150)}</div>
                   )}
-                  <div className="text-[11px] text-slate-500">{l.author.name}</div>
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500"><span>{l.author.name}</span><RowActions id={l.id} signed={!!l.signedAt} /></div>
                 </li>
               ))}
             </ul>

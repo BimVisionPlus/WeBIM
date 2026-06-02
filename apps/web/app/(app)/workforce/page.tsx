@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm, CheckinAction } from "./Actions";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,7 @@ export default async function WorkforcePage() {
                       <td className="p-2 text-xs">{w.hseCertNumber ? <><span className={hseOk ? "text-emerald-700" : "text-rose-700"}>{w.hseCertNumber}</span><div className="text-[10px] text-slate-500">{w.hseCertExpiry ? `hết ${formatDateVn(w.hseCertExpiry)}` : ""}</div></> : <span className="text-slate-400">Chưa có</span>}</td>
                       <td className="p-2 text-xs">{w.proLicenseNo ? <><span className={proOk ? "text-emerald-700" : "text-amber-700"}>{w.proLicenseNo}</span><div className="text-[10px] text-slate-500">{w.proLicenseExpiry ? formatDateVn(w.proLicenseExpiry) : ""}</div></> : <span className="text-slate-400">—</span>}</td>
                       <td className="p-2 text-right text-xs">{w._count.attendance}</td>
-                      <td className="p-2"><CheckinAction id={w.id} /></td>
+                      <td className="p-2"><div className="flex items-center gap-2"><CheckinAction id={w.id} /><RowActions id={w.id} hasAttendance={w._count.attendance > 0} /></div></td>
                     </tr>
                   );
                 })}

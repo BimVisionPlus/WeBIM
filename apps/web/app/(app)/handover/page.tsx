@@ -95,6 +95,7 @@ export default async function HandoverOrgPage() {
                   <th className="p-2 text-left">Tiêu đề</th>
                   <th className="p-2 text-left">Trạng thái</th>
                   <th className="p-2 text-left">SLA</th>
+                  <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -109,6 +110,7 @@ export default async function HandoverOrgPage() {
                       <td className="p-2"><div className="font-medium">{t.title}</div><div className="text-[11px] text-slate-500">{t.reporterName}</div></td>
                       <td className="p-2"><Badge variant={stateLabel[t.state]?.variant}>{stateLabel[t.state]?.vn}</Badge></td>
                       <td className="p-2 text-xs">{t.slaDueAt ? <span className={slaOver ? "text-rose-700" : "text-slate-600"}>{relativeDateVn(t.slaDueAt)}</span> : "—"}</td>
+                      <td className="p-2"><RowActions id={t.id} state={t.state} /></td>
                     </tr>
                   );
                 })}
