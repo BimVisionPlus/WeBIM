@@ -205,6 +205,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
             <Link href="/portfolio" className="hover:text-slate-900">Portfolio</Link>
             <Link href="/trust" className="hover:text-slate-900">Trust</Link>
             <Link href="/pricing" className="hover:text-slate-900">Giá</Link>
+            <Link href="/audit" className="hover:text-slate-900" title="Sổ kiểm toán — mọi thao tác">Audit</Link>
+            <Link href="/archive" className="hover:text-slate-900" title="Lưu trữ — khôi phục bản ghi đã xoá">Archive</Link>
             <Link href="/settings/team" className="hover:text-slate-900">Tổ chức</Link>
             <Link href="/api/auth/signout" className="hover:text-slate-900">Đăng xuất ({session.name})</Link>
           </nav>
