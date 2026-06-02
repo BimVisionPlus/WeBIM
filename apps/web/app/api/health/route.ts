@@ -10,6 +10,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@atlas/db";
+import { aiHealth } from "@atlas/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -65,29 +66,45 @@ async function checkS3(): Promise<CheckResult> {
   });
 }
 
-async function checkOllama(): Promise<CheckResult> {
-  return timed(async () => {
-    const url = process.env.OLLAMA_URL ?? "http://localhost:11434";
-    const res = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(2000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  });
-}
-
-async function checkWhisper(): Promise<CheckResult> {
-  return timed(async () => {
-    const url = process.env.WHISPER_URL ?? "http://localhost:9000";
-    const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(2000) }).catch(() => null);
-    if (!res || !res.ok) throw new Error("unreachable");
-  });
+// Probe the active LLM + STT providers via the provider-aware aiHealth().
+// Field names `ollama` / `whisper` are kept for UI / banner compatibility —
+// they represent the ACTIVE LLM and STT provider, whichever it is (Ollama,
+// Groq, etc). The AI offline banner polls these fields.
+async function checkAi(): Promise<{ ollama: CheckResult; whisper: CheckResult }> {
+  const t0 = Date.now();
+  try {
+    const h = await aiHealth();
+    const llmOk = h.enabled && h.ollama.reachable && h.ollama.missing.length === 0;
+    const sttOk = h.enabled && h.whisper.reachable;
+    const latencyMs = Date.now() - t0;
+    return {
+      ollama: {
+        ok: llmOk,
+        latencyMs,
+        detail: llmOk ? undefined : (h.ollama.error ?? (h.ollama.missing.length ? `missing models: ${h.ollama.missing.join(",")}` : "unreachable")),
+      },
+      whisper: {
+        ok: sttOk,
+        latencyMs,
+        detail: sttOk ? undefined : (h.whisper.error ?? "unreachable"),
+      },
+    };
+  } catch (e: any) {
+    const latencyMs = Date.now() - t0;
+    const detail = String(e?.message ?? e).slice(0, 200);
+    return {
+      ollama: { ok: false, latencyMs, detail },
+      whisper: { ok: false, latencyMs, detail },
+    };
+  }
 }
 
 export async function GET() {
-  const [postgres, redis, s3, ollama, whisper] = await Promise.all([
+  const [postgres, redis, s3, ai] = await Promise.all([
     checkPostgres(),
     checkRedis(),
     checkS3(),
-    checkOllama(),
-    checkWhisper(),
+    checkAi(),
   ]);
 
   const hardOk = postgres.ok && (process.env.REDIS_URL ? redis.ok : true);
@@ -101,7 +118,7 @@ export async function GET() {
         postgres,
         redis: process.env.REDIS_URL ? redis : { ok: true, latencyMs: 0, detail: "not configured" },
       },
-      soft: { s3, ollama, whisper },
+      soft: { s3, ollama: ai.ollama, whisper: ai.whisper },
     },
     { status },
   );
