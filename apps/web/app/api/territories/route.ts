@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@atlas/db";
-import { requireOrgMember, AuthError } from "@atlas/auth";
+import { requireOrgMember, requireSession, AuthError } from "@atlas/auth";
 import { audit, reqMeta, rateLimitGuard } from "@atlas/lib";
 
 const Body = z.object({
@@ -15,6 +15,7 @@ const Body = z.object({
 export async function POST(req: NextRequest) {
   const rl = await rateLimitGuard(req, { name: "territories.create" }); if (rl) return rl;
   try {
+    await requireSession();
     const parsed = Body.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     const d = parsed.data;
