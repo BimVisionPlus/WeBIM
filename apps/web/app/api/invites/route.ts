@@ -36,11 +36,16 @@ try {
     });
 
     const org = await prisma.organization.findUniqueOrThrow({ where: { id: orgId } });
-    const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+    // Always use the public origin of the current request so the link works
+    // regardless of how NEXT_PUBLIC_BASE_URL is set in env.
+    const reqUrl = new URL(req.url);
+    const fromHeader = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+    const proto = req.headers.get("x-forwarded-proto") ?? reqUrl.protocol.replace(":", "");
+    const base = fromHeader ? `${proto}://${fromHeader}` : (process.env.NEXT_PUBLIC_BASE_URL ?? reqUrl.origin);
     const link = buildInviteLink(token, base);
     const roleLabel = role;
 
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: email,
       ...tplInvite({ orgName: org.name, inviterName: session.name, link, role: roleLabel }),
     });
@@ -53,10 +58,18 @@ try {
       orgId,
       projectId: projectId ?? null,
       ...reqMeta(req),
-      after: { email, role },
+      after: { email, role, emailDelivered: emailResult.ok, emailTransport: emailResult.transport },
     });
 
-    return NextResponse.json({ ok: true, inviteId: invite.id });
+    // Return link + email outcome so the UI can show a copy-link fallback when
+    // email delivery isn't configured (Resend key invalid, no SMTP, etc.).
+    return NextResponse.json({
+      ok: true,
+      inviteId: invite.id,
+      link,
+      emailDelivered: emailResult.ok,
+      emailTransport: emailResult.transport,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: err.status ?? 500 });
   }
