@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -106,7 +107,7 @@ export default async function PcccOrgPage() {
                       <td className="p-2"><Badge variant="violet">{stageLabel[a.stage] ?? a.stage}</Badge></td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2 text-xs text-slate-500">{a.submittedAt ? formatDateVn(a.submittedAt) : "—"}</td>
-                      <td className="p-2 text-xs text-slate-500">{a.decisionAt ? formatDateVn(a.decisionAt) : "—"}</td>
+                      <td className="p-2 text-xs text-slate-500">{a.decisionAt ? formatDateVn(a.decisionAt) : "—"}</td><td className="p-2"><RowActions id={a.id} state={a.state} /></td>
                     </tr>
                   );
                 })}

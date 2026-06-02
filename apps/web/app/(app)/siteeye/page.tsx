@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,7 @@ export default async function SiteEyeOrgPage() {
                       {i.closedAt && <Badge variant="success">Đã đóng</Badge>}
                     </div>
                     <div className="mt-1 text-slate-900">{i.description.slice(0, 140)}{i.description.length > 140 ? "…" : ""}</div>
-                    <div className="text-[11px] text-slate-500">
+                    <div className="mt-1"><RowActions id={i.id} severity={i.severity} closedAt={i.closedAt} /></div><div className="text-[11px] text-slate-500">
                       {formatDateVn(i.occurredAt)} · {i.location ?? "—"}
                       {i.injured > 0 && <> · {i.injured} người bị thương</>}
                     </div>

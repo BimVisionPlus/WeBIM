@@ -4,6 +4,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function TerritoriesPage() {
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="p-2 text-left">Tên địa bàn</th><th className="p-2 text-left">Tỉnh</th><th className="p-2 text-left">Phạm vi</th><th className="p-2 text-left">Chủ địa bàn</th><th className="p-2 text-right">Leads</th></tr>
+                <tr><th className="p-2 text-left">Tên địa bàn</th><th className="p-2 text-left">Tỉnh</th><th className="p-2 text-left">Phạm vi</th><th className="p-2 text-left">Chủ địa bàn</th><th className="p-2 text-right">Leads</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {territories.map((t) => (
@@ -50,7 +51,7 @@ export default async function TerritoriesPage() {
                     <td className="p-2 text-xs">{t.province ?? "—"}</td>
                     <td className="p-2 text-xs line-clamp-2 max-w-md">{t.scope ?? "—"}</td>
                     <td className="p-2 text-xs">{t.owner?.name ?? <span className="text-slate-400">Chưa phân</span>}</td>
-                    <td className="p-2 text-right text-xs">{t._count.leads}</td>
+                    <td className="p-2 text-right text-xs">{t._count.leads}</td><td className="p-2"><RowActions id={t.id} initial={{ name: t.name, province: t.province, scope: t.scope, active: t.active }} /></td>
                   </tr>
                 ))}
               </tbody>

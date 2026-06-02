@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function VehicleDispatchPage() {
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="p-2 text-left">Biển số</th><th className="p-2 text-left">Tài xế</th><th className="p-2 text-left">Mục đích</th><th className="p-2 text-left">Bắt đầu</th><th className="p-2 text-left">Trạng thái</th></tr>
+                <tr><th className="p-2 text-left">Biển số</th><th className="p-2 text-left">Tài xế</th><th className="p-2 text-left">Mục đích</th><th className="p-2 text-left">Bắt đầu</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {dispatches.map((d) => {
@@ -63,7 +64,7 @@ export default async function VehicleDispatchPage() {
                       <td className="p-2 text-xs">{d.driverName}</td>
                       <td className="p-2"><div className="font-medium">{d.purpose}</div><div className="text-[10px] text-slate-500">{d.org.name}</div></td>
                       <td className="p-2 text-xs">{formatDateVn(d.startAt)}<div className="text-[10px] text-slate-500">{d.startAt.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</div></td>
-                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
+                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td><td className="p-2"><RowActions id={d.id} status={d.status} /></td>
                     </tr>
                   );
                 })}

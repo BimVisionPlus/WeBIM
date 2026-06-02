@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -115,7 +116,7 @@ export default async function PermitFlowOrgPage() {
                       <td className="p-2 text-xs">{a.applicant}</td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2 text-right text-xs">{attached}/{a._count.checklist} ({pct}%)</td>
-                      <td className="p-2 text-xs text-slate-500">{a.decisionAt ? formatDateVn(a.decisionAt) : "—"}</td>
+                      <td className="p-2 text-xs text-slate-500">{a.decisionAt ? formatDateVn(a.decisionAt) : "—"}</td><td className="p-2"><RowActions id={a.id} state={a.state} /></td>
                     </tr>
                   );
                 })}

@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export default async function ScheduleOrgPage() {
                   <th className="p-2 text-left">Bắt đầu</th>
                   <th className="p-2 text-left">Kết thúc</th>
                   <th className="p-2 text-right">Tiến độ</th>
-                  <th className="p-2 text-left">Trạng thái</th>
+                  <th className="p-2 text-left">Trạng thái</th><th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -105,7 +106,7 @@ export default async function ScheduleOrgPage() {
                           <span className="text-xs font-medium">{Math.round(t.pctComplete)}%</span>
                         </div>
                       </td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
+                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td><td className="p-2"><RowActions id={t.id} state={t.state} pctComplete={t.pctComplete} /></td>
                     </tr>
                   );
                 })}

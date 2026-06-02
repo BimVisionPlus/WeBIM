@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +56,7 @@ export default async function ContractorAssignsPage() {
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="p-2 text-left">Đơn vị nhận</th><th className="p-2 text-left">Dự án</th><th className="p-2 text-left">Phạm vi</th><th className="p-2 text-right">Giá trị</th><th className="p-2 text-right">% HT</th><th className="p-2 text-left">Trạng thái</th></tr>
+                <tr><th className="p-2 text-left">Đơn vị nhận</th><th className="p-2 text-left">Dự án</th><th className="p-2 text-left">Phạm vi</th><th className="p-2 text-right">Giá trị</th><th className="p-2 text-right">% HT</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {assignments.map((a) => {
@@ -67,7 +68,7 @@ export default async function ContractorAssignsPage() {
                       <td className="p-2 text-xs line-clamp-2 max-w-md">{a.scope}</td>
                       <td className="p-2 text-right font-medium">{formatVnd(a.amountVnd)}</td>
                       <td className="p-2 text-right"><div className="inline-flex items-center gap-2"><div className="h-1.5 w-16 rounded-full bg-slate-200 overflow-hidden"><div className={`h-full ${a.pctComplete >= 80 ? "bg-emerald-500" : "bg-blue-500"}`} style={{ width: `${a.pctComplete}%` }} /></div><span className="text-xs">{Math.round(a.pctComplete)}%</span></div></td>
-                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
+                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td><td className="p-2"><RowActions id={a.id} status={a.status} pctComplete={a.pctComplete} /></td>
                     </tr>
                   );
                 })}

@@ -6,6 +6,7 @@ import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
 import { PromoteAction } from "./PromoteAction";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export default async function LeadsPage() {
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="p-2 text-left">Dự án / Gói thầu</th><th className="p-2 text-left">Khách hàng</th><th className="p-2 text-left">Địa bàn</th><th className="p-2 text-right">Giá trị</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-left">Next action</th><th className="p-2 text-left">Thao tác</th></tr>
+                <tr><th className="p-2 text-left">Dự án / Gói thầu</th><th className="p-2 text-left">Khách hàng</th><th className="p-2 text-left">Địa bàn</th><th className="p-2 text-right">Giá trị</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-left">Next action</th><th className="p-2 text-left">Thao tác</th><th className="p-2 text-left">Promote</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {leads.map((l) => {
@@ -67,7 +68,7 @@ export default async function LeadsPage() {
                       <td className="p-2 text-right font-medium">{l.estValueVnd ? formatVnd(l.estValueVnd) : "—"}</td>
                       <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
                       <td className="p-2 text-xs">{l.nextActionAt ? formatDateVn(l.nextActionAt) : "—"}</td>
-                      <td className="p-2">{l.status === "WON" ? <PromoteAction leadId={l.id} orgId={l.orgId} suggestedKey={l.name.split(" ").map((w) => w[0]).filter((c) => /[A-Za-zĐ]/.test(c ?? "")).join("").toUpperCase().slice(0, 6) || "DA-" + l.id.slice(-4).toUpperCase()} /> : <span className="text-[10px] text-slate-400">—</span>}</td>
+                      <td className="p-2"><RowActions id={l.id} status={l.status} /></td><td className="p-2">{l.status === "WON" ? <PromoteAction leadId={l.id} orgId={l.orgId} suggestedKey={l.name.split(" ").map((w) => w[0]).filter((c) => /[A-Za-zĐ]/.test(c ?? "")).join("").toUpperCase().slice(0, 6) || "DA-" + l.id.slice(-4).toUpperCase()} /> : <span className="text-[10px] text-slate-400">—</span>}</td>
                     </tr>
                   );
                 })}

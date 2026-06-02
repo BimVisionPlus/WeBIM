@@ -3,7 +3,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn, formatVndShort } from "@atlas/lib";
 import { redirect } from "next/navigation";
 import { requireProject, AuthError } from "@atlas/auth";
-import { StatusUpdateForm, ContractScopeEditor, SummarizeButton } from "./Actions";
+import { StatusUpdateForm, ContractScopeEditor, SummarizeButton, StatusUpdateRowActions } from "./Actions";
 
 export const dynamic = "force-dynamic";
 
@@ -119,7 +119,7 @@ export default async function TinhHinhPage({ params }: { params: Promise<{ proje
                     </div>
                   </div>
                   <div className="mt-1 whitespace-pre-line text-sm text-slate-700">{u.body}</div>
-                  <div className="mt-1 text-[11px] text-slate-500">— {u.author?.name ?? "Hệ thống"}</div>
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500"><span>— {u.author?.name ?? "Hệ thống"}</span><StatusUpdateRowActions projectId={project.id} updateId={u.id} /></div>
                 </li>
               ))}
             </ul>

@@ -2,6 +2,7 @@ import { prisma } from "@atlas/db";
 import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd } from "@atlas/lib";
 import { CreateForm } from "./CreateForm";
+import { DeleteAction } from "@/components/delete-action";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,7 @@ export default async function CatalogPage() {
                               <span className="font-medium text-slate-700">{formatVnd(i.baselineUnitPriceVnd)}</span>
                             )}
                             <Badge variant="neutral">{i._count.suppliers} NCC</Badge>
+                            <DeleteAction url={`/api/catalog/items/${i.id}`} label="cấu kiện" testId={`delete-item-${i.id}`} soft={i._count.suppliers > 0} />
                           </div>
                         </div>
                       ))}
@@ -129,12 +131,15 @@ export default async function CatalogPage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {suppliers.map((s) => (
-                  <div key={s.id} className="p-3 text-sm">
-                    <div className="font-medium text-slate-900">{s.name}</div>
-                    <div className="text-[11px] text-slate-500">
-                      MST: {s.mst ?? "—"} · {s._count.items} cấu kiện
-                      {s.rating !== null && <> · ⭐ {s.rating?.toFixed(1)}</>}
+                  <div key={s.id} className="flex items-start justify-between p-3 text-sm">
+                    <div>
+                      <div className="font-medium text-slate-900">{s.name}</div>
+                      <div className="text-[11px] text-slate-500">
+                        MST: {s.mst ?? "—"} · {s._count.items} cấu kiện
+                        {s.rating !== null && <> · ⭐ {s.rating?.toFixed(1)}</>}
+                      </div>
                     </div>
+                    <DeleteAction url={`/api/catalog/suppliers/${s.id}`} label="nhà cung cấp" testId={`delete-supplier-${s.id}`} soft={s._count.items > 0} />
                   </div>
                 ))}
               </div>

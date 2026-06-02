@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export default async function BhxhPage() {
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="p-2 text-left">Họ tên</th><th className="p-2 text-left">CCCD</th><th className="p-2 text-left">Số sổ BHXH</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-right">Mức đóng/tháng</th><th className="p-2 text-left">Bắt đầu</th></tr>
+                <tr><th className="p-2 text-left">Họ tên</th><th className="p-2 text-left">CCCD</th><th className="p-2 text-left">Số sổ BHXH</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-right">Mức đóng/tháng</th><th className="p-2 text-left">Bắt đầu</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {records.map((r) => {
@@ -66,7 +67,7 @@ export default async function BhxhPage() {
                       <td className="p-2 font-mono text-xs">{r.bhxhNumber ?? "—"}</td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2 text-right text-xs">{r.monthlyBaseVnd ? formatVnd(r.monthlyBaseVnd) : "—"}</td>
-                      <td className="p-2 text-xs">{r.startedAt ? formatDateVn(r.startedAt) : "—"}</td>
+                      <td className="p-2 text-xs">{r.startedAt ? formatDateVn(r.startedAt) : "—"}</td><td className="p-2"><RowActions id={r.id} status={r.status} /></td>
                     </tr>
                   );
                 })}

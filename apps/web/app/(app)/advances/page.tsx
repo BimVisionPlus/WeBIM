@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,7 @@ export default async function AdvancesPage() {
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="p-2 text-left">Ngày</th><th className="p-2 text-left">Số phiếu</th><th className="p-2 text-left">Loại</th><th className="p-2 text-left">Người/ĐV nhận</th><th className="p-2 text-right">Số tiền</th><th className="p-2 text-left">Trạng thái</th></tr>
+                <tr><th className="p-2 text-left">Ngày</th><th className="p-2 text-left">Số phiếu</th><th className="p-2 text-left">Loại</th><th className="p-2 text-left">Người/ĐV nhận</th><th className="p-2 text-right">Số tiền</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {txns.map((t) => {
@@ -75,7 +76,7 @@ export default async function AdvancesPage() {
                       <td className="p-2"><Badge variant={tm.variant}>{tm.vn}</Badge></td>
                       <td className="p-2"><div className="font-medium">{t.payeeName}</div><div className="text-[11px] text-slate-500 line-clamp-1">{t.purpose}</div></td>
                       <td className="p-2 text-right font-medium">{formatVnd(t.amountVnd)}</td>
-                      <td className="p-2"><Badge variant={sm.variant}>{sm.vn}</Badge>{overdue && <Badge variant="warning" className="ml-1">Quá hạn</Badge>}</td>
+                      <td className="p-2"><Badge variant={sm.variant}>{sm.vn}</Badge>{overdue && <Badge variant="warning" className="ml-1">Quá hạn</Badge>}</td><td className="p-2"><RowActions id={t.id} status={t.status} /></td>
                     </tr>
                   );
                 })}

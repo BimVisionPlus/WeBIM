@@ -91,3 +91,16 @@ export function SummarizeButton({ projectId }: { projectId: string }) {
     </div>
   );
 }
+
+export function StatusUpdateRowActions({ projectId, updateId }: { projectId: string; updateId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  async function onDelete() {
+    if (!confirm("Xoá cập nhật này?")) return;
+    setBusy(true);
+    const r = await fetch(`/api/projects/${projectId}/status-updates/${updateId}`, { method: "DELETE" });
+    setBusy(false);
+    if (r.ok) router.refresh();
+  }
+  return <button onClick={onDelete} disabled={busy} className="text-[10px] text-rose-600 hover:underline disabled:opacity-50" data-testid={`delete-update-${updateId}`}>{busy ? "…" : "Xoá"}</button>;
+}

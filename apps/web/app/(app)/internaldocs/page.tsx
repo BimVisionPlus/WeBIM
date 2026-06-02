@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Badge } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
+import { RowActions } from "./RowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export default async function InternalDocsPage() {
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="p-2 text-left">Số</th><th className="p-2 text-left">Loại</th><th className="p-2 text-left">Tiêu đề</th><th className="p-2 text-left">Ban hành</th><th className="p-2 text-left">Người soạn</th></tr>
+                <tr><th className="p-2 text-left">Số</th><th className="p-2 text-left">Loại</th><th className="p-2 text-left">Tiêu đề</th><th className="p-2 text-left">Ban hành</th><th className="p-2 text-left">Người soạn</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {docs.map((d) => {
@@ -62,7 +63,7 @@ export default async function InternalDocsPage() {
                       <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
                       <td className="p-2"><div className="font-medium">{d.title}</div>{d.body && <div className="text-[11px] text-slate-500 line-clamp-1">{d.body}</div>}</td>
                       <td className="p-2 text-xs">{formatDateVn(d.issuedAt)}</td>
-                      <td className="p-2 text-xs">{d.author?.name ?? "—"}</td>
+                      <td className="p-2 text-xs">{d.author?.name ?? "—"}</td><td className="p-2"><RowActions id={d.id} initial={{ title: d.title, category: d.category, issuedAt: d.issuedAt.toISOString().slice(0,10), body: d.body }} /></td>
                     </tr>
                   );
                 })}

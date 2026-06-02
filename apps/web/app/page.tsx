@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { DepartmentSelect } from "./DepartmentSelect";
+import { ProjectRowActions } from "./ProjectRowActions";
 import { RiskBanner } from "@/components/risk-banner";
 import { DigestButton } from "@/components/digest-button";
 
@@ -312,7 +313,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                         </td>
                         <td className="p-3 text-xs text-slate-700">{p.endDate ? formatDateVn(p.endDate) : "—"}</td>
                         <td className="p-3 text-right">
-                          <Link href={`/projects/${p.id}`} className="text-xs text-blue-600 hover:underline" title="Xem dự án">✎</Link>
+                          <ProjectRowActions id={p.id} initial={{ name: p.name, province: p.province, endDate: p.endDate ? p.endDate.toISOString().slice(0,10) : null, status: p.status }} />
                         </td>
                       </tr>
                     );
