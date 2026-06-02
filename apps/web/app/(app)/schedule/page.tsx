@@ -106,7 +106,7 @@ export default async function ScheduleOrgPage() {
                           <span className="text-xs font-medium">{Math.round(t.pctComplete)}%</span>
                         </div>
                       </td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td><td className="p-2"><RowActions id={t.id} state={t.state} pctComplete={t.pctComplete} /></td>
+                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td><td className="p-2"><RowActions id={t.id} state={t.state} pctComplete={t.pctComplete} initial={{ name: t.name, discipline: t.discipline, zone: t.zone, plannedStart: t.plannedStart.toISOString().slice(0,10), plannedEnd: t.plannedEnd.toISOString().slice(0,10) }} /></td>
                     </tr>
                   );
                 })}

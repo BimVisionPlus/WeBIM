@@ -7,6 +7,7 @@ import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
 import { PromoteAction } from "./PromoteAction";
 import { RowActions } from "./RowActions";
+import { AuditHistoryLink } from "@/components/audit-history-link";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export default async function LeadsPage() {
                       <td className="p-2 text-right font-medium">{l.estValueVnd ? formatVnd(l.estValueVnd) : "—"}</td>
                       <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
                       <td className="p-2 text-xs">{l.nextActionAt ? formatDateVn(l.nextActionAt) : "—"}</td>
-                      <td className="p-2"><RowActions id={l.id} status={l.status} /></td><td className="p-2">{l.status === "WON" ? <PromoteAction leadId={l.id} orgId={l.orgId} suggestedKey={l.name.split(" ").map((w) => w[0]).filter((c) => /[A-Za-zĐ]/.test(c ?? "")).join("").toUpperCase().slice(0, 6) || "DA-" + l.id.slice(-4).toUpperCase()} /> : <span className="text-[10px] text-slate-400">—</span>}</td>
+                      <td className="p-2"><span className="inline-flex items-center gap-2"><RowActions id={l.id} status={l.status} initial={{ name: l.name, clientName: l.clientName, province: l.province, estValueVnd: l.estValueVnd ? l.estValueVnd.toString() : null, source: l.source, nextActionAt: l.nextActionAt ? l.nextActionAt.toISOString().slice(0,10) : null, note: l.note }} /><AuditHistoryLink entityId={l.id} entityType="ProjectLead" /></span></td><td className="p-2">{l.status === "WON" ? <PromoteAction leadId={l.id} orgId={l.orgId} suggestedKey={l.name.split(" ").map((w) => w[0]).filter((c) => /[A-Za-zĐ]/.test(c ?? "")).join("").toUpperCase().slice(0, 6) || "DA-" + l.id.slice(-4).toUpperCase()} /> : <span className="text-[10px] text-slate-400">—</span>}</td>
                     </tr>
                   );
                 })}

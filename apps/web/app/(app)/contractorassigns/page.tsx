@@ -68,7 +68,7 @@ export default async function ContractorAssignsPage() {
                       <td className="p-2 text-xs line-clamp-2 max-w-md">{a.scope}</td>
                       <td className="p-2 text-right font-medium">{formatVnd(a.amountVnd)}</td>
                       <td className="p-2 text-right"><div className="inline-flex items-center gap-2"><div className="h-1.5 w-16 rounded-full bg-slate-200 overflow-hidden"><div className={`h-full ${a.pctComplete >= 80 ? "bg-emerald-500" : "bg-blue-500"}`} style={{ width: `${a.pctComplete}%` }} /></div><span className="text-xs">{Math.round(a.pctComplete)}%</span></div></td>
-                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td><td className="p-2"><RowActions id={a.id} status={a.status} pctComplete={a.pctComplete} /></td>
+                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td><td className="p-2"><RowActions id={a.id} status={a.status} pctComplete={a.pctComplete} initial={{ contractorName: a.contractorName, scope: a.scope, amountVnd: a.amountVnd.toString(), startDate: a.startDate.toISOString().slice(0,10), endDate: a.endDate.toISOString().slice(0,10) }} /></td>
                     </tr>
                   );
                 })}

@@ -31,7 +31,7 @@ function summarizeDiff(before: unknown, after: unknown): string | null {
   return parts.join(" · ").slice(0, 200);
 }
 
-export default async function AuditPage({ searchParams }: { searchParams: Promise<{ entity?: string; action?: string; days?: string }> }) {
+export default async function AuditPage({ searchParams }: { searchParams: Promise<{ entity?: string; action?: string; days?: string; entityId?: string }> }) {
   const session = await getSession();
   if (!session) redirect("/signin?callbackUrl=/audit");
 
@@ -41,6 +41,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const entity = (sp.entity ?? "").trim();
   const action = (sp.action ?? "").trim();
+  const entityId = (sp.entityId ?? "").trim();
   const days = Math.min(Math.max(Number(sp.days ?? "30"), 1), 365);
   const since = new Date(Date.now() - days * 86400000);
 
@@ -56,6 +57,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       OR: [{ orgId: { in: orgIds } }, { projectId: { in: projectIds } }, { actorId: session.userId }],
       ...(entity ? { entityType: entity } : {}),
       ...(action ? { action: { contains: action } } : {}),
+      ...(entityId ? { entityId } : {}),
     },
     include: { actor: { select: { name: true, email: true } }, org: { select: { name: true, slug: true } } },
     orderBy: { createdAt: "desc" },
@@ -82,7 +84,14 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
       <Card className="mt-6">
         <CardBody>
+          {entityId && (
+            <div className="mb-3 flex items-center gap-2 rounded bg-blue-50 px-3 py-2 text-xs text-blue-800" data-testid="entity-focus">
+              <span>Đang xem lịch sử của <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[10px]">{entityId}</code></span>
+              <a href={`/audit?days=${days}${entity ? `&entity=${entity}` : ""}${action ? `&action=${action}` : ""}`} className="ml-auto text-[11px] font-medium text-blue-700 hover:underline">× Xoá bộ lọc theo entity</a>
+            </div>
+          )}
           <form className="flex flex-wrap items-end gap-3" method="get">
+            {entityId && <input type="hidden" name="entityId" value={entityId} />}
             <div><label className="text-xs text-slate-600">Loại thực thể</label>
               <select name="entity" defaultValue={entity} className="mt-1 rounded border border-slate-300 px-3 py-1.5 text-sm">
                 <option value="">Tất cả</option>
@@ -92,6 +101,12 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             <div><label className="text-xs text-slate-600">Action chứa</label><input name="action" defaultValue={action} placeholder="vd: create, delete, promote" className="mt-1 rounded border border-slate-300 px-3 py-1.5 text-sm" /></div>
             <div><label className="text-xs text-slate-600">Trong (ngày)</label><input type="number" name="days" min={1} max={365} defaultValue={days} className="mt-1 w-24 rounded border border-slate-300 px-3 py-1.5 text-sm" /></div>
             <button className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700">Lọc</button>
+            <a
+              href={`/api/audit/export?days=${days}${entity ? `&entity=${entity}` : ""}${action ? `&action=${action}` : ""}${entityId ? `&entityId=${entityId}` : ""}`}
+              className="rounded border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+              data-testid="export-csv"
+              download
+            >📥 Xuất CSV</a>
           </form>
         </CardBody>
       </Card>

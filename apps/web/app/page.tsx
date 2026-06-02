@@ -9,6 +9,7 @@ import { OrgSwitcher } from "@/components/org-switcher";
 import { DepartmentSelect } from "./DepartmentSelect";
 import { ProjectRowActions } from "./ProjectRowActions";
 import { RiskBanner } from "@/components/risk-banner";
+import { AuditHistoryLink } from "@/components/audit-history-link";
 import { DigestButton } from "@/components/digest-button";
 
 export const dynamic = "force-dynamic";
@@ -315,7 +316,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                         </td>
                         <td className="p-3 text-xs text-slate-700">{p.endDate ? formatDateVn(p.endDate) : "—"}</td>
                         <td className="p-3 text-right">
-                          <ProjectRowActions id={p.id} initial={{ name: p.name, province: p.province, endDate: p.endDate ? p.endDate.toISOString().slice(0,10) : null, status: p.status }} />
+                          <span className="inline-flex items-center gap-2">
+                            <AuditHistoryLink entityId={p.id} entityType="Project" />
+                            <ProjectRowActions id={p.id} initial={{ name: p.name, province: p.province, endDate: p.endDate ? p.endDate.toISOString().slice(0,10) : null, status: p.status }} />
+                          </span>
                         </td>
                       </tr>
                     );

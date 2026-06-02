@@ -6,6 +6,7 @@ import { formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
 import { RowActions } from "./RowActions";
+import { AuditHistoryLink } from "@/components/audit-history-link";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,7 @@ export default async function InternalDocsPage() {
                       <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
                       <td className="p-2"><div className="font-medium">{d.title}</div>{d.body && <div className="text-[11px] text-slate-500 line-clamp-1">{d.body}</div>}</td>
                       <td className="p-2 text-xs">{formatDateVn(d.issuedAt)}</td>
-                      <td className="p-2 text-xs">{d.author?.name ?? "—"}</td><td className="p-2"><RowActions id={d.id} initial={{ title: d.title, category: d.category, issuedAt: d.issuedAt.toISOString().slice(0,10), body: d.body }} /></td>
+                      <td className="p-2 text-xs">{d.author?.name ?? "—"}</td><td className="p-2"><span className="inline-flex items-center gap-2"><RowActions id={d.id} initial={{ title: d.title, category: d.category, issuedAt: d.issuedAt.toISOString().slice(0,10), body: d.body }} /><AuditHistoryLink entityId={d.id} entityType="InternalDocument" /></span></td>
                     </tr>
                   );
                 })}

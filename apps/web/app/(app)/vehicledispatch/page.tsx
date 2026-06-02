@@ -64,7 +64,7 @@ export default async function VehicleDispatchPage() {
                       <td className="p-2 text-xs">{d.driverName}</td>
                       <td className="p-2"><div className="font-medium">{d.purpose}</div><div className="text-[10px] text-slate-500">{d.org.name}</div></td>
                       <td className="p-2 text-xs">{formatDateVn(d.startAt)}<div className="text-[10px] text-slate-500">{d.startAt.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</div></td>
-                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td><td className="p-2"><RowActions id={d.id} status={d.status} /></td>
+                      <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td><td className="p-2"><RowActions id={d.id} status={d.status} initial={{ vehiclePlate: d.vehiclePlate, driverName: d.driverName, purpose: d.purpose, startAt: d.startAt.toISOString().slice(0,16), endAt: d.endAt ? d.endAt.toISOString().slice(0,16) : null, note: d.note }} /></td>
                     </tr>
                   );
                 })}

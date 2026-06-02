@@ -67,7 +67,7 @@ export default async function BhxhPage() {
                       <td className="p-2 font-mono text-xs">{r.bhxhNumber ?? "—"}</td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2 text-right text-xs">{r.monthlyBaseVnd ? formatVnd(r.monthlyBaseVnd) : "—"}</td>
-                      <td className="p-2 text-xs">{r.startedAt ? formatDateVn(r.startedAt) : "—"}</td><td className="p-2"><RowActions id={r.id} status={r.status} /></td>
+                      <td className="p-2 text-xs">{r.startedAt ? formatDateVn(r.startedAt) : "—"}</td><td className="p-2"><RowActions id={r.id} status={r.status} initial={{ employeeName: r.employeeName, employeeIdNo: r.employeeIdNo, bhxhNumber: r.bhxhNumber, monthlyBaseVnd: r.monthlyBaseVnd ? r.monthlyBaseVnd.toString() : null, startedAt: r.startedAt ? r.startedAt.toISOString().slice(0,10) : null, note: r.note }} /></td>
                     </tr>
                   );
                 })}

@@ -6,6 +6,7 @@ import { formatVnd, formatDateVn } from "@atlas/lib";
 import { AecModuleShell } from "@/components/aec-module-shell";
 import { CreateForm } from "./CreateForm";
 import { RowActions } from "./RowActions";
+import { AuditHistoryLink } from "@/components/audit-history-link";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,7 @@ export default async function AdvancesPage() {
                       <td className="p-2"><Badge variant={tm.variant}>{tm.vn}</Badge></td>
                       <td className="p-2"><div className="font-medium">{t.payeeName}</div><div className="text-[11px] text-slate-500 line-clamp-1">{t.purpose}</div></td>
                       <td className="p-2 text-right font-medium">{formatVnd(t.amountVnd)}</td>
-                      <td className="p-2"><Badge variant={sm.variant}>{sm.vn}</Badge>{overdue && <Badge variant="warning" className="ml-1">Quá hạn</Badge>}</td><td className="p-2"><RowActions id={t.id} status={t.status} /></td>
+                      <td className="p-2"><Badge variant={sm.variant}>{sm.vn}</Badge>{overdue && <Badge variant="warning" className="ml-1">Quá hạn</Badge>}</td><td className="p-2"><span className="inline-flex items-center gap-2"><RowActions id={t.id} status={t.status} initial={{ txnNo: t.txnNo, payeeName: t.payeeName, amountVnd: t.amountVnd.toString(), purpose: t.purpose, txnDate: t.txnDate.toISOString().slice(0,10), note: t.note }} /><AuditHistoryLink entityId={t.id} entityType="AdvanceTransaction" /></span></td>
                     </tr>
                   );
                 })}
