@@ -1,3 +1,5 @@
+import { RowActions } from "./RowActions";
+
 import { redirect } from "next/navigation";
 import { prisma } from "@atlas/db";
 import { getSession } from "@atlas/auth";

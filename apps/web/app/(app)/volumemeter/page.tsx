@@ -1,3 +1,5 @@
+import { DeleteRow } from "./DeleteRow";
+
 import { redirect } from "next/navigation";
 import { prisma } from "@atlas/db";
 import { getSession } from "@atlas/auth";

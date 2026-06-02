@@ -25,3 +25,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: e.message ?? "Internal" }, { status: e.status ?? 500 });
   }
 }
+
+export async function DELETE(req: NextRequest, ctx: { params: { id: string } | Promise<{ id: string }> }) {
+  const rl = await rateLimitGuard(req, { name: "hsetrain.delete" }); if (rl) return rl;
+  try {
+    const { id } = await ctx.params;
+    const rec = await prisma.hseCertificate.findUnique({ where: { id }, select: { id: true, orgId: true, state: true } });
+    if (!rec) return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
+    if (rec.state === "ACTIVE") return NextResponse.json({ error: "Chứng chỉ đang hiệu lực — thu hồi trước khi xoá" }, { status: 409 });
+    const session = await requireSession();
+    await prisma.hseCertificate.delete({ where: { id } });
+    await audit({ action: "hsetrain.delete", entityType: "HseCertificate", entityId: id, actorId: session.userId, orgId: rec.orgId ?? undefined, ...reqMeta(req) });
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message ?? "internal" }, { status: e.status ?? 500 });
+  }
+}

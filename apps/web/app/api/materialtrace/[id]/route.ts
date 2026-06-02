@@ -37,3 +37,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: e.message ?? "Internal" }, { status: e.status ?? 500 });
   }
 }
+
+export async function DELETE(req: NextRequest, ctx: { params: { id: string } | Promise<{ id: string }> }) {
+  const rl = await rateLimitGuard(req, { name: "materialtrace.delete" }); if (rl) return rl;
+  try {
+    const { id } = await ctx.params;
+    const rec = await prisma.materialLot.findUnique({ where: { id }, select: { id: true, projectId: true } });
+    if (!rec) return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
+    const { session } = await requireProject(rec.projectId);
+    const labCount = await prisma.labReport.count({ where: { materialLotId: id } });
+    if (labCount > 0) return NextResponse.json({ error: `Có ${labCount} báo cáo LAS gắn lô — không thể xoá` }, { status: 409 });
+    await prisma.materialLot.delete({ where: { id } });
+    await audit({ action: "materialtrace.delete", entityType: "MaterialLot", entityId: id, actorId: session.userId, projectId: rec.projectId, ...reqMeta(req) });
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message ?? "internal" }, { status: e.status ?? 500 });
+  }
+}
