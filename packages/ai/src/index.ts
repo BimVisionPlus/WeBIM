@@ -11,3 +11,6 @@ export * as ncrAi from "./tasks/ncr";
 export * as dailyLogAi from "./tasks/daily-log";
 export * as specAi from "./tasks/spec";
 export * as siteEyeAi from "./tasks/siteeye";
+export * as scheduleRiskAi from "./tasks/schedule-risk";
+export * as hoanCongAi from "./tasks/hoancong-draft";
+export * as submittalCheckAi from "./tasks/submittal-check";
