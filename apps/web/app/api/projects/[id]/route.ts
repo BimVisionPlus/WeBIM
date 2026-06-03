@@ -25,6 +25,7 @@ const Body = z.object({
   status: z.enum(["PLANNING", "IN_PROGRESS", "HANDOVER", "WARRANTY", "CLOSED"]).optional(),
   department: z.enum(["CONG_VIEC", "DAU_THAU", "HANH_CHINH", "TAI_CHINH_KE_TOAN", "PHAT_TRIEN_THI_TRUONG", "CONG_VIEC_KHAC"]).optional(),
   contractScope: z.string().max(20000).optional().nullable(),
+  businessUnitId: z.string().optional().nullable(),
 });
 
 export async function PATCH(req: NextRequest, ctx: { params: { id: string } | Promise<{ id: string }> }) {

@@ -14,9 +14,14 @@ import { DigestButton } from "@/components/digest-button";
 
 export const dynamic = "force-dynamic";
 
-// Tab keys + Vietnamese labels (tab 1 = overview, 2-7 = department filters)
-const TABS: { key: string; label: string; dept: string | null }[] = [
-  { key: "TONG_THE", label: "Tổng thể toàn công ty", dept: null },
+// Tab keys + Vietnamese labels. `dept` filters by department. `viewMode='by-unit'`
+// switches the table to group-by-BusinessUnit rendering. `href` makes the tab a
+// hard link (e.g. /units management page) rather than a tab filter.
+type TabDef = { key: string; label: string; dept: string | null; viewMode?: "flat" | "by-unit"; href?: string };
+const TABS: TabDef[] = [
+  { key: "TONG_THE", label: "Dự án (Công ty)", dept: null, viewMode: "flat" },
+  { key: "BY_UNIT", label: "Dự án các Đơn vị", dept: null, viewMode: "by-unit" },
+  { key: "MANAGE_UNITS", label: "Đơn vị", dept: null, href: "/units" },
   { key: "CONG_VIEC", label: "Công việc", dept: "CONG_VIEC" },
   { key: "DAU_THAU", label: "Đấu thầu", dept: "DAU_THAU" },
   { key: "HANH_CHINH", label: "Hành chính", dept: "HANH_CHINH" },
@@ -78,15 +83,23 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
     ],
   };
 
-  const allProjects = await prisma.project.findMany({
-    where: accessFilter,
-    include: {
-      stakeholders: { include: { org: { select: { name: true } } } },
-      scheduleTasks: { select: { pctComplete: true } },
-      _count: { select: { issues: true, models: true, drawingSets: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const [allProjects, allUnits] = await Promise.all([
+    prisma.project.findMany({
+      where: accessFilter,
+      include: {
+        stakeholders: { include: { org: { select: { name: true } } } },
+        scheduleTasks: { select: { pctComplete: true } },
+        businessUnit: { select: { id: true, code: true, name: true, province: true } },
+        _count: { select: { issues: true, models: true, drawingSets: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.businessUnit.findMany({
+      where: { orgId: { in: orgIds }, active: true },
+      select: { id: true, code: true, name: true, province: true, leader: { select: { name: true } }, _count: { select: { projects: true } } },
+      orderBy: [{ code: "asc" }],
+    }),
+  ]);
 
   if (allProjects.length === 0) {
     redirect(`/onboarding/project?orgId=${orgIds[0]}`);
@@ -202,6 +215,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
             <OrgSwitcher orgs={orgs} activeSlug={activeOrg.slug} />
             <Link href="/demo" className="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700">★ Demo</Link>
             <Link href="/" className="hover:text-slate-900">Dự án</Link>
+            <Link href="/units" className="hover:text-slate-900">Đơn vị</Link>
             <Link href="/winwork" className="hover:text-slate-900">WinWork</Link>
             <Link href="/catalog" className="hover:text-slate-900">Catalog</Link>
             <Link href="/portfolio" className="hover:text-slate-900">Portfolio</Link>
@@ -221,20 +235,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
         <nav className="flex flex-wrap gap-1 border-b border-slate-200" data-testid="dept-tabs">
           {TABS.map((t) => {
             const isActive = t.key === activeTabKey;
-            const n = counts[t.key] ?? 0;
+            let badgeNum: number | null = null;
+            if (t.key === "TONG_THE" || t.key === "BY_UNIT") badgeNum = enriched.length;
+            else if (t.key === "MANAGE_UNITS") badgeNum = allUnits.length;
+            else badgeNum = counts[t.key] ?? 0;
             const qs = new URLSearchParams();
             qs.set("tab", t.key);
             if (q) qs.set("q", q);
             if (statusFilter) qs.set("status", statusFilter);
+            const href = t.href ?? `/?${qs.toString()}`;
             return (
               <Link
                 key={t.key}
-                href={`/?${qs.toString()}`}
+                href={href}
                 data-testid={`tab-${t.key}`}
                 className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-slate-600 hover:text-slate-900"}`}
               >
                 {t.label}
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{n}</span>
+                {badgeNum != null && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{badgeNum}</span>}
               </Link>
             );
           })}
@@ -273,11 +291,75 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
               <div className="p-8 text-center text-sm text-slate-500">
                 {activeTab.dept ? `Phòng "${activeTab.label}" chưa có dự án nào.` : "Chưa có dự án nào phù hợp bộ lọc."}
               </div>
+            ) : activeTab.viewMode === "by-unit" ? (
+              <div className="divide-y divide-slate-100">
+                {(() => {
+                  const groups = new Map<string, { unit: { id: string | null; code: string; name: string; province: string | null }; projects: typeof visible }>();
+                  for (const p of visible) {
+                    const bu = p.businessUnit;
+                    const key = bu?.id ?? "_none";
+                    if (!groups.has(key)) {
+                      groups.set(key, {
+                        unit: bu ? { id: bu.id, code: bu.code, name: bu.name, province: bu.province } : { id: null, code: "—", name: "(Chưa gán đơn vị)", province: null },
+                        projects: [],
+                      });
+                    }
+                    groups.get(key)!.projects.push(p);
+                  }
+                  const sorted = Array.from(groups.values()).sort((a, b) => (a.unit.id ? 0 : 1) - (b.unit.id ? 0 : 1) || a.unit.code.localeCompare(b.unit.code));
+                  return sorted.map((g) => (
+                    <details key={g.unit.id ?? "_none"} open className="group">
+                      <summary className="flex cursor-pointer items-center gap-3 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                        <span className="font-mono text-slate-500">{g.unit.code}</span>
+                        <span className="text-slate-900">{g.unit.name}</span>
+                        {g.unit.province && <span className="text-slate-500">· {g.unit.province}</span>}
+                        <span className="ml-auto rounded-full bg-blue-100 px-2 py-0.5 text-blue-700">{g.projects.length} dự án</span>
+                      </summary>
+                      <table className="w-full text-sm">
+                        <tbody className="divide-y divide-slate-100">
+                          {g.projects.map((p) => {
+                            const extras = Math.max(0, p.stakeholders.length - 1);
+                            const firstName = p.stakeholders[0]?.org.name ?? "—";
+                            return (
+                              <tr key={p.id} className="hover:bg-slate-50" data-testid={`row-project-${p.id}`}>
+                                <td className="p-3">
+                                  <Link href={`/projects/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700">{p.name}</Link>
+                                  <div className="mt-0.5 flex items-center gap-2 text-[11px] font-mono text-slate-500">
+                                    <span>{p.key}</span>
+                                    <DepartmentSelect projectId={p.id} value={p.department} />
+                                  </div>
+                                </td>
+                                <td className="p-3 text-xs text-slate-700">
+                                  {firstName}
+                                  {extras > 0 && <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">+{extras}</span>}
+                                </td>
+                                <td className="p-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-2 w-32 overflow-hidden rounded-full bg-slate-200">
+                                      <div className={`h-full ${healthBar[p.health]}`} style={{ width: `${p.progress}%` }} />
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-700">{p.progress}%</span>
+                                  </div>
+                                </td>
+                                <td className="p-3">
+                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${healthBadge[p.health]}`}>{p.health}</span>
+                                </td>
+                                <td className="p-3 text-xs text-slate-700">{p.endDate ? formatDateVn(p.endDate) : "—"}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </details>
+                  ));
+                })()}
+              </div>
             ) : (
               <table className="w-full text-sm">
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
                   <tr>
                     <th className="p-3 text-left">Dự án</th>
+                    <th className="p-3 text-left">Đơn vị</th>
                     <th className="p-3 text-left">Nhân sự</th>
                     <th className="p-3 text-left">Tiến độ</th>
                     <th className="p-3 text-left">Trạng thái</th>
@@ -297,6 +379,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                             <span>{p.key}</span>
                             <DepartmentSelect projectId={p.id} value={p.department} />
                           </div>
+                        </td>
+                        <td className="p-3 text-xs">
+                          {p.businessUnit ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">
+                              <span className="font-mono">{p.businessUnit.code}</span>
+                              <span className="text-blue-900">{p.businessUnit.name}</span>
+                            </span>
+                          ) : <span className="text-slate-400">—</span>}
                         </td>
                         <td className="p-3 text-xs text-slate-700">
                           {firstName}

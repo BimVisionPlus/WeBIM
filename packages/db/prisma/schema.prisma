@@ -57,6 +57,7 @@ model Organization {
   contractorAssigns   ContractorAssignment[]
   marketTerritories   MarketTerritory[]
   projectLeads        ProjectLead[]
+  businessUnits       BusinessUnit[]
 }
 
 enum OrgType {
@@ -102,6 +103,7 @@ model User {
   statusUpdates  ProjectStatusUpdate[]
   internalDocs   InternalDocument[]
   marketTerritories MarketTerritory[]
+  ledBusinessUnits  BusinessUnit[]    @relation("BuLeader")
 }
 
 // ─── NextAuth ────────────────────────────────────────────────────────────────
@@ -195,12 +197,14 @@ model Project {
   status           ProjectStatus @default(PLANNING)
   department       ProjectDepartment @default(CONG_VIEC_KHAC) // phòng ban phụ trách (Viwase QLCV)
   contractScope    String?           @db.Text // Nội dung công việc theo hợp đồng (Viwase: tab Tổng thể drill-down)
+  businessUnitId   String? // Đơn vị thực hiện (chi nhánh / ban điều hành / tổng đội) — Viwase: "Dự án các Đơn vị"
   permitNumber     String? // Số giấy phép xây dựng
   permitDate       DateTime?
   warrantyMonths   Int           @default(24) // NĐ 06/2021: 12 tháng phần phụ, 24 tháng phần chính, 60 tháng hạ tầng
   createdAt        DateTime      @default(now())
 
   ownerOrg           Organization         @relation("OwnerOrg", fields: [ownerOrgId], references: [id])
+  businessUnit       BusinessUnit?        @relation(fields: [businessUnitId], references: [id])
   stakeholders       ProjectStakeholder[]
   issues             Issue[]
   rfis               RFI[]
@@ -248,6 +252,34 @@ model Project {
   vehicleDispatches  VehicleDispatch[]
   advanceTxns        AdvanceTransaction[]
   contractorAssigns  ContractorAssignment[]
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// BUSINESS UNIT (Đơn vị) — sub-organization inside an Org (chi nhánh, ban điều
+// hành, tổng đội). One Đơn vị owns many projects. Optional parent for nesting.
+// Viwase home tab "Dự án các Đơn vị" groups projects by this entity.
+// ──────────────────────────────────────────────────────────────────────────────
+model BusinessUnit {
+  id            String   @id @default(cuid())
+  orgId         String
+  code          String // "BCH-HN", "TD-BTCT", "BHT" — unique within an org
+  name          String // "Ban điều hành Hà Nội"
+  description   String?  @db.Text
+  parentId      String? // nesting (Ban → Tổng đội → Tổ)
+  leaderUserId  String? // chỉ huy trưởng / trưởng ban
+  province      String? // địa bàn chính
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  org      Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  parent   BusinessUnit?  @relation("BuTree", fields: [parentId], references: [id])
+  children BusinessUnit[] @relation("BuTree")
+  leader   User?          @relation("BuLeader", fields: [leaderUserId], references: [id])
+  projects Project[]
+
+  @@unique([orgId, code])
+  @@index([orgId, active])
 }
 
 enum ProjectStatus {
