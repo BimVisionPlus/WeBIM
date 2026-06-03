@@ -200,6 +200,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
           </div>
           <nav className="flex items-center gap-4 text-sm text-slate-600">
             <OrgSwitcher orgs={orgs} activeSlug={activeOrg.slug} />
+            <Link href="/demo" className="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700">★ Demo</Link>
             <Link href="/" className="hover:text-slate-900">Dự án</Link>
             <Link href="/winwork" className="hover:text-slate-900">WinWork</Link>
             <Link href="/catalog" className="hover:text-slate-900">Catalog</Link>
