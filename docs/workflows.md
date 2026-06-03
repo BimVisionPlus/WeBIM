@@ -1,6 +1,6 @@
 # Atlas AEC — Workflow & legal anchors
 
-Every issue subtype has its own state machine in [`packages/workflows/src/`](../packages/workflows/src/). The legal `ref` shown in the UI ties each transition to a specific clause in NĐ 06/2021, NĐ 10/2021, or related rules.
+Every issue subtype has its own state machine in [`packages/workflows/src/`](../packages/workflows/src/). The legal `ref` shown in the UI ties each transition to a specific clause in NĐ 06/2021, VBHN 06/VBHN-BXD (hợp nhất NĐ 10/2021 + sửa đổi), or related rules.
 
 ## 1. RFI — Request for Information
 
@@ -55,7 +55,7 @@ Mandatory: `photoAfterUrl` để chuyển từ IN_PROGRESS → READY_FOR_INSPECT
 
 ## 5. Change Order
 
-**Anchor:** NĐ 10/2021 quản lý chi phí + Luật Đấu thầu 2023.
+**Anchor:** VBHN 06/VBHN-BXD (hợp nhất NĐ 10/2021 + sửa đổi) quản lý chi phí + Luật Đấu thầu 2023.
 
 ```
 DRAFT → ESTIMATING → SUBMITTED → CDT_REVIEW ─┬─ APPROVED → IMPLEMENTED → CLOSED
@@ -83,7 +83,7 @@ Transition `IN_PROGRESS → SIGNED` chạy guard `requiredSignoffsFor(level)` đ
 
 ## 7. Progress Payment — Thanh toán giai đoạn
 
-**Anchor:** NĐ 10/2021.
+**Anchor:** VBHN 06/VBHN-BXD (hợp nhất NĐ 10/2021 + sửa đổi).
 
 ```
 DRAFT → SUBMITTED → CDT_REVIEW ─┬─ APPROVED → PAID

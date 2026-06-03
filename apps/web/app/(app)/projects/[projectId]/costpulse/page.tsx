@@ -53,7 +53,7 @@ export default async function CostPulsePage({ params }: { params: { projectId: s
       <div>
         <h2 className="text-xl font-semibold">CostPulse — Cost Intelligence</h2>
         <p className="mt-1 text-sm text-slate-500">
-          BoQ tracking + EVM (BAC/EV/AC/CPI/SPI) + payment milestones (NĐ 10/2021) + chỉ số giá vật liệu Bộ XD.
+          BoQ tracking + EVM (BAC/EV/AC/CPI/SPI) + payment milestones (VBHN 06/VBHN-BXD) + chỉ số giá vật liệu Bộ XD.
         </p>
       </div>
 
@@ -167,7 +167,7 @@ export default async function CostPulsePage({ params }: { params: { projectId: s
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Thanh toán giai đoạn (NĐ 10/2021)</CardTitle>
+            <CardTitle>Thanh toán giai đoạn (VBHN 06/VBHN-BXD)</CardTitle>
           </CardHeader>
           <CardBody className="p-0">
             {payments.length === 0 ? (

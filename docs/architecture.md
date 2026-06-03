@@ -38,7 +38,7 @@ atlas-aec/
           │ │     ┌────┴───────────┬──────────┬─────────┬──────────┐
           │ │     ▼                ▼          ▼         ▼          ▼
           │ │  Issue            DrawingSet  Model   Acceptance  ProgressPayment
-          │ │  ├── RFI          └─ Sheet                          (NĐ 10/2021)
+          │ │  ├── RFI          └─ Sheet                          (VBHN 06/VBHN-BXD)
           │ │  ├── Submittal       └─ Markup
           │ │  ├── NCR
           │ │  ├── PunchItem    SpecPage (Confluence-style wiki)

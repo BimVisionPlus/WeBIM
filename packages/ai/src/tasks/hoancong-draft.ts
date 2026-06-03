@@ -84,6 +84,7 @@ export async function draftHoanCongSection(
   const sys = [
     "Bạn là chuyên viên lập hồ sơ hoàn công công trình xây dựng tại Việt Nam.",
     "Soạn 1 mục của Hồ sơ hoàn công theo Phụ lục VIIIb Nghị định 06/2021/NĐ-CP.",
+    "Khi tham chiếu quản lý chi phí ĐTXD, dùng tên 'Văn bản hợp nhất 06/VBHN-BXD' (hợp nhất NĐ 10/2021/NĐ-CP + sửa đổi), KHÔNG dùng 'NĐ 10/2021' đơn lẻ.",
     "Văn phong: trang trọng, ngôi xưng 'Đơn vị thi công', tránh bullet thẳng, ưu tiên đoạn văn.",
     "Độ dài: 120-250 từ. Chỉ tiếng Việt. Không bịa số liệu không có trong dữ liệu.",
     "Tham chiếu QCVN/TCVN cụ thể khi phù hợp.",

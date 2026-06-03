@@ -24,7 +24,7 @@ export function Hero() {
           <strong className="text-white">Atlas AEC</strong> (suite ngang, kiểu Atlassian — 13 mô-đun) +{" "}
           <strong className="text-white">aec-platform</strong> (PM dọc cho nhà thầu VN — 14 mô-đun).
           Mỗi mô-đun độc lập, đăng nhập chung, dữ liệu liền mạch. Gắn chặt NĐ 06/2021 (nghiệm thu),
-          NĐ 10/2021 (chi phí), HĐĐT NĐ 123/2020.
+          VBHN 06/VBHN-BXD (chi phí ĐTXD — hợp nhất NĐ 10/2021), HĐĐT NĐ 123/2020.
         </p>
 
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

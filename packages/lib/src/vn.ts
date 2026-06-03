@@ -101,8 +101,9 @@ export const issueTypeMeta: Record<string, { label: string; prefix: string; colo
 
 /**
  * Compute VAT + retention for a progress-payment claim.
- * NĐ 10/2021 + practice: VAT 8% (giảm tạm theo NQ Quốc hội) hoặc 10%,
- * giữ lại 5% bảo hành (thông lệ), TNDN tạm thu 1% không tính ở đây.
+ * VBHN 06/VBHN-BXD (hợp nhất NĐ 10/2021 + sửa đổi) + practice: VAT 8%
+ * (giảm tạm theo NQ Quốc hội) hoặc 10%, giữ lại 5% bảo hành (thông lệ),
+ * TNDN tạm thu 1% không tính ở đây.
  */
 export function computePayment(workDoneVnd: bigint, vatRate = 8, retentionPct = 5) {
   const vat = (workDoneVnd * BigInt(vatRate)) / 100n;

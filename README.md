@@ -2,7 +2,7 @@
 
 > Atlassian suite, re-skinned for Architecture · Engineering · Construction. Grounded in Vietnamese building law.
 
-**The pitch.** Procore costs ~120tr/tháng for a 50-seat firm in VN and speaks English. Excel + Zalo costs 0đ and breaks every audit. Atlas AEC is the Atlassian-style workspace that PMs in VN already understand — re-imagined with AEC primitives (RFI, Submittal, NCR, Punch, Daily Log, BIM viewer, BBNT) and wired to NĐ 06/2021 / NĐ 10/2021 / NĐ 123/2020 out of the box.
+**The pitch.** Procore costs ~120tr/tháng for a 50-seat firm in VN and speaks English. Excel + Zalo costs 0đ and breaks every audit. Atlas AEC is the Atlassian-style workspace that PMs in VN already understand — re-imagined with AEC primitives (RFI, Submittal, NCR, Punch, Daily Log, BIM viewer, BBNT) and wired to NĐ 06/2021 / VBHN 06/VBHN-BXD (hợp nhất NĐ 10/2021) / NĐ 123/2020 out of the box.
 
 ## Module map (Atlassian → Atlas AEC)
 

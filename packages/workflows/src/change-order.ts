@@ -1,6 +1,7 @@
 /**
  * Change Order — Lệnh thay đổi.
- * Anchor: NĐ 10/2021 quản lý chi phí + Luật Đấu thầu 2023 (điều khoản phụ lục hợp đồng).
+ * Anchor: VBHN 06/VBHN-BXD (hợp nhất NĐ 10/2021 + sửa đổi) quản lý chi phí
+ *         + Luật Đấu thầu 2023 (điều khoản phụ lục hợp đồng).
  *
  *   DRAFT → ESTIMATING → SUBMITTED → CDT_REVIEW ─┬─→ APPROVED → IMPLEMENTED → CLOSED
  *                                                 └─→ REJECTED                → CLOSED
@@ -50,7 +51,7 @@ export const changeOrderWorkflow: Workflow<ChangeOrderState> = {
       to: "APPROVED",
       action: "Phê duyệt",
       allowedRoles: ["CHU_DAU_TU"],
-      ref: "NĐ 10/2021",
+      ref: "VBHN 06/VBHN-BXD",
     },
     {
       from: "CDT_REVIEW",

@@ -1,6 +1,6 @@
 /**
  * Progress Payment — Thanh toán giai đoạn.
- * Anchor: NĐ 10/2021 quản lý chi phí đầu tư xây dựng,
+ * Anchor: VBHN 06/VBHN-BXD (hợp nhất NĐ 10/2021 + sửa đổi) quản lý chi phí ĐTXD,
  *         TT 10/2020/TT-BTC hướng dẫn quyết toán dự án hoàn thành.
  *
  *   DRAFT → SUBMITTED → CDT_REVIEW ─┬─→ APPROVED → PAID
