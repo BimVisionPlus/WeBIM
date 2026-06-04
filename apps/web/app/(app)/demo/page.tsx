@@ -17,6 +17,7 @@ import { getSession } from "@atlas/auth";
 import { formatVnd } from "@atlas/lib";
 import Link from "next/link";
 import { DemoAiPanel } from "./DemoAiPanel";
+import { DemoTour } from "./DemoTour";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +147,7 @@ export default async function DemoLaunchpad() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <DemoTour />
       {/* Hero */}
       <div className="border-b border-slate-200 bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
         <div className="mx-auto max-w-7xl px-6 py-8">
