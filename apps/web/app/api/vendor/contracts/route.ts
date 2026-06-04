@@ -43,8 +43,13 @@ export async function POST(req: NextRequest) {
         state: d.state, signedAt: d.state === "ACTIVE" ? new Date() : null,
       },
     });
-    await audit({ action: "vendorcontract.create", entityType: "VendorContract", entityId: rec.id, actorId: session.userId, orgId: d.orgId, ...reqMeta(req), after: { contractNo: rec.contractNo, vendor: rec.vendorName, value: rec.valueVnd?.toString() } });
-    return NextResponse.json({ contract: rec });
+    await audit({ action: "vendorcontract.create", entityType: "VendorContract", entityId: rec.id, actorId: session.userId, orgId: d.orgId, ...reqMeta(req), after: { contractNo: rec.contractNo, vendor: rec.vendorName, value: rec.valueVnd?.toString() ?? null } });
+    return NextResponse.json({
+      contract: {
+        ...rec,
+        valueVnd: rec.valueVnd?.toString() ?? null,
+      },
+    });
   } catch (e) {
     if (e instanceof AuthError) return NextResponse.json({ error: e.message }, { status: e.status });
     if ((e as any)?.code === "P2002") return NextResponse.json({ error: "Số hợp đồng đã tồn tại" }, { status: 409 });

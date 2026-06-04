@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, ctx: { params: { id: string } | Pr
     if (data.state === "ACTIVE" && rec.state !== "ACTIVE") data.signedAt = new Date();
     const updated = await prisma.vendorContract.update({ where: { id }, data });
     await audit({ action: "vendorcontract.update", entityType: "VendorContract", entityId: id, actorId: session.userId, orgId: rec.orgId, ...reqMeta(req), before: { state: rec.state }, after: { state: updated.state } });
-    return NextResponse.json({ contract: updated });
+    return NextResponse.json({ contract: { ...updated, valueVnd: updated.valueVnd?.toString() ?? null } });
   } catch (e) {
     if (e instanceof AuthError) return NextResponse.json({ error: e.message }, { status: e.status });
     if ((e as any)?.code === "P2002") return NextResponse.json({ error: "Số hợp đồng trùng" }, { status: 409 });

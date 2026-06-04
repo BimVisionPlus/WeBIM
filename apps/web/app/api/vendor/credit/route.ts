@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       },
     });
     await audit({ action: "vendorcredit.create", entityType: "VendorCreditEntry", entityId: rec.id, actorId: session.userId, orgId: d.orgId, ...reqMeta(req), after: { type: rec.type, vendor: rec.vendorName, amount: rec.amountVnd.toString() } });
-    return NextResponse.json({ entry: rec });
+    return NextResponse.json({ entry: { ...rec, amountVnd: rec.amountVnd.toString() } });
   } catch (e) {
     if (e instanceof AuthError) return NextResponse.json({ error: e.message }, { status: e.status });
     console.error(e);
