@@ -21,6 +21,12 @@ import { DemoAiPanel } from "./DemoAiPanel";
 export const dynamic = "force-dynamic";
 
 const MODULES: Array<{ icon: string; group: string; name: string; href: string; tagline: string }> = [
+  // Atlas Suite — roadmap 02→05 shipped
+  { icon: "📦", group: "Atlas Suite (02→05)", name: "Atlas Vendor", href: "/vendor", tagline: "Supplier + thầu phụ · HĐ khung · Sổ công nợ" },
+  { icon: "💰", group: "Atlas Suite (02→05)", name: "Atlas Cost", href: "/cost", tagline: "Định mức TT 10/2019 · EVM · ML cảnh báo overrun" },
+  { icon: "✅", group: "Atlas Suite (02→05)", name: "Atlas Compliance", href: "/compliance", tagline: "TCVN/QCVN · PC07/Sở XD audit prep · AI score" },
+  { icon: "📱", group: "Atlas Suite (02→05)", name: "Atlas Field", href: "/field", tagline: "PWA mobile · Voice-to-form · GPS check-in · Offline" },
+  { icon: "🏛️", group: "Atlas Suite (02→05)", name: "Đơn vị (Business Units)", href: "/units", tagline: "Chi nhánh / Tổng đội / Ban điều hành" },
   // Đấu thầu
   { icon: "🎯", group: "Đấu thầu", name: "WinWork", href: "/winwork", tagline: "Pipeline bid + win-rate dashboard" },
   { icon: "📡", group: "Đấu thầu", name: "BidRadar", href: "/bidradar", tagline: "Quét cơ hội DauThauQuocGia + Báo Đấu thầu" },
@@ -79,6 +85,9 @@ const AI_FEATURES: Array<{ icon: string; name: string; verb: string; what: strin
   { icon: "⚠️", name: "Schedule Risk", verb: "AI cảnh báo", what: "Dự đoán slip % + giải thích bằng tiếng Việt" },
   { icon: "📐", name: "Submittal Checker", verb: "AI kiểm spec", what: "Đối chiếu vật liệu vs spec — flag mismatch" },
   { icon: "🎯", name: "Smart suggestion", verb: "AI gợi ý", what: "Trên StatusUpdate + InternalDocument" },
+  { icon: "💸", name: "Cost Overrun Forecast", verb: "AI dự báo", what: "BAC/EV/AC/CPI/SPI/EAC — Llama đọc trend + đề xuất action" },
+  { icon: "🛡️", name: "Compliance Check", verb: "AI đánh giá", what: "Per TCVN/QCVN: COMPLIANT / PARTIAL / NON_COMPLIANT + findings" },
+  { icon: "🗣️", name: "Field Voice-to-Form", verb: "AI rút trích", what: "Whisper + Llama → 5 intent (DAILY_LOG/INCIDENT/NCR/PPE/PROGRESS)" },
 ];
 
 export default async function DemoLaunchpad() {
@@ -86,7 +95,11 @@ export default async function DemoLaunchpad() {
   if (!session) redirect("/signin?callbackUrl=/demo");
 
   // Live counts (no caching — show real platform pulse).
-  const [projectCount, taskCount, ncrCount, paymentVnd, leadValue, workerCount, internalDocCount, rfiOpen, advanceOpen, handoverOpen] = await Promise.all([
+  const [
+    projectCount, taskCount, ncrCount, paymentVnd, leadValue,
+    workerCount, internalDocCount, rfiOpen, advanceOpen, handoverOpen,
+    vendorActive, normCodes, complianceStds, openAuditPreps, businessUnits,
+  ] = await Promise.all([
     prisma.project.count(),
     prisma.scheduleTask.count(),
     prisma.nCR.count(),
@@ -97,6 +110,11 @@ export default async function DemoLaunchpad() {
     prisma.rFI.count({ where: { answer: null } }),
     prisma.advanceTransaction.count({ where: { status: { in: ["PENDING", "APPROVED"] } } }),
     prisma.handoverTicket.count({ where: { state: { notIn: ["VERIFIED", "CLOSED"] } } }),
+    prisma.vendorContract.count({ where: { state: "ACTIVE" } }),
+    prisma.normCode.count(),
+    prisma.regulation.count({ where: { status: "IN_FORCE", kind: { in: ["TCVN", "QCVN"] } } }),
+    prisma.auditPrep.count({ where: { state: { in: ["DRAFT", "IN_PROGRESS", "READY", "INSPECTING"] } } }),
+    prisma.businessUnit.count({ where: { active: true } }),
   ]);
 
   // Pick the richest project to drill into
@@ -148,6 +166,11 @@ export default async function DemoLaunchpad() {
             <Stat label="RFI đang mở" value={rfiOpen.toString()} />
             <Stat label="Tạm ứng chưa hoàn" value={advanceOpen.toString()} />
             <Stat label="Bảo hành đang mở" value={handoverOpen.toString()} />
+            <Stat label="HĐ vendor ACTIVE" value={vendorActive.toString()} />
+            <Stat label="Định mức TT 10/2019" value={normCodes.toString()} />
+            <Stat label="Tiêu chuẩn TCVN/QCVN" value={complianceStds.toString()} />
+            <Stat label="Audit prep đang mở" value={openAuditPreps.toString()} />
+            <Stat label="Đơn vị" value={businessUnits.toString()} />
           </div>
         </div>
       </div>
