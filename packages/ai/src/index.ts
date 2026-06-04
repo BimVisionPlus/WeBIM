@@ -14,3 +14,4 @@ export * as siteEyeAi from "./tasks/siteeye";
 export * as scheduleRiskAi from "./tasks/schedule-risk";
 export * as hoanCongAi from "./tasks/hoancong-draft";
 export * as submittalCheckAi from "./tasks/submittal-check";
+export * as costOverrunAi from "./tasks/cost-overrun-forecast";
