@@ -15,3 +15,4 @@ export * as scheduleRiskAi from "./tasks/schedule-risk";
 export * as hoanCongAi from "./tasks/hoancong-draft";
 export * as submittalCheckAi from "./tasks/submittal-check";
 export * as costOverrunAi from "./tasks/cost-overrun-forecast";
+export * as complianceAi from "./tasks/compliance-check";

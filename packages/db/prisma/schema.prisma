@@ -255,6 +255,86 @@ model Project {
   vehicleDispatches  VehicleDispatch[]
   advanceTxns        AdvanceTransaction[]
   contractorAssigns  ContractorAssignment[]
+  auditPreps         AuditPrep[]
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ATLAS COMPLIANCE — module 04 (Q2/2027): audit-prep workflow for PC07 / Sở XD /
+// CĐT nghiệm thu. Each prep collects evidence + signatures against checklist
+// items. Items can link to existing platform records (Acceptance/NCR/Regulation).
+// ──────────────────────────────────────────────────────────────────────────────
+enum AuditPrepKind {
+  PC07_PCCC          // Cảnh sát PCCC PC07 thẩm duyệt / nghiệm thu
+  SO_XAY_DUNG        // Sở Xây dựng thẩm tra
+  CDT_NGHIEM_THU     // CĐT nghiệm thu giai đoạn / công việc
+  HOAN_CONG_QLNN     // Nộp hồ sơ hoàn công cơ quan QLNN
+  TVGS_NGHIEM_THU    // TVGS nghiệm thu định kỳ
+  KHAC
+}
+
+enum AuditPrepState {
+  DRAFT
+  IN_PROGRESS
+  READY
+  INSPECTING
+  PASSED
+  FAILED
+  CLOSED
+}
+
+enum AuditPrepItemState {
+  PENDING
+  IN_PROGRESS
+  READY
+  NOT_APPLICABLE
+  FAILED
+}
+
+model AuditPrep {
+  id            String         @id @default(cuid())
+  projectId     String
+  kind          AuditPrepKind
+  title         String
+  description   String?        @db.Text
+  scheduledAt   DateTime?
+  inspectorOrg  String?
+  inspectorName String?
+  state         AuditPrepState @default(DRAFT)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  resultNote    String?        @db.Text
+  evidenceUrl   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  project Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items   AuditPrepItem[]
+
+  @@index([projectId, state])
+  @@index([kind, scheduledAt])
+}
+
+model AuditPrepItem {
+  id             String             @id @default(cuid())
+  prepId         String
+  seq            Int
+  code           String
+  title          String
+  description    String?            @db.Text
+  required       Boolean            @default(true)
+  state          AuditPrepItemState @default(PENDING)
+  evidenceUrl    String?
+  notes          String?            @db.Text
+  signedByName   String?
+  signedAt       DateTime?
+  regulationCode String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  prep AuditPrep @relation(fields: [prepId], references: [id], onDelete: Cascade)
+
+  @@unique([prepId, seq])
+  @@index([prepId, state])
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
