@@ -58,6 +58,9 @@ model Organization {
   marketTerritories   MarketTerritory[]
   projectLeads        ProjectLead[]
   businessUnits       BusinessUnit[]
+  vendorContractsOwned  VendorContract[]    @relation("VendorContractOrg")
+  vendorContractsVendor VendorContract[]    @relation("VendorContractVendor")
+  vendorCreditEntries   VendorCreditEntry[] @relation("VendorCreditOrg")
 }
 
 enum OrgType {
@@ -3506,10 +3509,92 @@ model Supplier {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  items SupplierCatalogItem[]
+  items           SupplierCatalogItem[]
+  vendorContracts VendorContract[]
+  creditEntries   VendorCreditEntry[]
 
   @@index([name])
   @@index([active])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ATLAS VENDOR — module 02 (Q4/2026): hợp đồng khung + sổ công nợ với
+// nhà cung cấp & nhà thầu phụ. Polymorphic vendor pointer: hoặc Org
+// (nhà thầu phụ trong hệ thống), hoặc Supplier (vật tư từ catalog),
+// hoặc cả 2 đều null + vendorName là free-text bên ngoài hệ thống.
+// ──────────────────────────────────────────────────────────────────────────────
+enum VendorContractType {
+  FRAMEWORK // Hợp đồng khung (nhiều PO)
+  SPOT_PO // Đơn hàng đơn lẻ
+  ANNUAL // Hợp đồng năm
+  RAMP_UP // Hợp đồng thử việc / sản lượng tăng dần
+}
+
+enum VendorContractState {
+  DRAFT
+  NEGOTIATING
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum VendorCreditType {
+  PURCHASE // Phát sinh nợ
+  PAYMENT // Trả tiền
+  RETURN // Trả hàng, giảm nợ
+  ADJUST // Điều chỉnh khác
+}
+
+model VendorContract {
+  id          String              @id @default(cuid())
+  orgId       String // Tổ chức ký HĐ (Cofico, Vinhomes...)
+  vendorOrgId String? // Nhà thầu phụ là Org trong hệ thống
+  supplierId  String? // Hoặc Supplier từ catalog
+  vendorName  String // Cache tên để hiển thị (vd khi external/free-text)
+  contractNo  String // "HD-VT-2026/001"
+  type        VendorContractType
+  startDate   DateTime
+  endDate     DateTime?
+  valueVnd    BigInt?
+  scope       String?             @db.Text
+  terms       String?             @db.Text
+  state       VendorContractState @default(DRAFT)
+  signedAt    DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  org           Organization        @relation("VendorContractOrg", fields: [orgId], references: [id], onDelete: Cascade)
+  vendorOrg     Organization?       @relation("VendorContractVendor", fields: [vendorOrgId], references: [id])
+  supplier      Supplier?           @relation(fields: [supplierId], references: [id])
+  creditEntries VendorCreditEntry[]
+
+  @@unique([orgId, contractNo])
+  @@index([orgId, state])
+  @@index([vendorOrgId])
+  @@index([supplierId])
+}
+
+model VendorCreditEntry {
+  id          String           @id @default(cuid())
+  orgId       String
+  contractId  String?
+  vendorOrgId String?
+  supplierId  String?
+  vendorName  String
+  txnDate     DateTime
+  txnNo       String?
+  type        VendorCreditType
+  amountVnd   BigInt
+  notes       String?
+  createdAt   DateTime         @default(now())
+
+  org      Organization    @relation("VendorCreditOrg", fields: [orgId], references: [id], onDelete: Cascade)
+  contract VendorContract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  supplier Supplier?       @relation(fields: [supplierId], references: [id])
+
+  @@index([orgId, txnDate])
+  @@index([vendorOrgId])
+  @@index([supplierId])
 }
 
 // Many-to-many: supplier × catalog item with price + lead time.
