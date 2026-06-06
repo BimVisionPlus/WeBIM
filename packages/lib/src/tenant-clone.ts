@@ -59,21 +59,21 @@ export async function cloneTenant(opts: CloneOpts): Promise<CloneResult> {
   const existing = await prisma.organization.findUnique({ where: { slug: opts.slug } });
   if (existing) throw new Error(`Slug "${opts.slug}" already taken`);
 
-  // 2) Load template org + projects
+  // 2) Load template org + projects (small subset for fast clone)
   const template = await prisma.organization.findUnique({
     where: { slug: templateSlug },
     include: {
       projectsOwned: {
-        take: 5, // limit cloned projects for tenant pilot
+        take: 3, // limit cloned projects for tenant pilot
         orderBy: { createdAt: "desc" },
         include: {
           boqs: { where: { isCurrent: true }, include: { lines: true } },
           scheduleTasks: true,
           issues: {
             include: { rfi: true, submittal: true, ncr: true, punchItem: true, changeOrder: true },
-            take: 50, // cap per project
+            take: 15, // cap per project for fast clone
           },
-          dailyLogs: { take: 14, orderBy: { date: "desc" } },
+          dailyLogs: { take: 5, orderBy: { date: "desc" } },
         },
       },
     },
