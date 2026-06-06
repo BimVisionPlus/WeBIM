@@ -36,27 +36,30 @@ function extractTenantSlug(host: string): string | null {
 }
 
 export function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-
-  // Security headers
-  res.headers.set("X-Frame-Options", "SAMEORIGIN");
-  res.headers.set("X-Content-Type-Options", "nosniff");
-  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
-
   const host = req.headers.get("host") ?? "";
-
-  // Tenant subdomain detection
   const slug = extractTenantSlug(host);
+
+  // Build request headers — server components read these via next/headers().
+  const requestHeaders = new Headers(req.headers);
   if (slug) {
+    requestHeaders.set("x-tenant-slug", slug);
+
     // Block main-only paths on tenant subdomains
     if (MAIN_ONLY_PATHS.some((p) => req.nextUrl.pathname.startsWith(p))) {
       const main = req.nextUrl.clone();
       main.host = "app.aecplatform.vn";
       return NextResponse.redirect(main, 302);
     }
-    res.headers.set("x-tenant-slug", slug);
   }
+
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // Security headers (on response)
+  res.headers.set("X-Frame-Options", "SAMEORIGIN");
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
+  if (slug) res.headers.set("x-tenant-slug", slug);
 
   // Force HTTPS in prod
   if (process.env.NODE_ENV === "production") {
