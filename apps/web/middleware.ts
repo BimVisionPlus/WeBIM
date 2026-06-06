@@ -1,30 +1,65 @@
 /**
- * Edge middleware: enforce HTTPS in prod + add security headers.
+ * Edge middleware: HTTPS enforcement + security headers + tenant subdomain.
+ *
+ * Tenant subdomain resolution (module D):
+ *   - host = aecplatform.vn / app.aecplatform.vn → main, no tenant
+ *   - host = <slug>.aecplatform.vn → set x-tenant-slug header for downstream
  *
  * NOTE: NextAuth runs at the route handler layer, not edge. Per-route rate
- * limiting happens inside each route handler — putting it in middleware would
- * require Redis access from the edge runtime, which complicates Docker self-host.
+ * limiting happens inside each route handler.
  */
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const MAIN_HOSTS = new Set([
+  "aecplatform.vn",
+  "www.aecplatform.vn",
+  "app.aecplatform.vn",
+  "localhost:3170",
+  "localhost:3000",
+  "127.0.0.1:3170",
+]);
+
+// Paths only allowed on the main domain — block on tenant subdomains.
+const MAIN_ONLY_PATHS = ["/admin/tenants", "/admin/system"];
+
+function extractTenantSlug(host: string): string | null {
+  if (MAIN_HOSTS.has(host)) return null;
+  const hostNoPort = host.split(":")[0]!;
+  if (!hostNoPort.endsWith(".aecplatform.vn")) return null;
+  const slug = hostNoPort.slice(0, -".aecplatform.vn".length);
+  if (!slug || slug === "www" || slug === "app") return null;
+  // Valid DNS label: lowercase alphanumeric + hyphen, 2-40 chars
+  if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug)) return null;
+  return slug;
+}
+
 export function middleware(req: NextRequest) {
   const res = NextResponse.next();
 
-  // Security headers (in addition to next.config headers — belt + braces).
+  // Security headers
   res.headers.set("X-Frame-Options", "SAMEORIGIN");
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
 
-  // Force HTTPS in prod — but only for real public hosts. Localhost and
-  // private/loopback ranges are never reachable from the internet, so
-  // redirecting them to https just breaks `next start` smoke tests in CI
-  // (which run NODE_ENV=production on http://localhost:3000 and otherwise
-  // get a 301 chain on every request, breaking NextAuth's csrf bootstrap).
+  const host = req.headers.get("host") ?? "";
+
+  // Tenant subdomain detection
+  const slug = extractTenantSlug(host);
+  if (slug) {
+    // Block main-only paths on tenant subdomains
+    if (MAIN_ONLY_PATHS.some((p) => req.nextUrl.pathname.startsWith(p))) {
+      const main = req.nextUrl.clone();
+      main.host = "app.aecplatform.vn";
+      return NextResponse.redirect(main, 302);
+    }
+    res.headers.set("x-tenant-slug", slug);
+  }
+
+  // Force HTTPS in prod
   if (process.env.NODE_ENV === "production") {
-    const host = req.headers.get("host") ?? "";
     const isLocal =
       host.startsWith("localhost") ||
       host.startsWith("127.0.0.1") ||

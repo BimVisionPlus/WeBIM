@@ -1,4 +1,5 @@
 export * from "./s3";
+export * from "./tenant-clone";
 export * from "./aps";
 export * from "./vn";
 export * from "./env";

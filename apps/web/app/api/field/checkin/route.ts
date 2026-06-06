@@ -7,11 +7,15 @@
  * creates Attendance row. Records GPS even if no project geo-fence configured.
  * Mode "in" = new Attendance; "out" = updates the latest open Attendance with
  * checkOutAt.
+ *
+ * SECURITY: requireProject(projectId) validates the caller belongs to an
+ * organization that participates in the target project, preventing
+ * cross-project Attendance pollution.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@atlas/db";
-import { requireSession, AuthError } from "@atlas/auth";
+import { requireSession, requireProject, AuthError } from "@atlas/auth";
 import { audit, reqMeta, rateLimitGuard } from "@atlas/lib";
 
 const Body = z.object({
@@ -50,6 +54,10 @@ export async function POST(req: NextRequest) {
 
     const projectId = d.projectId ?? worker.projectId;
     if (!projectId) return NextResponse.json({ error: "Chưa biết dự án — vui lòng truyền projectId" }, { status: 400 });
+
+    // SECURITY: verify the caller has access to this project before any write.
+    // This blocks a Cofico user creating an Attendance row on a Vinhomes project.
+    await requireProject(projectId);
 
     const now = new Date();
 
