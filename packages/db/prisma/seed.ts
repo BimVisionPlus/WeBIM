@@ -31,6 +31,9 @@ async function main() {
 
   // Wipe (dev-only)
   await prisma.aiSuggestion.deleteMany();
+  await prisma.aiCitation.deleteMany();
+  // Claims (children cascade từ Claim; xóa trước Regulation/User vì FK Restrict)
+  await prisma.claim.deleteMany();
   await prisma.transition.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.attachment.deleteMany();
@@ -613,6 +616,333 @@ async function main() {
   await prisma.projectRegulation.createMany({
     data: applicable.map((a) => ({ projectId: project.id, regulationId: a.id, required: true })),
   });
+
+  // ─── Thư viện pháp lý cho Claims (hợp đồng xây dựng / khiếu nại / tranh chấp)
+  // body = TÓM TẮT THAM CHIẾU các điều thường viện dẫn — không phải toàn văn.
+  // Luôn đối chiếu văn bản gốc (url) trước khi đưa vào hồ sơ chính thức.
+  const claimRegs: Array<{
+    code: string;
+    kind: "LUAT" | "NGHI_DINH" | "THONG_TU";
+    title: string;
+    issuedBy: string;
+    effectiveAt: string;
+    url: string;
+    tags: string[];
+    body: string;
+  }> = [
+    {
+      code: "Luật Xây dựng 50/2014/QH13",
+      kind: "LUAT",
+      title: "Luật Xây dựng (sửa đổi, bổ sung bởi Luật 62/2020/QH14)",
+      issuedBy: "Quốc hội",
+      effectiveAt: "2015-01-01",
+      url: "https://vanban.chinhphu.vn/?pageid=27160&docid=175388",
+      tags: ["hợp đồng", "khiếu nại", "luật khung"],
+      body:
+        "TÓM TẮT THAM CHIẾU (đối chiếu văn bản gốc trước khi trích dẫn):\n" +
+        "- Điều 138 — Quy định chung về hợp đồng xây dựng: nguyên tắc ký kết, hiệu lực.\n" +
+        "- Điều 143 — Điều chỉnh hợp đồng xây dựng: các trường hợp được điều chỉnh (thay đổi phạm vi, " +
+        "bất khả kháng, thay đổi chính sách ảnh hưởng trực tiếp).\n" +
+        "- Điều 146 — Thưởng, phạt hợp đồng xây dựng; bồi thường thiệt hại do vi phạm: căn cứ yêu cầu " +
+        "bồi thường khi một bên vi phạm nghĩa vụ hợp đồng.\n" +
+        "- Điều 147 — Quyết toán, thanh lý hợp đồng xây dựng.",
+    },
+    {
+      code: "NĐ 37/2015/NĐ-CP",
+      kind: "NGHI_DINH",
+      title: "Quy định chi tiết về hợp đồng xây dựng",
+      issuedBy: "Chính phủ",
+      effectiveAt: "2015-06-15",
+      url: "https://vanban.chinhphu.vn/?pageid=27160&docid=180094",
+      tags: ["hợp đồng", "khiếu nại", "EOT", "thanh toán"],
+      body:
+        "TÓM TẮT THAM CHIẾU (đối chiếu văn bản gốc trước khi trích dẫn):\n" +
+        "- Điều 19 — Thanh toán hợp đồng xây dựng: nghĩa vụ và thời hạn thanh toán của bên giao thầu.\n" +
+        "- Điều 35–37 — Nguyên tắc điều chỉnh hợp đồng; điều chỉnh khối lượng; điều chỉnh đơn giá và " +
+        "giá hợp đồng xây dựng.\n" +
+        "- Điều 39 — Điều chỉnh tiến độ thực hiện hợp đồng (cơ sở yêu cầu EOT: bất khả kháng, lỗi của " +
+        "bên giao thầu như chậm bàn giao mặt bằng/thiết kế, thay đổi phạm vi công việc).\n" +
+        "- Điều 40 — Tạm dừng thực hiện công việc trong hợp đồng.\n" +
+        "- Điều 44 — Khiếu nại trong quá trình thực hiện hợp đồng xây dựng: trình tự, thời hạn nêu " +
+        "khiếu nại; hết thời hạn theo hợp đồng có thể mất quyền khiếu nại.\n" +
+        "- Điều 45 — Giải quyết tranh chấp hợp đồng xây dựng: thương lượng → hòa giải → trọng tài/tòa án.",
+    },
+    {
+      code: "NĐ 50/2021/NĐ-CP",
+      kind: "NGHI_DINH",
+      title: "Sửa đổi, bổ sung NĐ 37/2015/NĐ-CP về hợp đồng xây dựng",
+      issuedBy: "Chính phủ",
+      effectiveAt: "2021-04-01",
+      url: "https://vanban.chinhphu.vn/?pageid=27160&docid=202917",
+      tags: ["hợp đồng", "điều chỉnh giá"],
+      body:
+        "TÓM TẮT THAM CHIẾU: sửa đổi, bổ sung một số điều của NĐ 37/2015/NĐ-CP — đáng chú ý các quy " +
+        "định về điều chỉnh khối lượng, điều chỉnh đơn giá/giá hợp đồng và loại hợp đồng áp dụng. Khi " +
+        "viện dẫn NĐ 37/2015 cần kiểm tra điều khoản đó có bị NĐ 50/2021 sửa đổi hay không.",
+    },
+    {
+      code: "BLDS 91/2015/QH13",
+      kind: "LUAT",
+      title: "Bộ luật Dân sự 2015",
+      issuedBy: "Quốc hội",
+      effectiveAt: "2017-01-01",
+      url: "https://vanban.chinhphu.vn/?pageid=27160&docid=183188",
+      tags: ["bồi thường", "vi phạm nghĩa vụ", "lãi chậm trả"],
+      body:
+        "TÓM TẮT THAM CHIẾU (đối chiếu văn bản gốc trước khi trích dẫn):\n" +
+        "- Điều 351 — Trách nhiệm dân sự do vi phạm nghĩa vụ.\n" +
+        "- Điều 357 — Trách nhiệm do chậm thực hiện nghĩa vụ trả tiền (cơ sở tính lãi chậm thanh toán).\n" +
+        "- Điều 360 — Trách nhiệm bồi thường thiệt hại do vi phạm nghĩa vụ.\n" +
+        "- Điều 418 — Thỏa thuận phạt vi phạm trong hợp đồng.",
+    },
+    {
+      code: "Luật Thương mại 36/2005/QH11",
+      kind: "LUAT",
+      title: "Luật Thương mại 2005",
+      issuedBy: "Quốc hội",
+      effectiveAt: "2006-01-01",
+      url: "https://vanban.chinhphu.vn/?pageid=27160&docid=29059",
+      tags: ["phạt vi phạm", "bồi thường"],
+      body:
+        "TÓM TẮT THAM CHIẾU (đối chiếu văn bản gốc trước khi trích dẫn):\n" +
+        "- Điều 300–301 — Phạt vi phạm: mức phạt tổng không quá 8% giá trị phần nghĩa vụ hợp đồng bị " +
+        "vi phạm (trần phạt thường được viện dẫn trong tranh chấp xây dựng giữa doanh nghiệp).\n" +
+        "- Điều 302–303 — Bồi thường thiệt hại: căn cứ phát sinh, giá trị bồi thường gồm tổn thất thực " +
+        "tế và khoản lợi trực tiếp đáng lẽ được hưởng.",
+    },
+  ];
+  const claimRegRows: Record<string, { id: string }> = {};
+  for (const reg of claimRegs) {
+    claimRegRows[reg.code] = await prisma.regulation.create({
+      data: {
+        code: reg.code,
+        kind: reg.kind,
+        title: reg.title,
+        body: reg.body,
+        issuedBy: reg.issuedBy,
+        effectiveAt: new Date(reg.effectiveAt),
+        url: reg.url,
+        tags: reg.tags,
+        status: "IN_FORCE",
+      },
+    });
+  }
+  await prisma.projectRegulation.createMany({
+    data: ["Luật Xây dựng 50/2014/QH13", "NĐ 37/2015/NĐ-CP", "NĐ 50/2021/NĐ-CP"].map((code) => ({
+      projectId: project.id,
+      regulationId: claimRegRows[code].id,
+      required: true,
+      note: "Khung pháp lý hợp đồng / khiếu nại",
+    })),
+  });
+
+  // ─── Claims demo — hồ sơ khiếu nại / EOT ──────────────────────────────────
+  const claim1 = await prisma.claim.create({
+    data: {
+      projectId: project.id,
+      key: `${project.key}-CLM-001`,
+      title: "Chậm bàn giao mặt bằng Zone B — yêu cầu EOT 45 ngày + chi phí chờ đợi",
+      description:
+        "CĐT chậm bàn giao mặt bằng thi công Zone B 45 ngày so với mốc Điều 9.2 hợp đồng " +
+        "(kế hoạch 10/03/2026, thực tế 24/04/2026). Nhà thầu phải duy trì nhân lực, thiết bị " +
+        "(2 cẩu tháp, 180 nhân công) trong thời gian chờ. Yêu cầu: gia hạn tiến độ 45 ngày + " +
+        "chi phí máy chờ, nhân công chờ 1.850.000.000 VND.",
+      type: "EOT",
+      direction: "CONTRACTOR_TO_OWNER",
+      state: "EVIDENCE",
+      counterparty: "CĐT Vinhomes JSC",
+      contractRef: "Điều 9.2 + Điều 14.4, HĐ số 18/2025/HĐTC-VHGP",
+      amountVnd: BigInt("1850000000"),
+      eotDays: 45,
+      periodStart: new Date("2026-03-10"),
+      periodEnd: new Date("2026-04-24"),
+      noticeDeadlineAt: new Date("2026-06-19"),
+      createdById: anh.id,
+      assigneeId: anh.id,
+      events: {
+        create: [
+          {
+            occurredAt: new Date("2026-03-08"),
+            kind: "NOTICE",
+            title: "CĐT thông báo lùi bàn giao mặt bằng Zone B",
+            detail: "CV số 112/2026/CV-VH: vướng di dời hạ tầng ngầm, lùi bàn giao 'dự kiến 2 tuần'.",
+            createdById: anh.id,
+          },
+          {
+            occurredAt: new Date("2026-03-10"),
+            kind: "DELAY_START",
+            title: "Mốc bàn giao mặt bằng theo HĐ — không thực hiện",
+            detail: "Theo Điều 9.2, CĐT phải bàn giao mặt bằng Zone B ngày 10/03/2026.",
+            createdById: anh.id,
+          },
+          {
+            occurredAt: new Date("2026-03-18"),
+            kind: "NOTICE",
+            title: "Nhà thầu gửi văn bản bảo lưu quyền khiếu nại",
+            detail:
+              "CV số 045/2026/CV-CFC: thông báo ảnh hưởng tiến độ + chi phí, bảo lưu quyền yêu cầu " +
+              "EOT và chi phí phát sinh theo Điều 14.4 HĐ.",
+            createdById: anh.id,
+          },
+          {
+            occurredAt: new Date("2026-04-02"),
+            kind: "MEETING",
+            title: "Họp 3 bên CĐT–TVGS–NT về mặt bằng Zone B",
+            detail: "Biên bản họp: CĐT cam kết bàn giao trước 25/04; các bên ghi nhận nhà thầu đang chờ mặt bằng.",
+            createdById: binh.id,
+          },
+          {
+            occurredAt: new Date("2026-04-24"),
+            kind: "DELAY_END",
+            title: "CĐT bàn giao mặt bằng Zone B (chậm 45 ngày)",
+            detail: "Biên bản bàn giao mặt bằng ký 3 bên ngày 24/04/2026.",
+            createdById: anh.id,
+          },
+        ],
+      },
+      evidence: {
+        create: [
+          {
+            kind: "CORRESPONDENCE",
+            title: "CV 112/2026/CV-VH — CĐT thông báo lùi bàn giao mặt bằng",
+            note: "Chứng minh nguyên nhân chậm trễ thuộc trách nhiệm CĐT.",
+            capturedAt: new Date("2026-03-08"),
+            addedById: anh.id,
+          },
+          {
+            kind: "CORRESPONDENCE",
+            title: "CV 045/2026/CV-CFC — Nhà thầu bảo lưu quyền khiếu nại",
+            note: "Chứng minh đã thông báo trong thời hạn theo Điều 14.4 HĐ.",
+            capturedAt: new Date("2026-03-18"),
+            addedById: anh.id,
+          },
+          {
+            kind: "CONTRACT",
+            title: "Trích HĐ 18/2025/HĐTC-VHGP — Điều 9.2 (bàn giao mặt bằng) + Điều 14.4 (khiếu nại)",
+            note: "Mốc nghĩa vụ bàn giao mặt bằng và cơ chế khiếu nại trong hợp đồng.",
+            capturedAt: new Date("2026-01-15"),
+            addedById: anh.id,
+          },
+          {
+            kind: "INVOICE",
+            title: "Bảng tổng hợp chi phí máy chờ + nhân công chờ (10/03–24/04)",
+            note: "2 cẩu tháp × 45 ngày + chi phí duy trì 180 nhân công — tổng 1.85 tỷ.",
+            capturedAt: new Date("2026-04-28"),
+            addedById: anh.id,
+          },
+        ],
+      },
+      legalBases: {
+        create: [
+          {
+            regulationId: claimRegRows["NĐ 37/2015/NĐ-CP"].id,
+            articleRef: "Điều 39",
+            argument:
+              "Chậm bàn giao mặt bằng là lỗi của bên giao thầu, thuộc trường hợp được điều chỉnh tiến " +
+              "độ thực hiện hợp đồng — cơ sở trực tiếp cho yêu cầu EOT 45 ngày.",
+            source: "USER",
+            accepted: true,
+          },
+          {
+            regulationId: claimRegRows["Luật Xây dựng 50/2014/QH13"].id,
+            articleRef: "Điều 146",
+            argument:
+              "Bên giao thầu vi phạm nghĩa vụ bàn giao mặt bằng theo Điều 9.2 HĐ, gây thiệt hại thực tế " +
+              "(chi phí máy chờ, nhân công chờ) — căn cứ yêu cầu bồi thường thiệt hại.",
+            source: "USER",
+            accepted: true,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.claim.create({
+    data: {
+      projectId: project.id,
+      key: `${project.key}-CLM-002`,
+      title: "Chậm thanh toán đợt 4 (IPC#4) — yêu cầu thanh toán + lãi chậm trả",
+      description:
+        "Hồ sơ thanh toán đợt 4 (khối lượng tầng 8–10, giá trị 12.400.000.000 VND) được TVGS xác nhận " +
+        "ngày 05/05/2026, CĐT chưa thanh toán dù quá thời hạn theo Điều 11.3 HĐ. Yêu cầu thanh toán " +
+        "gốc + lãi chậm trả.",
+      type: "PAYMENT_DELAY",
+      direction: "CONTRACTOR_TO_OWNER",
+      state: "SUBMITTED",
+      counterparty: "CĐT Vinhomes JSC",
+      contractRef: "Điều 11.3, HĐ số 18/2025/HĐTC-VHGP",
+      amountVnd: BigInt("12400000000"),
+      submittedAt: new Date("2026-06-02"),
+      periodStart: new Date("2026-05-05"),
+      createdById: anh.id,
+      assigneeId: anh.id,
+      events: {
+        create: [
+          {
+            occurredAt: new Date("2026-05-05"),
+            kind: "OTHER",
+            title: "TVGS xác nhận hồ sơ thanh toán IPC#4",
+            detail: "Khối lượng tầng 8–10 được Apave xác nhận đủ điều kiện thanh toán.",
+            createdById: binh.id,
+          },
+          {
+            occurredAt: new Date("2026-05-26"),
+            kind: "PAYMENT",
+            title: "Quá hạn thanh toán theo Điều 11.3 HĐ",
+            detail: "Hết thời hạn thanh toán theo hợp đồng, CĐT chưa chuyển tiền.",
+            createdById: anh.id,
+          },
+          {
+            occurredAt: new Date("2026-06-02"),
+            kind: "NOTICE",
+            title: "Gửi văn bản yêu cầu thanh toán + lãi chậm trả",
+            detail: "CV số 078/2026/CV-CFC kèm bảng tính lãi chậm trả từ 26/05/2026.",
+            createdById: anh.id,
+          },
+        ],
+      },
+      evidence: {
+        create: [
+          {
+            kind: "ACCEPTANCE",
+            title: "Hồ sơ IPC#4 + xác nhận khối lượng của TVGS (05/05/2026)",
+            note: "Chứng minh nghĩa vụ thanh toán đã phát sinh.",
+            capturedAt: new Date("2026-05-05"),
+            addedById: anh.id,
+          },
+          {
+            kind: "CORRESPONDENCE",
+            title: "CV 078/2026/CV-CFC — yêu cầu thanh toán + bảng tính lãi",
+            capturedAt: new Date("2026-06-02"),
+            addedById: anh.id,
+          },
+        ],
+      },
+      legalBases: {
+        create: [
+          {
+            regulationId: claimRegRows["NĐ 37/2015/NĐ-CP"].id,
+            articleRef: "Điều 19",
+            argument:
+              "Bên giao thầu có nghĩa vụ thanh toán theo thời hạn hợp đồng sau khi hồ sơ thanh toán " +
+              "được xác nhận — CĐT đã quá hạn theo Điều 11.3 HĐ.",
+            source: "USER",
+            accepted: true,
+          },
+          {
+            regulationId: claimRegRows["BLDS 91/2015/QH13"].id,
+            articleRef: "Điều 357",
+            argument:
+              "Chậm thực hiện nghĩa vụ trả tiền phát sinh trách nhiệm trả lãi trên số tiền chậm trả " +
+              "tương ứng thời gian chậm — cơ sở tính lãi chậm thanh toán kèm theo yêu cầu gốc.",
+            source: "USER",
+            accepted: true,
+          },
+        ],
+      },
+    },
+  });
+  console.log(`  ✓ Claims: 2 hồ sơ khiếu nại (${claim1.key}, ${project.key}-CLM-002) + 5 văn bản pháp lý`);
 
   const dossierTpl = [
     { category: "KHAO_SAT" as const, itemCode: "I.A.1", itemTitle: "Báo cáo khảo sát địa chất", required: true },

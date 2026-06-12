@@ -165,6 +165,9 @@ model User {
   internalDocs   InternalDocument[]
   marketTerritories MarketTerritory[]
   ledBusinessUnits  BusinessUnit[]    @relation("BuLeader")
+  claimsCreated     Claim[]           @relation("ClaimCreator")
+  claimsAssigned    Claim[]           @relation("ClaimAssignee")
+  claimEvents       ClaimEvent[]      @relation("ClaimEventAuthor")
 }
 
 // ─── NextAuth ────────────────────────────────────────────────────────────────
@@ -314,6 +317,7 @@ model Project {
   advanceTxns        AdvanceTransaction[]
   contractorAssigns  ContractorAssignment[]
   auditPreps         AuditPrep[]
+  claims             Claim[]
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -2230,12 +2234,14 @@ model Attachment {
   acceptanceId String?
   bidId        String?
   incidentId   String?
+  claimId      String?
 
   issue      Issue?          @relation(fields: [issueId], references: [id], onDelete: Cascade)
   dailyLog   DailyLog?       @relation("DailyLogPhotos", fields: [dailyLogId], references: [id], onDelete: Cascade)
   acceptance Acceptance?     @relation("AcceptanceAttachments", fields: [acceptanceId], references: [id], onDelete: Cascade)
   bid        Bid?            @relation("BidAttachments", fields: [bidId], references: [id], onDelete: Cascade)
   incident   IncidentReport? @relation("IncidentPhotos", fields: [incidentId], references: [id], onDelete: Cascade)
+  claim      Claim?          @relation("ClaimAttachments", fields: [claimId], references: [id], onDelete: Cascade)
 }
 
 // ============================================================================
@@ -2513,6 +2519,7 @@ model Regulation {
 
   rules               CodeRule[]
   projectApplications ProjectRegulation[]
+  claimBases          ClaimLegalBasis[]
 
   @@index([kind, status])
   @@index([effectiveAt])
@@ -4221,4 +4228,169 @@ enum LeadStatus {
   WON // Đã trúng / chuyển thành Project
   LOST // Không trúng / bỏ qua
   ARCHIVED
+}
+
+// ============================================================================
+//  CLAIMS — Hồ sơ khiếu nại / yêu cầu EOT, phát sinh chi phí
+//  Căn cứ: NĐ 37/2015/NĐ-CP Đ.44 (khiếu nại trong quá trình thực hiện HĐ),
+//  Đ.45 (giải quyết tranh chấp); Luật Xây dựng 2014 Đ.146. Mô hình:
+//  Claim (hồ sơ) → ClaimEvent (diễn biến sự việc) → ClaimEvidence (chứng cứ,
+//  soft-link tới DailyLog/RFI/ChangeOrder/SuperviseEntry/Acceptance/…) →
+//  ClaimLegalBasis (căn cứ pháp lý ↔ Regulation, mức điều/khoản).
+//  AI chỉ gợi ý căn cứ + soạn nháp văn bản — engineer-in-loop, không tự áp dụng.
+// ============================================================================
+
+model Claim {
+  id               String         @id @default(cuid())
+  projectId        String
+  key              String         @unique // "VHGP-S9-CLM-001"
+  title            String
+  description      String?        @db.Text
+  type             ClaimType      @default(EOT)
+  direction        ClaimDirection @default(CONTRACTOR_TO_OWNER)
+  state            ClaimState     @default(DRAFT)
+  counterparty     String? // bên bị khiếu nại: "CĐT Vinhomes" | "Nhà thầu Cofico" | TVGS …
+  contractRef      String? // điều khoản HĐ viện dẫn: "Điều 12.3, HĐ số 05/2025/HĐXD"
+  amountVnd        BigInt? // giá trị yêu cầu (VND) — null nếu chỉ yêu cầu EOT
+  eotDays          Int? // số ngày gia hạn tiến độ yêu cầu
+  periodStart      DateTime? // khoảng thời gian xảy ra sự kiện gốc
+  periodEnd        DateTime?
+  noticeDeadlineAt DateTime? // hạn gửi thông báo theo HĐ / NĐ 37/2015
+  submittedAt      DateTime?
+  resolvedAt       DateTime?
+  resolutionNote   String?        @db.Text
+  statementMd      String?        @db.Text // văn bản khiếu nại đã chốt (markdown)
+  createdById      String
+  assigneeId       String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy   User              @relation("ClaimCreator", fields: [createdById], references: [id])
+  assignee    User?             @relation("ClaimAssignee", fields: [assigneeId], references: [id])
+  events      ClaimEvent[]
+  evidence    ClaimEvidence[]
+  legalBases  ClaimLegalBasis[]
+  attachments Attachment[]      @relation("ClaimAttachments")
+
+  @@index([projectId, state])
+  @@index([projectId, noticeDeadlineAt])
+}
+
+enum ClaimType {
+  EOT // Gia hạn tiến độ (Extension of Time) — NĐ 37/2015 Đ.39
+  COST // Chi phí phát sinh / bồi thường thiệt hại
+  PRICE_ESCALATION // Điều chỉnh giá hợp đồng — NĐ 37/2015 Đ.38
+  PAYMENT_DELAY // Chậm thanh toán — NĐ 37/2015 Đ.43
+  DEFECT // Khiếu nại chất lượng / lỗi thi công
+  OTHER
+}
+
+enum ClaimDirection {
+  CONTRACTOR_TO_OWNER // Nhà thầu → Chủ đầu tư
+  OWNER_TO_CONTRACTOR // Chủ đầu tư → Nhà thầu
+  TO_CONSULTANT // Khiếu nại TVGS / TVTK
+}
+
+enum ClaimState {
+  DRAFT // Đang lập hồ sơ
+  EVIDENCE // Đang thu thập chứng cứ
+  SUBMITTED // Đã gửi văn bản khiếu nại
+  UNDER_REVIEW // Bên kia đang xem xét
+  NEGOTIATION // Đang thương lượng / hòa giải
+  RESOLVED // Đã giải quyết (chấp thuận toàn bộ / một phần)
+  REJECTED // Bị bác — có thể leo thang
+  ESCALATED // Đưa ra trọng tài / tòa án — NĐ 37/2015 Đ.45
+  WITHDRAWN // Rút khiếu nại
+}
+
+// Diễn biến sự việc — timeline làm xương sống cho lập luận nhân quả.
+model ClaimEvent {
+  id          String         @id @default(cuid())
+  claimId     String
+  occurredAt  DateTime // ngày xảy ra sự kiện (không phải ngày nhập)
+  kind        ClaimEventKind @default(OTHER)
+  title       String
+  detail      String?        @db.Text
+  // Soft-link tới bản ghi gốc trên nền tảng (nguồn sự kiện)
+  sourceTable String? // "DailyLog" | "RFI" | "ChangeOrder" | "SuperviseEntry" | …
+  sourceId    String?
+  createdById String
+  createdAt   DateTime       @default(now())
+
+  claim     Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  createdBy User  @relation("ClaimEventAuthor", fields: [createdById], references: [id])
+
+  @@index([claimId, occurredAt])
+}
+
+enum ClaimEventKind {
+  DELAY_START // Bắt đầu chậm trễ / cản trở
+  DELAY_END // Kết thúc chậm trễ
+  INSTRUCTION // Chỉ đạo / chỉ thị của CĐT, TVGS
+  NOTICE // Thông báo / văn bản gửi đi
+  RESPONSE // Văn bản phản hồi nhận được
+  SITE_CONDITION // Điều kiện công trường (mưa bão, địa chất, mặt bằng)
+  PAYMENT // Sự kiện thanh toán / chậm thanh toán
+  MEETING // Cuộc họp / biên bản làm việc
+  OTHER
+}
+
+// Chứng cứ — neo vào bản ghi sẵn có (nhật ký, RFI, CO, biên bản TVGS, BBNT…)
+// hoặc file đính kèm. refTable/refId là soft-link, không FK cứng.
+model ClaimEvidence {
+  id         String            @id @default(cuid())
+  claimId    String
+  kind       ClaimEvidenceKind
+  title      String
+  note       String?           @db.Text // vì sao chứng cứ này liên quan
+  refTable   String? // "DailyLog" | "RFI" | "ChangeOrder" | "SuperviseEntry" | "Acceptance" | "WeatherSnapshot"
+  refId      String?
+  capturedAt DateTime? // ngày của chứng cứ (ngày nhật ký, ngày văn bản)
+  addedById  String // không cần relation — luôn xem trong ngữ cảnh claim
+  createdAt  DateTime          @default(now())
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId, capturedAt])
+  @@unique([claimId, refTable, refId]) // không gắn trùng một bản ghi
+}
+
+enum ClaimEvidenceKind {
+  DAILY_LOG // Nhật ký thi công
+  RFI
+  CHANGE_ORDER
+  SUPERVISE_ENTRY // Sổ TVGS
+  ACCEPTANCE // Biên bản nghiệm thu
+  WEATHER // Dữ liệu thời tiết
+  CORRESPONDENCE // Công văn / email
+  PHOTO
+  CONTRACT // Trích hợp đồng / phụ lục
+  INVOICE // Hóa đơn / chứng từ chi phí
+  OTHER
+}
+
+// Căn cứ pháp lý — mức điều/khoản, gắn vào Regulation đã có.
+// source=AI → từ gợi ý Qwen (suggestionId trỏ AiSuggestion), phải được duyệt.
+model ClaimLegalBasis {
+  id           String           @id @default(cuid())
+  claimId      String
+  regulationId String
+  articleRef   String // "Điều 44 khoản 1" | "Điều 146"
+  argument     String           @db.Text // lập luận áp dụng vào vụ việc
+  source       ClaimBasisSource @default(USER)
+  aiConfidence Float? // 0–1 khi source=AI
+  suggestionId String? // soft FK → AiSuggestion
+  accepted     Boolean          @default(true) // false = gợi ý AI chưa duyệt
+  createdAt    DateTime         @default(now())
+
+  claim      Claim      @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  regulation Regulation @relation(fields: [regulationId], references: [id])
+
+  @@unique([claimId, regulationId, articleRef])
+}
+
+enum ClaimBasisSource {
+  USER
+  AI
 }

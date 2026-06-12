@@ -27,4 +27,6 @@ export type AiSuggestionKind =
   | "cost.overrun_warning"
   | "portfolio.briefing"
   | "agent.plan"
-  | "agent.execute";
+  | "agent.execute"
+  | "claim.legal_basis"
+  | "claim.draft_statement";

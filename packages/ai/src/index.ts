@@ -17,3 +17,4 @@ export * as submittalCheckAi from "./tasks/submittal-check";
 export * as costOverrunAi from "./tasks/cost-overrun-forecast";
 export * as complianceAi from "./tasks/compliance-check";
 export * as fieldVoiceAi from "./tasks/field-voice-form";
+export * as claimAi from "./tasks/claim";

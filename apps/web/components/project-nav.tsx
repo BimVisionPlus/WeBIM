@@ -24,6 +24,7 @@ const AEC_TABS: Tab[] = [
   { href: "/site/submittals", label: "Submittal", group: "aec" },
   { href: "/site/ncr", label: "NCR", group: "aec" },
   { href: "/site/punch", label: "Punch", group: "aec" },
+  { href: "/site/claims", label: "Khiếu nại", group: "aec" },
   { href: "/models", label: "Models", group: "aec" },
   { href: "/specs", label: "Specs", group: "aec" },
   { href: "/codeguard", label: "CodeGuard", group: "aec" },
