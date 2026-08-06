@@ -1,0 +1,14 @@
+schema_version = "1.0.0"
+
+id = "webim"
+version = "0.1.0"
+name = "WeBIM"
+tagline = "Independent OpenBIM authoring tools powered by IfcOpenShell"
+maintainer = "WeBIM"
+type = "add-on"
+
+blender_version_min = "4.2.0"
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+files = "Import and export IFC files selected by the user"
