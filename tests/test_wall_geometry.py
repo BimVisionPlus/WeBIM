@@ -97,3 +97,27 @@ def test_wall_pieces_window_has_sill():
     assert len(pieces) == 4
     sill = next(p for p in pieces if p.z_bottom == 0 and p.z_top < 3)
     assert sill.z_top == pytest.approx(0.9)
+
+
+def test_door_swing_matches_web_reference():
+    from webim.domain.wall_geometry import door_swing
+
+    door = WallOpening(
+        id="o1", name="D1", kind="DOOR", offset=4.0, width=1.0, height=2.1
+    )
+    wall = make_wall("a", (0, 0, 0), (8, 0, 0), openings=(door,))
+    swing = door_swing(wall, door)
+    assert_point(swing.hinge, (3.5, 0.1))
+    assert_point(swing.leaf_end, (3.5, 1.1))
+    assert_point(swing.arc[0], (4.5, 0.1))
+    assert_point(swing.arc[-1], (3.5, 1.1))
+
+
+def test_door_swing_none_for_windows():
+    from webim.domain.wall_geometry import door_swing
+
+    window = WallOpening(
+        id="o1", name="WN1", kind="WINDOW", offset=4.0, width=1.2, height=1.2
+    )
+    wall = make_wall("a", (0, 0, 0), (8, 0, 0), openings=(window,))
+    assert door_swing(wall, window) is None

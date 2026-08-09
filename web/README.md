@@ -115,7 +115,19 @@ IFC4 STEP text → .ifc download
 - Two-way sync: moving a `NativeWall` mesh in Blender writes the plan
   delta back into the domain (`translate_wall`; z stays bound to the
   level, openings ride along) and rebuilds the meshes so joins
-  recompute.
+  recompute. Each wall also gets an editable 2-point axis curve
+  (`NativeWallAxis`): grab an endpoint like a grid and
+  `set_wall_axis` writes the new plan axis back (z level-bound).
+- Blender draws door swing symbols (`NativeDoorSwing` curves: open
+  leaf + quarter arc) from the same `door_swing` geometry as the web,
+  pytest-matched to the web reference values.
+- Schedules — the last Project Browser branch: `ScheduleDatum`
+  (name + kind, serialized under `schedules`, preserved by the Python
+  domain) renders live derived tables in the main area — Walls
+  (length/thickness/height/opening count with totals), Doors/Windows
+  (mark/type/host/level/dims/sill) and Slabs (shoelace area,
+  thickness, top elevation). Kind and name edit in the properties
+  panel.
 - The Python add-on domain (`webim/domain/project.py`) now parses and
   preserves `walls`/`openings`/`levels`/`sheets`, so a web-authored
   project survives a Blender round-trip, and the add-on's IFC export

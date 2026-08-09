@@ -298,3 +298,49 @@ def wall_pieces(wall: NativeWall, walls) -> tuple[WallPiece, ...]:
     if cursor < length:
         pieces.append(WallPiece(polygon(cursor, length), 0.0, wall.height))
     return tuple(pieces)
+
+
+@dataclass(frozen=True, slots=True)
+class DoorSwing:
+    """Plan symbol of a door: hinge point, open leaf end, quarter arc."""
+
+    hinge: Point2
+    leaf_end: Point2
+    arc: tuple[Point2, ...]
+
+
+def door_swing(wall: NativeWall, opening, segments: int = 12) -> DoorSwing | None:
+    """Port of the web doorSwing: hinge on the swing-side face at the
+    hinge jamb, leaf fully open, arc from closed to open position."""
+    if opening.kind != "DOOR":
+        return None
+    frame = _axis_frame(wall)
+    if frame is None:
+        return None
+    direction, normal, _ = frame
+    half = wall.thickness / 2
+    hinge_sign = -1.0 if opening.hinge_end == "START" else 1.0
+    side_sign = 1.0 if opening.swing_side == "LEFT" else -1.0
+    hinge_t = opening.offset + hinge_sign * opening.width / 2
+    hinge = (
+        wall.start[0] + direction[0] * hinge_t + normal[0] * half * side_sign,
+        wall.start[1] + direction[1] * hinge_t + normal[1] * half * side_sign,
+    )
+    closed = (-hinge_sign * direction[0], -hinge_sign * direction[1])
+    open_dir = (normal[0] * side_sign, normal[1] * side_sign)
+    leaf_end = (
+        hinge[0] + open_dir[0] * opening.width,
+        hinge[1] + open_dir[1] * opening.width,
+    )
+    arc = []
+    for index in range(segments + 1):
+        angle = (math.pi / 2) * (index / segments)
+        cos = math.cos(angle)
+        sin = math.sin(angle)
+        arc.append(
+            (
+                hinge[0] + (closed[0] * cos + open_dir[0] * sin) * opening.width,
+                hinge[1] + (closed[1] * cos + open_dir[1] * sin) * opening.width,
+            )
+        )
+    return DoorSwing(hinge=hinge, leaf_end=leaf_end, arc=tuple(arc))

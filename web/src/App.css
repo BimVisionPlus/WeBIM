@@ -307,3 +307,40 @@ input[type="text"],
 .sheet-placement input {
   width: 100%;
 }
+
+.schedule-host {
+  height: 100%;
+  overflow: auto;
+  padding: 20px 24px;
+}
+
+.schedule-host h2 {
+  font-size: 15px;
+  margin: 0 0 14px;
+}
+
+.schedule-host table {
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.schedule-host th,
+.schedule-host td {
+  border: 1px solid var(--panel-border);
+  padding: 5px 12px;
+  text-align: left;
+  font-size: 12.5px;
+}
+
+.schedule-host th {
+  background: var(--panel);
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+
+.schedule-host tfoot td {
+  color: var(--muted);
+  background: var(--panel);
+}

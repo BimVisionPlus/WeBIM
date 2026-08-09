@@ -72,6 +72,15 @@ export interface SlabDatum {
   zOffset: number;
 }
 
+export type ScheduleKind = "WALL" | "OPENING" | "SLAB";
+
+/** A schedule view: a derived element table, persisted by name and kind. */
+export interface ScheduleDatum {
+  id: string;
+  name: string;
+  kind: ScheduleKind;
+}
+
 export type OpeningKind = "DOOR" | "WINDOW";
 export type HingeEnd = "START" | "END";
 export type SwingSide = "LEFT" | "RIGHT";
@@ -170,6 +179,7 @@ export class NativeBimProject {
   levels: LevelDatum[];
   sheets: SheetDatum[];
   slabs: SlabDatum[];
+  schedules: ScheduleDatum[];
 
   constructor(
     id: string,
@@ -183,6 +193,7 @@ export class NativeBimProject {
     levels: LevelDatum[] = [],
     sheets: SheetDatum[] = [],
     slabs: SlabDatum[] = [],
+    schedules: ScheduleDatum[] = [],
   ) {
     this.id = id;
     this.name = name;
@@ -195,6 +206,7 @@ export class NativeBimProject {
     this.levels = levels;
     this.sheets = sheets;
     this.slabs = slabs;
+    this.schedules = schedules;
   }
 
   static create(
@@ -246,6 +258,11 @@ export class NativeBimProject {
         thickness: slab.thickness,
         level_id: slab.levelId,
         z_offset: slab.zOffset,
+      })),
+      schedules: this.schedules.map((schedule) => ({
+        id: schedule.id,
+        name: schedule.name,
+        kind: schedule.kind,
       })),
       sheets: this.sheets.map((sheet) => ({
         id: sheet.id,
@@ -371,6 +388,11 @@ export class NativeBimProject {
         thickness: (slab.thickness as number) ?? 0.2,
         levelId: (slab.level_id as string) ?? defaultLevelId,
         zOffset: (slab.z_offset as number) ?? 0,
+      })),
+      ((data.schedules as Record<string, unknown>[]) ?? []).map((schedule) => ({
+        id: schedule.id as string,
+        name: schedule.name as string,
+        kind: schedule.kind as ScheduleKind,
       })),
     );
   }
@@ -546,6 +568,46 @@ export class NativeBimProject {
   slabTopZ(slab: SlabDatum): number {
     const level = this.levelById(slab.levelId);
     return (level?.elevation ?? 0) + slab.zOffset;
+  }
+
+  addSchedule(kind: ScheduleKind = "WALL"): ScheduleDatum {
+    const labels: Record<ScheduleKind, string> = {
+      WALL: "Wall Schedule",
+      OPENING: "Door/Window Schedule",
+      SLAB: "Slab Schedule",
+    };
+    const schedule: ScheduleDatum = {
+      id: uuid4Hex(),
+      name: labels[kind],
+      kind,
+    };
+    this.schedules.push(schedule);
+    return schedule;
+  }
+
+  updateSchedule(
+    scheduleId: string,
+    changes: { name?: string; kind?: ScheduleKind },
+  ): ScheduleDatum {
+    const index = this.schedules.findIndex((schedule) => schedule.id === scheduleId);
+    if (index === -1) {
+      throw new Error(`Unknown ScheduleDatum: ${scheduleId}`);
+    }
+    const schedule = this.schedules[index];
+    this.schedules[index] = {
+      ...schedule,
+      name: changes.name ?? schedule.name,
+      kind: changes.kind ?? schedule.kind,
+    };
+    return this.schedules[index];
+  }
+
+  removeSchedule(scheduleId: string): ScheduleDatum {
+    const index = this.schedules.findIndex((schedule) => schedule.id === scheduleId);
+    if (index === -1) {
+      throw new Error(`Unknown ScheduleDatum: ${scheduleId}`);
+    }
+    return this.schedules.splice(index, 1)[0];
   }
 
   addSheet(title: string): SheetDatum {

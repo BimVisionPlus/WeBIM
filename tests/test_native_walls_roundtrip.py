@@ -73,6 +73,7 @@ WEB_PAYLOAD = {
             "z_offset": 0.0,
         }
     ],
+    "schedules": [{"id": "sc1", "name": "Wall Schedule", "kind": "WALL"}],
     "sheets": [
         {
             "id": "s1",
@@ -98,6 +99,7 @@ def test_parses_web_authored_walls_levels_sheets():
     assert project.views[0].level_id == "l1"
     assert project.slabs[0].kind == "FLOOR"
     assert project.slabs[0].outline[2] == (8.0, 5.0)
+    assert project.schedules[0].kind == "WALL"
 
 
 def test_round_trip_preserves_web_data():
@@ -112,7 +114,7 @@ def test_legacy_payload_without_new_keys_still_loads():
     payload = {
         key: value
         for key, value in WEB_PAYLOAD.items()
-        if key not in {"walls", "levels", "sheets", "slabs"}
+        if key not in {"walls", "levels", "sheets", "slabs", "schedules"}
     }
     payload["views"] = [
         {k: v for k, v in view.items() if k != "level_id"}
@@ -123,6 +125,7 @@ def test_legacy_payload_without_new_keys_still_loads():
     assert project.levels == []
     assert project.sheets == []
     assert project.slabs == []
+    assert project.schedules == []
     assert project.views[0].level_id is None
 
 
@@ -138,3 +141,17 @@ def test_translate_wall_moves_axis_and_keeps_level_z():
 
     with _pytest.raises(KeyError):
         project.translate_wall("missing", 1.0, 0.0)
+
+
+def test_set_wall_axis_updates_plan_and_keeps_level_z():
+    project = NativeBimProject.from_json(json.dumps(WEB_PAYLOAD))
+    moved = project.set_wall_axis("w1", (1.0, 2.0, 99.0), (9.0, 2.0, 99.0))
+    # x/y come from the edited curve, z stays level-bound.
+    assert moved.start == (1.0, 2.0, 0.0)
+    assert moved.end == (9.0, 2.0, 0.0)
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError):
+        project.set_wall_axis("w1", (1.0, 2.0, 0.0), (1.0, 2.0, 5.0))
+    with _pytest.raises(KeyError):
+        project.set_wall_axis("missing", (0, 0, 0), (1, 0, 0))

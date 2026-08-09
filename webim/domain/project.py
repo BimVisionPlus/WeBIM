@@ -105,6 +105,15 @@ class SheetDatum:
     placements: tuple[SheetPlacement, ...] = ()
 
 
+@dataclass(frozen=True, slots=True)
+class ScheduleDatum:
+    """Derived element table authored in WeBIM Web (name + kind only)."""
+
+    id: str
+    name: str
+    kind: str = "WALL"
+
+
 @dataclass(slots=True)
 class NativeBimProject:
     id: str
@@ -118,6 +127,7 @@ class NativeBimProject:
     levels: list[LevelDatum] = field(default_factory=list)
     sheets: list[SheetDatum] = field(default_factory=list)
     slabs: list[SlabDatum] = field(default_factory=list)
+    schedules: list[ScheduleDatum] = field(default_factory=list)
 
     @classmethod
     def create(
@@ -228,6 +238,14 @@ class NativeBimProject:
                 }
                 for slab in self.slabs
             ],
+            "schedules": [
+                {
+                    "id": schedule.id,
+                    "name": schedule.name,
+                    "kind": schedule.kind,
+                }
+                for schedule in self.schedules
+            ],
             "sheets": [
                 {
                     "id": sheet.id,
@@ -329,6 +347,14 @@ class NativeBimProject:
                 )
                 for slab in data.get("slabs", [])
             ],
+            schedules=[
+                ScheduleDatum(
+                    id=schedule["id"],
+                    name=schedule["name"],
+                    kind=schedule.get("kind", "WALL"),
+                )
+                for schedule in data.get("schedules", [])
+            ],
             sheets=[
                 SheetDatum(
                     id=sheet["id"],
@@ -421,6 +447,26 @@ class NativeBimProject:
                 start=(wall.start[0] + dx, wall.start[1] + dy, wall.start[2]),
                 end=(wall.end[0] + dx, wall.end[1] + dy, wall.end[2]),
             )
+            self.walls[index] = moved
+            return moved
+        raise KeyError(f"Unknown NativeWall: {wall_id}")
+
+    def set_wall_axis(self, wall_id: str, start, end) -> NativeWall:
+        """Update a native wall's plan axis from Blender endpoint edits.
+
+        Only x/y are taken from the edited curve; z stays bound to the
+        wall's level. Openings keep their start-relative offsets.
+        """
+        from dataclasses import replace
+
+        for index, wall in enumerate(self.walls):
+            if wall.id != wall_id:
+                continue
+            new_start = (float(start[0]), float(start[1]), wall.start[2])
+            new_end = (float(end[0]), float(end[1]), wall.end[2])
+            if new_start[:2] == new_end[:2]:
+                raise ValueError("Wall endpoints must be different")
+            moved = replace(wall, start=new_start, end=new_end)
             self.walls[index] = moved
             return moved
         raise KeyError(f"Unknown NativeWall: {wall_id}")

@@ -5,7 +5,7 @@ import { exportProjectToIfc } from "../export/ifcGrid";
 export type ToolId = "SELECT" | "GRID" | "WALL" | "DOOR" | "WINDOW" | "FLOOR" | "ROOF";
 
 export interface Selection {
-  kind: "grid" | "view" | "wall" | "opening" | "level" | "sheet" | "slab";
+  kind: "grid" | "view" | "wall" | "opening" | "level" | "sheet" | "slab" | "schedule";
   id: string;
 }
 
@@ -31,6 +31,8 @@ class AppStore {
   activeViewId: string | null = null;
   /** When set, the viewport shows this sheet's paper space instead of a view. */
   activeSheetId: string | null = null;
+  /** When set, the main area shows this schedule's table. */
+  activeScheduleId: string | null = null;
   snapIncrement = 0.1;
   pendingStart: Point3D | null = null;
   statusMessage = "Ready";
@@ -79,11 +81,20 @@ class AppStore {
   }
 
   get activeView() {
-    if (this.activeSheetId) return null;
+    if (this.activeSheetId || this.activeScheduleId) return null;
     return this.project.views.find((view) => view.id === this.activeViewId) ?? null;
   }
 
+  get activeSchedule() {
+    return (
+      this.project.schedules.find(
+        (schedule) => schedule.id === this.activeScheduleId,
+      ) ?? null
+    );
+  }
+
   get activeSheet() {
+    if (this.activeScheduleId) return null;
     return this.project.sheets.find((sheet) => sheet.id === this.activeSheetId) ?? null;
   }
 
@@ -293,6 +304,43 @@ class AppStore {
     }
   }
 
+  addSchedule(): void {
+    const schedule = this.project.addSchedule("WALL");
+    this.activateSchedule(schedule.id);
+    this.commit();
+  }
+
+  updateSchedule(
+    scheduleId: string,
+    changes: Parameters<NativeBimProject["updateSchedule"]>[1],
+  ): void {
+    this.project.updateSchedule(scheduleId, changes);
+    this.commit();
+  }
+
+  removeSchedule(scheduleId: string): void {
+    this.project.removeSchedule(scheduleId);
+    if (this.activeScheduleId === scheduleId) {
+      this.activeScheduleId = null;
+      this.activeViewId = this.project.views[0]?.id ?? null;
+    }
+    if (this.selection?.kind === "schedule" && this.selection.id === scheduleId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
+  activateSchedule(scheduleId: string): void {
+    this.activeSheetId = null;
+    this.activeScheduleId = scheduleId;
+    this.selection = { kind: "schedule", id: scheduleId };
+    if (this.activeTool !== "SELECT") {
+      this.activeTool = "SELECT";
+      this.pendingStart = null;
+    }
+    this.commit(false);
+  }
+
   addSheet(): void {
     const sheet = this.project.addSheet("Untitled sheet");
     this.activateSheet(sheet.id);
@@ -317,6 +365,7 @@ class AppStore {
   }
 
   activateSheet(sheetId: string): void {
+    this.activeScheduleId = null;
     this.activeSheetId = sheetId;
     this.selection = { kind: "sheet", id: sheetId };
     if (this.activeTool !== "SELECT") {
@@ -375,6 +424,7 @@ class AppStore {
 
   activateView(viewId: string): void {
     this.activeSheetId = null;
+    this.activeScheduleId = null;
     this.activeViewId = viewId;
     this.selection = { kind: "view", id: viewId };
     const view = this.activeView;

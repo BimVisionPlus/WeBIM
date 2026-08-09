@@ -3,6 +3,8 @@ import { store, useStoreVersion } from "../state/store";
 import type {
   GridDatum,
   LevelDatum,
+  ScheduleDatum,
+  ScheduleKind,
   OpeningDatum,
   Point3D,
   SheetDatum,
@@ -328,6 +330,37 @@ function SlabProperties({ slab }: { slab: SlabDatum }) {
   );
 }
 
+function ScheduleProperties({ schedule }: { schedule: ScheduleDatum }) {
+  return (
+    <>
+      <h3>{schedule.name}</h3>
+      <label className="prop-row">
+        <span>Name</span>
+        <input
+          value={schedule.name}
+          onChange={(event) => store.updateSchedule(schedule.id, { name: event.target.value })}
+        />
+      </label>
+      <label className="prop-row">
+        <span>Kind</span>
+        <select
+          value={schedule.kind}
+          onChange={(event) =>
+            store.updateSchedule(schedule.id, { kind: event.target.value as ScheduleKind })
+          }
+        >
+          <option value="WALL">Walls</option>
+          <option value="OPENING">Doors/Windows</option>
+          <option value="SLAB">Slabs</option>
+        </select>
+      </label>
+      <button className="danger" onClick={() => store.removeSchedule(schedule.id)}>
+        Delete schedule
+      </button>
+    </>
+  );
+}
+
 function LevelProperties({ level }: { level: LevelDatum }) {
   return (
     <>
@@ -505,6 +538,10 @@ export function PropertiesPanel() {
     selection?.kind === "slab"
       ? store.project.slabs.find((candidate) => candidate.id === selection.id)
       : undefined;
+  const schedule =
+    selection?.kind === "schedule"
+      ? store.project.schedules.find((candidate) => candidate.id === selection.id)
+      : undefined;
 
   return (
     <aside className="panel properties-panel">
@@ -516,7 +553,8 @@ export function PropertiesPanel() {
       {level && <LevelProperties level={level} />}
       {sheet && <SheetProperties sheet={sheet} />}
       {slab && <SlabProperties slab={slab} />}
-      {!axis && !view && !wall && !opening && !level && !sheet && !slab && (
+      {schedule && <ScheduleProperties schedule={schedule} />}
+      {!axis && !view && !wall && !opening && !level && !sheet && !slab && !schedule && (
         <div className="tree-empty">Select an element, level, sheet or view.</div>
       )}
     </aside>

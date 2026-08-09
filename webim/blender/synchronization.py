@@ -61,29 +61,46 @@ def _adopt_duplicate_grid(obj, source_axis, project) -> None:
 
 
 def _sync_native_wall_edits(project) -> None:
-    """Write NativeWall object translations back into the domain.
+    """Write NativeWall edits back into the domain.
 
-    Native wall meshes are built with world-space vertices at object
-    origin, so a nonzero object location means the user moved the wall.
-    The plan delta is applied to the domain (z stays bound to the level)
-    and all native walls are rebuilt so joins recompute.
+    Two edit paths: dragging the solid (built with world-space vertices,
+    so a nonzero object location is a plan translation) and editing the
+    2-point axis curve (grab an endpoint in Edit Mode or move the axis
+    object). Both keep z bound to the wall's level; afterwards all
+    native walls are rebuilt so joins recompute.
     """
     from .tools.wall import rebuild_native_walls
 
+    walls = {wall.id: wall for wall in project.walls}
     moved = False
     for obj in list(bpy.data.objects):
-        if obj.get("webim_class") != "NativeWall":
-            continue
-        location = obj.location
-        if abs(location.x) <= _EPSILON and abs(location.y) <= _EPSILON:
-            continue
-        wall_id = obj.get("webim_id", "")
-        try:
-            project.translate_wall(wall_id, location.x, location.y)
-        except KeyError:
-            continue
-        moved = True
-        SESSION.is_dirty = True
+        webim_class = obj.get("webim_class")
+        if webim_class == "NativeWall":
+            location = obj.location
+            if abs(location.x) <= _EPSILON and abs(location.y) <= _EPSILON:
+                continue
+            try:
+                project.translate_wall(obj.get("webim_id", ""), location.x, location.y)
+            except KeyError:
+                continue
+            moved = True
+            SESSION.is_dirty = True
+        elif webim_class == "NativeWallAxis":
+            wall = walls.get(obj.get("webim_id", ""))
+            if wall is None or not obj.data.splines:
+                continue
+            start, end = _world_endpoints(obj)
+            if not (
+                _points_differ(start[:2], wall.start[:2])
+                or _points_differ(end[:2], wall.end[:2])
+            ):
+                continue
+            try:
+                project.set_wall_axis(wall.id, start, end)
+            except (KeyError, ValueError):
+                continue
+            moved = True
+            SESSION.is_dirty = True
     if moved:
         rebuild_native_walls(project)
 

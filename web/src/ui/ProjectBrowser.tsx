@@ -228,7 +228,35 @@ export function ProjectBrowser() {
             </button>
           </div>
         ))}
-        <div className="tree-branch muted">Schedules</div>
+        <div className="tree-branch">
+          Schedules
+          <button className="mini" title="Add schedule" onClick={() => store.addSchedule()}>
+            +
+          </button>
+        </div>
+        {project.schedules.map((schedule) => (
+          <div
+            key={schedule.id}
+            className={`tree-leaf ${store.activeScheduleId === schedule.id ? "active" : ""} ${
+              store.selection?.kind === "schedule" && store.selection.id === schedule.id
+                ? "selected"
+                : ""
+            }`}
+            onClick={() => store.activateSchedule(schedule.id)}
+          >
+            <span>{schedule.name}</span>
+            <button
+              className="mini"
+              title="Delete schedule"
+              onClick={(event) => {
+                event.stopPropagation();
+                store.removeSchedule(schedule.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
       </div>
     </aside>
   );
