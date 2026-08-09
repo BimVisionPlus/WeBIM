@@ -34,10 +34,14 @@ function validateJoinType(value: string): WallJoinType {
 }
 
 export type OpeningKind = "DOOR" | "WINDOW";
+export type HingeEnd = "START" | "END";
+export type SwingSide = "LEFT" | "RIGHT";
 
 /**
  * Rectangular opening hosted by a wall: centred at `offset` metres from
  * the wall start along its axis, `sillHeight` above the wall base.
+ * Doors also carry the plan-swing: which jamb holds the hinge and which
+ * side of the wall (relative to start→end) the leaf opens toward.
  */
 export interface OpeningDatum {
   id: string;
@@ -47,6 +51,8 @@ export interface OpeningDatum {
   width: number;
   height: number;
   sillHeight: number;
+  hingeEnd: HingeEnd;
+  swingSide: SwingSide;
 }
 
 export const OPENING_DEFAULTS: Record<
@@ -192,6 +198,8 @@ export class NativeBimProject {
           width: opening.width,
           height: opening.height,
           sill_height: opening.sillHeight,
+          hinge_end: opening.hingeEnd,
+          swing_side: opening.swingSide,
         })),
       })),
     };
@@ -242,6 +250,8 @@ export class NativeBimProject {
           width: opening.width as number,
           height: opening.height as number,
           sillHeight: (opening.sill_height as number) ?? 0,
+          hingeEnd: (opening.hinge_end as HingeEnd) ?? "START",
+          swingSide: (opening.swing_side as SwingSide) ?? "LEFT",
         })),
       })),
     );
@@ -480,13 +490,28 @@ export class NativeBimProject {
     if (opening.offset - opening.width / 2 < 0 || opening.offset + opening.width / 2 > length) {
       throw new Error("Opening must fit within the wall length");
     }
+    for (const other of wall.openings) {
+      if (other.id === opening.id) continue;
+      if (
+        Math.abs(other.offset - opening.offset) <
+        (other.width + opening.width) / 2
+      ) {
+        throw new Error(`Opening overlaps ${other.name}`);
+      }
+    }
   }
 
   addOpening(
     wallId: string,
     kind: OpeningKind,
     offset: number,
-    options: { width?: number; height?: number; sillHeight?: number } = {},
+    options: {
+      width?: number;
+      height?: number;
+      sillHeight?: number;
+      hingeEnd?: HingeEnd;
+      swingSide?: SwingSide;
+    } = {},
   ): OpeningDatum {
     const wall = this.wallById(wallId);
     const defaults = OPENING_DEFAULTS[kind];
@@ -506,6 +531,8 @@ export class NativeBimProject {
       width: options.width ?? defaults.width,
       height: options.height ?? defaults.height,
       sillHeight: options.sillHeight ?? defaults.sillHeight,
+      hingeEnd: options.hingeEnd ?? "START",
+      swingSide: options.swingSide ?? "LEFT",
     };
     this.validateOpening(wall, opening);
     wall.openings.push(opening);
@@ -515,7 +542,14 @@ export class NativeBimProject {
   updateOpening(
     wallId: string,
     openingId: string,
-    changes: { offset?: number; width?: number; height?: number; sillHeight?: number },
+    changes: {
+      offset?: number;
+      width?: number;
+      height?: number;
+      sillHeight?: number;
+      hingeEnd?: HingeEnd;
+      swingSide?: SwingSide;
+    },
   ): OpeningDatum {
     const wall = this.wallById(wallId);
     const index = wall.openings.findIndex((opening) => opening.id === openingId);
@@ -529,6 +563,8 @@ export class NativeBimProject {
       width: changes.width ?? opening.width,
       height: changes.height ?? opening.height,
       sillHeight: changes.sillHeight ?? opening.sillHeight,
+      hingeEnd: changes.hingeEnd ?? opening.hingeEnd,
+      swingSide: changes.swingSide ?? opening.swingSide,
     };
     this.validateOpening(wall, updated);
     wall.openings[index] = updated;

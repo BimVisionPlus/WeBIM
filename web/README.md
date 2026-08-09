@@ -69,6 +69,16 @@ IFC4 STEP text → .ifc download
   `IfcOpeningElement` (+`IfcRelVoidsElement`) filled by an
   `IfcDoor`/`IfcWindow` via `IfcRelFillsElement`, contained in the
   storey.
+- Door swing symbols in plan: open leaf plus quarter arc, driven by the
+  door's hinge jamb (start/end) and swing side (left/right of the wall
+  direction), editable in the properties panel and serialized as
+  `hinge_end`/`swing_side`.
+- Openings on the same wall must not overlap along the axis
+  (edge-to-edge is allowed); violations are rejected on add, edit and
+  drag with a status message.
+- Selected openings show a centre anchor: click it, move along the
+  wall (ghost preview, snapped and clamped), click to confirm — the
+  same click-move-click pattern as endpoint editing.
 - Anchor endpoint editing: select a grid or wall, click an endpoint
   anchor, move, click to confirm (Esc cancels) — same click-move-click
   flow as the add-on.

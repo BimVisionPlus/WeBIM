@@ -437,3 +437,53 @@ export function openingFootprint(wall: WallDatum, opening: OpeningDatum): Point2
   ];
   return [corner(from, 1), corner(to, 1), corner(to, -1), corner(from, -1)];
 }
+
+/** Plan-symbol geometry for a door: hinge point, open leaf, quarter arc. */
+export interface DoorSwing {
+  hinge: Point2;
+  leafEnd: Point2;
+  arc: Point2[];
+}
+
+/**
+ * Door swing in plan: the hinge sits on the swing-side wall face at the
+ * hinge jamb; the leaf is drawn fully open (perpendicular to the wall)
+ * and a quarter arc runs from the closed position at the opposite jamb
+ * to the leaf end.
+ */
+export function doorSwing(
+  wall: WallDatum,
+  opening: OpeningDatum,
+  segments = 12,
+): DoorSwing | null {
+  if (opening.kind !== "DOOR") return null;
+  const frame = axisFrame(wall);
+  if (!frame) return null;
+  const half = wall.thickness / 2;
+  const hingeSign = opening.hingeEnd === "START" ? -1 : 1;
+  const sideSign = opening.swingSide === "LEFT" ? 1 : -1;
+  const hingeT = opening.offset + (hingeSign * opening.width) / 2;
+  const hinge: Point2 = [
+    wall.start[0] + frame.dir[0] * hingeT + frame.normal[0] * half * sideSign,
+    wall.start[1] + frame.dir[1] * hingeT + frame.normal[1] * half * sideSign,
+  ];
+  // Unit vectors from the hinge: closed leaf (toward the other jamb) and
+  // fully open leaf (out of the wall on the swing side).
+  const closed: Point2 = [-hingeSign * frame.dir[0], -hingeSign * frame.dir[1]];
+  const open: Point2 = [frame.normal[0] * sideSign, frame.normal[1] * sideSign];
+  const leafEnd: Point2 = [
+    hinge[0] + open[0] * opening.width,
+    hinge[1] + open[1] * opening.width,
+  ];
+  const arc: Point2[] = [];
+  for (let i = 0; i <= segments; i += 1) {
+    const angle = (Math.PI / 2) * (i / segments);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    arc.push([
+      hinge[0] + (closed[0] * cos + open[0] * sin) * opening.width,
+      hinge[1] + (closed[1] * cos + open[1] * sin) * opening.width,
+    ]);
+  }
+  return { hinge, leafEnd, arc };
+}

@@ -235,6 +235,34 @@ function OpeningProperties({ wall, opening }: { wall: WallDatum; opening: Openin
         step={0.05}
         onCommit={(value) => update({ sillHeight: value })}
       />
+      {opening.kind === "DOOR" && (
+        <>
+          <label className="prop-row">
+            <span>Hinge</span>
+            <select
+              value={opening.hingeEnd}
+              onChange={(event) =>
+                update({ hingeEnd: event.target.value as "START" | "END" })
+              }
+            >
+              <option value="START">Start jamb</option>
+              <option value="END">End jamb</option>
+            </select>
+          </label>
+          <label className="prop-row">
+            <span>Swing</span>
+            <select
+              value={opening.swingSide}
+              onChange={(event) =>
+                update({ swingSide: event.target.value as "LEFT" | "RIGHT" })
+              }
+            >
+              <option value="LEFT">Left of wall</option>
+              <option value="RIGHT">Right of wall</option>
+            </select>
+          </label>
+        </>
+      )}
       <button className="danger" onClick={() => store.removeOpening(wall.id, opening.id)}>
         Delete {opening.kind === "DOOR" ? "door" : "window"}
       </button>

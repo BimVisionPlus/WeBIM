@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  doorSwing,
   openingFootprint,
   wallFootprint,
   wallJoins,
@@ -322,5 +323,41 @@ describe("openingFootprint", () => {
     expectPoint(corners[1], [4.5, 0.1]);
     expectPoint(corners[2], [4.5, -0.1]);
     expectPoint(corners[3], [3.5, -0.1]);
+  });
+});
+
+describe("doorSwing", () => {
+  it("places hinge on the swing-side face and sweeps a quarter arc", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0], { thickness: 0.2 });
+    const door = project.addOpening(wall.id, "DOOR", 4, { width: 1 });
+    const swing = doorSwing(wall, door)!;
+    // Hinge START + swing LEFT: hinge at the start jamb on the +Y face.
+    expectPoint(swing.hinge, [3.5, 0.1]);
+    expectPoint(swing.leafEnd, [3.5, 1.1]);
+    // Arc runs from the closed position (other jamb) to the open leaf end.
+    expectPoint(swing.arc[0], [4.5, 0.1]);
+    expectPoint(swing.arc[swing.arc.length - 1], [3.5, 1.1]);
+  });
+
+  it("honours hinge end and swing side", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0], { thickness: 0.2 });
+    const door = project.addOpening(wall.id, "DOOR", 4, {
+      width: 1,
+      hingeEnd: "END",
+      swingSide: "RIGHT",
+    });
+    const swing = doorSwing(wall, door)!;
+    expectPoint(swing.hinge, [4.5, -0.1]);
+    expectPoint(swing.leafEnd, [4.5, -1.1]);
+    expectPoint(swing.arc[0], [3.5, -0.1]);
+  });
+
+  it("returns null for windows", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    const window = project.addOpening(wall.id, "WINDOW", 4);
+    expect(doorSwing(wall, window)).toBeNull();
   });
 });

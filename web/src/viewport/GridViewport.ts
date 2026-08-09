@@ -9,7 +9,7 @@
 
 import * as THREE from "three";
 import { snapGridPoint, type SnapResult } from "../application/gridSnapping";
-import { openingFootprint, wallPieces } from "../application/wallGeometry";
+import { doorSwing, openingFootprint, wallPieces } from "../application/wallGeometry";
 import { dashSpans, LINE_PATTERNS } from "../domain/lineStyles";
 import type { GridDatum, OpeningDatum, Point3D, WallDatum } from "../domain/project";
 import { store } from "../state/store";
@@ -88,6 +88,7 @@ export class GridViewport {
   private cursorWorld: Point3D = [0, 0, 0];
   private lastSnap: SnapResult | null = null;
   private endpointEdit: EndpointEdit | null = null;
+  private openingDrag: { wallId: string; openingId: string; offset: number } | null = null;
   private panning = false;
   private panStart = new THREE.Vector2();
   private cameraStart = new THREE.Vector3();
@@ -306,6 +307,36 @@ export class GridViewport {
     });
   }
 
+  /** Anchor of the selected opening: its centre point on the wall axis. */
+  private openingAnchorPoint(): { wall: WallDatum; opening: OpeningDatum; point: Point3D } | null {
+    const selection = store.selection;
+    if (selection?.kind !== "opening") return null;
+    const wall = store.project.openingHost(selection.id);
+    const opening = wall?.openings.find((candidate) => candidate.id === selection.id);
+    if (!wall || !opening) return null;
+    const dx = wall.end[0] - wall.start[0];
+    const dy = wall.end[1] - wall.start[1];
+    const length = Math.hypot(dx, dy);
+    if (length === 0) return null;
+    return {
+      wall,
+      opening,
+      point: [
+        wall.start[0] + (dx / length) * opening.offset,
+        wall.start[1] + (dy / length) * opening.offset,
+        wall.start[2],
+      ],
+    };
+  }
+
+  private pickOpeningAnchor(world: Point3D): { wall: WallDatum; opening: OpeningDatum } | null {
+    const anchor = this.openingAnchorPoint();
+    if (!anchor) return null;
+    const threshold = ANCHOR_HIT_PIXELS * this.worldPerPixel();
+    const distance = Math.hypot(anchor.point[0] - world[0], anchor.point[1] - world[1]);
+    return distance < threshold ? { wall: anchor.wall, opening: anchor.opening } : null;
+  }
+
   private pickAnchor(world: Point3D): EndpointEdit | null {
     const selection = store.selection;
     if (!selection || (selection.kind !== "grid" && selection.kind !== "wall")) return null;
@@ -363,24 +394,37 @@ export class GridViewport {
     return null;
   }
 
+  /** Snapped opening offset for a cursor position, clamped into the wall. */
+  private offsetOnWall(wall: WallDatum, world: Point3D, width: number): number {
+    const dx = wall.end[0] - wall.start[0];
+    const dy = wall.end[1] - wall.start[1];
+    const length = Math.hypot(dx, dy);
+    const along = ((world[0] - wall.start[0]) * dx + (world[1] - wall.start[1]) * dy) / length;
+    const snapped = Math.round(along / store.snapIncrement) * store.snapIncrement;
+    return Number(Math.min(Math.max(snapped, width / 2), length - width / 2).toFixed(10));
+  }
+
   private placeOpening(world: Point3D, kind: "DOOR" | "WINDOW"): void {
     const wall = this.pickWall(world);
     if (!wall) {
       store.setStatus("Click on a wall to place the opening");
       return;
     }
-    const dx = wall.end[0] - wall.start[0];
-    const dy = wall.end[1] - wall.start[1];
-    const length = Math.hypot(dx, dy);
-    const along = ((world[0] - wall.start[0]) * dx + (world[1] - wall.start[1]) * dy) / length;
     const width = kind === "DOOR" ? 0.9 : 1.2;
-    const snapped = Math.round(along / store.snapIncrement) * store.snapIncrement;
-    const offset = Math.min(Math.max(snapped, width / 2), length - width / 2);
     try {
-      store.addOpening(wall.id, kind, Number(offset.toFixed(10)));
+      store.addOpening(wall.id, kind, this.offsetOnWall(wall, world, width));
     } catch (error) {
       store.setStatus((error as Error).message);
     }
+  }
+
+  private draggedOpening(): { wall: WallDatum; opening: OpeningDatum } | null {
+    if (!this.openingDrag) return null;
+    const wall = store.project.walls.find((candidate) => candidate.id === this.openingDrag!.wallId);
+    const opening = wall?.openings.find(
+      (candidate) => candidate.id === this.openingDrag!.openingId,
+    );
+    return wall && opening ? { wall, opening } : null;
   }
 
   private pickElement(world: Point3D): { kind: "grid" | "wall"; id: string } | null {
@@ -415,6 +459,24 @@ export class GridViewport {
     }
     if (event.button !== 0 || !this.inPlanView) return;
     const world = this.screenToWorld(event.clientX, event.clientY);
+
+    if (this.openingDrag) {
+      // Second click commits the opening move.
+      const dragged = this.draggedOpening();
+      if (dragged) {
+        try {
+          store.updateOpening(dragged.wall.id, dragged.opening.id, {
+            offset: this.openingDrag.offset,
+          });
+          store.setStatus("Opening moved");
+        } catch (error) {
+          store.setStatus((error as Error).message);
+        }
+      }
+      this.openingDrag = null;
+      this.syncPreview();
+      return;
+    }
 
     if (this.endpointEdit) {
       // Second click commits the endpoint move.
@@ -464,6 +526,17 @@ export class GridViewport {
       }
       this.syncPreview();
     } else {
+      const openingAnchor = this.pickOpeningAnchor(world);
+      if (openingAnchor) {
+        this.openingDrag = {
+          wallId: openingAnchor.wall.id,
+          openingId: openingAnchor.opening.id,
+          offset: openingAnchor.opening.offset,
+        };
+        store.setStatus("Move the opening along the wall, click to confirm. Esc cancels.");
+        this.syncPreview();
+        return;
+      }
       const anchor = this.pickAnchor(world);
       if (anchor) {
         this.endpointEdit = anchor;
@@ -498,6 +571,18 @@ export class GridViewport {
     }
     if (!this.inPlanView) return;
     this.cursorWorld = this.screenToWorld(event.clientX, event.clientY);
+    if (this.openingDrag) {
+      const dragged = this.draggedOpening();
+      if (dragged) {
+        this.openingDrag.offset = this.offsetOnWall(
+          dragged.wall,
+          this.cursorWorld,
+          dragged.opening.width,
+        );
+        this.syncPreview();
+      }
+      return;
+    }
     if (store.activeTool === "GRID" || store.activeTool === "WALL" || this.endpointEdit) {
       this.lastSnap = this.computeSnap(this.cursorWorld);
       this.syncPreview();
@@ -529,6 +614,12 @@ export class GridViewport {
 
   private onContextMenu = (event: MouseEvent): void => {
     event.preventDefault();
+    if (this.openingDrag) {
+      this.openingDrag = null;
+      store.setStatus("Opening move cancelled");
+      this.syncPreview();
+      return;
+    }
     if (this.endpointEdit) {
       this.endpointEdit = null;
       store.setStatus("Endpoint edit cancelled");
@@ -550,7 +641,10 @@ export class GridViewport {
       return;
     }
     if (event.key === "Escape") {
-      if (this.endpointEdit) {
+      if (this.openingDrag) {
+        this.openingDrag = null;
+        store.setStatus("Opening move cancelled");
+      } else if (this.endpointEdit) {
         this.endpointEdit = null;
         store.setStatus("Endpoint edit cancelled");
       } else if (store.activeTool !== "SELECT" && store.pendingStart) {
@@ -612,6 +706,9 @@ export class GridViewport {
     this.disposeGroup(this.anchorGroup);
     if (this.endpointEdit && !this.editedElement()) {
       this.endpointEdit = null;
+    }
+    if (this.openingDrag && !this.draggedOpening()) {
+      this.openingDrag = null;
     }
     const factor = store.annotationViewFactor;
     const viewScale = store.activeView?.scale ?? 100;
@@ -823,13 +920,13 @@ export class GridViewport {
 
     // Plan marker: opening rectangle drawn above the wall top.
     const corners = openingFootprint(wall, opening);
+    const markerZ = wall.start[2] + wall.height + 0.05;
     if (corners.length === 4) {
-      const z = wall.start[2] + wall.height + 0.05;
       const positions: number[] = [];
       for (let i = 0; i < 4; i += 1) {
         const [x0, y0] = corners[i];
         const [x1, y1] = corners[(i + 1) % 4];
-        positions.push(x0, y0, z, x1, y1, z);
+        positions.push(x0, y0, markerZ, x1, y1, markerZ);
       }
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -837,10 +934,56 @@ export class GridViewport {
         new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: fillColor })),
       );
     }
+
+    // Door swing symbol, plan views only: open leaf + quarter arc.
+    if (this.inPlanView) {
+      const swing = doorSwing(wall, opening);
+      if (swing) {
+        const positions: number[] = [
+          swing.hinge[0], swing.hinge[1], markerZ,
+          swing.leafEnd[0], swing.leafEnd[1], markerZ,
+        ];
+        for (let i = 0; i < swing.arc.length - 1; i += 1) {
+          positions.push(
+            swing.arc[i][0], swing.arc[i][1], markerZ,
+            swing.arc[i + 1][0], swing.arc[i + 1][1], markerZ,
+          );
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        this.wallGroup.add(
+          new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: fillColor })),
+        );
+      }
+    }
+  }
+
+  private addAnchorCircle(x: number, y: number, z: number): void {
+    const positions: number[] = [];
+    const segments = 24;
+    for (let i = 0; i < segments; i += 1) {
+      const a0 = (Math.PI * 2 * i) / segments;
+      const a1 = (Math.PI * 2 * (i + 1)) / segments;
+      positions.push(Math.cos(a0), Math.sin(a0), 0, Math.cos(a1), Math.sin(a1), 0);
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    const circle = new THREE.LineSegments(
+      geometry,
+      new THREE.LineBasicMaterial({ color: COLOR_ANCHOR }),
+    );
+    circle.position.set(x, y, z);
+    this.anchorGroup.add(circle);
   }
 
   private buildAnchors(): void {
     if (!this.inPlanView || store.activeTool !== "SELECT") return;
+    const openingAnchor = this.openingAnchorPoint();
+    if (openingAnchor) {
+      const z = openingAnchor.point[2] + openingAnchor.wall.height + 0.1;
+      this.addAnchorCircle(openingAnchor.point[0], openingAnchor.point[1], z);
+      return;
+    }
     const selection = store.selection;
     if (!selection || (selection.kind !== "grid" && selection.kind !== "wall")) return;
     const element =
@@ -850,21 +993,7 @@ export class GridViewport {
     if (!element) return;
     for (const endpoint of ["start", "end"] as const) {
       const point = element[endpoint];
-      const positions: number[] = [];
-      const segments = 24;
-      for (let i = 0; i < segments; i += 1) {
-        const a0 = (Math.PI * 2 * i) / segments;
-        const a1 = (Math.PI * 2 * (i + 1)) / segments;
-        positions.push(Math.cos(a0), Math.sin(a0), 0, Math.cos(a1), Math.sin(a1), 0);
-      }
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-      const circle = new THREE.LineSegments(
-        geometry,
-        new THREE.LineBasicMaterial({ color: COLOR_ANCHOR }),
-      );
-      circle.position.set(point[0], point[1], 0.2);
-      this.anchorGroup.add(circle);
+      this.addAnchorCircle(point[0], point[1], 0.2);
     }
   }
 
@@ -878,6 +1007,33 @@ export class GridViewport {
 
   private syncPreview(): void {
     this.disposeGroup(this.previewGroup);
+
+    // Ghost rectangle while an opening is being moved along its wall.
+    if (this.openingDrag) {
+      const dragged = this.draggedOpening();
+      if (dragged) {
+        const ghost = openingFootprint(dragged.wall, {
+          ...dragged.opening,
+          offset: this.openingDrag.offset,
+        });
+        if (ghost.length === 4) {
+          const z = dragged.wall.start[2] + dragged.wall.height + 0.15;
+          const positions: number[] = [];
+          for (let i = 0; i < 4; i += 1) {
+            const [x0, y0] = ghost[i];
+            const [x1, y1] = ghost[(i + 1) % 4];
+            positions.push(x0, y0, z, x1, y1, z);
+          }
+          const geometry = new THREE.BufferGeometry();
+          geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+          this.previewGroup.add(
+            new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: COLOR_PREVIEW })),
+          );
+        }
+      }
+      return;
+    }
+
     const snap = this.lastSnap;
     const drawing = store.activeTool === "GRID" || store.activeTool === "WALL";
     if (!drawing && !this.endpointEdit) return;

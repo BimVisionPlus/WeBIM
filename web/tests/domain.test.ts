@@ -199,3 +199,44 @@ describe("wall openings (domain)", () => {
     expect(legacy.walls[0].openings).toEqual([]);
   });
 });
+
+describe("opening overlap validation", () => {
+  it("rejects overlapping openings on the same wall", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    project.addOpening(wall.id, "DOOR", 4, { width: 1 });
+    expect(() => project.addOpening(wall.id, "WINDOW", 4.5, { width: 1.2 })).toThrow(
+      "overlaps D1",
+    );
+  });
+
+  it("allows edge-to-edge openings and blocks updates into overlap", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    project.addOpening(wall.id, "DOOR", 2, { width: 1 });
+    const window = project.addOpening(wall.id, "WINDOW", 3.1, { width: 1.2 });
+    expect(() =>
+      project.updateOpening(wall.id, window.id, { offset: 2.5 }),
+    ).toThrow("overlaps D1");
+    // Touching exactly edge-to-edge is allowed.
+    project.updateOpening(wall.id, window.id, { offset: 3.1 });
+  });
+
+  it("round-trips hinge and swing and defaults legacy JSON", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    const door = project.addOpening(wall.id, "DOOR", 4);
+    expect(door.hingeEnd).toBe("START");
+    project.updateOpening(wall.id, door.id, { hingeEnd: "END", swingSide: "RIGHT" });
+    const restored = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(restored.walls[0].openings[0].hingeEnd).toBe("END");
+    expect(restored.walls[0].openings[0].swingSide).toBe("RIGHT");
+
+    const payload = JSON.parse(JSON.stringify(project.toDict()));
+    delete payload.walls[0].openings[0].hinge_end;
+    delete payload.walls[0].openings[0].swing_side;
+    const legacy = NativeBimProject.fromJson(JSON.stringify(payload));
+    expect(legacy.walls[0].openings[0].hingeEnd).toBe("START");
+    expect(legacy.walls[0].openings[0].swingSide).toBe("LEFT");
+  });
+});
