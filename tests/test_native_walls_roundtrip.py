@@ -124,3 +124,17 @@ def test_legacy_payload_without_new_keys_still_loads():
     assert project.sheets == []
     assert project.slabs == []
     assert project.views[0].level_id is None
+
+
+def test_translate_wall_moves_axis_and_keeps_level_z():
+    project = NativeBimProject.from_json(json.dumps(WEB_PAYLOAD))
+    moved = project.translate_wall("w1", 1.5, -2.0)
+    assert moved.start == (1.5, -2.0, 0.0)
+    assert moved.end == (9.5, -2.0, 0.0)
+    # Openings ride along: offsets are relative to the wall start.
+    assert moved.openings[0].offset == 4.0
+    assert project.walls[0] is moved
+    import pytest as _pytest
+
+    with _pytest.raises(KeyError):
+        project.translate_wall("missing", 1.0, 0.0)

@@ -10,6 +10,12 @@
 import * as THREE from "three";
 import { snapGridPoint, type SnapResult } from "../application/gridSnapping";
 import { doorSwing, openingFootprint, wallPieces } from "../application/wallGeometry";
+import {
+  hatchSegments,
+  slabSectionCuts,
+  wallSectionCuts,
+} from "../application/sectionCuts";
+import { paperMmToModelUnits } from "../domain/lineStyles";
 import { dashSpans, LINE_PATTERNS } from "../domain/lineStyles";
 import type {
   GridDatum,
@@ -877,6 +883,9 @@ export class GridViewport {
       const selected = store.selection?.kind === "slab" && store.selection.id === slab.id;
       this.buildSlab(slab, selected ? COLOR_SELECTED : undefined);
     }
+    if (viewType === "SECTION") {
+      this.buildSectionHatches(viewScale, this.wallGroup);
+    }
     this.buildAnchors();
     this.syncPreview();
   }
@@ -913,6 +922,43 @@ export class GridViewport {
   }
 
   /**
+   * Hatch the cut faces of walls and slabs crossing the section plane
+   * (X = 0): 45-degree lines at 1.5 mm paper spacing, drawn just in
+   * front of the plane toward the camera.
+   */
+  private buildSectionHatches(viewScale: number, group: THREE.Group): void {
+    const spacing = paperMmToModelUnits(1.5, viewScale);
+    const cutX = -0.02;
+    const addHatch = (rects: ReturnType<typeof wallSectionCuts>, color: number): void => {
+      const positions: number[] = [];
+      for (const rect of rects) {
+        for (const [u0, z0, u1, z1] of hatchSegments(rect, spacing)) {
+          positions.push(cutX, u0, z0, cutX, u1, z1);
+        }
+        positions.push(
+          cutX, rect.u0, rect.z0, cutX, rect.u1, rect.z0,
+          cutX, rect.u1, rect.z0, cutX, rect.u1, rect.z1,
+          cutX, rect.u1, rect.z1, cutX, rect.u0, rect.z1,
+          cutX, rect.u0, rect.z1, cutX, rect.u0, rect.z0,
+        );
+      }
+      if (positions.length === 0) return;
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      group.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color })));
+    };
+    for (const wall of store.project.walls) {
+      addHatch(wallSectionCuts(wall, store.project.walls, 0), COLOR_WALL);
+    }
+    for (const slab of store.project.slabs) {
+      addHatch(
+        slabSectionCuts(slab, store.project.slabTopZ(slab), 0),
+        slab.kind === "FLOOR" ? COLOR_FLOOR : COLOR_ROOF,
+      );
+    }
+  }
+
+  /**
    * The full content of a technical view, built into a standalone group —
    * used to render live model linework inside sheet frames.
    */
@@ -943,6 +989,9 @@ export class GridViewport {
       }
       for (const slab of store.project.slabs) {
         this.buildSlab(slab, undefined, group);
+      }
+      if (viewType === "SECTION") {
+        this.buildSectionHatches(view.scale, group);
       }
     }
     return group;

@@ -60,6 +60,34 @@ def _adopt_duplicate_grid(obj, source_axis, project) -> None:
     update_grid_head_annotation(obj, duplicated_axis)
 
 
+def _sync_native_wall_edits(project) -> None:
+    """Write NativeWall object translations back into the domain.
+
+    Native wall meshes are built with world-space vertices at object
+    origin, so a nonzero object location means the user moved the wall.
+    The plan delta is applied to the domain (z stays bound to the level)
+    and all native walls are rebuilt so joins recompute.
+    """
+    from .tools.wall import rebuild_native_walls
+
+    moved = False
+    for obj in list(bpy.data.objects):
+        if obj.get("webim_class") != "NativeWall":
+            continue
+        location = obj.location
+        if abs(location.x) <= _EPSILON and abs(location.y) <= _EPSILON:
+            continue
+        wall_id = obj.get("webim_id", "")
+        try:
+            project.translate_wall(wall_id, location.x, location.y)
+        except KeyError:
+            continue
+        moved = True
+        SESSION.is_dirty = True
+    if moved:
+        rebuild_native_walls(project)
+
+
 @persistent
 def synchronize_blender_grid_edits(_scene=None, _depsgraph=None) -> None:
     """Adopt Blender duplicates and synchronize object transforms to native Grids."""
@@ -106,6 +134,8 @@ def synchronize_blender_grid_edits(_scene=None, _depsgraph=None) -> None:
             updated = project.update_grid_axis(axis_id, start=start, end=end)
             update_grid_head_positions(updated)
             SESSION.is_dirty = True
+
+        _sync_native_wall_edits(project)
     finally:
         _SYNCING = False
 

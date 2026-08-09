@@ -16,7 +16,7 @@ from webim.tools.grid import (
 )
 
 from .project import ProjectSettings, SpatialHierarchy, create_project
-from .wall import WallInput, create_wall
+from .wall import WallInput, add_native_wall_openings, create_wall
 
 
 class IfcSession:
@@ -141,10 +141,10 @@ class IfcSession:
                         native_id=axis.id,
                     ),
                 )
-            # Web-authored native walls export as IfcWall bodies. Openings
-            # are not yet voided on this path (WeBIM Web exports them).
+            # Web-authored native walls export as IfcWall bodies with their
+            # openings voided and filled, matching the web exporter.
             for wall in self.native_project.walls:
-                create_wall(
+                wall_entity = create_wall(
                     export_model,
                     export_storey,
                     WallInput(
@@ -155,6 +155,9 @@ class IfcSession:
                         height=wall.height,
                         thickness=wall.thickness,
                     ),
+                )
+                add_native_wall_openings(
+                    export_model, export_storey, wall_entity, wall
                 )
         finalize_grid_axis_annotations(export_model)
         export_model.write(str(target))

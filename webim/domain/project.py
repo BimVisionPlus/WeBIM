@@ -404,6 +404,27 @@ class NativeBimProject:
                 return self.views.pop(index)
         raise KeyError(f"Unknown TechnicalView: {view_id}")
 
+    def translate_wall(self, wall_id: str, dx: float, dy: float) -> NativeWall:
+        """Move a native wall in plan (z stays bound to its level).
+
+        Blender edits write back through this: dragging a NativeWall mesh
+        translates the wall's axis; openings ride along since offsets are
+        relative to the wall start.
+        """
+        from dataclasses import replace
+
+        for index, wall in enumerate(self.walls):
+            if wall.id != wall_id:
+                continue
+            moved = replace(
+                wall,
+                start=(wall.start[0] + dx, wall.start[1] + dy, wall.start[2]),
+                end=(wall.end[0] + dx, wall.end[1] + dy, wall.end[2]),
+            )
+            self.walls[index] = moved
+            return moved
+        raise KeyError(f"Unknown NativeWall: {wall_id}")
+
     def add_grid_axis(
         self,
         start: Point3D,

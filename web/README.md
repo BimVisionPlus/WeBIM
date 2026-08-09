@@ -104,6 +104,18 @@ IFC4 STEP text → .ifc download
   pure-Python port of the wall geometry
   (`webim/domain/wall_geometry.py`) that is pytest-verified against
   the web implementation's reference values.
+- Section views hatch cut faces: walls and slabs crossing the section
+  plane (X = 0) draw their cut rectangles with 45° lines at 1.5 mm
+  paper spacing (`src/application/sectionCuts.ts`), in the live
+  viewport and inside sheet frames.
+- The add-on's IFC export now voids native wall openings
+  (`IfcOpeningElement` + `IfcRelVoidsElement`) and fills them with
+  `IfcDoor`/`IfcWindow` via `IfcRelFillsElement` — verified by pytest
+  against a real ifcopenshell round-trip.
+- Two-way sync: moving a `NativeWall` mesh in Blender writes the plan
+  delta back into the domain (`translate_wall`; z stays bound to the
+  level, openings ride along) and rebuilds the meshes so joins
+  recompute.
 - The Python add-on domain (`webim/domain/project.py`) now parses and
   preserves `walls`/`openings`/`levels`/`sheets`, so a web-authored
   project survives a Blender round-trip, and the add-on's IFC export
