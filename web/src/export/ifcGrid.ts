@@ -183,22 +183,46 @@ export function exportProjectToIfc(
     "$",
     "$",
   ]);
-  const storeyPlacement = step.add("IFCLOCALPLACEMENT", [buildingPlacement, worldPlacement]);
-  const storey = step.add("IFCBUILDINGSTOREY", [
-    text(ifcGuid()),
-    "$",
-    text(project.storeyName),
-    "$",
-    "$",
-    storeyPlacement,
-    "$",
-    "$",
-    ".ELEMENT.",
-    "0.",
-  ]);
+  // One IfcBuildingStorey per level (a single default storey when the
+  // project predates levels).
+  const levels =
+    project.levels.length > 0
+      ? project.levels
+      : [{ id: "__default__", name: project.storeyName, elevation: 0 }];
+  const storeyByLevel = new Map<string, { ref: string; placement: string }>();
+  const containedByStorey = new Map<string, string[]>();
+  for (const level of levels) {
+    const placement = step.add("IFCLOCALPLACEMENT", [buildingPlacement, worldPlacement]);
+    const ref = step.add("IFCBUILDINGSTOREY", [
+      text(ifcGuid()),
+      "$",
+      text(level.name),
+      "$",
+      "$",
+      placement,
+      "$",
+      "$",
+      ".ELEMENT.",
+      real(level.elevation),
+    ]);
+    storeyByLevel.set(level.id, { ref, placement });
+    containedByStorey.set(ref, []);
+  }
+  const firstStorey = storeyByLevel.get(levels[0].id)!;
+  const storeyForWall = (wall: WallDatum) =>
+    storeyByLevel.get(wall.levelId) ?? firstStorey;
+  const storey = firstStorey.ref;
+  const storeyPlacement = firstStorey.placement;
   step.add("IFCRELAGGREGATES", [text(ifcGuid()), "$", "$", "$", ifcProject, `(${site})`]);
   step.add("IFCRELAGGREGATES", [text(ifcGuid()), "$", "$", "$", site, `(${building})`]);
-  step.add("IFCRELAGGREGATES", [text(ifcGuid()), "$", "$", "$", building, `(${storey})`]);
+  step.add("IFCRELAGGREGATES", [
+    text(ifcGuid()),
+    "$",
+    "$",
+    "$",
+    building,
+    `(${[...storeyByLevel.values()].map((entry) => entry.ref).join(",")})`,
+  ]);
 
   const polyline = (start: Point3D, end: Point3D): string => {
     const first = step.add("IFCCARTESIANPOINT", [
@@ -281,12 +305,13 @@ export function exportProjectToIfc(
 
   const wallRefs = new Map<string, string>();
   for (const wall of project.walls) {
-    const ref = addWall(step, wall, project.walls, context, storeyPlacement);
+    const home = storeyForWall(wall);
+    const ref = addWall(step, wall, project.walls, context, home.placement);
     wallRefs.set(wall.id, ref);
-    containedProducts.push(ref);
+    containedByStorey.get(home.ref)!.push(ref);
     for (const opening of wall.openings) {
-      const filling = addOpening(step, wall, opening, ref, context, storeyPlacement);
-      containedProducts.push(filling);
+      const filling = addOpening(step, wall, opening, ref, context, home.placement);
+      containedByStorey.get(home.ref)!.push(filling);
     }
   }
   // Join relationships mirror the geometric joins: coincident-end pairs and
@@ -307,14 +332,16 @@ export function exportProjectToIfc(
     ]);
   }
 
-  if (containedProducts.length > 0) {
+  containedByStorey.get(storey)!.push(...containedProducts);
+  for (const [storeyRef, products] of containedByStorey) {
+    if (products.length === 0) continue;
     step.add("IFCRELCONTAINEDINSPATIALSTRUCTURE", [
       text(ifcGuid()),
       "$",
       "$",
       "$",
-      `(${containedProducts.join(",")})`,
-      storey,
+      `(${products.join(",")})`,
+      storeyRef,
     ]);
   }
 

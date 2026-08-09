@@ -240,3 +240,73 @@ describe("opening overlap validation", () => {
     expect(legacy.walls[0].openings[0].swingSide).toBe("LEFT");
   });
 });
+
+describe("levels", () => {
+  it("hosts walls: base z follows the level elevation", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const ground = project.addLevel("Level 1", 0);
+    const upper = project.addLevel("Level 2", 3);
+    const wall = project.addWall([0, 0, 0], [4, 0, 0], { levelId: upper.id });
+    expect(wall.start[2]).toBe(3);
+    expect(wall.levelId).toBe(upper.id);
+    // Moving the level carries its walls.
+    project.updateLevel(upper.id, { elevation: 3.5 });
+    expect(project.walls[0].start[2]).toBe(3.5);
+    expect(project.walls[0].end[2]).toBe(3.5);
+    // Re-hosting a wall moves it to the new level's elevation.
+    project.updateWall(wall.id, { levelId: ground.id });
+    expect(project.walls[0].start[2]).toBe(0);
+  });
+
+  it("keeps levels sorted and guards deletion", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const l2 = project.addLevel("Level 2", 3);
+    project.addLevel("Level 1", 0);
+    expect(project.levels.map((level) => level.name)).toEqual(["Level 1", "Level 2"]);
+    project.addWall([0, 0, 0], [4, 0, 0], { levelId: l2.id });
+    expect(() => project.removeLevel(l2.id)).toThrow("hosts walls");
+  });
+
+  it("migrates legacy JSON without levels", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    project.addWall([0, 0, 0], [4, 0, 0]);
+    project.addView("Plan", "FLOOR_PLAN");
+    const payload = JSON.parse(JSON.stringify(project.toDict()));
+    delete payload.levels;
+    delete payload.walls[0].level_id;
+    delete payload.views[0].level_id;
+    const restored = NativeBimProject.fromJson(JSON.stringify(payload));
+    expect(restored.levels).toHaveLength(1);
+    expect(restored.walls[0].levelId).toBe(restored.levels[0].id);
+    expect(restored.views[0].levelId).toBe(restored.levels[0].id);
+  });
+});
+
+describe("sheets", () => {
+  it("numbers sheets and places views once each", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const view = project.addView("Plan", "FLOOR_PLAN");
+    const sheet = project.addSheet("Ground floor plan");
+    expect(sheet.name).toBe("A101");
+    expect(project.addSheet("Details").name).toBe("A102");
+    project.placeViewOnSheet(sheet.id, view.id, 60, 320);
+    expect(() => project.placeViewOnSheet(sheet.id, view.id, 100, 100)).toThrow(
+      "already placed",
+    );
+    project.updateSheetPlacement(sheet.id, sheet.placements[0].id, { x: 200 });
+    expect(sheet.placements[0].x).toBe(200);
+  });
+
+  it("round-trips levels and sheets through JSON", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const level = project.addLevel("Level 1", 0);
+    const view = project.addView("Plan", "FLOOR_PLAN", 100, 40, level.id);
+    const sheet = project.addSheet("Plans");
+    project.placeViewOnSheet(sheet.id, view.id, 60, 320);
+    const restored = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(restored.levels[0].name).toBe("Level 1");
+    expect(restored.views[0].levelId).toBe(level.id);
+    expect(restored.sheets[0].name).toBe("A101");
+    expect(restored.sheets[0].placements[0].viewId).toBe(view.id);
+  });
+});

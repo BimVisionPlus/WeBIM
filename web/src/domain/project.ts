@@ -33,6 +33,28 @@ function validateJoinType(value: string): WallJoinType {
   return value as WallJoinType;
 }
 
+/** Horizontal datum: floor plans bind to a level, walls sit on one. */
+export interface LevelDatum {
+  id: string;
+  name: string;
+  elevation: number;
+}
+
+/** A view frame placed on a sheet, positioned in paper millimetres. */
+export interface SheetViewPlacement {
+  id: string;
+  viewId: string;
+  x: number;
+  y: number;
+}
+
+export interface SheetDatum {
+  id: string;
+  name: string;
+  title: string;
+  placements: SheetViewPlacement[];
+}
+
 export type OpeningKind = "DOOR" | "WINDOW";
 export type HingeEnd = "START" | "END";
 export type SwingSide = "LEFT" | "RIGHT";
@@ -77,6 +99,7 @@ export interface WallDatum {
   joinStart: WallJoinType;
   joinEnd: WallJoinType;
   openings: OpeningDatum[];
+  levelId: string;
 }
 
 export type ViewType = "FLOOR_PLAN" | "SECTION" | "ELEVATION";
@@ -87,6 +110,8 @@ export interface TechnicalView {
   viewType: ViewType;
   scale: number;
   orthoScale: number;
+  /** Level shown by a floor plan; unused for sections/elevations. */
+  levelId?: string;
 }
 
 export function uuid4Hex(): string {
@@ -125,6 +150,8 @@ export class NativeBimProject {
   gridAxes: GridDatum[];
   views: TechnicalView[];
   walls: WallDatum[];
+  levels: LevelDatum[];
+  sheets: SheetDatum[];
 
   constructor(
     id: string,
@@ -135,6 +162,8 @@ export class NativeBimProject {
     gridAxes: GridDatum[] = [],
     views: TechnicalView[] = [],
     walls: WallDatum[] = [],
+    levels: LevelDatum[] = [],
+    sheets: SheetDatum[] = [],
   ) {
     this.id = id;
     this.name = name;
@@ -144,6 +173,8 @@ export class NativeBimProject {
     this.gridAxes = gridAxes;
     this.views = views;
     this.walls = walls;
+    this.levels = levels;
+    this.sheets = sheets;
   }
 
   static create(
@@ -180,6 +211,23 @@ export class NativeBimProject {
         view_type: view.viewType,
         scale: view.scale,
         ortho_scale: view.orthoScale,
+        ...(view.levelId ? { level_id: view.levelId } : {}),
+      })),
+      levels: this.levels.map((level) => ({
+        id: level.id,
+        name: level.name,
+        elevation: level.elevation,
+      })),
+      sheets: this.sheets.map((sheet) => ({
+        id: sheet.id,
+        name: sheet.name,
+        title: sheet.title,
+        placements: sheet.placements.map((placement) => ({
+          id: placement.id,
+          view_id: placement.viewId,
+          x: placement.x,
+          y: placement.y,
+        })),
       })),
       walls: this.walls.map((wall) => ({
         id: wall.id,
@@ -190,6 +238,7 @@ export class NativeBimProject {
         height: wall.height,
         join_start: wall.joinStart,
         join_end: wall.joinEnd,
+        level_id: wall.levelId,
         openings: wall.openings.map((opening) => ({
           id: opening.id,
           name: opening.name,
@@ -207,6 +256,19 @@ export class NativeBimProject {
 
   static fromJson(value: string): NativeBimProject {
     const data = JSON.parse(value);
+    // Legacy files carry no levels: synthesize one at elevation 0 and
+    // attach orphan walls and floor plans to it.
+    const levels: LevelDatum[] = ((data.levels as Record<string, unknown>[]) ?? []).map(
+      (level) => ({
+        id: level.id as string,
+        name: level.name as string,
+        elevation: level.elevation as number,
+      }),
+    );
+    if (levels.length === 0) {
+      levels.push({ id: uuid4Hex(), name: "Level 1", elevation: 0 });
+    }
+    const defaultLevelId = levels[0].id;
     return new NativeBimProject(
       data.id,
       data.name,
@@ -232,6 +294,9 @@ export class NativeBimProject {
         viewType: view.view_type as ViewType,
         scale: (view.scale as number) ?? 100,
         orthoScale: (view.ortho_scale as number) ?? 20.0,
+        levelId:
+          (view.level_id as string) ??
+          ((view.view_type as string) === "FLOOR_PLAN" ? defaultLevelId : undefined),
       })),
       (data.walls ?? []).map((wall: Record<string, unknown>) => ({
         id: wall.id as string,
@@ -242,6 +307,7 @@ export class NativeBimProject {
         height: (wall.height as number) ?? 3.0,
         joinStart: validateJoinType((wall.join_start as string) ?? "MITER"),
         joinEnd: validateJoinType((wall.join_end as string) ?? "MITER"),
+        levelId: (wall.level_id as string) ?? defaultLevelId,
         openings: ((wall.openings as Record<string, unknown>[]) ?? []).map((opening) => ({
           id: opening.id as string,
           name: opening.name as string,
@@ -254,10 +320,30 @@ export class NativeBimProject {
           swingSide: (opening.swing_side as SwingSide) ?? "LEFT",
         })),
       })),
+      levels,
+      ((data.sheets as Record<string, unknown>[]) ?? []).map((sheet) => ({
+        id: sheet.id as string,
+        name: sheet.name as string,
+        title: (sheet.title as string) ?? "",
+        placements: ((sheet.placements as Record<string, unknown>[]) ?? []).map(
+          (placement) => ({
+            id: placement.id as string,
+            viewId: placement.view_id as string,
+            x: placement.x as number,
+            y: placement.y as number,
+          }),
+        ),
+      })),
     );
   }
 
-  addView(name: string, viewType: string, scale = 100, orthoScale = 20.0): TechnicalView {
+  addView(
+    name: string,
+    viewType: string,
+    scale = 100,
+    orthoScale = 20.0,
+    levelId?: string,
+  ): TechnicalView {
     const normalizedType = viewType.toUpperCase() as ViewType;
     if (!["FLOOR_PLAN", "SECTION", "ELEVATION"].includes(normalizedType)) {
       throw new Error(`Unsupported technical view type: ${viewType}`);
@@ -268,15 +354,150 @@ export class NativeBimProject {
     if (orthoScale <= 0) {
       throw new Error("Camera ortho scale must be greater than zero");
     }
+    if (levelId && !this.levels.some((level) => level.id === levelId)) {
+      throw new Error(`Unknown LevelDatum: ${levelId}`);
+    }
     const view: TechnicalView = {
       id: uuid4Hex(),
       name,
       viewType: normalizedType,
       scale,
       orthoScale,
+      levelId,
     };
     this.views.push(view);
     return view;
+  }
+
+  addLevel(name: string, elevation: number): LevelDatum {
+    const level: LevelDatum = { id: uuid4Hex(), name, elevation };
+    this.levels.push(level);
+    this.levels.sort((first, second) => first.elevation - second.elevation);
+    return level;
+  }
+
+  /** Change a level; moving its elevation carries its walls along. */
+  updateLevel(levelId: string, changes: { name?: string; elevation?: number }): LevelDatum {
+    const index = this.levels.findIndex((level) => level.id === levelId);
+    if (index === -1) {
+      throw new Error(`Unknown LevelDatum: ${levelId}`);
+    }
+    const level = this.levels[index];
+    const updated: LevelDatum = {
+      ...level,
+      name: changes.name ?? level.name,
+      elevation: changes.elevation ?? level.elevation,
+    };
+    this.levels[index] = updated;
+    if (changes.elevation !== undefined && changes.elevation !== level.elevation) {
+      for (let wallIndex = 0; wallIndex < this.walls.length; wallIndex += 1) {
+        const wall = this.walls[wallIndex];
+        if (wall.levelId !== levelId) continue;
+        this.walls[wallIndex] = {
+          ...wall,
+          start: [wall.start[0], wall.start[1], updated.elevation],
+          end: [wall.end[0], wall.end[1], updated.elevation],
+        };
+      }
+      this.levels.sort((first, second) => first.elevation - second.elevation);
+    }
+    return updated;
+  }
+
+  removeLevel(levelId: string): LevelDatum {
+    const index = this.levels.findIndex((level) => level.id === levelId);
+    if (index === -1) {
+      throw new Error(`Unknown LevelDatum: ${levelId}`);
+    }
+    if (this.levels.length <= 1) {
+      throw new Error("Cannot delete the last level");
+    }
+    if (this.walls.some((wall) => wall.levelId === levelId)) {
+      throw new Error("Level still hosts walls");
+    }
+    if (this.views.some((view) => view.levelId === levelId)) {
+      throw new Error("Level still has views");
+    }
+    return this.levels.splice(index, 1)[0];
+  }
+
+  levelById(levelId: string): LevelDatum | null {
+    return this.levels.find((level) => level.id === levelId) ?? null;
+  }
+
+  addSheet(title: string): SheetDatum {
+    const sheet: SheetDatum = {
+      id: uuid4Hex(),
+      name: `A${101 + this.sheets.length}`,
+      title,
+      placements: [],
+    };
+    this.sheets.push(sheet);
+    return sheet;
+  }
+
+  private sheetById(sheetId: string): SheetDatum {
+    const sheet = this.sheets.find((candidate) => candidate.id === sheetId);
+    if (!sheet) {
+      throw new Error(`Unknown SheetDatum: ${sheetId}`);
+    }
+    return sheet;
+  }
+
+  updateSheet(sheetId: string, changes: { name?: string; title?: string }): SheetDatum {
+    const sheet = this.sheetById(sheetId);
+    sheet.name = changes.name ?? sheet.name;
+    sheet.title = changes.title ?? sheet.title;
+    return sheet;
+  }
+
+  removeSheet(sheetId: string): SheetDatum {
+    const index = this.sheets.findIndex((sheet) => sheet.id === sheetId);
+    if (index === -1) {
+      throw new Error(`Unknown SheetDatum: ${sheetId}`);
+    }
+    return this.sheets.splice(index, 1)[0];
+  }
+
+  placeViewOnSheet(sheetId: string, viewId: string, x: number, y: number): SheetViewPlacement {
+    const sheet = this.sheetById(sheetId);
+    if (!this.views.some((view) => view.id === viewId)) {
+      throw new Error(`Unknown TechnicalView: ${viewId}`);
+    }
+    if (sheet.placements.some((placement) => placement.viewId === viewId)) {
+      throw new Error("View is already placed on this sheet");
+    }
+    const placement: SheetViewPlacement = { id: uuid4Hex(), viewId, x, y };
+    sheet.placements.push(placement);
+    return placement;
+  }
+
+  updateSheetPlacement(
+    sheetId: string,
+    placementId: string,
+    changes: { x?: number; y?: number },
+  ): SheetViewPlacement {
+    const sheet = this.sheetById(sheetId);
+    const index = sheet.placements.findIndex((placement) => placement.id === placementId);
+    if (index === -1) {
+      throw new Error(`Unknown SheetViewPlacement: ${placementId}`);
+    }
+    const placement = sheet.placements[index];
+    sheet.placements[index] = {
+      ...placement,
+      x: changes.x ?? placement.x,
+      y: changes.y ?? placement.y,
+    };
+    return sheet.placements[index];
+  }
+
+  removeSheetPlacement(sheetId: string, placementId: string): SheetViewPlacement {
+    const sheet = this.sheetById(sheetId);
+    const index = sheet.placements.findIndex((placement) => placement.id === placementId);
+    if (index === -1) {
+      throw new Error(`Unknown SheetViewPlacement: ${placementId}`);
+    }
+    return sheet.placements.splice(index, 1)[0];
   }
 
   updateView(
@@ -388,11 +609,23 @@ export class NativeBimProject {
       height?: number;
       joinStart?: WallJoinType;
       joinEnd?: WallJoinType;
+      levelId?: string;
     } = {},
   ): WallDatum {
     if (pointsEqual(start, end)) {
       throw new Error("Wall endpoints must be different");
     }
+    if (this.levels.length === 0) {
+      this.addLevel("Level 1", 0);
+    }
+    const level = options.levelId
+      ? this.levelById(options.levelId)
+      : this.levels[0];
+    if (!level) {
+      throw new Error(`Unknown LevelDatum: ${options.levelId}`);
+    }
+    start = [start[0], start[1], level.elevation];
+    end = [end[0], end[1], level.elevation];
     const thickness = options.thickness ?? 0.2;
     const height = options.height ?? 3.0;
     if (thickness <= 0) {
@@ -411,6 +644,7 @@ export class NativeBimProject {
       joinStart: validateJoinType(options.joinStart ?? "MITER"),
       joinEnd: validateJoinType(options.joinEnd ?? "MITER"),
       openings: [],
+      levelId: level.id,
     };
     this.walls.push(wall);
     return wall;
@@ -425,6 +659,7 @@ export class NativeBimProject {
       height?: number;
       joinStart?: WallJoinType;
       joinEnd?: WallJoinType;
+      levelId?: string;
     },
   ): WallDatum {
     const index = this.walls.findIndex((wall) => wall.id === wallId);
@@ -432,14 +667,22 @@ export class NativeBimProject {
       throw new Error(`Unknown WallDatum: ${wallId}`);
     }
     const wall = this.walls[index];
+    const levelId = changes.levelId ?? wall.levelId;
+    const level = this.levelById(levelId);
+    if (!level) {
+      throw new Error(`Unknown LevelDatum: ${levelId}`);
+    }
+    const start = changes.start ?? wall.start;
+    const end = changes.end ?? wall.end;
     const updated: WallDatum = {
       ...wall,
-      start: changes.start ?? wall.start,
-      end: changes.end ?? wall.end,
+      start: [start[0], start[1], level.elevation],
+      end: [end[0], end[1], level.elevation],
       thickness: changes.thickness ?? wall.thickness,
       height: changes.height ?? wall.height,
       joinStart: validateJoinType(changes.joinStart ?? wall.joinStart),
       joinEnd: validateJoinType(changes.joinEnd ?? wall.joinEnd),
+      levelId: level.id,
     };
     if (pointsEqual(updated.start, updated.end)) {
       throw new Error("Wall endpoints must be different");

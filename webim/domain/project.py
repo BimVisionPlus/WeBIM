@@ -30,6 +30,66 @@ class TechnicalView:
     view_type: str
     scale: int = 100
     ortho_scale: float = 20.0
+    level_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class WallOpening:
+    """Door/window opening hosted by a native wall (authored in WeBIM Web)."""
+
+    id: str
+    name: str
+    kind: str
+    offset: float
+    width: float
+    height: float
+    sill_height: float = 0.0
+    hinge_end: str = "START"
+    swing_side: str = "LEFT"
+
+
+@dataclass(frozen=True, slots=True)
+class NativeWall:
+    """Native wall element authored in WeBIM Web.
+
+    The Blender adapter does not render these yet; the domain parses and
+    preserves them so web-authored projects survive a Blender round-trip,
+    and export_ifc includes them as IfcWall bodies.
+    """
+
+    id: str
+    name: str
+    start: Point3D
+    end: Point3D
+    thickness: float = 0.2
+    height: float = 3.0
+    join_start: str = "MITER"
+    join_end: str = "MITER"
+    level_id: str | None = None
+    openings: tuple[WallOpening, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class LevelDatum:
+    id: str
+    name: str
+    elevation: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class SheetPlacement:
+    id: str
+    view_id: str
+    x: float
+    y: float
+
+
+@dataclass(frozen=True, slots=True)
+class SheetDatum:
+    id: str
+    name: str
+    title: str = ""
+    placements: tuple[SheetPlacement, ...] = ()
 
 
 @dataclass(slots=True)
@@ -41,6 +101,9 @@ class NativeBimProject:
     storey_name: str
     grid_axes: list[GridDatum] = field(default_factory=list)
     views: list[TechnicalView] = field(default_factory=list)
+    walls: list[NativeWall] = field(default_factory=list)
+    levels: list[LevelDatum] = field(default_factory=list)
+    sheets: list[SheetDatum] = field(default_factory=list)
 
     @classmethod
     def create(
@@ -87,8 +150,70 @@ class NativeBimProject:
                     "view_type": view.view_type,
                     "scale": view.scale,
                     "ortho_scale": view.ortho_scale,
+                    **(
+                        {"level_id": view.level_id}
+                        if view.level_id is not None
+                        else {}
+                    ),
                 }
                 for view in self.views
+            ],
+            "walls": [
+                {
+                    "id": wall.id,
+                    "name": wall.name,
+                    "start": list(wall.start),
+                    "end": list(wall.end),
+                    "thickness": wall.thickness,
+                    "height": wall.height,
+                    "join_start": wall.join_start,
+                    "join_end": wall.join_end,
+                    **(
+                        {"level_id": wall.level_id}
+                        if wall.level_id is not None
+                        else {}
+                    ),
+                    "openings": [
+                        {
+                            "id": opening.id,
+                            "name": opening.name,
+                            "kind": opening.kind,
+                            "offset": opening.offset,
+                            "width": opening.width,
+                            "height": opening.height,
+                            "sill_height": opening.sill_height,
+                            "hinge_end": opening.hinge_end,
+                            "swing_side": opening.swing_side,
+                        }
+                        for opening in wall.openings
+                    ],
+                }
+                for wall in self.walls
+            ],
+            "levels": [
+                {
+                    "id": level.id,
+                    "name": level.name,
+                    "elevation": level.elevation,
+                }
+                for level in self.levels
+            ],
+            "sheets": [
+                {
+                    "id": sheet.id,
+                    "name": sheet.name,
+                    "title": sheet.title,
+                    "placements": [
+                        {
+                            "id": placement.id,
+                            "view_id": placement.view_id,
+                            "x": placement.x,
+                            "y": placement.y,
+                        }
+                        for placement in sheet.placements
+                    ],
+                }
+                for sheet in self.sheets
             ],
         }
 
@@ -122,8 +247,62 @@ class NativeBimProject:
                     view_type=view["view_type"],
                     scale=view.get("scale", 100),
                     ortho_scale=view.get("ortho_scale", 20.0),
+                    level_id=view.get("level_id"),
                 )
                 for view in data.get("views", [])
+            ],
+            walls=[
+                NativeWall(
+                    id=wall["id"],
+                    name=wall["name"],
+                    start=tuple(wall["start"]),
+                    end=tuple(wall["end"]),
+                    thickness=wall.get("thickness", 0.2),
+                    height=wall.get("height", 3.0),
+                    join_start=wall.get("join_start", "MITER"),
+                    join_end=wall.get("join_end", "MITER"),
+                    level_id=wall.get("level_id"),
+                    openings=tuple(
+                        WallOpening(
+                            id=opening["id"],
+                            name=opening["name"],
+                            kind=opening["kind"],
+                            offset=opening["offset"],
+                            width=opening["width"],
+                            height=opening["height"],
+                            sill_height=opening.get("sill_height", 0.0),
+                            hinge_end=opening.get("hinge_end", "START"),
+                            swing_side=opening.get("swing_side", "LEFT"),
+                        )
+                        for opening in wall.get("openings", [])
+                    ),
+                )
+                for wall in data.get("walls", [])
+            ],
+            levels=[
+                LevelDatum(
+                    id=level["id"],
+                    name=level["name"],
+                    elevation=level.get("elevation", 0.0),
+                )
+                for level in data.get("levels", [])
+            ],
+            sheets=[
+                SheetDatum(
+                    id=sheet["id"],
+                    name=sheet["name"],
+                    title=sheet.get("title", ""),
+                    placements=tuple(
+                        SheetPlacement(
+                            id=placement["id"],
+                            view_id=placement["view_id"],
+                            x=placement["x"],
+                            y=placement["y"],
+                        )
+                        for placement in sheet.get("placements", [])
+                    ),
+                )
+                for sheet in data.get("sheets", [])
             ],
         )
 

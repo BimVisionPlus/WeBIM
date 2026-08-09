@@ -180,6 +180,8 @@ export function tJoinTarget(
   let best: { wall: WallDatum; distance: number } | null = null;
   for (const candidate of walls) {
     if (candidate.id === wall.id) continue;
+    // Walls on different levels never T-join.
+    if (Math.abs(candidate.start[2] - wall.start[2]) > JOIN_TOLERANCE) continue;
     const frame = axisFrame(candidate);
     if (!frame) continue;
     const half = candidate.thickness / 2;

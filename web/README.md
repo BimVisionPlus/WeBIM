@@ -79,6 +79,21 @@ IFC4 STEP text → .ifc download
 - Selected openings show a centre anchor: click it, move along the
   wall (ghost preview, snapped and clamped), click to confirm — the
   same click-move-click pattern as endpoint editing.
+- Storey levels: every wall is hosted on a level (`level_id`), floor
+  plans bind to one, and adding a level (Levels `+`) creates its floor
+  plan 3 m above the topmost. Moving a level's elevation carries its
+  walls; plans render only their own level; elevations/sections draw
+  green level lines with name tags. Legacy files migrate to a
+  synthesized Level 1. IFC exports one `IfcBuildingStorey` per level
+  with walls contained accordingly.
+- Sheets: `A101`-numbered sheets with an A1 titleblock rendered in
+  paper space; place any view from the sheet's properties panel — each
+  placement is a labelled frame sized by the view's ortho extent at its
+  scale, positioned in paper millimetres. Serialized under `sheets`.
+- The Python add-on domain (`webim/domain/project.py`) now parses and
+  preserves `walls`/`openings`/`levels`/`sheets`, so a web-authored
+  project survives a Blender round-trip, and the add-on's IFC export
+  includes native walls (openings not yet voided on that path).
 - Anchor endpoint editing: select a grid or wall, click an endpoint
   anchor, move, click to confirm (Esc cancels) — same click-move-click
   flow as the add-on.

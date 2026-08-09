@@ -28,6 +28,14 @@ const COLOR_GRID = 0xc44536;
 const COLOR_WALL = 0x9aa3b2;
 const COLOR_DOOR = 0xb08968;
 const COLOR_WINDOW = 0x7fb3d5;
+const COLOR_LEVEL = 0x5f9e6e;
+const COLOR_PAPER = 0x23262d;
+const COLOR_PAPER_LINES = 0x8b8f98;
+
+// A1 landscape paper, in metres of paper space.
+const SHEET_WIDTH = 0.841;
+const SHEET_HEIGHT = 0.594;
+const SHEET_MARGIN = 0.01;
 const COLOR_SELECTED = 0x4da3ff;
 const COLOR_PREVIEW = 0x8fd460;
 const COLOR_AXIS_LOCK = 0xffb454;
@@ -75,6 +83,25 @@ function makeTextSprite(label: string, worldSize: number): THREE.Sprite {
   return sprite;
 }
 
+/** Wide label sprite for level tags and sheet annotations. */
+function makeLabelSprite(label: string, worldHeight: number): THREE.Sprite {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 96;
+  const ctx = canvas.getContext("2d")!;
+  ctx.font = "600 56px 'Inter', 'Segoe UI', sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = COLOR_TEXT;
+  ctx.fillText(label, 8, 52);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(worldHeight * (512 / 96), worldHeight, 1);
+  return sprite;
+}
+
 export class GridViewport {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -82,6 +109,7 @@ export class GridViewport {
   private canvas: HTMLCanvasElement;
   private gridGroup = new THREE.Group();
   private wallGroup = new THREE.Group();
+  private sheetGroup = new THREE.Group();
   private previewGroup = new THREE.Group();
   private anchorGroup = new THREE.Group();
   private underlayGroup = new THREE.Group();
@@ -117,6 +145,7 @@ export class GridViewport {
     this.scene.add(this.underlayGroup);
     this.scene.add(this.gridGroup);
     this.scene.add(this.wallGroup);
+    this.scene.add(this.sheetGroup);
     this.scene.add(this.previewGroup);
     this.scene.add(this.anchorGroup);
     this.buildUnderlay();
@@ -164,6 +193,7 @@ export class GridViewport {
   }
 
   private get inPlanView(): boolean {
+    if (store.activeSheet) return false;
     return (store.activeView?.viewType ?? "FLOOR_PLAN") === "FLOOR_PLAN";
   }
 
@@ -174,10 +204,29 @@ export class GridViewport {
   }
 
   private applyViewCamera(): void {
+    const sheet = store.activeSheet;
     const view = store.activeView;
-    const key = view ? `${view.id}:${view.viewType}:${view.orthoScale}` : "plan";
+    const key = sheet
+      ? `sheet:${sheet.id}`
+      : view
+        ? `${view.id}:${view.viewType}:${view.orthoScale}`
+        : "plan";
     if (key === this.appliedViewKey) return;
     this.appliedViewKey = key;
+    const aspectForSheet = this.canvas.clientWidth / Math.max(this.canvas.clientHeight, 1);
+    if (sheet) {
+      const half = SHEET_HEIGHT * 0.62;
+      this.camera.top = half;
+      this.camera.bottom = -half;
+      this.camera.left = -half * aspectForSheet;
+      this.camera.right = half * aspectForSheet;
+      this.camera.position.set(SHEET_WIDTH / 2, SHEET_HEIGHT / 2, 500);
+      this.camera.up.set(0, 1, 0);
+      this.camera.lookAt(SHEET_WIDTH / 2, SHEET_HEIGHT / 2, 0);
+      this.camera.updateProjectionMatrix();
+      this.camera.updateMatrixWorld(true);
+      return;
+    }
     const half = (view?.orthoScale ?? 40) / 2;
     const aspect = this.canvas.clientWidth / Math.max(this.canvas.clientHeight, 1);
     this.camera.top = half;
@@ -257,12 +306,20 @@ export class GridViewport {
     return [vector.x, vector.y, 0];
   }
 
+  /** Walls participating in the current view (plan filters by level). */
+  private visibleWalls(): WallDatum[] {
+    const levelId = this.inPlanView ? store.activeLevel?.id : undefined;
+    return levelId
+      ? store.project.walls.filter((wall) => wall.levelId === levelId)
+      : store.project.walls;
+  }
+
   private allEndpoints(): Point3D[] {
     const points: Point3D[] = [];
     for (const axis of store.project.gridAxes) {
       points.push(axis.start, axis.end);
     }
-    for (const wall of store.project.walls) {
+    for (const wall of this.visibleWalls()) {
       points.push(wall.start, wall.end);
     }
     return points;
@@ -359,7 +416,7 @@ export class GridViewport {
     const pixelThreshold = PICK_PIXELS * this.worldPerPixel();
     let best: WallDatum | null = null;
     let bestDistance = Infinity;
-    for (const wall of store.project.walls) {
+    for (const wall of this.visibleWalls()) {
       const distance = distanceToSegment(world, wall.start, wall.end);
       const threshold = Math.max(pixelThreshold, wall.thickness / 2);
       if (distance < threshold && distance < bestDistance) {
@@ -372,7 +429,7 @@ export class GridViewport {
 
   private pickOpening(world: Point3D): { wall: WallDatum; opening: OpeningDatum } | null {
     const tolerance = PICK_PIXELS * this.worldPerPixel();
-    for (const wall of store.project.walls) {
+    for (const wall of this.visibleWalls()) {
       const dx = wall.end[0] - wall.start[0];
       const dy = wall.end[1] - wall.start[1];
       const length = Math.hypot(dx, dy);
@@ -438,7 +495,7 @@ export class GridViewport {
         best = { kind: "grid", id: axis.id };
       }
     }
-    for (const wall of store.project.walls) {
+    for (const wall of this.visibleWalls()) {
       const distance = distanceToSegment(world, wall.start, wall.end);
       const threshold = Math.max(pixelThreshold, wall.thickness / 2);
       if (distance < threshold && distance < bestDistance) {
@@ -704,12 +761,22 @@ export class GridViewport {
     this.disposeGroup(this.gridGroup);
     this.disposeGroup(this.wallGroup);
     this.disposeGroup(this.anchorGroup);
+    this.disposeGroup(this.sheetGroup);
     if (this.endpointEdit && !this.editedElement()) {
       this.endpointEdit = null;
     }
     if (this.openingDrag && !this.draggedOpening()) {
       this.openingDrag = null;
     }
+
+    const sheet = store.activeSheet;
+    this.underlayGroup.visible = !sheet;
+    if (sheet) {
+      this.buildSheet(sheet);
+      this.syncPreview();
+      return;
+    }
+
     const factor = store.annotationViewFactor;
     const viewScale = store.activeView?.scale ?? 100;
     const viewType = store.activeView?.viewType ?? "FLOOR_PLAN";
@@ -723,12 +790,115 @@ export class GridViewport {
         this.buildDatumGrid(axis, viewType, viewScale, factor, color);
       }
     }
+    if (viewType !== "FLOOR_PLAN") {
+      this.buildLevelLines(viewType, factor);
+    }
+    // Floor plans show only their own level's walls; elevations show all.
+    const activeLevelId = store.activeLevel?.id;
     for (const wall of store.project.walls) {
+      if (viewType === "FLOOR_PLAN" && activeLevelId && wall.levelId !== activeLevelId) {
+        continue;
+      }
       const selected = store.selection?.kind === "wall" && store.selection.id === wall.id;
       this.buildWall(wall, selected ? COLOR_SELECTED : COLOR_WALL);
     }
     this.buildAnchors();
     this.syncPreview();
+  }
+
+  /** Level datum lines with name tags, drawn in elevations and sections. */
+  private buildLevelLines(viewType: "ELEVATION" | "SECTION", factor: number): void {
+    const span = 30;
+    for (const level of store.project.levels) {
+      const selected = store.selection?.kind === "level" && store.selection.id === level.id;
+      const color = selected ? COLOR_SELECTED : COLOR_LEVEL;
+      const z = level.elevation;
+      const toWorld = (h: number): [number, number, number] =>
+        viewType === "ELEVATION" ? [h, 0, z] : [0, h, z];
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute([...toWorld(-span), ...toWorld(span)], 3),
+      );
+      this.gridGroup.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({ color })));
+      const label = makeLabelSprite(
+        `${level.name}  +${level.elevation.toFixed(2)}`,
+        0.45 * factor,
+      );
+      const [lx, ly, lz] = toWorld(span - 4);
+      label.position.set(lx, ly, lz + 0.35 * factor);
+      this.gridGroup.add(label);
+    }
+  }
+
+  /** Paper space: titleblock plus a frame per placed view. */
+  private buildSheet(sheet: import("../domain/project").SheetDatum): void {
+    const rect = (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      color: number,
+    ): void => {
+      const positions = [
+        x, y, 0, x + width, y, 0,
+        x + width, y, 0, x + width, y + height, 0,
+        x + width, y + height, 0, x, y + height, 0,
+        x, y + height, 0, x, y, 0,
+      ];
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      this.sheetGroup.add(
+        new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color })),
+      );
+    };
+
+    // Paper background.
+    const paper = new THREE.Mesh(
+      new THREE.PlaneGeometry(SHEET_WIDTH, SHEET_HEIGHT),
+      new THREE.MeshBasicMaterial({ color: COLOR_PAPER }),
+    );
+    paper.position.set(SHEET_WIDTH / 2, SHEET_HEIGHT / 2, -0.01);
+    this.sheetGroup.add(paper);
+    rect(0, 0, SHEET_WIDTH, SHEET_HEIGHT, COLOR_PAPER_LINES);
+    rect(
+      SHEET_MARGIN,
+      SHEET_MARGIN,
+      SHEET_WIDTH - 2 * SHEET_MARGIN,
+      SHEET_HEIGHT - 2 * SHEET_MARGIN,
+      COLOR_PAPER_LINES,
+    );
+    // Titleblock, bottom-right.
+    const titleWidth = 0.24;
+    const titleHeight = 0.06;
+    rect(
+      SHEET_WIDTH - SHEET_MARGIN - titleWidth,
+      SHEET_MARGIN,
+      titleWidth,
+      titleHeight,
+      COLOR_PAPER_LINES,
+    );
+    const titleLabel = makeLabelSprite(`${sheet.name} — ${sheet.title}`, 0.02);
+    titleLabel.position.set(
+      SHEET_WIDTH - SHEET_MARGIN - titleWidth + 0.055,
+      SHEET_MARGIN + titleHeight / 2,
+      0.01,
+    );
+    this.sheetGroup.add(titleLabel);
+
+    for (const placement of sheet.placements) {
+      const view = store.project.views.find((candidate) => candidate.id === placement.viewId);
+      if (!view) continue;
+      // Frame size: the view's model extent printed at its scale.
+      const frameWidth = view.orthoScale / view.scale;
+      const frameHeight = frameWidth * 0.7;
+      const x = placement.x / 1000;
+      const y = placement.y / 1000;
+      rect(x, y, frameWidth, frameHeight, COLOR_PAPER_LINES);
+      const label = makeLabelSprite(`${view.name} · 1:${view.scale}`, 0.016);
+      label.position.set(x + 0.045, y - 0.014, 0.01);
+      this.sheetGroup.add(label);
+    }
   }
 
   private buildAxisLine(axis: GridDatum, viewScale: number, color: number): THREE.LineSegments {

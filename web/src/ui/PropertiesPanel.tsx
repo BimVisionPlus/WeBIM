@@ -2,12 +2,15 @@ import { LINE_PATTERNS, LINE_WEIGHTS_MM } from "../domain/lineStyles";
 import { store, useStoreVersion } from "../state/store";
 import type {
   GridDatum,
+  LevelDatum,
   OpeningDatum,
   Point3D,
+  SheetDatum,
   TechnicalView,
   WallDatum,
   WallJoinType,
 } from "../domain/project";
+import { useState } from "react";
 
 const JOIN_TYPE_LABELS: Array<[WallJoinType, string]> = [
   ["MITER", "Miter"],
@@ -176,6 +179,19 @@ function WallProperties({ wall }: { wall: WallDatum }) {
         step={0.1}
         onCommit={(value) => store.updateWall(wall.id, { height: value })}
       />
+      <label className="prop-row">
+        <span>Level</span>
+        <select
+          value={wall.levelId}
+          onChange={(event) => store.updateWall(wall.id, { levelId: event.target.value })}
+        >
+          {store.project.levels.map((level) => (
+            <option key={level.id} value={level.id}>
+              {level.name}
+            </option>
+          ))}
+        </select>
+      </label>
       {(["joinStart", "joinEnd"] as const).map((key) => (
         <label key={key} className="prop-row">
           <span>{key === "joinStart" ? "Start join" : "End join"}</span>
@@ -270,6 +286,115 @@ function OpeningProperties({ wall, opening }: { wall: WallDatum; opening: Openin
   );
 }
 
+function LevelProperties({ level }: { level: LevelDatum }) {
+  return (
+    <>
+      <h3>{level.name}</h3>
+      <label className="prop-row">
+        <span>Name</span>
+        <input
+          value={level.name}
+          onChange={(event) => store.updateLevel(level.id, { name: event.target.value })}
+        />
+      </label>
+      <NumberField
+        label="Elevation (m)"
+        value={level.elevation}
+        onCommit={(value) => store.updateLevel(level.id, { elevation: value })}
+      />
+      <div className="prop-static">
+        <span>Walls on level</span>
+        <span>{store.project.walls.filter((wall) => wall.levelId === level.id).length}</span>
+      </div>
+      <button className="danger" onClick={() => store.removeLevel(level.id)}>
+        Delete level
+      </button>
+    </>
+  );
+}
+
+function SheetProperties({ sheet }: { sheet: SheetDatum }) {
+  const placeable = store.project.views.filter(
+    (view) => !sheet.placements.some((placement) => placement.viewId === view.id),
+  );
+  const [viewToPlace, setViewToPlace] = useState("");
+  return (
+    <>
+      <h3>Sheet {sheet.name}</h3>
+      <label className="prop-row">
+        <span>Number</span>
+        <input
+          value={sheet.name}
+          onChange={(event) => store.updateSheet(sheet.id, { name: event.target.value })}
+        />
+      </label>
+      <label className="prop-row">
+        <span>Title</span>
+        <input
+          value={sheet.title}
+          onChange={(event) => store.updateSheet(sheet.id, { title: event.target.value })}
+        />
+      </label>
+      <div className="prop-row">
+        <select
+          value={viewToPlace}
+          onChange={(event) => setViewToPlace(event.target.value)}
+        >
+          <option value="">Place a view…</option>
+          {placeable.map((view) => (
+            <option key={view.id} value={view.id}>
+              {view.name}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => {
+            if (viewToPlace) {
+              store.placeViewOnSheet(sheet.id, viewToPlace);
+              setViewToPlace("");
+            }
+          }}
+        >
+          Place
+        </button>
+      </div>
+      {sheet.placements.map((placement) => {
+        const view = store.project.views.find((candidate) => candidate.id === placement.viewId);
+        return (
+          <div key={placement.id} className="sheet-placement">
+            <span>{view?.name ?? "?"}</span>
+            {(["x", "y"] as const).map((axis) => (
+              <input
+                key={axis}
+                type="number"
+                step={10}
+                value={placement[axis]}
+                title={`${axis.toUpperCase()} (mm)`}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  if (!Number.isNaN(value)) {
+                    store.updateSheetPlacement(sheet.id, placement.id, { [axis]: value });
+                  }
+                }}
+              />
+            ))}
+            <button
+              className="mini"
+              title="Remove from sheet"
+              onClick={() => store.removeSheetPlacement(sheet.id, placement.id)}
+            >
+              ×
+            </button>
+          </div>
+        );
+      })}
+      <button className="danger" onClick={() => store.removeSheet(sheet.id)}>
+        Delete sheet
+      </button>
+    </>
+  );
+}
+
 function ViewProperties({ view }: { view: TechnicalView }) {
   return (
     <>
@@ -326,6 +451,14 @@ export function PropertiesPanel() {
   const openingHost =
     selection?.kind === "opening" ? store.project.openingHost(selection.id) : null;
   const opening = openingHost?.openings.find((candidate) => candidate.id === selection?.id);
+  const level =
+    selection?.kind === "level"
+      ? store.project.levels.find((candidate) => candidate.id === selection.id)
+      : undefined;
+  const sheet =
+    selection?.kind === "sheet"
+      ? store.project.sheets.find((candidate) => candidate.id === selection.id)
+      : undefined;
 
   return (
     <aside className="panel properties-panel">
@@ -334,8 +467,10 @@ export function PropertiesPanel() {
       {view && <ViewProperties view={view} />}
       {wall && <WallProperties wall={wall} />}
       {openingHost && opening && <OpeningProperties wall={openingHost} opening={opening} />}
-      {!axis && !view && !wall && !opening && (
-        <div className="tree-empty">Select a grid, wall, opening or view.</div>
+      {level && <LevelProperties level={level} />}
+      {sheet && <SheetProperties sheet={sheet} />}
+      {!axis && !view && !wall && !opening && !level && !sheet && (
+        <div className="tree-empty">Select a grid, wall, opening, level, sheet or view.</div>
       )}
     </aside>
   );

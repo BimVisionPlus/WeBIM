@@ -141,6 +141,21 @@ class IfcSession:
                         native_id=axis.id,
                     ),
                 )
+            # Web-authored native walls export as IfcWall bodies. Openings
+            # are not yet voided on this path (WeBIM Web exports them).
+            for wall in self.native_project.walls:
+                create_wall(
+                    export_model,
+                    export_storey,
+                    WallInput(
+                        wall.name,
+                        (wall.start[0], wall.start[1]),
+                        (wall.end[0], wall.end[1]),
+                        elevation=wall.start[2],
+                        height=wall.height,
+                        thickness=wall.thickness,
+                    ),
+                )
         finalize_grid_axis_annotations(export_model)
         export_model.write(str(target))
         return target

@@ -5,7 +5,7 @@ import { exportProjectToIfc } from "../export/ifcGrid";
 export type ToolId = "SELECT" | "GRID" | "WALL" | "DOOR" | "WINDOW";
 
 export interface Selection {
-  kind: "grid" | "view" | "wall" | "opening";
+  kind: "grid" | "view" | "wall" | "opening" | "level" | "sheet";
   id: string;
 }
 
@@ -19,7 +19,8 @@ function defaultProject(): NativeBimProject {
     "Main Building",
     "Ground Floor",
   );
-  project.addView("Level 1", "FLOOR_PLAN", 100, 40);
+  const level = project.addLevel("Level 1", 0);
+  project.addView("Level 1", "FLOOR_PLAN", 100, 40, level.id);
   return project;
 }
 
@@ -28,6 +29,8 @@ class AppStore {
   activeTool: ToolId = "SELECT";
   selection: Selection | null = null;
   activeViewId: string | null = null;
+  /** When set, the viewport shows this sheet's paper space instead of a view. */
+  activeSheetId: string | null = null;
   snapIncrement = 0.1;
   pendingStart: Point3D | null = null;
   statusMessage = "Ready";
@@ -76,7 +79,21 @@ class AppStore {
   }
 
   get activeView() {
+    if (this.activeSheetId) return null;
     return this.project.views.find((view) => view.id === this.activeViewId) ?? null;
+  }
+
+  get activeSheet() {
+    return this.project.sheets.find((sheet) => sheet.id === this.activeSheetId) ?? null;
+  }
+
+  /** Level shown by the active floor plan (first level as fallback). */
+  get activeLevel() {
+    const view = this.activeView;
+    if (view?.viewType === "FLOOR_PLAN" && view.levelId) {
+      return this.project.levelById(view.levelId) ?? this.project.levels[0] ?? null;
+    }
+    return this.project.levels[0] ?? null;
   }
 
   /** Paper-size annotations convert from the 1:100 baseline into model units. */
@@ -152,6 +169,7 @@ class AppStore {
     const wall = this.project.addWall(start, end, {
       thickness: this.wallThickness,
       height: this.wallHeight,
+      levelId: this.activeLevel?.id,
     });
     this.statusMessage = `Wall ${wall.name} created`;
     this.commit();
@@ -195,11 +213,105 @@ class AppStore {
   }
 
   addView(viewType: "FLOOR_PLAN" | "SECTION" | "ELEVATION"): void {
-    const prefix =
-      viewType === "FLOOR_PLAN" ? "Level" : viewType === "SECTION" ? "Section" : "Elevation";
+    if (viewType === "FLOOR_PLAN") {
+      // A new floor plan comes with its own level above the topmost one.
+      this.addLevel();
+      return;
+    }
+    const prefix = viewType === "SECTION" ? "Section" : "Elevation";
     const count = this.project.views.filter((view) => view.viewType === viewType).length;
     const view = this.project.addView(`${prefix} ${count + 1}`, viewType);
+    this.activeSheetId = null;
     this.activeViewId = view.id;
+    this.commit();
+  }
+
+  addLevel(): void {
+    const top = this.project.levels[this.project.levels.length - 1];
+    const elevation = top ? top.elevation + 3 : 0;
+    const name = `Level ${this.project.levels.length + 1}`;
+    const level = this.project.addLevel(name, elevation);
+    const view = this.project.addView(name, "FLOOR_PLAN", 100, 40, level.id);
+    this.activeSheetId = null;
+    this.activeViewId = view.id;
+    this.selection = { kind: "level", id: level.id };
+    this.statusMessage = `${name} created at +${elevation} m`;
+    this.commit();
+  }
+
+  updateLevel(levelId: string, changes: Parameters<NativeBimProject["updateLevel"]>[1]): void {
+    this.project.updateLevel(levelId, changes);
+    this.commit();
+  }
+
+  removeLevel(levelId: string): void {
+    try {
+      this.project.removeLevel(levelId);
+      if (this.selection?.kind === "level" && this.selection.id === levelId) {
+        this.selection = null;
+      }
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  addSheet(): void {
+    const sheet = this.project.addSheet("Untitled sheet");
+    this.activateSheet(sheet.id);
+    this.commit();
+  }
+
+  updateSheet(sheetId: string, changes: Parameters<NativeBimProject["updateSheet"]>[1]): void {
+    this.project.updateSheet(sheetId, changes);
+    this.commit();
+  }
+
+  removeSheet(sheetId: string): void {
+    this.project.removeSheet(sheetId);
+    if (this.activeSheetId === sheetId) {
+      this.activeSheetId = null;
+      this.activeViewId = this.project.views[0]?.id ?? null;
+    }
+    if (this.selection?.kind === "sheet" && this.selection.id === sheetId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
+  activateSheet(sheetId: string): void {
+    this.activeSheetId = sheetId;
+    this.selection = { kind: "sheet", id: sheetId };
+    if (this.activeTool !== "SELECT") {
+      this.activeTool = "SELECT";
+      this.pendingStart = null;
+    }
+    this.commit(false);
+  }
+
+  placeViewOnSheet(sheetId: string, viewId: string): void {
+    try {
+      const count = this.project.sheets.find((sheet) => sheet.id === sheetId)?.placements
+        .length ?? 0;
+      // Stagger frames left-to-right across the sheet.
+      this.project.placeViewOnSheet(sheetId, viewId, 60 + count * 240, 320);
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  updateSheetPlacement(
+    sheetId: string,
+    placementId: string,
+    changes: { x?: number; y?: number },
+  ): void {
+    this.project.updateSheetPlacement(sheetId, placementId, changes);
+    this.commit();
+  }
+
+  removeSheetPlacement(sheetId: string, placementId: string): void {
+    this.project.removeSheetPlacement(sheetId, placementId);
     this.commit();
   }
 
@@ -225,6 +337,7 @@ class AppStore {
   }
 
   activateView(viewId: string): void {
+    this.activeSheetId = null;
     this.activeViewId = viewId;
     this.selection = { kind: "view", id: viewId };
     const view = this.activeView;

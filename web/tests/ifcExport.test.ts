@@ -172,3 +172,23 @@ describe("opening export", () => {
     expect(ifc).toContain("'WN1'");
   });
 });
+
+describe("multi-storey export", () => {
+  it("exports one IfcBuildingStorey per level and contains walls by level", () => {
+    const project = projectWith([]);
+    const ground = project.addLevel("Level 1", 0);
+    const upper = project.addLevel("Level 2", 3);
+    project.addWall([0, 0, 0], [4, 0, 0], { levelId: ground.id } as never);
+    project.addWall([0, 5, 0], [4, 5, 0], { levelId: upper.id } as never);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc.match(/IFCBUILDINGSTOREY\(/g)).toHaveLength(2);
+    expect(ifc).toContain("'Level 1'");
+    expect(ifc).toContain("'Level 2'");
+    // Two containment relationships, one per storey.
+    expect(ifc.match(/IFCRELCONTAINEDINSPATIALSTRUCTURE\(/g)).toHaveLength(2);
+    // Upper wall base placement sits at the level elevation.
+    expect(ifc).toContain("(0.,0.,3.)");
+    // Storey elevations are written on the storeys themselves.
+    expect(ifc).toContain(".ELEMENT.,3.");
+  });
+});

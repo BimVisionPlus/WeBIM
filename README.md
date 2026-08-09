@@ -34,6 +34,7 @@ webim/
 - Khi mở lại `.blend`, add-on khôi phục native project từ JSON.
 - IFC không bị thay đổi trong lúc người dùng vẽ Grid.
 - Wall hiện vẫn dùng IFC implementation cũ và sẽ được chuyển sang native domain ở giai đoạn tiếp theo.
+- Native domain đọc và giữ nguyên `walls`/`openings`/`levels`/`sheets` do WeBIM Web (thư mục `web/`) tạo ra; Export IFC của add-on cũng xuất các native wall này. Blender chưa render chúng trong viewport.
 
 ## Native Grid Drawing Tool
 

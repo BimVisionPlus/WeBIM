@@ -287,3 +287,23 @@ input[type="text"],
 .tree-leaf-nested {
   padding-left: 40px;
 }
+
+.tree-branch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sheet-placement {
+  display: grid;
+  grid-template-columns: 1fr 56px 56px 24px;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sheet-placement input {
+  width: 100%;
+}

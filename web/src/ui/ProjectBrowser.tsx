@@ -54,6 +54,37 @@ export function ProjectBrowser() {
           </div>
         ))}
         <div className="tree-branch">Model</div>
+        <div className="tree-subbranch">
+          Levels
+          <button className="mini" title="Add level (with floor plan)" onClick={() => store.addLevel()}>
+            +
+          </button>
+        </div>
+        {project.levels.map((level) => (
+          <div
+            key={level.id}
+            className={`tree-leaf ${
+              store.selection?.kind === "level" && store.selection.id === level.id
+                ? "selected"
+                : ""
+            }`}
+            onClick={() => store.select({ kind: "level", id: level.id })}
+          >
+            <span>
+              {level.name} <em>+{level.elevation.toFixed(2)} m</em>
+            </span>
+            <button
+              className="mini"
+              title="Delete level"
+              onClick={(event) => {
+                event.stopPropagation();
+                store.removeLevel(level.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
         <div className="tree-subbranch">Grids</div>
         {project.gridAxes.map((axis) => (
           <div
@@ -139,7 +170,37 @@ export function ProjectBrowser() {
         {project.walls.length === 0 && (
           <div className="tree-empty">No walls yet — press W and click twice.</div>
         )}
-        <div className="tree-branch muted">Sheets</div>
+        <div className="tree-branch">
+          Sheets
+          <button className="mini" title="Add sheet" onClick={() => store.addSheet()}>
+            +
+          </button>
+        </div>
+        {project.sheets.map((sheet) => (
+          <div
+            key={sheet.id}
+            className={`tree-leaf ${store.activeSheetId === sheet.id ? "active" : ""} ${
+              store.selection?.kind === "sheet" && store.selection.id === sheet.id
+                ? "selected"
+                : ""
+            }`}
+            onClick={() => store.activateSheet(sheet.id)}
+          >
+            <span>
+              {sheet.name} <em>{sheet.title}</em>
+            </span>
+            <button
+              className="mini"
+              title="Delete sheet"
+              onClick={(event) => {
+                event.stopPropagation();
+                store.removeSheet(sheet.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
         <div className="tree-branch muted">Schedules</div>
       </div>
     </aside>

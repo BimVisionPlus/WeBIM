@@ -8,6 +8,7 @@ import { store, useStoreVersion } from "./state/store";
 export default function App() {
   useStoreVersion();
   const activeView = store.activeView;
+  const activeSheet = store.activeSheet;
   return (
     <div className="app-shell">
       <Toolbar />
@@ -16,7 +17,11 @@ export default function App() {
         <main className="viewport-host">
           <Viewport />
           <div className="viewport-hud">
-            {activeView ? `${activeView.name} · 1:${activeView.scale}` : "No active view"}
+            {activeSheet
+              ? `Sheet ${activeSheet.name} — ${activeSheet.title}`
+              : activeView
+                ? `${activeView.name} · 1:${activeView.scale}`
+                : "No active view"}
           </div>
         </main>
         <PropertiesPanel />
