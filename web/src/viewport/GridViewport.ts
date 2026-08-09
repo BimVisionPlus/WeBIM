@@ -9,6 +9,7 @@
 
 import * as THREE from "three";
 import { snapGridPoint, type SnapResult } from "../application/gridSnapping";
+import { wallFootprint } from "../application/wallGeometry";
 import { dashSpans, LINE_PATTERNS } from "../domain/lineStyles";
 import type { GridDatum, Point3D, WallDatum } from "../domain/project";
 import { store } from "../state/store";
@@ -601,11 +602,15 @@ export class GridViewport {
   }
 
   private buildWall(wall: WallDatum, color: number): void {
-    const dx = wall.end[0] - wall.start[0];
-    const dy = wall.end[1] - wall.start[1];
-    const length = Math.hypot(dx, dy);
+    const length = Math.hypot(wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]);
     if (length === 0) return;
-    const geometry = new THREE.BoxGeometry(length, wall.thickness, wall.height);
+    // Footprint polygon in world XY, mitered against joined walls, extruded up.
+    const corners = wallFootprint(wall, store.project.walls);
+    const shape = new THREE.Shape(corners.map(([x, y]) => new THREE.Vector2(x, y)));
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: wall.height,
+      bevelEnabled: false,
+    });
     const material = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
@@ -613,11 +618,7 @@ export class GridViewport {
       depthWrite: false,
     });
     const mesh = new THREE.Mesh(geometry, material);
-    const midX = (wall.start[0] + wall.end[0]) / 2;
-    const midY = (wall.start[1] + wall.end[1]) / 2;
-    const angle = Math.atan2(dy, dx);
-    mesh.position.set(midX, midY, wall.start[2] + wall.height / 2);
-    mesh.rotation.z = angle;
+    mesh.position.set(0, 0, wall.start[2]);
     this.wallGroup.add(mesh);
 
     const edges = new THREE.LineSegments(
@@ -625,7 +626,6 @@ export class GridViewport {
       new THREE.LineBasicMaterial({ color }),
     );
     edges.position.copy(mesh.position);
-    edges.rotation.copy(mesh.rotation);
     this.wallGroup.add(edges);
   }
 

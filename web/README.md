@@ -35,6 +35,11 @@ IFC4 STEP text → .ifc download
   height in the Properties panel); rendered as an extruded solid and
   exported as `IfcWall` with a SweptSolid body. Walls serialize under a
   `walls` key the Blender add-on ignores for now.
+- Corner joins: when exactly two wall ends meet at a point, both
+  footprints are mitered so the pair shares the corner points — in the
+  viewport and in the exported IFC profile
+  (`IfcArbitraryClosedProfileDef`). Collinear continuations, T/X joints
+  and angles past the miter limit (4× thickness) keep square butt ends.
 - Anchor endpoint editing: select a grid or wall, click an endpoint
   anchor, move, click to confirm (Esc cancels) — same click-move-click
   flow as the add-on.

@@ -101,15 +101,27 @@ describe("exportProjectToIfc", () => {
 });
 
 describe("wall export", () => {
-  it("exports walls as IfcWall with a swept solid body", () => {
+  it("exports walls as IfcWall with a swept footprint body", () => {
     const project = projectWith([]);
     project.addWall([0, 0, 0], [5, 0, 0], { thickness: 0.3, height: 2.8 });
     const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
     expect(ifc.match(/IFCWALL\(/g)).toHaveLength(1);
     expect(ifc).toContain("IFCEXTRUDEDAREASOLID(");
-    expect(ifc).toContain("IFCRECTANGLEPROFILEDEF(.AREA.,$,");
+    expect(ifc).toContain("IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,");
     expect(ifc).toContain("'W1'");
     expect(ifc).toContain("2.8");
     expect(ifc).toContain("IFCRELCONTAINEDINSPATIALSTRUCTURE(");
+  });
+
+  it("exports mitered footprint corners for joined walls", () => {
+    const project = projectWith([]);
+    project.addWall([0, 0, 0], [4, 0, 0]);
+    project.addWall([4, 0, 0], [4, 3, 0]);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc.match(/IFCWALL\(/g)).toHaveLength(2);
+    // Shared miter corners appear in both wall profiles; (3.9,0.1) is also
+    // wall B's first point, repeated to close its polyline.
+    expect(ifc.match(/IFCCARTESIANPOINT\(\(3\.9,0\.1\)\)/g)?.length).toBe(3);
+    expect(ifc.match(/IFCCARTESIANPOINT\(\(4\.1,-0\.1\)\)/g)?.length).toBe(2);
   });
 });
