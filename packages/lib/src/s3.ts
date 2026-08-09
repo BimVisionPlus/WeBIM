@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const endpoint = process.env.S3_ENDPOINT ?? "http://localhost:9000";
@@ -44,6 +44,16 @@ export async function presignDownload(bucket: BucketKey, key: string, expiresIn 
 
 export async function deleteObject(bucket: BucketKey, key: string) {
   await s3.send(new DeleteObjectCommand({ Bucket: buckets[bucket], Key: key }));
+}
+
+export async function objectExists(bucket: BucketKey, key: string) {
+  try {
+    await s3.send(new HeadObjectCommand({ Bucket: buckets[bucket], Key: key }));
+    return true;
+  } catch (error: any) {
+    if (error?.name === "NotFound" || error?.$metadata?.httpStatusCode === 404) return false;
+    throw error;
+  }
 }
 
 /** Build a stable object key for a project's uploaded file. */

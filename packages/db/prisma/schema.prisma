@@ -19,61 +19,61 @@ datasource db {
 // ─── Tenancy & Identity ─────────────────────────────────────────────────────
 
 model Organization {
-  id             String   @id @default(cuid())
-  name           String // "CTCP Xây dựng Cofico"
-  slug           String   @unique // "cofico"
-  mst            String? // Mã số thuế
-  type           OrgType // CĐT / TVGS / NT_CHINH / NT_PHU / TV_THIET_KE
-  address        String?
-  phone          String?
-  email          String?
-  isBetaApproved Boolean  @default(false) // gates onboarding for waitlist pilot
-  createdAt      DateTime @default(now())
+  id                    String        @id @default(cuid())
+  name                  String // "CTCP Xây dựng Cofico"
+  slug                  String        @unique // "cofico"
+  mst                   String? // Mã số thuế
+  type                  OrgType // CĐT / TVGS / NT_CHINH / NT_PHU / TV_THIET_KE
+  address               String?
+  phone                 String?
+  email                 String?
+  isBetaApproved        Boolean       @default(false) // gates onboarding for waitlist pilot
+  createdAt             DateTime      @default(now())
   // Multi-tenant subdomain support (D — Sandbox per customer)
-  isTenantDemo            Boolean       @default(false)
-  tenantStatus            TenantStatus?
-  tenantExpiresAt         DateTime?
-  tenantProvisionedFrom   String?
-  tenantProvisionedAt     DateTime?
-  prospectName            String?
-  prospectEmail           String?
-  prospectCompany         String?
-  prospectIndustry        String?
-  prospectSource          String?
-  lastVisitedAt           DateTime?
-  visitCount              Int           @default(0)
+  isTenantDemo          Boolean       @default(false)
+  tenantStatus          TenantStatus?
+  tenantExpiresAt       DateTime?
+  tenantProvisionedFrom String?
+  tenantProvisionedAt   DateTime?
+  prospectName          String?
+  prospectEmail         String?
+  prospectCompany       String?
+  prospectIndustry      String?
+  prospectSource        String?
+  lastVisitedAt         DateTime?
+  visitCount            Int           @default(0)
 
-  members       Membership[]
-  projectsOwned Project[]            @relation("OwnerOrg")
-  projectRoles  ProjectStakeholder[]
-  invites       Invite[]
-  auditEvents   AuditEvent[]
-  bids          Bid[]
-  paymentApps        PaymentApplication[] @relation("PaymentContractor")
-  contractBonds      ContractBond[]       @relation("ContractBondContractor")
-  superviseEntries   SuperviseEntry[]     @relation("SuperviseTvgsOrg")
-  tenderPackages     TenderPackage[]      @relation("TenderPackageOrg")
-  eiaConsultedApps   EiaApplication[]     @relation("EiaConsultant")
-  hseCertsOwned      HseCertificate[]     @relation("HseCertOrg")
-  hseCertsTrained    HseCertificate[]     @relation("HseCertTrainer")
-  siteWorkers        SiteWorker[]         @relation("WorkerOrg")
-  contractorProfile  ContractorProfile?   @relation("ContractorProfileOrg")
-  suppliedLots       MaterialLot[]        @relation("MaterialLotSupplier")
-  consultantTimes    ConsultantTimesheet[] @relation("ConsultantTimeOrg")
-  consultantContracts ConsultantContract[]  @relation("ConsultantContractTvOrg")
-  consultantClients  ConsultantContract[]   @relation("ConsultantContractClientOrg")
+  members               Membership[]
+  projectsOwned         Project[]               @relation("OwnerOrg")
+  projectRoles          ProjectStakeholder[]
+  invites               Invite[]
+  auditEvents           AuditEvent[]
+  bids                  Bid[]
+  paymentApps           PaymentApplication[]    @relation("PaymentContractor")
+  contractBonds         ContractBond[]          @relation("ContractBondContractor")
+  superviseEntries      SuperviseEntry[]        @relation("SuperviseTvgsOrg")
+  tenderPackages        TenderPackage[]         @relation("TenderPackageOrg")
+  eiaConsultedApps      EiaApplication[]        @relation("EiaConsultant")
+  hseCertsOwned         HseCertificate[]        @relation("HseCertOrg")
+  hseCertsTrained       HseCertificate[]        @relation("HseCertTrainer")
+  siteWorkers           SiteWorker[]            @relation("WorkerOrg")
+  contractorProfile     ContractorProfile?      @relation("ContractorProfileOrg")
+  suppliedLots          MaterialLot[]           @relation("MaterialLotSupplier")
+  consultantTimes       ConsultantTimesheet[]   @relation("ConsultantTimeOrg")
+  consultantContracts   ConsultantContract[]    @relation("ConsultantContractTvOrg")
+  consultantClients     ConsultantContract[]    @relation("ConsultantContractClientOrg")
   // Viwase QLCV — dept content
-  internalDocs        InternalDocument[]
-  bhxhRecords         SocialInsuranceRecord[]
-  vehicleDispatches   VehicleDispatch[]
-  advanceTxns         AdvanceTransaction[]
-  contractorAssigns   ContractorAssignment[]
-  marketTerritories   MarketTerritory[]
-  projectLeads        ProjectLead[]
-  businessUnits       BusinessUnit[]
-  vendorContractsOwned  VendorContract[]    @relation("VendorContractOrg")
-  vendorContractsVendor VendorContract[]    @relation("VendorContractVendor")
-  vendorCreditEntries   VendorCreditEntry[] @relation("VendorCreditOrg")
+  internalDocs          InternalDocument[]
+  bhxhRecords           SocialInsuranceRecord[]
+  vehicleDispatches     VehicleDispatch[]
+  advanceTxns           AdvanceTransaction[]
+  contractorAssigns     ContractorAssignment[]
+  marketTerritories     MarketTerritory[]
+  projectLeads          ProjectLead[]
+  businessUnits         BusinessUnit[]
+  vendorContractsOwned  VendorContract[]        @relation("VendorContractOrg")
+  vendorContractsVendor VendorContract[]        @relation("VendorContractVendor")
+  vendorCreditEntries   VendorCreditEntry[]     @relation("VendorCreditOrg")
   tenantProvisionings   TenantProvisioning[]
   tenantVisits          TenantVisit[]
 
@@ -89,17 +89,17 @@ enum TenantStatus {
 }
 
 model TenantProvisioning {
-  id            String       @id @default(cuid())
-  orgId         String
-  sourceOrgId   String?
-  startedAt     DateTime     @default(now())
-  finishedAt    DateTime?
-  status        String       @default("RUNNING")
-  errorMessage  String?      @db.Text
-  stats         Json?
-  actorId       String?
-  ip            String?
-  userAgent     String?
+  id           String    @id @default(cuid())
+  orgId        String
+  sourceOrgId  String?
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  status       String    @default("RUNNING")
+  errorMessage String?   @db.Text
+  stats        Json?
+  actorId      String?
+  ip           String?
+  userAgent    String?
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
@@ -108,13 +108,13 @@ model TenantProvisioning {
 }
 
 model TenantVisit {
-  id          String   @id @default(cuid())
-  orgId       String
-  visitedAt   DateTime @default(now())
-  userId      String?
-  path        String
-  ip          String?
-  userAgent   String?
+  id        String   @id @default(cuid())
+  orgId     String
+  visitedAt DateTime @default(now())
+  userId    String?
+  path      String
+  ip        String?
+  userAgent String?
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
@@ -145,29 +145,29 @@ model User {
   failedLogins  Int       @default(0)
   createdAt     DateTime  @default(now())
 
-  memberships    Membership[]
-  assignedIssues Issue[]              @relation("Assignee")
-  reportedIssues Issue[]              @relation("Reporter")
-  signoffs       Signoff[]
-  dailyLogs      DailyLog[]
-  comments       Comment[]
-  sessions       Session[]
-  accounts       Account[]
-  auditEvents    AuditEvent[]
-  invitesSent    Invite[]             @relation("InvitedBy")
-  resetTokens    PasswordResetToken[]
-  bidsOwned      Bid[]                @relation("BidOwner")
-  superviseEntries SuperviseEntry[]   @relation("SuperviseTvgsUser")
-  hseCerts       HseCertificate[]     @relation("HseCertUser")
-  consultantTimes ConsultantTimesheet[] @relation("ConsultantTimeUser")
+  memberships       Membership[]
+  assignedIssues    Issue[]               @relation("Assignee")
+  reportedIssues    Issue[]               @relation("Reporter")
+  signoffs          Signoff[]
+  dailyLogs         DailyLog[]
+  comments          Comment[]
+  sessions          Session[]
+  accounts          Account[]
+  auditEvents       AuditEvent[]
+  invitesSent       Invite[]              @relation("InvitedBy")
+  resetTokens       PasswordResetToken[]
+  bidsOwned         Bid[]                 @relation("BidOwner")
+  superviseEntries  SuperviseEntry[]      @relation("SuperviseTvgsUser")
+  hseCerts          HseCertificate[]      @relation("HseCertUser")
+  consultantTimes   ConsultantTimesheet[] @relation("ConsultantTimeUser")
   // Viwase QLCV
-  statusUpdates  ProjectStatusUpdate[]
-  internalDocs   InternalDocument[]
+  statusUpdates     ProjectStatusUpdate[]
+  internalDocs      InternalDocument[]
   marketTerritories MarketTerritory[]
-  ledBusinessUnits  BusinessUnit[]    @relation("BuLeader")
-  claimsCreated     Claim[]           @relation("ClaimCreator")
-  claimsAssigned    Claim[]           @relation("ClaimAssignee")
-  claimEvents       ClaimEvent[]      @relation("ClaimEventAuthor")
+  ledBusinessUnits  BusinessUnit[]        @relation("BuLeader")
+  claimsCreated     Claim[]               @relation("ClaimCreator")
+  claimsAssigned    Claim[]               @relation("ClaimAssignee")
+  claimEvents       ClaimEvent[]          @relation("ClaimEventAuthor")
 }
 
 // ─── NextAuth ────────────────────────────────────────────────────────────────
@@ -248,8 +248,8 @@ enum MemberRole {
 // ─── Project (the top-level container) ──────────────────────────────────────
 
 model Project {
-  id               String        @id @default(cuid())
-  key              String        @unique // "VINHOMES-Q9" — used as prefix: VINHOMES-Q9-RFI-001
+  id               String            @id @default(cuid())
+  key              String            @unique // "VINHOMES-Q9" — used as prefix: VINHOMES-Q9-RFI-001
   name             String // "Vinhomes Grand Park — Lô S9"
   ownerOrgId       String
   address          String?
@@ -258,66 +258,66 @@ model Project {
   contractValueVnd BigInt? // Giá trị hợp đồng (VND)
   startDate        DateTime?
   endDate          DateTime?
-  status           ProjectStatus @default(PLANNING)
+  status           ProjectStatus     @default(PLANNING)
   department       ProjectDepartment @default(CONG_VIEC_KHAC) // phòng ban phụ trách (Viwase QLCV)
   contractScope    String?           @db.Text // Nội dung công việc theo hợp đồng (Viwase: tab Tổng thể drill-down)
   businessUnitId   String? // Đơn vị thực hiện (chi nhánh / ban điều hành / tổng đội) — Viwase: "Dự án các Đơn vị"
   permitNumber     String? // Số giấy phép xây dựng
   permitDate       DateTime?
-  warrantyMonths   Int           @default(24) // NĐ 06/2021: 12 tháng phần phụ, 24 tháng phần chính, 60 tháng hạ tầng
-  createdAt        DateTime      @default(now())
+  warrantyMonths   Int               @default(24) // NĐ 06/2021: 12 tháng phần phụ, 24 tháng phần chính, 60 tháng hạ tầng
+  createdAt        DateTime          @default(now())
 
-  ownerOrg           Organization         @relation("OwnerOrg", fields: [ownerOrgId], references: [id])
-  businessUnit       BusinessUnit?        @relation(fields: [businessUnitId], references: [id])
-  stakeholders       ProjectStakeholder[]
-  issues             Issue[]
-  rfis               RFI[]
-  submittals         Submittal[]
-  ncrs               NCR[]
-  punchItems         PunchItem[]
-  changeOrders       ChangeOrder[]
-  dailyLogs          DailyLog[]
-  drawingSets        DrawingSet[]
-  models             Model[]
-  acceptances        Acceptance[]
-  payments           ProgressPayment[]
-  specs              SpecPage[]
-  bids               Bid[]
-  regulations        ProjectRegulation[]
-  boqs               BoQ[]
-  overrunSignals     CostOverrunSignal[]
-  scheduleTasks      ScheduleTask[]
-  permitApplications PermitApplication[]
-  pcccApplications   PcccApplication[]
-  paymentApps        PaymentApplication[]
-  takeoffSheets      TakeoffSheet[]
-  contractBonds      ContractBond[]
-  hoanCongDossier    HoanCongDossier?
-  superviseEntries   SuperviseEntry[]
-  qaqcChecks         QaqcCheck[]
-  eiaApplications    EiaApplication[]
-  envMeasurements    EnvMeasurement[]
-  siteWorkers        SiteWorker[]
-  attendance         Attendance[]
-  materialLots       MaterialLot[]
-  labReports         LabReport[]
-  methodStatements   MethodStatement[]
-  approvalRequests   ApprovalRequest[]
-  consultantTimes    ConsultantTimesheet[]
+  ownerOrg            Organization            @relation("OwnerOrg", fields: [ownerOrgId], references: [id])
+  businessUnit        BusinessUnit?           @relation(fields: [businessUnitId], references: [id])
+  stakeholders        ProjectStakeholder[]
+  issues              Issue[]
+  rfis                RFI[]
+  submittals          Submittal[]
+  ncrs                NCR[]
+  punchItems          PunchItem[]
+  changeOrders        ChangeOrder[]
+  dailyLogs           DailyLog[]
+  drawingSets         DrawingSet[]
+  models              Model[]
+  acceptances         Acceptance[]
+  payments            ProgressPayment[]
+  specs               SpecPage[]
+  bids                Bid[]
+  regulations         ProjectRegulation[]
+  boqs                BoQ[]
+  overrunSignals      CostOverrunSignal[]
+  scheduleTasks       ScheduleTask[]
+  permitApplications  PermitApplication[]
+  pcccApplications    PcccApplication[]
+  paymentApps         PaymentApplication[]
+  takeoffSheets       TakeoffSheet[]
+  contractBonds       ContractBond[]
+  hoanCongDossier     HoanCongDossier?
+  superviseEntries    SuperviseEntry[]
+  qaqcChecks          QaqcCheck[]
+  eiaApplications     EiaApplication[]
+  envMeasurements     EnvMeasurement[]
+  siteWorkers         SiteWorker[]
+  attendance          Attendance[]
+  materialLots        MaterialLot[]
+  labReports          LabReport[]
+  methodStatements    MethodStatement[]
+  approvalRequests    ApprovalRequest[]
+  consultantTimes     ConsultantTimesheet[]
   consultantContracts ConsultantContract[]
-  agencyDocs         AgencyDocument[]
-  agencyAppts        AgencyAppointment[]
-  docCorpus          DocCorpus[]
-  monitorPoints      MonitorPoint[]
+  agencyDocs          AgencyDocument[]
+  agencyAppts         AgencyAppointment[]
+  docCorpus           DocCorpus[]
+  monitorPoints       MonitorPoint[]
   // Viwase QLCV — drill-down + dept-tab content
-  statusUpdates      ProjectStatusUpdate[]
-  internalDocs       InternalDocument[]
-  bhxhRecords        SocialInsuranceRecord[]
-  vehicleDispatches  VehicleDispatch[]
-  advanceTxns        AdvanceTransaction[]
-  contractorAssigns  ContractorAssignment[]
-  auditPreps         AuditPrep[]
-  claims             Claim[]
+  statusUpdates       ProjectStatusUpdate[]
+  internalDocs        InternalDocument[]
+  bhxhRecords         SocialInsuranceRecord[]
+  vehicleDispatches   VehicleDispatch[]
+  advanceTxns         AdvanceTransaction[]
+  contractorAssigns   ContractorAssignment[]
+  auditPreps          AuditPrep[]
+  claims              Claim[]
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -326,11 +326,11 @@ model Project {
 // items. Items can link to existing platform records (Acceptance/NCR/Regulation).
 // ──────────────────────────────────────────────────────────────────────────────
 enum AuditPrepKind {
-  PC07_PCCC          // Cảnh sát PCCC PC07 thẩm duyệt / nghiệm thu
-  SO_XAY_DUNG        // Sở Xây dựng thẩm tra
-  CDT_NGHIEM_THU     // CĐT nghiệm thu giai đoạn / công việc
-  HOAN_CONG_QLNN     // Nộp hồ sơ hoàn công cơ quan QLNN
-  TVGS_NGHIEM_THU    // TVGS nghiệm thu định kỳ
+  PC07_PCCC // Cảnh sát PCCC PC07 thẩm duyệt / nghiệm thu
+  SO_XAY_DUNG // Sở Xây dựng thẩm tra
+  CDT_NGHIEM_THU // CĐT nghiệm thu giai đoạn / công việc
+  HOAN_CONG_QLNN // Nộp hồ sơ hoàn công cơ quan QLNN
+  TVGS_NGHIEM_THU // TVGS nghiệm thu định kỳ
   KHAC
 }
 
@@ -405,17 +405,17 @@ model AuditPrepItem {
 // Viwase home tab "Dự án các Đơn vị" groups projects by this entity.
 // ──────────────────────────────────────────────────────────────────────────────
 model BusinessUnit {
-  id            String   @id @default(cuid())
-  orgId         String
-  code          String // "BCH-HN", "TD-BTCT", "BHT" — unique within an org
-  name          String // "Ban điều hành Hà Nội"
-  description   String?  @db.Text
-  parentId      String? // nesting (Ban → Tổng đội → Tổ)
-  leaderUserId  String? // chỉ huy trưởng / trưởng ban
-  province      String? // địa bàn chính
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  orgId        String
+  code         String // "BCH-HN", "TD-BTCT", "BHT" — unique within an org
+  name         String // "Ban điều hành Hà Nội"
+  description  String?  @db.Text
+  parentId     String? // nesting (Ban → Tổng đội → Tổ)
+  leaderUserId String? // chỉ huy trưởng / trưởng ban
+  province     String? // địa bàn chính
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   org      Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   parent   BusinessUnit?  @relation("BuTree", fields: [parentId], references: [id])
@@ -728,25 +728,136 @@ model Sheet {
   revision       String // "R0"
   supersededById String? // FK to next-revision Sheet
 
-  drawingSet   DrawingSet @relation(fields: [drawingSetId], references: [id], onDelete: Cascade)
-  supersededBy Sheet?     @relation("Supersedes", fields: [supersededById], references: [id])
-  supersedes   Sheet[]    @relation("Supersedes")
+  // ── CANVAS layer ──────────────────────────────────────────────────────────
+  // The canvas viewer never renders DWG/PDF directly; it renders a raster (or
+  // inline SVG) of the page and overlays vector markup on top. rasterUrl is the
+  // S3 key of that rendered page; when null the raster route synthesises a
+  // placeholder so a sheet is always openable.
+  rasterUrl     String?
+  rasterWidth   Int? // px — intrinsic size of the raster, for aspect ratio
+  rasterHeight  Int?
+  // Physical page size in millimetres (A1 = 841×594). Combined with `scale`
+  // this is what turns a MEASURE markup into a real-world length.
+  paperWidthMm  Float?
+  paperHeightMm Float?
+
+  drawingSet   DrawingSet       @relation(fields: [drawingSetId], references: [id], onDelete: Cascade)
+  supersededBy Sheet?           @relation("Supersedes", fields: [supersededById], references: [id])
+  supersedes   Sheet[]          @relation("Supersedes")
   markups      Markup[]
   issues       Issue[]
+  shareLinks   SheetShareLink[]
+  presences    CanvasPresence[]
 
   @@unique([drawingSetId, sheetNumber, revision])
 }
 
+// ── CANVAS: markup ───────────────────────────────────────────────────────────
+// One markup = one annotation on a sheet = one comment thread anchor.
+//
+// `geometry` is ALWAYS stored in normalised sheet space (x,y ∈ [0,1], origin
+// top-left), never in screen pixels — so a markup made on a phone at 2× zoom
+// lands in the same place on a 4K monitor, and survives the sheet being
+// re-rastered at a different resolution. See packages/lib/src/canvas/geometry.ts
+// for the per-kind shape of this JSON.
 model Markup {
+  id           String       @id @default(cuid())
+  sheetId      String
+  authorId     String? // null ⇒ created by a share-link guest
+  guestName    String? // display name when authorId is null
+  kind         MarkupKind   @default(PIN)
+  geometry     Json // normalised 0..1 sheet space
+  color        String       @default("#ff3b30")
+  label        String?
+  status       MarkupStatus @default(OPEN)
+  pageNumber   Int          @default(1)
+  resolvedAt   DateTime?
+  resolvedById String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  sheet    Sheet           @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  comments MarkupComment[]
+
+  @@index([sheetId, status])
+  @@index([sheetId, pageNumber])
+}
+
+enum MarkupKind {
+  PIN // point comment anchor
+  RECT // axis-aligned box
+  CLOUD // revision cloud — the AEC primitive
+  ARROW
+  POLYLINE // freehand ink / leader line
+  TEXT
+  MEASURE // two-point dimension, resolved to real-world length via scale
+}
+
+enum MarkupStatus {
+  OPEN
+  RESOLVED
+}
+
+model MarkupComment {
   id        String   @id @default(cuid())
-  sheetId   String
-  authorId  String
-  geometry  Json // SVG path / polygon coords
-  color     String   @default("#ff3b30")
-  label     String?
+  markupId  String
+  authorId  String? // null ⇒ share-link guest
+  guestName String?
+  body      String   @db.Text
   createdAt DateTime @default(now())
 
+  markup Markup @relation(fields: [markupId], references: [id], onDelete: Cascade)
+
+  @@index([markupId, createdAt])
+}
+
+// ── CANVAS: share links ──────────────────────────────────────────────────────
+// The distribution mechanic. A CĐT / nhà thầu / TVGS who will never hold a
+// Revit or AutoCAD licence opens /c/<token> and can read + comment on the
+// drawing. No account, no install. This is the one thing a cracked copy of
+// AutoCAD cannot do, which is why it is the paid product's centre of gravity.
+model SheetShareLink {
+  id           String    @id @default(cuid())
+  token        String    @unique
+  sheetId      String
+  projectId    String // denormalised — audit rows are project-scoped
+  role         ShareRole @default(COMMENT)
+  label        String? // "Gửi CĐT — duyệt MB tầng 5"
+  createdById  String
+  expiresAt    DateTime?
+  revokedAt    DateTime?
+  viewCount    Int       @default(0)
+  lastViewedAt DateTime?
+  createdAt    DateTime  @default(now())
+
   sheet Sheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+
+  @@index([sheetId, revokedAt])
+  @@index([projectId])
+}
+
+enum ShareRole {
+  VIEW // read-only
+  COMMENT // read + create markups/comments as a named guest
+}
+
+// Short-lived heartbeats for the avatars shown in the canvas header. Rows are
+// pruned opportunistically by the presence API, so no websocket service is
+// required for the first browser-native collaboration layer.
+model CanvasPresence {
+  id          String   @id @default(cuid())
+  sheetId     String
+  sessionKey  String
+  userId      String?
+  displayName String
+  color       String
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  sheet Sheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+
+  @@unique([sheetId, sessionKey])
+  @@index([sheetId, lastSeenAt])
 }
 
 // BIM federated model (IFC / RVT / NWD) — viewed via Autodesk APS / Forge Viewer
@@ -945,25 +1056,25 @@ enum PaymentFundSource {
 // ============================================================================
 
 model TakeoffSheet {
-  id          String           @id @default(cuid())
-  projectId   String
-  code        String // "QTO-VHGP-S9-MONG-001"
-  title       String
-  scope       String // "Móng cọc trục A-F", "Cốt thép tầng 12"
-  source      TakeoffSource    @default(MANUAL)
-  modelId     String? // link Model nếu auto từ IFC
-  state       String // DRAFT, NT_SUBMITTED, TVGS_VERIFIED, CDT_APPROVED
-  totalLines  Int              @default(0)
-  totalValue  BigInt           @default(0) // tổng giá trị (VND) = sum(qtyExecuted * unitPriceVnd)
-  ntSubmittedAt   DateTime?
-  tvgsVerifiedAt  DateTime?
-  cdtApprovedAt   DateTime?
-  notes       String?          @db.Text
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id             String        @id @default(cuid())
+  projectId      String
+  code           String // "QTO-VHGP-S9-MONG-001"
+  title          String
+  scope          String // "Móng cọc trục A-F", "Cốt thép tầng 12"
+  source         TakeoffSource @default(MANUAL)
+  modelId        String? // link Model nếu auto từ IFC
+  state          String // DRAFT, NT_SUBMITTED, TVGS_VERIFIED, CDT_APPROVED
+  totalLines     Int           @default(0)
+  totalValue     BigInt        @default(0) // tổng giá trị (VND) = sum(qtyExecuted * unitPriceVnd)
+  ntSubmittedAt  DateTime?
+  tvgsVerifiedAt DateTime?
+  cdtApprovedAt  DateTime?
+  notes          String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  model   Model?         @relation(fields: [modelId], references: [id])
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  model   Model?        @relation(fields: [modelId], references: [id])
   lines   TakeoffLine[]
 
   @@unique([projectId, code])
@@ -971,19 +1082,19 @@ model TakeoffSheet {
 }
 
 model TakeoffLine {
-  id              String         @id @default(cuid())
-  sheetId         String
-  seq             Int // số thứ tự
-  workCode        String? // mã định mức AB.xxxxx theo định mức 10/2019
-  description     String         @db.Text
-  unit            String // "m3", "m2", "kg", "tấn", "cái"
-  qtyEstimated    Decimal        @db.Decimal(18, 4) // KL dự toán (BoQ)
-  qtyExecuted     Decimal        @db.Decimal(18, 4) // KL thi công đo thực
-  qtyAsBuilt      Decimal?       @db.Decimal(18, 4) // KL hoàn công (sau bàn giao)
-  unitPriceVnd    BigInt // đơn giá VND/đơn vị
-  ifcElementId    String? // GlobalId IFC nếu auto-takeoff
-  csiCode         String? // MasterFormat CSI (cross-reference)
-  notes           String?
+  id           String   @id @default(cuid())
+  sheetId      String
+  seq          Int // số thứ tự
+  workCode     String? // mã định mức AB.xxxxx theo định mức 10/2019
+  description  String   @db.Text
+  unit         String // "m3", "m2", "kg", "tấn", "cái"
+  qtyEstimated Decimal  @db.Decimal(18, 4) // KL dự toán (BoQ)
+  qtyExecuted  Decimal  @db.Decimal(18, 4) // KL thi công đo thực
+  qtyAsBuilt   Decimal? @db.Decimal(18, 4) // KL hoàn công (sau bàn giao)
+  unitPriceVnd BigInt // đơn giá VND/đơn vị
+  ifcElementId String? // GlobalId IFC nếu auto-takeoff
+  csiCode      String? // MasterFormat CSI (cross-reference)
+  notes        String?
 
   sheet TakeoffSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
 
@@ -1005,19 +1116,19 @@ enum TakeoffSource {
 // ============================================================================
 
 model NormCode {
-  id            String         @id @default(cuid())
-  code          String         @unique // "AB.13211"
+  id            String     @id @default(cuid())
+  code          String     @unique // "AB.13211"
   chapter       String // "AB - CÔNG TÁC XÂY DỰNG"
   section       String // "AB.1 - Công tác đào, đắp"
   group         String? // "AB.13 - Bê tông"
-  title         String         @db.Text
+  title         String     @db.Text
   unit          String // "100m3", "tấn", "m"
-  source        NormSource     @default(TT_10_2019)
+  source        NormSource @default(TT_10_2019)
   effectiveFrom DateTime?
   effectiveTo   DateTime?
-  notes         String?        @db.Text
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  notes         String?    @db.Text
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   resources NormResource[]
   prices    NormPrice[]
@@ -1027,14 +1138,14 @@ model NormCode {
 }
 
 model NormResource {
-  id            String       @id @default(cuid())
-  normId        String
-  resourceType  ResourceType // VL, NC, M
-  resourceCode  String? // mã vật liệu nội bộ hoặc mã máy
-  description   String       @db.Text
-  unit          String // "kg", "m3", "ca", "công"
-  quantity      Decimal      @db.Decimal(18, 6) // hao phí trên đơn vị định mức
-  notes         String?
+  id           String       @id @default(cuid())
+  normId       String
+  resourceType ResourceType // VL, NC, M
+  resourceCode String? // mã vật liệu nội bộ hoặc mã máy
+  description  String       @db.Text
+  unit         String // "kg", "m3", "ca", "công"
+  quantity     Decimal      @db.Decimal(18, 6) // hao phí trên đơn vị định mức
+  notes        String?
 
   norm NormCode @relation(fields: [normId], references: [id], onDelete: Cascade)
 
@@ -1043,17 +1154,17 @@ model NormResource {
 }
 
 model NormPrice {
-  id          String   @id @default(cuid())
-  normId      String
-  province    String // "HCM", "HN", "DN", "BD"
-  period      String // "2026-Q2"
+  id           String   @id @default(cuid())
+  normId       String
+  province     String // "HCM", "HN", "DN", "BD"
+  period       String // "2026-Q2"
   unitPriceVnd BigInt // đơn giá tổng hợp VND/đơn vị định mức
-  vlCostVnd   BigInt? // chi phí vật liệu
-  ncCostVnd   BigInt? // chi phí nhân công
-  mCostVnd    BigInt? // chi phí máy thi công
-  source      String? // "Sở XD HCM Q2/2026" / "Công bố giá VL Bộ XD"
-  notes       String?
-  createdAt   DateTime @default(now())
+  vlCostVnd    BigInt? // chi phí vật liệu
+  ncCostVnd    BigInt? // chi phí nhân công
+  mCostVnd     BigInt? // chi phí máy thi công
+  source       String? // "Sở XD HCM Q2/2026" / "Công bố giá VL Bộ XD"
+  notes        String?
+  createdAt    DateTime @default(now())
 
   norm NormCode @relation(fields: [normId], references: [id], onDelete: Cascade)
 
@@ -1083,33 +1194,33 @@ enum ResourceType {
 // ============================================================================
 
 model ContractBond {
-  id              String        @id @default(cuid())
-  projectId       String
-  contractorOrgId String? // bên được bảo lãnh
-  type            BondType // BAO_LANH_THUC_HIEN / BAO_LANH_TAM_UNG / BAO_LANH_BAO_HANH
-  bondNumber      String // "BL-VCB-2026-04221"
-  issuerBank      String // "Vietcombank", "BIDV", "Techcombank", "MB"
-  beneficiary     String // "Công ty CP Vinhomes" — bên thụ hưởng
-  amountVnd       BigInt
-  pctOfContract   Decimal?      @db.Decimal(6, 3) // 5%, 10%, 30% etc
-  contractRef     String? // số HĐ kinh tế
+  id               String     @id @default(cuid())
+  projectId        String
+  contractorOrgId  String? // bên được bảo lãnh
+  type             BondType // BAO_LANH_THUC_HIEN / BAO_LANH_TAM_UNG / BAO_LANH_BAO_HANH
+  bondNumber       String // "BL-VCB-2026-04221"
+  issuerBank       String // "Vietcombank", "BIDV", "Techcombank", "MB"
+  beneficiary      String // "Công ty CP Vinhomes" — bên thụ hưởng
+  amountVnd        BigInt
+  pctOfContract    Decimal?   @db.Decimal(6, 3) // 5%, 10%, 30% etc
+  contractRef      String? // số HĐ kinh tế
   contractValueVnd BigInt?
-  issuedAt        DateTime
-  effectiveFrom   DateTime
-  expiresAt       DateTime // ngày hết hạn tự động — alert T-30/T-7
-  status          BondStatus    @default(ACTIVE)
-  releasedAt      DateTime?
-  releasedNote    String?
-  claimedAt       DateTime? // bị bồi thường (call bond)
+  issuedAt         DateTime
+  effectiveFrom    DateTime
+  expiresAt        DateTime // ngày hết hạn tự động — alert T-30/T-7
+  status           BondStatus @default(ACTIVE)
+  releasedAt       DateTime?
+  releasedNote     String?
+  claimedAt        DateTime? // bị bồi thường (call bond)
   claimedAmountVnd BigInt?
-  feeVnd          BigInt? // phí bảo lãnh (NT trả ngân hàng)
-  feeRate         Decimal?      @db.Decimal(6, 4) // %/năm
-  bankApiSyncedAt DateTime? // lần sync cuối với API ngân hàng
-  bankApiStatus   String? // ACTIVE / VOIDED / CALLED
-  fileUrl         String? // PDF cam kết bảo lãnh
-  notes           String?       @db.Text
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  feeVnd           BigInt? // phí bảo lãnh (NT trả ngân hàng)
+  feeRate          Decimal?   @db.Decimal(6, 4) // %/năm
+  bankApiSyncedAt  DateTime? // lần sync cuối với API ngân hàng
+  bankApiStatus    String? // ACTIVE / VOIDED / CALLED
+  fileUrl          String? // PDF cam kết bảo lãnh
+  notes            String?    @db.Text
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   contractorOrg Organization? @relation("ContractBondContractor", fields: [contractorOrgId], references: [id])
@@ -1125,24 +1236,24 @@ model ContractBond {
 // ============================================================================
 
 model HoanCongDossier {
-  id              String                 @id @default(cuid())
-  projectId       String                 @unique
-  code            String // "HC-VHGP-S9-2026"
-  title           String
-  state           String // DRAFT, ASSEMBLING, NT_REVIEW, TVGS_REVIEW, CDT_REVIEW, COMPILED, SUBMITTED_QLNN, ACCEPTED
-  pdfaUrl         String? // S3 key of compiled PDF/A book
-  pdfaSizeBytes   BigInt?
-  pdfaSha256      String?
-  pdfaCompiledAt  DateTime?
-  ntSignedAt      DateTime?
-  tvgsSignedAt    DateTime?
-  cdtSignedAt     DateTime?
-  submittedAt     DateTime? // gửi cơ quan QLNN (Sở XD)
-  acceptedAt      DateTime?
-  qlnnRef         String? // số văn bản xác nhận QLNN
-  notes           String?                @db.Text
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
+  id             String    @id @default(cuid())
+  projectId      String    @unique
+  code           String // "HC-VHGP-S9-2026"
+  title          String
+  state          String // DRAFT, ASSEMBLING, NT_REVIEW, TVGS_REVIEW, CDT_REVIEW, COMPILED, SUBMITTED_QLNN, ACCEPTED
+  pdfaUrl        String? // S3 key of compiled PDF/A book
+  pdfaSizeBytes  BigInt?
+  pdfaSha256     String?
+  pdfaCompiledAt DateTime?
+  ntSignedAt     DateTime?
+  tvgsSignedAt   DateTime?
+  cdtSignedAt    DateTime?
+  submittedAt    DateTime? // gửi cơ quan QLNN (Sở XD)
+  acceptedAt     DateTime?
+  qlnnRef        String? // số văn bản xác nhận QLNN
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   project  Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   sections HoanCongSection[]
@@ -1151,14 +1262,14 @@ model HoanCongDossier {
 }
 
 model HoanCongSection {
-  id          String           @id @default(cuid())
+  id          String  @id @default(cuid())
   dossierId   String
   seq         Int // 1..13 theo VIIIb
   code        String // "VIIIb.1", "VIIIb.2", …
   title       String // "Hồ sơ pháp lý đầu tư", "Khảo sát địa chất", …
-  required    Boolean          @default(true)
-  itemCount   Int              @default(0)
-  signedCount Int              @default(0)
+  required    Boolean @default(true)
+  itemCount   Int     @default(0)
+  signedCount Int     @default(0)
   notes       String?
 
   dossier HoanCongDossier @relation(fields: [dossierId], references: [id], onDelete: Cascade)
@@ -1169,18 +1280,18 @@ model HoanCongSection {
 }
 
 model HoanCongItem {
-  id          String         @id @default(cuid())
-  sectionId   String
-  seq         Int // số thứ tự trong cuốn (tự động đánh)
-  title       String
-  docDate     DateTime?
-  docNumber   String? // "BBNT-CV-001"
-  fileUrl     String? // S3 key
-  fileSize    BigInt?
-  sha256      String?
-  signedBy    Json? // [{role, userId, signedAt, certSerial}]
-  status      DossierStatus  @default(MISSING)
-  notes       String?
+  id        String        @id @default(cuid())
+  sectionId String
+  seq       Int // số thứ tự trong cuốn (tự động đánh)
+  title     String
+  docDate   DateTime?
+  docNumber String? // "BBNT-CV-001"
+  fileUrl   String? // S3 key
+  fileSize  BigInt?
+  sha256    String?
+  signedBy  Json? // [{role, userId, signedAt, certSerial}]
+  status    DossierStatus @default(MISSING)
+  notes     String?
 
   section HoanCongSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
@@ -1196,35 +1307,35 @@ model HoanCongItem {
 // ============================================================================
 
 model SuperviseEntry {
-  id              String              @id @default(cuid())
-  projectId       String
-  logDate         DateTime
-  shift           SuperviseShift      @default(DAY)
-  supervisorOrgId String? // TVGS org
+  id               String         @id @default(cuid())
+  projectId        String
+  logDate          DateTime
+  shift            SuperviseShift @default(DAY)
+  supervisorOrgId  String? // TVGS org
   supervisorUserId String? // KS giám sát
-  weather         String? // sync với WeatherSnapshot
-  attendees       String?             @db.Text // CĐT/NT/TVGS có mặt
-  workItems       String              @db.Text // mô tả công việc thi công
-  qualityNotes    String?             @db.Text // quan sát chất lượng
-  safetyNotes     String?             @db.Text // quan sát ATLĐ
-  materialsNotes  String?             @db.Text // VL nhận, kiểm tra CO/CQ
-  testRefs        String[] // mã LabReport tham chiếu
-  ncrIds          String[] // NCR phát sinh trong ca
-  rfiIds          String[] // RFI phát sinh
-  acceptanceIds   String[] // BBNT diễn ra trong ca
-  photoUrls       String[] // S3 keys ảnh
-  voiceNoteUrl    String? // Whisper.cpp transcript source
-  voiceTranscript String?             @db.Text
-  state           String // DRAFT, TVGS_SIGNED, NT_SIGNED, CDT_SIGNED, FINALIZED
-  tvgsSignedAt    DateTime?
-  tvgsCertSerial  String?
-  ntSignedAt      DateTime?
-  ntCertSerial    String?
-  cdtSignedAt     DateTime?
-  cdtCertSerial   String?
-  pdfUrl          String? // PDF render của entry
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  weather          String? // sync với WeatherSnapshot
+  attendees        String?        @db.Text // CĐT/NT/TVGS có mặt
+  workItems        String         @db.Text // mô tả công việc thi công
+  qualityNotes     String?        @db.Text // quan sát chất lượng
+  safetyNotes      String?        @db.Text // quan sát ATLĐ
+  materialsNotes   String?        @db.Text // VL nhận, kiểm tra CO/CQ
+  testRefs         String[] // mã LabReport tham chiếu
+  ncrIds           String[] // NCR phát sinh trong ca
+  rfiIds           String[] // RFI phát sinh
+  acceptanceIds    String[] // BBNT diễn ra trong ca
+  photoUrls        String[] // S3 keys ảnh
+  voiceNoteUrl     String? // Whisper.cpp transcript source
+  voiceTranscript  String?        @db.Text
+  state            String // DRAFT, TVGS_SIGNED, NT_SIGNED, CDT_SIGNED, FINALIZED
+  tvgsSignedAt     DateTime?
+  tvgsCertSerial   String?
+  ntSignedAt       DateTime?
+  ntCertSerial     String?
+  cdtSignedAt      DateTime?
+  cdtCertSerial    String?
+  pdfUrl           String? // PDF render của entry
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   supervisorOrg  Organization? @relation("SuperviseTvgsOrg", fields: [supervisorOrgId], references: [id])
@@ -1247,34 +1358,34 @@ enum SuperviseShift {
 // ============================================================================
 
 model ItpTemplate {
-  id           String        @id @default(cuid())
-  code         String        @unique // "ITP-MONG-COC-D800"
-  category     ItpCategory
-  title        String
-  description  String?       @db.Text
-  tcvnRefs     String[] // ["TCVN 9395:2012", "TCVN 9398:2012"]
-  isGlobal     Boolean       @default(true) // true = library, false = project-custom
-  projectId    String? // nếu custom per project
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id          String      @id @default(cuid())
+  code        String      @unique // "ITP-MONG-COC-D800"
+  category    ItpCategory
+  title       String
+  description String?     @db.Text
+  tcvnRefs    String[] // ["TCVN 9395:2012", "TCVN 9398:2012"]
+  isGlobal    Boolean     @default(true) // true = library, false = project-custom
+  projectId   String? // nếu custom per project
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  items        ItpItem[]
-  qaqcChecks   QaqcCheck[]
+  items      ItpItem[]
+  qaqcChecks QaqcCheck[]
 
   @@index([category])
 }
 
 model ItpItem {
-  id            String       @id @default(cuid())
-  templateId    String
-  seq           Int
-  checkPoint    String       @db.Text // "Đường kính cọc D800 ± 5%"
-  acceptCrit    String       @db.Text // "490-510mm; có 3 điểm đo mỗi 1m chiều sâu"
-  method        String? // "Đo bằng thước kẹp khi nhổ casing"
-  frequency     String? // "100% cọc; mỗi cọc 3 lần"
-  tcvnRef       String? // "TCVN 9395:2012 Điều 7.3"
-  hold          Boolean      @default(false) // hold-point (TVGS phải có mặt)
-  witness       Boolean      @default(false) // TVGS chứng kiến (không bắt buộc có mặt)
+  id         String  @id @default(cuid())
+  templateId String
+  seq        Int
+  checkPoint String  @db.Text // "Đường kính cọc D800 ± 5%"
+  acceptCrit String  @db.Text // "490-510mm; có 3 điểm đo mỗi 1m chiều sâu"
+  method     String? // "Đo bằng thước kẹp khi nhổ casing"
+  frequency  String? // "100% cọc; mỗi cọc 3 lần"
+  tcvnRef    String? // "TCVN 9395:2012 Điều 7.3"
+  hold       Boolean @default(false) // hold-point (TVGS phải có mặt)
+  witness    Boolean @default(false) // TVGS chứng kiến (không bắt buộc có mặt)
 
   template ItpTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
@@ -1282,7 +1393,7 @@ model ItpItem {
 }
 
 model QaqcCheck {
-  id              String       @id @default(cuid())
+  id              String     @id @default(cuid())
   projectId       String
   templateId      String? // ITP gốc
   location        String // "Cọc P14 trục 3-A"
@@ -1290,13 +1401,13 @@ model QaqcCheck {
   conductedAt     DateTime?
   inspectorOrgId  String? // TVGS / NT_CHINH
   inspectorUserId String?
-  result          QaqcResult   @default(PENDING)
+  result          QaqcResult @default(PENDING)
   measurements    Json? // {qty:.., spec:.., actual:..} mỗi ItpItem
   ncrId           String? // nếu FAIL → tạo NCR
-  notes           String?      @db.Text
+  notes           String?    @db.Text
   photoUrls       String[]
   acceptanceId    String? // gắn vào BBNT
-  createdAt       DateTime     @default(now())
+  createdAt       DateTime   @default(now())
 
   project  Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   template ItpTemplate? @relation(fields: [templateId], references: [id])
@@ -1335,28 +1446,28 @@ enum QaqcResult {
 // ============================================================================
 
 model TenderPackage {
-  id              String              @id @default(cuid())
-  orgId           String // doanh nghiệp sở hữu package (bên mời thầu hoặc nhà thầu)
-  perspective     TenderPerspective // BEN_MOI (CĐT/BMT soạn HSMT) | NHA_THAU (NT soạn HSDT)
-  code            String // "HSMT-2026-VHGP-04" hoặc "HSDT-2026-CFC-018"
-  title           String
-  tenderId        String? // mã KHLCNT trên muasamcong nếu có
-  oppotunityId    String? // link TenderOpportunity (BidRadar scout)
-  packageType     String // "Xây lắp", "Tư vấn", "Mua sắm hàng hóa", "Hỗn hợp"
-  selectionMethod String // "Đấu thầu rộng rãi", "Chào hàng cạnh tranh", "Chỉ định thầu"…
+  id                String            @id @default(cuid())
+  orgId             String // doanh nghiệp sở hữu package (bên mời thầu hoặc nhà thầu)
+  perspective       TenderPerspective // BEN_MOI (CĐT/BMT soạn HSMT) | NHA_THAU (NT soạn HSDT)
+  code              String // "HSMT-2026-VHGP-04" hoặc "HSDT-2026-CFC-018"
+  title             String
+  tenderId          String? // mã KHLCNT trên muasamcong nếu có
+  oppotunityId      String? // link TenderOpportunity (BidRadar scout)
+  packageType       String // "Xây lắp", "Tư vấn", "Mua sắm hàng hóa", "Hỗn hợp"
+  selectionMethod   String // "Đấu thầu rộng rãi", "Chào hàng cạnh tranh", "Chỉ định thầu"…
   estimatedValueVnd BigInt?
-  bidSecurityVnd  BigInt?
-  language        String              @default("vi")
-  state           String // DRAFT, REVIEWING, READY, SUBMITTED, AWARDED, LOST, CANCELLED
-  submittedAt     DateTime?
-  awardedAt       DateTime?
-  awardedTo       String? // org id of awarded contractor (BEN_MOI perspective)
-  submissionRef   String? // mã giao dịch eGP muasamcong
-  notes           String?             @db.Text
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  bidSecurityVnd    BigInt?
+  language          String            @default("vi")
+  state             String // DRAFT, REVIEWING, READY, SUBMITTED, AWARDED, LOST, CANCELLED
+  submittedAt       DateTime?
+  awardedAt         DateTime?
+  awardedTo         String? // org id of awarded contractor (BEN_MOI perspective)
+  submissionRef     String? // mã giao dịch eGP muasamcong
+  notes             String?           @db.Text
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  org      Organization        @relation("TenderPackageOrg", fields: [orgId], references: [id])
+  org      Organization    @relation("TenderPackageOrg", fields: [orgId], references: [id])
   sections TenderSection[]
 
   @@unique([orgId, code])
@@ -1364,15 +1475,15 @@ model TenderPackage {
 }
 
 model TenderSection {
-  id          String         @id @default(cuid())
+  id          String          @id @default(cuid())
   packageId   String
   seq         Int
   code        String // "I", "II", "Chương 3"
   title       String
-  body        String?        @db.Text // markdown soạn thảo
+  body        String?         @db.Text // markdown soạn thảo
   source      TenderSecSource @default(MANUAL) // auto-generated vs manual
   templateRef String? // template gốc đã dùng
-  signed      Boolean        @default(false)
+  signed      Boolean         @default(false)
   signedAt    DateTime?
 
   package TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
@@ -1399,7 +1510,7 @@ enum TenderSecSource {
 // ============================================================================
 
 model EiaApplication {
-  id              String       @id @default(cuid())
+  id              String    @id @default(cuid())
   projectId       String
   type            EiaType // DTM / DKDT / DKBVMT (giấy phép môi trường)
   code            String // "DTM-VHGP-S9-2024"
@@ -1414,35 +1525,35 @@ model EiaApplication {
   decisionDate    DateTime?
   expiresAt       DateTime? // ngày hết hiệu lực GPMT (nếu có)
   pdfUrl          String? // S3 key báo cáo ĐTM
-  notes           String?      @db.Text
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  consultantOrg  Organization? @relation("EiaConsultant", fields: [consultantOrgId], references: [id])
-  measurements   EnvMeasurement[]
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  consultantOrg Organization?    @relation("EiaConsultant", fields: [consultantOrgId], references: [id])
+  measurements  EnvMeasurement[]
 
   @@unique([projectId, code])
   @@index([projectId, state])
 }
 
 model EnvMeasurement {
-  id           String            @id @default(cuid())
-  eiaId        String?
-  projectId    String
-  measureType  EnvMeasureType // BUI / ON / NUOC_THAI / KHI_THAI / DAT
-  sampleCode   String // "QT-BUI-2026-04-001"
-  sampleDate   DateTime
-  location     String // điểm đo
-  parameter    String // "TSP", "PM10", "Leq", "BOD5", "COD"
-  value        Decimal           @db.Decimal(14, 4)
-  unit         String // "µg/m³", "dB(A)", "mg/L"
-  qcvnRef      String // "QCVN 05:2023/BTNMT"
-  qcvnLimit    Decimal?          @db.Decimal(14, 4)
-  exceeded     Boolean           @default(false)
-  labCode      String? // mã LabReport ngoài
-  notes        String?
-  createdAt    DateTime          @default(now())
+  id          String         @id @default(cuid())
+  eiaId       String?
+  projectId   String
+  measureType EnvMeasureType // BUI / ON / NUOC_THAI / KHI_THAI / DAT
+  sampleCode  String // "QT-BUI-2026-04-001"
+  sampleDate  DateTime
+  location    String // điểm đo
+  parameter   String // "TSP", "PM10", "Leq", "BOD5", "COD"
+  value       Decimal        @db.Decimal(14, 4)
+  unit        String // "µg/m³", "dB(A)", "mg/L"
+  qcvnRef     String // "QCVN 05:2023/BTNMT"
+  qcvnLimit   Decimal?       @db.Decimal(14, 4)
+  exceeded    Boolean        @default(false)
+  labCode     String? // mã LabReport ngoài
+  notes       String?
+  createdAt   DateTime       @default(now())
 
   eia     EiaApplication? @relation(fields: [eiaId], references: [id])
   project Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -1474,16 +1585,16 @@ enum EnvMeasureType {
 // ============================================================================
 
 model HseCourse {
-  id              String       @id @default(cuid())
-  code            String       @unique // "ATLD-N3-2026"
-  group           HseGroup // 1..6
-  title           String
-  durationHours   Int // số giờ theo NĐ 44/2016
-  syllabus        String       @db.Text
-  validityMonths  Int          @default(24) // chứng chỉ có hiệu lực
-  isOnline        Boolean      @default(true) // LMS hỗ trợ
-  passScore       Int          @default(80) // % bài kiểm tra để đạt
-  createdAt       DateTime     @default(now())
+  id             String   @id @default(cuid())
+  code           String   @unique // "ATLD-N3-2026"
+  group          HseGroup // 1..6
+  title          String
+  durationHours  Int // số giờ theo NĐ 44/2016
+  syllabus       String   @db.Text
+  validityMonths Int      @default(24) // chứng chỉ có hiệu lực
+  isOnline       Boolean  @default(true) // LMS hỗ trợ
+  passScore      Int      @default(80) // % bài kiểm tra để đạt
+  createdAt      DateTime @default(now())
 
   certificates HseCertificate[]
 
@@ -1491,27 +1602,27 @@ model HseCourse {
 }
 
 model HseCertificate {
-  id              String         @id @default(cuid())
-  courseId        String
-  userId          String?
-  workerName      String // có thể không có user (NLĐ công trường)
-  workerIdNo      String? // CCCD
-  orgId           String? // tổ chức nhận chứng chỉ
-  certNumber      String         @unique // "ATLD-N3-2026-0001"
-  qrCode          String? // QR check thẻ tại cổng
-  issuedAt        DateTime
-  expiresAt       DateTime
-  testScore       Int? // % điểm kiểm tra
-  trainerName     String?
-  trainerOrgId    String? // đơn vị huấn luyện được cấp phép
-  state           String         @default("ACTIVE") // ACTIVE / EXPIRED / REVOKED
-  cardPdfUrl      String? // thẻ ATLĐ PDF
-  createdAt       DateTime       @default(now())
+  id           String   @id @default(cuid())
+  courseId     String
+  userId       String?
+  workerName   String // có thể không có user (NLĐ công trường)
+  workerIdNo   String? // CCCD
+  orgId        String? // tổ chức nhận chứng chỉ
+  certNumber   String   @unique // "ATLD-N3-2026-0001"
+  qrCode       String? // QR check thẻ tại cổng
+  issuedAt     DateTime
+  expiresAt    DateTime
+  testScore    Int? // % điểm kiểm tra
+  trainerName  String?
+  trainerOrgId String? // đơn vị huấn luyện được cấp phép
+  state        String   @default("ACTIVE") // ACTIVE / EXPIRED / REVOKED
+  cardPdfUrl   String? // thẻ ATLĐ PDF
+  createdAt    DateTime @default(now())
 
-  course      HseCourse     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  user        User?         @relation("HseCertUser", fields: [userId], references: [id])
-  org         Organization? @relation("HseCertOrg", fields: [orgId], references: [id])
-  trainerOrg  Organization? @relation("HseCertTrainer", fields: [trainerOrgId], references: [id])
+  course     HseCourse     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user       User?         @relation("HseCertUser", fields: [userId], references: [id])
+  org        Organization? @relation("HseCertOrg", fields: [orgId], references: [id])
+  trainerOrg Organization? @relation("HseCertTrainer", fields: [trainerOrgId], references: [id])
 
   @@index([state, expiresAt])
   @@index([orgId])
@@ -1532,36 +1643,36 @@ enum HseGroup {
 // ============================================================================
 
 model SiteWorker {
-  id              String       @id @default(cuid())
-  orgId           String // tổ chức tuyển dụng (NT chính / NT phụ)
-  projectId       String? // gán dự án hiện tại
-  workerCode      String // mã NLĐ nội bộ
-  fullName        String
-  dob             DateTime?
-  gender          String?
-  idNo            String? // CCCD
-  phone           String?
-  hometown        String? // quê quán
-  trade           String // "Thợ sắt", "Thợ điện", "KS XD chính"
-  level           String? // "bậc 3.5/7"
-  isStaff         Boolean      @default(false) // cán bộ vs công nhân thời vụ
-  startedAt       DateTime?
-  endedAt         DateTime?
-  hseGroup        HseGroup? // nhóm ATLĐ đã huấn luyện
-  hseCertNumber   String? // số chứng chỉ ATLĐ
-  hseCertExpiry   DateTime?
-  proLicenseNo    String? // chứng chỉ hành nghề HĐXD (KTS/KS)
+  id               String    @id @default(cuid())
+  orgId            String // tổ chức tuyển dụng (NT chính / NT phụ)
+  projectId        String? // gán dự án hiện tại
+  workerCode       String // mã NLĐ nội bộ
+  fullName         String
+  dob              DateTime?
+  gender           String?
+  idNo             String? // CCCD
+  phone            String?
+  hometown         String? // quê quán
+  trade            String // "Thợ sắt", "Thợ điện", "KS XD chính"
+  level            String? // "bậc 3.5/7"
+  isStaff          Boolean   @default(false) // cán bộ vs công nhân thời vụ
+  startedAt        DateTime?
+  endedAt          DateTime?
+  hseGroup         HseGroup? // nhóm ATLĐ đã huấn luyện
+  hseCertNumber    String? // số chứng chỉ ATLĐ
+  hseCertExpiry    DateTime?
+  proLicenseNo     String? // chứng chỉ hành nghề HĐXD (KTS/KS)
   proLicenseExpiry DateTime?
-  faceEmbedding   Bytes? // 512-dim embedding from InsightFace (compressed Float32 → bytes)
-  badgePhotoUrl   String? // ảnh thẻ
-  badgeQrCode     String? // QR ra vào cổng
-  state           String       @default("ACTIVE") // ACTIVE / SUSPENDED / TERMINATED
-  notes           String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  faceEmbedding    Bytes? // 512-dim embedding from InsightFace (compressed Float32 → bytes)
+  badgePhotoUrl    String? // ảnh thẻ
+  badgeQrCode      String? // QR ra vào cổng
+  state            String    @default("ACTIVE") // ACTIVE / SUSPENDED / TERMINATED
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  org       Organization @relation("WorkerOrg", fields: [orgId], references: [id])
-  project   Project?     @relation(fields: [projectId], references: [id])
+  org        Organization @relation("WorkerOrg", fields: [orgId], references: [id])
+  project    Project?     @relation(fields: [projectId], references: [id])
   attendance Attendance[]
 
   @@unique([orgId, workerCode])
@@ -1570,18 +1681,18 @@ model SiteWorker {
 }
 
 model Attendance {
-  id          String       @id @default(cuid())
-  workerId    String
-  projectId   String
-  checkInAt   DateTime
-  checkOutAt  DateTime?
-  gateCode    String? // "Cổng A", "Cổng B"
-  gpsLat      Decimal?     @db.Decimal(10, 7)
-  gpsLng      Decimal?     @db.Decimal(10, 7)
-  method      AttendMethod @default(QR)
-  faceMatchScore Decimal?  @db.Decimal(5, 4) // 0.0-1.0 cosine similarity
-  ppeStatus   Json? // {helmet: true, vest: true, boots: true} từ SiteEye YOLO
-  notes       String?
+  id             String       @id @default(cuid())
+  workerId       String
+  projectId      String
+  checkInAt      DateTime
+  checkOutAt     DateTime?
+  gateCode       String? // "Cổng A", "Cổng B"
+  gpsLat         Decimal?     @db.Decimal(10, 7)
+  gpsLng         Decimal?     @db.Decimal(10, 7)
+  method         AttendMethod @default(QR)
+  faceMatchScore Decimal?     @db.Decimal(5, 4) // 0.0-1.0 cosine similarity
+  ppeStatus      Json? // {helmet: true, vest: true, boots: true} từ SiteEye YOLO
+  notes          String?
 
   worker  SiteWorker @relation(fields: [workerId], references: [id], onDelete: Cascade)
   project Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -1604,35 +1715,35 @@ enum AttendMethod {
 // ============================================================================
 
 model ContractorProfile {
-  id              String          @id @default(cuid())
-  orgId           String          @unique
-  legalName       String
-  mst             String? // Mã số thuế
-  capabilityClass CapabilityClass // HANG_I / HANG_II / HANG_III
-  capabilityNo    String? // số chứng chỉ năng lực hoạt động XD
+  id               String          @id @default(cuid())
+  orgId            String          @unique
+  legalName        String
+  mst              String? // Mã số thuế
+  capabilityClass  CapabilityClass // HANG_I / HANG_II / HANG_III
+  capabilityNo     String? // số chứng chỉ năng lực hoạt động XD
   capabilityExpiry DateTime?
-  capabilityScope String[] // ["Thi công dân dụng", "Thi công công nghiệp", "Tư vấn giám sát"]
-  charteredEng    Int             @default(0) // số KS chính
-  totalStaff      Int             @default(0)
-  charterCapVnd   BigInt? // vốn điều lệ
-  yearsExperience Int?
-  pastProjects    Int             @default(0) // số DA đã làm
-  pastValueVnd    BigInt? // tổng giá trị DA đã thực hiện
-  rating          Decimal?        @db.Decimal(3, 2) // 0-5 sao bình quân
-  blacklisted     Boolean         @default(false)
-  blacklistReason String?         @db.Text
-  blacklistAt     DateTime?
-  notes           String?         @db.Text
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  capabilityScope  String[] // ["Thi công dân dụng", "Thi công công nghiệp", "Tư vấn giám sát"]
+  charteredEng     Int             @default(0) // số KS chính
+  totalStaff       Int             @default(0)
+  charterCapVnd    BigInt? // vốn điều lệ
+  yearsExperience  Int?
+  pastProjects     Int             @default(0) // số DA đã làm
+  pastValueVnd     BigInt? // tổng giá trị DA đã thực hiện
+  rating           Decimal?        @db.Decimal(3, 2) // 0-5 sao bình quân
+  blacklisted      Boolean         @default(false)
+  blacklistReason  String?         @db.Text
+  blacklistAt      DateTime?
+  notes            String?         @db.Text
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
-  org           Organization              @relation("ContractorProfileOrg", fields: [orgId], references: [id], onDelete: Cascade)
-  performances  ContractorPerformance[]
-  references    ContractorReference[]
+  org          Organization            @relation("ContractorProfileOrg", fields: [orgId], references: [id], onDelete: Cascade)
+  performances ContractorPerformance[]
+  references   ContractorReference[]
 }
 
 model ContractorReference {
-  id           String            @id @default(cuid())
+  id           String  @id @default(cuid())
   contractorId String
   projectName  String
   ownerName    String?
@@ -1640,10 +1751,10 @@ model ContractorReference {
   yearEnd      Int?
   valueVnd     BigInt?
   role         String // "NT chính", "NT phụ MEP", "TVGS"
-  description  String?           @db.Text
+  description  String? @db.Text
   contactName  String?
   contactPhone String?
-  verified     Boolean           @default(false)
+  verified     Boolean @default(false)
 
   contractor ContractorProfile @relation(fields: [contractorId], references: [id], onDelete: Cascade)
 
@@ -1651,17 +1762,17 @@ model ContractorReference {
 }
 
 model ContractorPerformance {
-  id           String   @id @default(cuid())
-  contractorId String
-  projectId    String? // dự án trong hệ thống
-  ratingDate   DateTime
-  ratingScore  Decimal  @db.Decimal(3, 2) // 1-5
+  id            String   @id @default(cuid())
+  contractorId  String
+  projectId     String? // dự án trong hệ thống
+  ratingDate    DateTime
+  ratingScore   Decimal  @db.Decimal(3, 2) // 1-5
   scheduleScore Decimal? @db.Decimal(3, 2)
-  qualityScore Decimal? @db.Decimal(3, 2)
-  safetyScore  Decimal? @db.Decimal(3, 2)
-  costScore    Decimal? @db.Decimal(3, 2)
-  notes        String?  @db.Text
-  rater        String? // CĐT / Atlas auto-rating
+  qualityScore  Decimal? @db.Decimal(3, 2)
+  safetyScore   Decimal? @db.Decimal(3, 2)
+  costScore     Decimal? @db.Decimal(3, 2)
+  notes         String?  @db.Text
+  rater         String? // CĐT / Atlas auto-rating
 
   contractor ContractorProfile @relation(fields: [contractorId], references: [id], onDelete: Cascade)
 
@@ -1681,30 +1792,30 @@ enum CapabilityClass {
 // ============================================================================
 
 model MaterialLot {
-  id              String       @id @default(cuid())
-  projectId       String
-  lotCode         String // "LOT-THEP-VHGP-S9-04221"
-  materialName    String // "Thép thanh CB400-V D16"
-  materialCode    String? // mã VL nội bộ
-  category        MaterialCat
-  supplierOrgId   String? // nhà cung cấp
-  manufacturer    String // tên nhà sản xuất
-  origin          String? // "Việt Nam", "Trung Quốc", "Nhật Bản"
-  receivedAt      DateTime
-  quantity        Decimal      @db.Decimal(18, 4)
-  unit            String // "kg", "tấn", "m3", "viên", "m2"
-  coDocUrl        String? // Giấy chứng nhận xuất xứ (Certificate of Origin)
-  cqDocUrl        String? // Chứng nhận chất lượng (Certificate of Quality)
-  crCertNo        String? // Số hợp quy CR (sản phẩm phải hợp quy)
-  crCertExpiry    DateTime?
-  qrCode          String? // QR lot — scan tại công trường
-  testRefs        String[] // LabReport sample IDs
-  state           MaterialState @default(RECEIVED)
-  acceptedAt      DateTime?
+  id               String        @id @default(cuid())
+  projectId        String
+  lotCode          String // "LOT-THEP-VHGP-S9-04221"
+  materialName     String // "Thép thanh CB400-V D16"
+  materialCode     String? // mã VL nội bộ
+  category         MaterialCat
+  supplierOrgId    String? // nhà cung cấp
+  manufacturer     String // tên nhà sản xuất
+  origin           String? // "Việt Nam", "Trung Quốc", "Nhật Bản"
+  receivedAt       DateTime
+  quantity         Decimal       @db.Decimal(18, 4)
+  unit             String // "kg", "tấn", "m3", "viên", "m2"
+  coDocUrl         String? // Giấy chứng nhận xuất xứ (Certificate of Origin)
+  cqDocUrl         String? // Chứng nhận chất lượng (Certificate of Quality)
+  crCertNo         String? // Số hợp quy CR (sản phẩm phải hợp quy)
+  crCertExpiry     DateTime?
+  qrCode           String? // QR lot — scan tại công trường
+  testRefs         String[] // LabReport sample IDs
+  state            MaterialState @default(RECEIVED)
+  acceptedAt       DateTime?
   acceptedByUserId String?
-  rejectedReason  String?
-  notes           String?
-  createdAt       DateTime     @default(now())
+  rejectedReason   String?
+  notes            String?
+  createdAt        DateTime      @default(now())
 
   project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   supplierOrg Organization? @relation("MaterialLotSupplier", fields: [supplierOrgId], references: [id])
@@ -1742,27 +1853,27 @@ enum MaterialState {
 // ============================================================================
 
 model LabReport {
-  id              String       @id @default(cuid())
-  projectId       String
-  sampleCode      String // "LAB-VHGP-S9-BT-2026-052"
-  sampleType      LabSampleType
-  materialLotId   String? // link MaterialTrace lot
-  sampledAt       DateTime
-  sampledBy       String? // tên người lấy mẫu
-  receivedAt      DateTime? // ngày phòng LAS nhận mẫu
-  testedAt        DateTime?
-  labCode         String // mã LAS — "LAS-XD 1234"
-  labOrgName      String? // tên phòng LAS
-  testMethod      String // "Nén mẫu BT", "Kéo thép", "Cấp phối hạt"
-  tcvnRef         String // "TCVN 3118:1993"
-  parameters      Json // {ngay7: 28.5, ngay28: 38.2, ...} kết quả từng chỉ tiêu
-  specRequired    Json? // {ngay28: ">=30"} yêu cầu spec
-  result          LabResult    @default(PENDING)
-  ncrId           String? // tự tạo NCR nếu FAIL
-  reportFileUrl   String? // PDF báo cáo thí nghiệm
-  reportNo        String? // số báo cáo phòng LAS
-  notes           String?      @db.Text
-  createdAt       DateTime     @default(now())
+  id            String        @id @default(cuid())
+  projectId     String
+  sampleCode    String // "LAB-VHGP-S9-BT-2026-052"
+  sampleType    LabSampleType
+  materialLotId String? // link MaterialTrace lot
+  sampledAt     DateTime
+  sampledBy     String? // tên người lấy mẫu
+  receivedAt    DateTime? // ngày phòng LAS nhận mẫu
+  testedAt      DateTime?
+  labCode       String // mã LAS — "LAS-XD 1234"
+  labOrgName    String? // tên phòng LAS
+  testMethod    String // "Nén mẫu BT", "Kéo thép", "Cấp phối hạt"
+  tcvnRef       String // "TCVN 3118:1993"
+  parameters    Json // {ngay7: 28.5, ngay28: 38.2, ...} kết quả từng chỉ tiêu
+  specRequired  Json? // {ngay28: ">=30"} yêu cầu spec
+  result        LabResult     @default(PENDING)
+  ncrId         String? // tự tạo NCR nếu FAIL
+  reportFileUrl String? // PDF báo cáo thí nghiệm
+  reportNo      String? // số báo cáo phòng LAS
+  notes         String?       @db.Text
+  createdAt     DateTime      @default(now())
 
   project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   materialLot MaterialLot? @relation(fields: [materialLotId], references: [id])
@@ -1795,32 +1906,32 @@ enum LabResult {
 // ============================================================================
 
 model MethodStatement {
-  id              String          @id @default(cuid())
-  projectId       String?
-  templateId      String? // template gốc nếu có
-  code            String // "BPTC-VHGP-S9-COC-001"
-  category        MethodCategory
-  title           String
-  scope           String // mô tả phạm vi
-  body            String          @db.Text // markdown nội dung BPTC
-  tcvnRefs        String[]
-  riskMatrix      Json? // {risks: [{risk, likelihood, impact, control}]}
-  resources       Json? // {workers, equipment, materials}
-  duration        Int? // số ngày
-  state           String // DRAFT, NT_SUBMITTED, TVGS_REVIEW, CDT_REVIEW, APPROVED, REJECTED, EXECUTING, CLOSED
-  ntSubmittedAt   DateTime?
-  tvgsApprovedAt  DateTime?
-  tvgsCertSerial  String?
-  cdtApprovedAt   DateTime?
-  cdtCertSerial   String?
-  rejectionNote   String?         @db.Text
-  pdfUrl          String?
-  isTemplate      Boolean         @default(false) // true = library
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id             String         @id @default(cuid())
+  projectId      String?
+  templateId     String? // template gốc nếu có
+  code           String // "BPTC-VHGP-S9-COC-001"
+  category       MethodCategory
+  title          String
+  scope          String // mô tả phạm vi
+  body           String         @db.Text // markdown nội dung BPTC
+  tcvnRefs       String[]
+  riskMatrix     Json? // {risks: [{risk, likelihood, impact, control}]}
+  resources      Json? // {workers, equipment, materials}
+  duration       Int? // số ngày
+  state          String // DRAFT, NT_SUBMITTED, TVGS_REVIEW, CDT_REVIEW, APPROVED, REJECTED, EXECUTING, CLOSED
+  ntSubmittedAt  DateTime?
+  tvgsApprovedAt DateTime?
+  tvgsCertSerial String?
+  cdtApprovedAt  DateTime?
+  cdtCertSerial  String?
+  rejectionNote  String?        @db.Text
+  pdfUrl         String?
+  isTemplate     Boolean        @default(false) // true = library
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  project  Project?         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  template MethodStatement? @relation("MethodTemplate", fields: [templateId], references: [id])
+  project  Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  template MethodStatement?  @relation("MethodTemplate", fields: [templateId], references: [id])
   children MethodStatement[] @relation("MethodTemplate")
 
   @@index([projectId, state])
@@ -1847,24 +1958,24 @@ enum MethodCategory {
 // ============================================================================
 
 model ApprovalRequest {
-  id          String         @id @default(cuid())
-  projectId   String
-  source      ApprovalSource // PAYMENT, CHANGEORDER, METHOD, QAQC, ACCEPTANCE, MATERIAL, …
-  sourceId    String // ID của bản ghi gốc
-  title       String
-  summary     String         @db.Text
-  amountVnd   BigInt?
-  priority    ApprovalPriority @default(NORMAL)
-  state       ApprovalState  @default(PENDING)
+  id              String            @id @default(cuid())
+  projectId       String
+  source          ApprovalSource // PAYMENT, CHANGEORDER, METHOD, QAQC, ACCEPTANCE, MATERIAL, …
+  sourceId        String // ID của bản ghi gốc
+  title           String
+  summary         String            @db.Text
+  amountVnd       BigInt?
+  priority        ApprovalPriority  @default(NORMAL)
+  state           ApprovalState     @default(PENDING)
   requesterUserId String?
   requesterOrgId  String?
-  dueAt       DateTime?
-  decidedAt   DateTime?
+  dueAt           DateTime?
+  decidedAt       DateTime?
   decidedByUserId String?
-  decision    ApprovalDecision?
-  decisionNote String?       @db.Text
-  attachmentIds String[]
-  createdAt   DateTime       @default(now())
+  decision        ApprovalDecision?
+  decisionNote    String?           @db.Text
+  attachmentIds   String[]
+  createdAt       DateTime          @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -1911,21 +2022,21 @@ enum ApprovalDecision {
 // ============================================================================
 
 model ConsultantTimesheet {
-  id          String      @id @default(cuid())
-  orgId       String // tổ chức tư vấn (TVTK/TVGS/TVQLDA)
-  userId      String? // user chấm công
-  workerName  String // tên KS/KTS (có thể không có user)
-  role        String // "KS XD chính", "KS MEP", "KS QLDA", "Architect", "Junior KS"
-  projectId   String? // dự án đang tính giờ
-  workDate    DateTime
-  hours       Decimal     @db.Decimal(5, 2)
-  description String      @db.Text
-  billable    Boolean     @default(true)
+  id             String   @id @default(cuid())
+  orgId          String // tổ chức tư vấn (TVTK/TVGS/TVQLDA)
+  userId         String? // user chấm công
+  workerName     String // tên KS/KTS (có thể không có user)
+  role           String // "KS XD chính", "KS MEP", "KS QLDA", "Architect", "Junior KS"
+  projectId      String? // dự án đang tính giờ
+  workDate       DateTime
+  hours          Decimal  @db.Decimal(5, 2)
+  description    String   @db.Text
+  billable       Boolean  @default(true)
   rateVndPerHour BigInt? // charge-out rate VND/giờ
-  amountVnd   BigInt? // = hours * rate
-  invoiced    Boolean     @default(false)
-  invoiceRef  String?
-  createdAt   DateTime    @default(now())
+  amountVnd      BigInt? // = hours * rate
+  invoiced       Boolean  @default(false)
+  invoiceRef     String?
+  createdAt      DateTime @default(now())
 
   org     Organization @relation("ConsultantTimeOrg", fields: [orgId], references: [id])
   user    User?        @relation("ConsultantTimeUser", fields: [userId], references: [id])
@@ -1937,21 +2048,21 @@ model ConsultantTimesheet {
 }
 
 model ConsultantContract {
-  id              String          @id @default(cuid())
+  id              String         @id @default(cuid())
   orgId           String // bên tư vấn
   clientOrgId     String? // CĐT
   projectId       String?
   contractNo      String
   contractType    ConsultantType
   totalValueVnd   BigInt
-  invoicedVnd     BigInt          @default(0)
-  paidVnd         BigInt          @default(0)
-  percentComplete Decimal         @db.Decimal(5, 2) @default(0)
+  invoicedVnd     BigInt         @default(0)
+  paidVnd         BigInt         @default(0)
+  percentComplete Decimal        @default(0) @db.Decimal(5, 2)
   startDate       DateTime
   endDate         DateTime?
   state           String // ACTIVE / COMPLETED / TERMINATED
-  notes           String?         @db.Text
-  createdAt       DateTime        @default(now())
+  notes           String?        @db.Text
+  createdAt       DateTime       @default(now())
 
   org       Organization  @relation("ConsultantContractTvOrg", fields: [orgId], references: [id])
   clientOrg Organization? @relation("ConsultantContractClientOrg", fields: [clientOrgId], references: [id])
@@ -1976,36 +2087,36 @@ enum ConsultantType {
 // ============================================================================
 
 model GovAgency {
-  id          String   @id @default(cuid())
-  code        String   @unique // "SXD-HCM", "PC07-HCM"
-  name        String
-  agencyType  AgencyType
-  level       String? // "Trung ương", "Tỉnh/TP", "Quận/Huyện"
-  province    String?
-  address     String?
+  id           String     @id @default(cuid())
+  code         String     @unique // "SXD-HCM", "PC07-HCM"
+  name         String
+  agencyType   AgencyType
+  level        String? // "Trung ương", "Tỉnh/TP", "Quận/Huyện"
+  province     String?
+  address      String?
   contactPhone String?
   contactEmail String?
-  notes       String? @db.Text
+  notes        String?    @db.Text
 
   documents    AgencyDocument[]
   appointments AgencyAppointment[]
 }
 
 model AgencyDocument {
-  id          String         @id @default(cuid())
+  id          String       @id @default(cuid())
   agencyId    String
   projectId   String?
   direction   DocDirection // INCOMING (from agency) / OUTGOING (to agency)
   docNo       String // "VB 1234/SXD-CCXD"
   docDate     DateTime
   subject     String
-  body        String?        @db.Text
+  body        String?      @db.Text
   category    String? // "Giấy phép", "Văn bản chỉ đạo", "Yêu cầu báo cáo"
   fileUrl     String?
   status      String? // "Đang xử lý", "Đã trả lời", "Đã hoàn thành"
   dueAt       DateTime?
   respondedAt DateTime?
-  createdAt   DateTime       @default(now())
+  createdAt   DateTime     @default(now())
 
   agency  GovAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   project Project?  @relation(fields: [projectId], references: [id])
@@ -2016,17 +2127,17 @@ model AgencyDocument {
 }
 
 model AgencyAppointment {
-  id        String   @id @default(cuid())
-  agencyId  String
-  projectId String?
+  id          String   @id @default(cuid())
+  agencyId    String
+  projectId   String?
   scheduledAt DateTime
-  duration  Int      @default(60) // phút
-  purpose   String
-  attendees String?  @db.Text
-  location  String?
-  status    String   @default("SCHEDULED") // SCHEDULED / DONE / CANCELLED
-  outcome   String?  @db.Text
-  createdAt DateTime @default(now())
+  duration    Int      @default(60) // phút
+  purpose     String
+  attendees   String?  @db.Text
+  location    String?
+  status      String   @default("SCHEDULED") // SCHEDULED / DONE / CANCELLED
+  outcome     String?  @db.Text
+  createdAt   DateTime @default(now())
 
   agency  GovAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   project Project?  @relation(fields: [projectId], references: [id])
@@ -2059,25 +2170,25 @@ enum DocDirection {
 // ============================================================================
 
 model DocCorpus {
-  id          String        @id @default(cuid())
+  id          String       @id @default(cuid())
   projectId   String?
   orgId       String? // global vs project vs org
   sourceType  CorpusSource
   sourceId    String? // ID bản ghi gốc (SpecPage, RFI, BBNT, công văn…)
   sourceUrl   String? // S3 key của file gốc
   title       String
-  body        String        @db.Text // full text (sau OCR nếu PDF)
-  language    String        @default("vi")
-  chunkCount  Int           @default(0)
-  indexed     Boolean       @default(false)
+  body        String       @db.Text // full text (sau OCR nếu PDF)
+  language    String       @default("vi")
+  chunkCount  Int          @default(0)
+  indexed     Boolean      @default(false)
   indexedAt   DateTime?
   embedModel  String? // "bge-m3"
-  llmRedacted Boolean       @default(false) // đã redact PII
+  llmRedacted Boolean      @default(false) // đã redact PII
   metadata    Json? // {docNo, docDate, tcvnRefs, ...}
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  project Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   chunks  DocChunk[]
 
   @@index([projectId, sourceType])
@@ -2085,15 +2196,15 @@ model DocCorpus {
 }
 
 model DocChunk {
-  id          String     @id @default(cuid())
-  corpusId    String
-  seq         Int
-  text        String     @db.Text
-  embedding   Bytes? // bge-m3 1024-dim Float32 → 4096 bytes. Migrate pgvector when corpus > 10k.
-  tokenCount  Int?
-  pageNo      Int?
-  spanStart   Int? // ký tự start trong body gốc
-  spanEnd     Int?
+  id         String @id @default(cuid())
+  corpusId   String
+  seq        Int
+  text       String @db.Text
+  embedding  Bytes? // bge-m3 1024-dim Float32 → 4096 bytes. Migrate pgvector when corpus > 10k.
+  tokenCount Int?
+  pageNo     Int?
+  spanStart  Int? // ký tự start trong body gốc
+  spanEnd    Int?
 
   corpus DocCorpus @relation(fields: [corpusId], references: [id], onDelete: Cascade)
 
@@ -2101,16 +2212,16 @@ model DocChunk {
 }
 
 model DocChatQuery {
-  id          String       @id @default(cuid())
-  projectId   String?
-  userId      String? // người hỏi
-  question    String       @db.Text
-  answer      String?      @db.Text
-  citations   Json? // [{corpusId, chunkId, score, snippet}]
-  modelUsed   String? // "qwen2.5-14b-instruct"
-  latencyMs   Int?
-  feedback    Int? // -1, 0, +1
-  createdAt   DateTime     @default(now())
+  id        String   @id @default(cuid())
+  projectId String?
+  userId    String? // người hỏi
+  question  String   @db.Text
+  answer    String?  @db.Text
+  citations Json? // [{corpusId, chunkId, score, snippet}]
+  modelUsed String? // "qwen2.5-14b-instruct"
+  latencyMs Int?
+  feedback  Int? // -1, 0, +1
+  createdAt DateTime @default(now())
 
   @@index([projectId, createdAt])
   @@index([userId, createdAt])
@@ -2135,38 +2246,38 @@ enum CorpusSource {
 // ============================================================================
 
 model MonitorPoint {
-  id          String         @id @default(cuid())
-  projectId   String
-  pointCode   String // "SET-001", "INC-A2", "PIEZ-3"
-  monitorType MonitorType
-  description String?
-  locationX   Decimal?       @db.Decimal(12, 4) // toạ độ X mặt bằng (m)
-  locationY   Decimal?       @db.Decimal(12, 4)
-  locationZ   Decimal?       @db.Decimal(12, 4) // cao độ (m)
-  installedAt DateTime?
-  thresholdWarn Decimal?     @db.Decimal(12, 4) // ngưỡng cảnh báo
+  id             String      @id @default(cuid())
+  projectId      String
+  pointCode      String // "SET-001", "INC-A2", "PIEZ-3"
+  monitorType    MonitorType
+  description    String?
+  locationX      Decimal?    @db.Decimal(12, 4) // toạ độ X mặt bằng (m)
+  locationY      Decimal?    @db.Decimal(12, 4)
+  locationZ      Decimal?    @db.Decimal(12, 4) // cao độ (m)
+  installedAt    DateTime?
+  thresholdWarn  Decimal?    @db.Decimal(12, 4) // ngưỡng cảnh báo
   thresholdAlert Decimal?    @db.Decimal(12, 4) // ngưỡng nguy hiểm
-  unit        String // "mm", "° (độ)", "m H2O", "µε"
-  active      Boolean        @default(true)
-  createdAt   DateTime       @default(now())
+  unit           String // "mm", "° (độ)", "m H2O", "µε"
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now())
 
-  project       Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  measurements  MonitorMeasurement[]
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  measurements MonitorMeasurement[]
 
   @@unique([projectId, pointCode])
   @@index([projectId, monitorType, active])
 }
 
 model MonitorMeasurement {
-  id          String        @id @default(cuid())
-  pointId     String
-  measuredAt  DateTime
-  value       Decimal       @db.Decimal(14, 4)
-  cumulative  Decimal?      @db.Decimal(14, 4) // luỹ kế từ ngày đầu
-  rate24h     Decimal?      @db.Decimal(14, 6) // tốc độ thay đổi /ngày
-  alertLevel  AlertLevel    @default(NORMAL)
-  notes       String?
-  rawJson     Json? // raw output từ thiết bị (Leica/Trimble/Topcon)
+  id         String     @id @default(cuid())
+  pointId    String
+  measuredAt DateTime
+  value      Decimal    @db.Decimal(14, 4)
+  cumulative Decimal?   @db.Decimal(14, 4) // luỹ kế từ ngày đầu
+  rate24h    Decimal?   @db.Decimal(14, 6) // tốc độ thay đổi /ngày
+  alertLevel AlertLevel @default(NORMAL)
+  notes      String?
+  rawJson    Json? // raw output từ thiết bị (Leica/Trimble/Topcon)
 
   point MonitorPoint @relation(fields: [pointId], references: [id], onDelete: Cascade)
 
@@ -4009,14 +4120,14 @@ enum PcccApplicationState {
 
 // Per-project status timeline shown in /projects/[id]/tinh-hinh
 model ProjectStatusUpdate {
-  id        String   @id @default(cuid())
-  projectId String
-  title     String
-  body      String   @db.Text
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  body        String   @db.Text
   pctComplete Float? // optional snapshot of progress at the time of the update
-  reportedAt DateTime @default(now())
-  authorId  String?
-  createdAt DateTime @default(now())
+  reportedAt  DateTime @default(now())
+  authorId    String?
+  createdAt   DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   author  User?   @relation(fields: [authorId], references: [id])
@@ -4028,16 +4139,16 @@ model ProjectStatusUpdate {
 
 // Văn bản nội bộ (internal memos / circulars within the company)
 model InternalDocument {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   orgId       String
   projectId   String?
   docNo       String // số văn bản
   category    InternalDocCategory @default(KHAC)
   title       String
-  body        String?  @db.Text
-  issuedAt    DateTime @default(now())
+  body        String?             @db.Text
+  issuedAt    DateTime            @default(now())
   effectiveAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime            @default(now())
   authorId    String?
 
   org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -4059,18 +4170,18 @@ enum InternalDocCategory {
 
 // Theo dõi bảo hiểm xã hội (BHXH) cho nhân viên
 model SocialInsuranceRecord {
-  id          String   @id @default(cuid())
-  orgId       String
-  projectId   String?
-  employeeName String
-  employeeIdNo String? // CCCD
-  bhxhNumber   String? // Số sổ BHXH
-  status       BhxhStatus @default(DANG_DONG)
+  id             String     @id @default(cuid())
+  orgId          String
+  projectId      String?
+  employeeName   String
+  employeeIdNo   String? // CCCD
+  bhxhNumber     String? // Số sổ BHXH
+  status         BhxhStatus @default(DANG_DONG)
   monthlyBaseVnd BigInt? // Mức đóng / tháng
-  startedAt    DateTime?
-  stoppedAt    DateTime?
-  note         String? @db.Text
-  createdAt    DateTime @default(now())
+  startedAt      DateTime?
+  stoppedAt      DateTime?
+  note           String?    @db.Text
+  createdAt      DateTime   @default(now())
 
   org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   project Project?     @relation(fields: [projectId], references: [id])
@@ -4088,7 +4199,7 @@ enum BhxhStatus {
 
 // Điều phối xe — vehicle dispatch / motor pool
 model VehicleDispatch {
-  id           String   @id @default(cuid())
+  id           String         @id @default(cuid())
   orgId        String
   projectId    String?
   vehiclePlate String // Biển số
@@ -4097,8 +4208,8 @@ model VehicleDispatch {
   startAt      DateTime
   endAt        DateTime?
   status       DispatchStatus @default(SCHEDULED)
-  note         String? @db.Text
-  createdAt    DateTime @default(now())
+  note         String?        @db.Text
+  createdAt    DateTime       @default(now())
 
   org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   project Project?     @relation(fields: [projectId], references: [id])
@@ -4118,7 +4229,7 @@ enum DispatchStatus {
 
 // Tạm ứng / Thanh toán / Hoàn ứng — single ledger by type
 model AdvanceTransaction {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   orgId       String
   projectId   String?
   type        AdvanceType
@@ -4126,11 +4237,11 @@ model AdvanceTransaction {
   payeeName   String // Người/đơn vị nhận
   amountVnd   BigInt
   purpose     String
-  txnDate     DateTime @default(now())
+  txnDate     DateTime         @default(now())
   status      AdvanceTxnStatus @default(PENDING)
   parentTxnId String? // dùng cho HOAN_UNG để link về tạm ứng gốc
-  note        String? @db.Text
-  createdAt   DateTime @default(now())
+  note        String?          @db.Text
+  createdAt   DateTime         @default(now())
 
   org       Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   project   Project?             @relation(fields: [projectId], references: [id])
@@ -4156,20 +4267,20 @@ enum AdvanceTxnStatus {
 
 // Bảng giao khoán cho các đơn vị (DV = đội nhóm hoặc nhà thầu phụ)
 model ContractorAssignment {
-  id           String   @id @default(cuid())
-  projectId    String
-  contractorName String // Tên đơn vị nhận khoán
+  id              String           @id @default(cuid())
+  projectId       String
+  contractorName  String // Tên đơn vị nhận khoán
   contractorOrgId String? // (optional) FK nếu DV có trong Organization
-  scope        String   @db.Text // Phạm vi công việc giao khoán
-  amountVnd    BigInt
-  startDate    DateTime
-  endDate      DateTime
-  pctComplete  Float    @default(0) // 0..100
-  status       AssignmentStatus @default(ACTIVE)
-  createdAt    DateTime @default(now())
+  scope           String           @db.Text // Phạm vi công việc giao khoán
+  amountVnd       BigInt
+  startDate       DateTime
+  endDate         DateTime
+  pctComplete     Float            @default(0) // 0..100
+  status          AssignmentStatus @default(ACTIVE)
+  createdAt       DateTime         @default(now())
 
-  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  contractorOrg  Organization? @relation(fields: [contractorOrgId], references: [id])
+  project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contractorOrg Organization? @relation(fields: [contractorOrgId], references: [id])
 
   @@index([projectId, status])
 }
@@ -4185,17 +4296,17 @@ enum AssignmentStatus {
 
 // Địa bàn — geographic territory the BD team is covering
 model MarketTerritory {
-  id        String   @id @default(cuid())
-  orgId     String
-  name      String // VD: "Miền Trung", "Tỉnh Đắk Lắk"
-  province  String?
-  scope     String?  @db.Text // Phạm vi hoạt động
+  id          String   @id @default(cuid())
+  orgId       String
+  name        String // VD: "Miền Trung", "Tỉnh Đắk Lắk"
+  province    String?
+  scope       String?  @db.Text // Phạm vi hoạt động
   ownerUserId String? // Trưởng địa bàn
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
-  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  owner User?        @relation(fields: [ownerUserId], references: [id])
+  org   Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  owner User?         @relation(fields: [ownerUserId], references: [id])
   leads ProjectLead[]
 
   @@index([orgId, active])
@@ -4203,18 +4314,18 @@ model MarketTerritory {
 
 // Dự án đang theo + Dự án tiềm năng (status discriminates)
 model ProjectLead {
-  id            String   @id @default(cuid())
-  orgId         String
-  territoryId   String?
-  name          String // tên gói thầu / khách hàng / dự án dự kiến
-  clientName    String?
-  province      String?
-  estValueVnd   BigInt?
-  source        String?
-  status        LeadStatus @default(POTENTIAL)
-  nextActionAt  DateTime?
-  note          String? @db.Text
-  createdAt     DateTime @default(now())
+  id           String     @id @default(cuid())
+  orgId        String
+  territoryId  String?
+  name         String // tên gói thầu / khách hàng / dự án dự kiến
+  clientName   String?
+  province     String?
+  estValueVnd  BigInt?
+  source       String?
+  status       LeadStatus @default(POTENTIAL)
+  nextActionAt DateTime?
+  note         String?    @db.Text
+  createdAt    DateTime   @default(now())
 
   org       Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   territory MarketTerritory? @relation(fields: [territoryId], references: [id])
@@ -4352,8 +4463,8 @@ model ClaimEvidence {
 
   claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
-  @@index([claimId, capturedAt])
   @@unique([claimId, refTable, refId]) // không gắn trùng một bản ghi
+  @@index([claimId, capturedAt])
 }
 
 enum ClaimEvidenceKind {

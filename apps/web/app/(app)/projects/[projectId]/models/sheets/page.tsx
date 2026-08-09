@@ -1,10 +1,11 @@
 import { prisma } from "@atlas/db";
+import Link from "next/link";
 import { Card, CardBody } from "@atlas/ui";
 
 export default async function SheetsPage({ params }: { params: { projectId: string } }) {
   const sets = await prisma.drawingSet.findMany({
     where: { projectId: params.projectId },
-    include: { sheets: { orderBy: { sheetNumber: "asc" } } },
+    include: { sheets: { include: { _count: { select: { markups: true } } }, orderBy: { sheetNumber: "asc" } } },
     orderBy: { issuedDate: "desc" },
   });
 
@@ -25,15 +26,17 @@ export default async function SheetsPage({ params }: { params: { projectId: stri
                     <th className="px-4 py-2.5">Tiêu đề</th>
                     <th className="px-4 py-2.5">Tỉ lệ</th>
                     <th className="px-4 py-2.5">Revision</th>
+                    <th className="px-4 py-2.5">Review</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {s.sheets.map((sh) => (
                     <tr key={sh.id} className="transition hover:bg-slate-50">
                       <td className="px-4 py-2 font-mono text-xs">{sh.sheetNumber}</td>
-                      <td className="px-4 py-2 text-slate-900">{sh.title}</td>
+                      <td className="px-4 py-2 text-slate-900"><Link className="font-medium hover:text-blue-600" href={`/projects/${params.projectId}/models/sheets/${sh.id}`}>{sh.title}</Link></td>
                       <td className="px-4 py-2 text-slate-600">{sh.scale ?? "—"}</td>
                       <td className="px-4 py-2 text-slate-600">{sh.revision}</td>
+                      <td className="px-4 py-2"><Link className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100" href={`/projects/${params.projectId}/models/sheets/${sh.id}`}>Mở canvas · {sh._count.markups}</Link></td>
                     </tr>
                   ))}
                 </tbody>
