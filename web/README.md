@@ -46,6 +46,18 @@ IFC4 STEP text → .ifc download
   to butt against the near face of the continuous wall, which stays
   unbroken. Works at any angle; parallel walls and end vicinities are
   excluded.
+- Per-end join overrides (`Start join` / `End join` in wall properties):
+  `Miter` (default), `Butt` (the wall listed first in the project runs
+  through to the far face, the other butts against its near face), or
+  `Square (no join)`. Stored as `join_start`/`join_end` in the wall
+  JSON; older files default to miter.
+- Join relationships export as `IfcRelConnectsPathElements` — corner
+  pairs with `ATSTART`/`ATEND`, T-joins with `ATPATH` on the continuous
+  wall; square ends emit no relationship.
+- Grid datums in elevations/sections: grids perpendicular to the view
+  render as vertical dashed lines with the head bubble above the top of
+  the walls (Revit-style); grids parallel to the view are hidden, and
+  plan linework is not drawn edge-on.
 - Anchor endpoint editing: select a grid or wall, click an endpoint
   anchor, move, click to confirm (Esc cancels) — same click-move-click
   flow as the add-on.
