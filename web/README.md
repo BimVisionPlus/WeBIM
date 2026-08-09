@@ -38,8 +38,14 @@ IFC4 STEP text → .ifc download
 - Corner joins: when exactly two wall ends meet at a point, both
   footprints are mitered so the pair shares the corner points — in the
   viewport and in the exported IFC profile
-  (`IfcArbitraryClosedProfileDef`). Collinear continuations, T/X joints
-  and angles past the miter limit (4× thickness) keep square butt ends.
+  (`IfcArbitraryClosedProfileDef`). Collinear continuations, star joints
+  (3+ coincident ends) and angles past the miter limit (4× thickness)
+  keep square butt ends.
+- T-joins: a wall end (with no coincident end) landing on another
+  wall's axis segment is trimmed — or extended, if it stops just short —
+  to butt against the near face of the continuous wall, which stays
+  unbroken. Works at any angle; parallel walls and end vicinities are
+  excluded.
 - Anchor endpoint editing: select a grid or wall, click an endpoint
   anchor, move, click to confirm (Esc cancels) — same click-move-click
   flow as the add-on.

@@ -1,11 +1,15 @@
-// Plan-space wall footprints with mitered corner joins.
+// Plan-space wall footprints with mitered corner joins and T-joins.
 //
 // A wall's footprint is the rectangle around its axis. When exactly two
 // wall ends meet at a point, both footprints are mitered: each side face
 // is extended to its intersection with the matching side face of the
 // other wall, so the pair shares the two miter corners and the seam runs
-// between them. Collinear continuations, T/X joints (3+ ends) and
+// between them. Collinear continuations, star joints (3+ ends) and
 // too-sharp angles (miter limit) keep square butt ends.
+//
+// A wall end with no coincident end that lands on another wall's axis
+// segment is a T-join: its end face is trimmed (or extended) to butt
+// against the near face of the continuous wall, which stays unbroken.
 
 import type { Point3D, WallDatum } from "../domain/project";
 
@@ -64,8 +68,12 @@ function sideLines(wall: WallDatum, endpoint: "start" | "end"): { left: Line2; r
   };
 }
 
-/** The single other wall end meeting this one, or null for 0 or 2+ others. */
-function joinPartner(wall: WallDatum, endpoint: "start" | "end", walls: readonly WallDatum[]): WallEnd | null {
+/** Every other wall end coinciding with this one. */
+function endPartners(
+  wall: WallDatum,
+  endpoint: "start" | "end",
+  walls: readonly WallDatum[],
+): WallEnd[] {
   const joint = wall[endpoint];
   const others: WallEnd[] = [];
   for (const candidate of walls) {
@@ -76,20 +84,18 @@ function joinPartner(wall: WallDatum, endpoint: "start" | "end", walls: readonly
       }
     }
   }
-  return others.length === 1 ? others[0] : null;
+  return others;
 }
 
 /**
- * Miter corners at one wall end, in the outgoing frame:
- * [cornerLeft, cornerRight], or null when the end stays square.
+ * Miter corners against the single coincident wall end, in the outgoing
+ * frame: [cornerLeft, cornerRight], or null when the end stays square.
  */
 function miterCorners(
   wall: WallDatum,
   endpoint: "start" | "end",
-  walls: readonly WallDatum[],
+  partner: WallEnd,
 ): [Point2, Point2] | null {
-  const partner = joinPartner(wall, endpoint, walls);
-  if (!partner) return null;
   const own = sideLines(wall, endpoint);
   const other = sideLines(partner.wall, partner.endpoint);
   const cornerLeft = intersectLines(own.left, other.right);
@@ -103,6 +109,83 @@ function miterCorners(
   );
   if (reach > limit) return null;
   return [cornerLeft, cornerRight];
+}
+
+/**
+ * T-join corners: the end butts against the near face of a wall whose axis
+ * segment passes under this endpoint. [cornerLeft, cornerRight] in the
+ * outgoing frame, or null when no continuous wall qualifies.
+ */
+function tButtCorners(
+  wall: WallDatum,
+  endpoint: "start" | "end",
+  walls: readonly WallDatum[],
+): [Point2, Point2] | null {
+  const joint = wall[endpoint];
+  const { o } = outgoingFrame(wall, endpoint);
+
+  let best: { face: Line2; distance: number; thickness: number } | null = null;
+  for (const candidate of walls) {
+    if (candidate.id === wall.id) continue;
+    const ax = candidate.end[0] - candidate.start[0];
+    const ay = candidate.end[1] - candidate.start[1];
+    const axisLength = Math.hypot(ax, ay);
+    if (axisLength === 0) continue;
+    const dir: Point2 = [ax / axisLength, ay / axisLength];
+    const normal: Point2 = [-dir[1], dir[0]];
+    const half = candidate.thickness / 2;
+    const relX = joint[0] - candidate.start[0];
+    const relY = joint[1] - candidate.start[1];
+    const along = relX * dir[0] + relY * dir[1];
+    // Interior of the axis segment only; end vicinities belong to corner logic.
+    if (along < half || along > axisLength - half) continue;
+    const offset = relX * normal[0] + relY * normal[1];
+    if (Math.abs(offset) > half + JOIN_TOLERANCE) continue;
+    // The face on the side of the continuous wall that this wall's body faces.
+    const side = o[0] * normal[0] + o[1] * normal[1];
+    if (Math.abs(side) < 1e-6) continue; // parallel walls
+    const sign = side > 0 ? 1 : -1;
+    const face: Line2 = {
+      point: [
+        candidate.start[0] + normal[0] * sign * half,
+        candidate.start[1] + normal[1] * sign * half,
+      ],
+      dir,
+    };
+    const distance = Math.abs(offset);
+    if (!best || distance < best.distance) {
+      best = { face, distance, thickness: candidate.thickness };
+    }
+  }
+  if (!best) return null;
+
+  const own = sideLines(wall, endpoint);
+  const cornerLeft = intersectLines(own.left, best.face);
+  const cornerRight = intersectLines(own.right, best.face);
+  if (!cornerLeft || !cornerRight) return null;
+  const limit = MITER_LIMIT_FACTOR * Math.max(wall.thickness, best.thickness);
+  const reach = Math.max(
+    Math.hypot(cornerLeft[0] - joint[0], cornerLeft[1] - joint[1]),
+    Math.hypot(cornerRight[0] - joint[0], cornerRight[1] - joint[1]),
+  );
+  if (reach > limit) return null;
+  return [cornerLeft, cornerRight];
+}
+
+/** Join corners for one wall end: corner miter, T-butt, or null (square). */
+function endJoinCorners(
+  wall: WallDatum,
+  endpoint: "start" | "end",
+  walls: readonly WallDatum[],
+): [Point2, Point2] | null {
+  const partners = endPartners(wall, endpoint, walls);
+  if (partners.length === 1) {
+    return miterCorners(wall, endpoint, partners[0]);
+  }
+  if (partners.length > 1) {
+    return null;
+  }
+  return tButtCorners(wall, endpoint, walls);
 }
 
 /**
@@ -120,15 +203,15 @@ export function wallFootprint(wall: WallDatum, walls: readonly WallDatum[]): Poi
   let endLeft: Point2 = [wall.end[0] + n[0] * half, wall.end[1] + n[1] * half];
   let endRight: Point2 = [wall.end[0] - n[0] * half, wall.end[1] - n[1] * half];
 
-  const startMiter = miterCorners(wall, "start", walls);
-  if (startMiter) {
+  const startJoin = endJoinCorners(wall, "start", walls);
+  if (startJoin) {
     // Outgoing dir at the start is start→end, so outgoing-left is footprint-left.
-    [startLeft, startRight] = startMiter;
+    [startLeft, startRight] = startJoin;
   }
-  const endMiter = miterCorners(wall, "end", walls);
-  if (endMiter) {
+  const endJoin = endJoinCorners(wall, "end", walls);
+  if (endJoin) {
     // Outgoing dir at the end is reversed, so outgoing-left is footprint-right.
-    [endRight, endLeft] = endMiter;
+    [endRight, endLeft] = endJoin;
   }
   return [startLeft, endLeft, endRight, startRight];
 }
