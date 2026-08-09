@@ -1,0 +1,285 @@
+:root {
+  color-scheme: dark;
+  --bg: #16181d;
+  --panel: #1f2229;
+  --panel-border: #2c3038;
+  --text: #e8e6e3;
+  --muted: #8b8f98;
+  --accent: #4da3ff;
+  --accent-warm: #c44536;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.brand {
+  font-weight: 700;
+  color: var(--accent-warm);
+  letter-spacing: 0.02em;
+}
+
+.project-name {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 4px 6px;
+  width: 160px;
+}
+
+.project-name:hover,
+.project-name:focus {
+  border-color: var(--panel-border);
+  outline: none;
+}
+
+.tool-group {
+  display: flex;
+  gap: 4px;
+}
+
+button {
+  background: #262a32;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12.5px;
+  padding: 5px 10px;
+}
+
+button:hover {
+  background: #2e333d;
+}
+
+button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b1520;
+  font-weight: 600;
+}
+
+button.danger {
+  margin-top: 12px;
+  border-color: #5c2a24;
+  color: #ff8a76;
+}
+
+button.mini {
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 18px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+button.mini:hover {
+  color: var(--text);
+  background: #2e333d;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.spacer {
+  flex: 1;
+}
+
+select,
+input[type="number"],
+input[type="text"],
+.prop-row input {
+  background: #14161b;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 4px 6px;
+  font-size: 12.5px;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel {
+  width: 240px;
+  background: var(--panel);
+  border-right: 1px solid var(--panel-border);
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.properties-panel {
+  border-right: none;
+  border-left: 1px solid var(--panel-border);
+}
+
+.panel h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 2px 0 10px;
+}
+
+.panel h3 {
+  font-size: 13px;
+  margin: 4px 0 10px;
+}
+
+.tree-branch {
+  font-weight: 600;
+  margin-top: 10px;
+  padding: 3px 0;
+}
+
+.tree-branch.muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.tree-subbranch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  padding: 2px 0 2px 12px;
+}
+
+.tree-leaf {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 4px 3px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tree-leaf:hover {
+  background: #262a32;
+}
+
+.tree-leaf.selected {
+  background: rgba(77, 163, 255, 0.18);
+}
+
+.tree-leaf.active span {
+  color: var(--accent);
+}
+
+.tree-leaf em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.tree-empty {
+  color: var(--muted);
+  padding: 6px 4px;
+  font-style: italic;
+}
+
+.viewport-host {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.viewport-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.viewport-hud {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  background: rgba(22, 24, 29, 0.8);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.prop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+.prop-row input,
+.prop-row select {
+  width: 130px;
+}
+
+.prop-static {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.prop-point {
+  display: grid;
+  grid-template-columns: 52px 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.prop-point-label {
+  color: var(--muted);
+}
+
+.prop-point input {
+  width: 100%;
+}
+
+.status-bar {
+  padding: 4px 10px;
+  background: var(--panel);
+  border-top: 1px solid var(--panel-border);
+  color: var(--muted);
+  font-size: 12px;
+}

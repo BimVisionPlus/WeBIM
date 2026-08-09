@@ -1,0 +1,101 @@
+import { describe, expect, it } from "vitest";
+import { NativeBimProject } from "../src/domain/project";
+import { exportProjectToIfc, groupAxisFamilies, ifcGuid } from "../src/export/ifcGrid";
+
+function projectWith(axes: Array<[[number, number, number], [number, number, number]]>) {
+  const project = NativeBimProject.create("Test", "Site", "Building", "Storey");
+  for (const [start, end] of axes) {
+    project.addGridAxis(start, end);
+  }
+  return project;
+}
+
+describe("ifcGuid", () => {
+  it("produces 22-char IFC base64 ids", () => {
+    for (let i = 0; i < 20; i += 1) {
+      const guid = ifcGuid();
+      expect(guid).toHaveLength(22);
+      expect(guid).toMatch(/^[0-3][0-9A-Za-z_$]{21}$/);
+    }
+  });
+});
+
+describe("groupAxisFamilies", () => {
+  it("groups parallel axes within one degree", () => {
+    const project = projectWith([
+      [[0, 0, 0], [0, 10, 0]],
+      [[5, 0, 0], [5.05, 10, 0]],
+      [[0, 0, 0], [10, 0, 0]],
+    ]);
+    const families = groupAxisFamilies(project.gridAxes);
+    expect(families).toHaveLength(2);
+    expect(families[0].axes).toHaveLength(2);
+  });
+});
+
+describe("exportProjectToIfc", () => {
+  it("exports two axis families as a RECTANGULAR IfcGrid", () => {
+    const project = projectWith([
+      [[0, 0, 0], [0, 10, 0]],
+      [[5, 0, 0], [5, 10, 0]],
+      [[0, 0, 0], [10, 0, 0]],
+      [[0, 5, 0], [10, 5, 0]],
+    ]);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc).toContain("FILE_SCHEMA(('IFC4'))");
+    expect(ifc).toContain("IFCGRID(");
+    expect(ifc).toContain(".RECTANGULAR.");
+    expect(ifc.match(/IFCGRIDAXIS\(/g)).toHaveLength(4);
+    expect(ifc).toContain("'A'");
+    expect(ifc).not.toContain("IFCANNOTATION(");
+  });
+
+  it("exports three families as TRIANGULAR", () => {
+    const project = projectWith([
+      [[0, 0, 0], [0, 10, 0]],
+      [[0, 0, 0], [10, 0, 0]],
+      [[0, 0, 0], [10, 10, 0]],
+    ]);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc).toContain(".TRIANGULAR.");
+  });
+
+  it("keeps a single family as standalone IfcAnnotation axes", () => {
+    const project = projectWith([
+      [[0, 0, 0], [0, 10, 0]],
+      [[5, 0, 0], [5, 10, 0]],
+    ]);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc).not.toContain("IFCGRID(");
+    expect(ifc.match(/IFCANNOTATION\(/g)).toHaveLength(2);
+    expect(ifc).toContain("'WEBIM_GRID_AXIS'");
+  });
+
+  it("splits systems into separate IfcGrids", () => {
+    const project = projectWith([]);
+    project.addGridAxis([0, 0, 0], [0, 10, 0], { systemName: "G1" });
+    project.addGridAxis([0, 0, 0], [10, 0, 0], { systemName: "G1" });
+    project.addGridAxis([20, 0, 0], [20, 10, 0], { systemName: "G2" });
+    project.addGridAxis([20, 0, 0], [30, 0, 0], { systemName: "G2" });
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc.match(/IFCGRID\(/g)).toHaveLength(2);
+    expect(ifc).toContain("'G1'");
+    expect(ifc).toContain("'G2'");
+  });
+
+  it("contains the spatial hierarchy", () => {
+    const ifc = exportProjectToIfc(projectWith([[[0, 0, 0], [0, 1, 0]]]), {
+      timestamp: "2026-08-09T00:00:00Z",
+    });
+    for (const entity of [
+      "IFCPROJECT(",
+      "IFCSITE(",
+      "IFCBUILDING(",
+      "IFCBUILDINGSTOREY(",
+      "IFCRELAGGREGATES(",
+      "IFCRELCONTAINEDINSPATIALSTRUCTURE(",
+    ]) {
+      expect(ifc).toContain(entity);
+    }
+  });
+});

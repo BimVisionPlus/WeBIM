@@ -1,0 +1,283 @@
+// Port of webim/domain/project.py — same JSON schema (version 4) so project
+// files round-trip with the WeBIM Blender add-on.
+
+import { validateLineStyle } from "./lineStyles";
+
+export type Point3D = [number, number, number];
+
+export interface GridDatum {
+  id: string;
+  name: string;
+  start: Point3D;
+  end: Point3D;
+  systemName: string;
+  headType: string;
+  headScale: number;
+  linePattern: string;
+  lineWeightMm: number;
+}
+
+export type ViewType = "FLOOR_PLAN" | "SECTION" | "ELEVATION";
+
+export interface TechnicalView {
+  id: string;
+  name: string;
+  viewType: ViewType;
+  scale: number;
+  orthoScale: number;
+}
+
+export function uuid4Hex(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export function letterLabel(index: number): string {
+  let label = "";
+  let value = index + 1;
+  while (value) {
+    const remainder = (value - 1) % 26;
+    value = Math.floor((value - 1) / 26);
+    label = String.fromCharCode(65 + remainder) + label;
+  }
+  return label;
+}
+
+function pointsEqual(a: Point3D, b: Point3D): boolean {
+  return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+}
+
+function makeGridDatum(data: GridDatum): GridDatum {
+  validateLineStyle(data.linePattern, data.lineWeightMm);
+  return data;
+}
+
+export class NativeBimProject {
+  id: string;
+  name: string;
+  siteName: string;
+  buildingName: string;
+  storeyName: string;
+  gridAxes: GridDatum[];
+  views: TechnicalView[];
+
+  constructor(
+    id: string,
+    name: string,
+    siteName: string,
+    buildingName: string,
+    storeyName: string,
+    gridAxes: GridDatum[] = [],
+    views: TechnicalView[] = [],
+  ) {
+    this.id = id;
+    this.name = name;
+    this.siteName = siteName;
+    this.buildingName = buildingName;
+    this.storeyName = storeyName;
+    this.gridAxes = gridAxes;
+    this.views = views;
+  }
+
+  static create(
+    name: string,
+    siteName: string,
+    buildingName: string,
+    storeyName: string,
+  ): NativeBimProject {
+    return new NativeBimProject(uuid4Hex(), name, siteName, buildingName, storeyName);
+  }
+
+  toDict(): Record<string, unknown> {
+    return {
+      schema_version: 4,
+      id: this.id,
+      name: this.name,
+      site_name: this.siteName,
+      building_name: this.buildingName,
+      storey_name: this.storeyName,
+      grid_axes: this.gridAxes.map((axis) => ({
+        id: axis.id,
+        name: axis.name,
+        start: [...axis.start],
+        end: [...axis.end],
+        system_name: axis.systemName,
+        head_type: axis.headType,
+        head_scale: axis.headScale,
+        line_pattern: axis.linePattern,
+        line_weight_mm: axis.lineWeightMm,
+      })),
+      views: this.views.map((view) => ({
+        id: view.id,
+        name: view.name,
+        view_type: view.viewType,
+        scale: view.scale,
+        ortho_scale: view.orthoScale,
+      })),
+    };
+  }
+
+  static fromJson(value: string): NativeBimProject {
+    const data = JSON.parse(value);
+    return new NativeBimProject(
+      data.id,
+      data.name,
+      data.site_name,
+      data.building_name,
+      data.storey_name,
+      data.grid_axes.map((axis: Record<string, unknown>) =>
+        makeGridDatum({
+          id: axis.id as string,
+          name: axis.name as string,
+          start: axis.start as Point3D,
+          end: axis.end as Point3D,
+          systemName: axis.system_name as string,
+          headType: (axis.head_type as string) ?? "CIRCLE",
+          headScale: (axis.head_scale as number) ?? 1.0,
+          linePattern: (axis.line_pattern as string) ?? "CENTER",
+          lineWeightMm: (axis.line_weight_mm as number) ?? 0.25,
+        }),
+      ),
+      (data.views ?? []).map((view: Record<string, unknown>) => ({
+        id: view.id as string,
+        name: view.name as string,
+        viewType: view.view_type as ViewType,
+        scale: (view.scale as number) ?? 100,
+        orthoScale: (view.ortho_scale as number) ?? 20.0,
+      })),
+    );
+  }
+
+  addView(name: string, viewType: string, scale = 100, orthoScale = 20.0): TechnicalView {
+    const normalizedType = viewType.toUpperCase() as ViewType;
+    if (!["FLOOR_PLAN", "SECTION", "ELEVATION"].includes(normalizedType)) {
+      throw new Error(`Unsupported technical view type: ${viewType}`);
+    }
+    if (scale <= 0) {
+      throw new Error("View scale denominator must be greater than zero");
+    }
+    if (orthoScale <= 0) {
+      throw new Error("Camera ortho scale must be greater than zero");
+    }
+    const view: TechnicalView = {
+      id: uuid4Hex(),
+      name,
+      viewType: normalizedType,
+      scale,
+      orthoScale,
+    };
+    this.views.push(view);
+    return view;
+  }
+
+  updateView(
+    viewId: string,
+    changes: { name?: string; scale?: number; orthoScale?: number },
+  ): TechnicalView {
+    const index = this.views.findIndex((view) => view.id === viewId);
+    if (index === -1) {
+      throw new Error(`Unknown TechnicalView: ${viewId}`);
+    }
+    const view = this.views[index];
+    const updated: TechnicalView = {
+      ...view,
+      name: changes.name ?? view.name,
+      scale: changes.scale ?? view.scale,
+      orthoScale: changes.orthoScale ?? view.orthoScale,
+    };
+    if (updated.scale <= 0) {
+      throw new Error("View scale denominator must be greater than zero");
+    }
+    if (updated.orthoScale <= 0) {
+      throw new Error("Camera ortho scale must be greater than zero");
+    }
+    this.views[index] = updated;
+    return updated;
+  }
+
+  removeView(viewId: string): TechnicalView {
+    const index = this.views.findIndex((view) => view.id === viewId);
+    if (index === -1) {
+      throw new Error(`Unknown TechnicalView: ${viewId}`);
+    }
+    return this.views.splice(index, 1)[0];
+  }
+
+  addGridAxis(
+    start: Point3D,
+    end: Point3D,
+    options: {
+      systemName?: string;
+      headType?: string;
+      headScale?: number;
+      linePattern?: string;
+      lineWeightMm?: number;
+    } = {},
+  ): GridDatum {
+    if (pointsEqual(start, end)) {
+      throw new Error("A grid axis requires two different points");
+    }
+    const headScale = options.headScale ?? 1.0;
+    if (headScale <= 0) {
+      throw new Error("Grid head scale must be greater than zero");
+    }
+    const axis = makeGridDatum({
+      id: uuid4Hex(),
+      name: letterLabel(this.gridAxes.length),
+      start,
+      end,
+      systemName: options.systemName ?? "Default Grid",
+      headType: options.headType ?? "CIRCLE",
+      headScale,
+      linePattern: options.linePattern ?? "CENTER",
+      lineWeightMm: options.lineWeightMm ?? 0.25,
+    });
+    this.gridAxes.push(axis);
+    return axis;
+  }
+
+  updateGridAxis(
+    axisId: string,
+    changes: {
+      start?: Point3D;
+      end?: Point3D;
+      headType?: string;
+      headScale?: number;
+      linePattern?: string;
+      lineWeightMm?: number;
+    },
+  ): GridDatum {
+    const index = this.gridAxes.findIndex((axis) => axis.id === axisId);
+    if (index === -1) {
+      throw new Error(`Unknown GridDatum: ${axisId}`);
+    }
+    const axis = this.gridAxes[index];
+    const updated = makeGridDatum({
+      ...axis,
+      start: changes.start ?? axis.start,
+      end: changes.end ?? axis.end,
+      headType: changes.headType ?? axis.headType,
+      headScale: changes.headScale ?? axis.headScale,
+      linePattern: changes.linePattern ?? axis.linePattern,
+      lineWeightMm: changes.lineWeightMm ?? axis.lineWeightMm,
+    });
+    if (pointsEqual(updated.start, updated.end)) {
+      throw new Error("A grid axis requires two different points");
+    }
+    if (updated.headScale <= 0) {
+      throw new Error("Grid head scale must be greater than zero");
+    }
+    this.gridAxes[index] = updated;
+    return updated;
+  }
+
+  removeGridAxis(axisId: string): GridDatum {
+    const index = this.gridAxes.findIndex((axis) => axis.id === axisId);
+    if (index === -1) {
+      throw new Error(`Unknown GridDatum: ${axisId}`);
+    }
+    return this.gridAxes.splice(index, 1)[0];
+  }
+}
