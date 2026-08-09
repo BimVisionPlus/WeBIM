@@ -125,3 +125,25 @@ describe("wall export", () => {
     expect(ifc.match(/IFCCARTESIANPOINT\(\(4\.1,-0\.1\)\)/g)?.length).toBe(2);
   });
 });
+
+describe("wall connection relationships", () => {
+  it("emits IfcRelConnectsPathElements for corner and T joins", () => {
+    const project = projectWith([]);
+    project.addWall([0, 0, 0], [8, 0, 0]);
+    project.addWall([8, 0, 0], [8, 3, 0]);
+    project.addWall([4, -3, 0], [4, 0, 0]);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    const rels = ifc.match(/IFCRELCONNECTSPATHELEMENTS\(/g);
+    expect(rels).toHaveLength(2);
+    expect(ifc).toContain(".ATPATH.");
+    expect(ifc).toContain("(),(),.ATSTART.,.ATEND.");
+  });
+
+  it("emits no relationship for SQUARE ends", () => {
+    const project = projectWith([]);
+    project.addWall([0, 0, 0], [4, 0, 0], { joinEnd: "SQUARE" } as never);
+    project.addWall([4, 0, 0], [4, 3, 0]);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc).not.toContain("IFCRELCONNECTSPATHELEMENTS(");
+  });
+});

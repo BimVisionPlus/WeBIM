@@ -11,7 +11,7 @@
 // the browser counterpart of create_2pt_wall in webim/core/wall.py, plus
 // corner joins.
 
-import { wallFootprint } from "../application/wallGeometry";
+import { wallFootprint, wallJoins } from "../application/wallGeometry";
 import type { GridDatum, NativeBimProject, Point3D, WallDatum } from "../domain/project";
 
 const GUID_ALPHABET =
@@ -269,8 +269,28 @@ export function exportProjectToIfc(
     }
   }
 
+  const wallRefs = new Map<string, string>();
   for (const wall of project.walls) {
-    containedProducts.push(addWall(step, wall, project.walls, context, storeyPlacement));
+    const ref = addWall(step, wall, project.walls, context, storeyPlacement);
+    wallRefs.set(wall.id, ref);
+    containedProducts.push(ref);
+  }
+  // Join relationships mirror the geometric joins: coincident-end pairs and
+  // T-joins (ATPATH on the continuous wall). SQUARE ends emit nothing.
+  for (const join of wallJoins(project.walls)) {
+    step.add("IFCRELCONNECTSPATHELEMENTS", [
+      text(ifcGuid()),
+      "$",
+      "$",
+      "$",
+      "$",
+      wallRefs.get(join.relating.id)!,
+      wallRefs.get(join.related.id)!,
+      "()",
+      "()",
+      `.${join.related.connection}.`,
+      `.${join.relating.connection}.`,
+    ]);
   }
 
   if (containedProducts.length > 0) {

@@ -535,11 +535,16 @@ export class GridViewport {
     }
     const factor = store.annotationViewFactor;
     const viewScale = store.activeView?.scale ?? 100;
+    const viewType = store.activeView?.viewType ?? "FLOOR_PLAN";
     for (const axis of store.project.gridAxes) {
       const selected = store.selection?.kind === "grid" && store.selection.id === axis.id;
       const color = selected ? COLOR_SELECTED : COLOR_GRID;
-      this.gridGroup.add(this.buildAxisLine(axis, viewScale, color));
-      this.buildAxisHeads(axis, factor, color);
+      if (viewType === "FLOOR_PLAN") {
+        this.gridGroup.add(this.buildAxisLine(axis, viewScale, color));
+        this.buildAxisHeads(axis, factor, color);
+      } else {
+        this.buildDatumGrid(axis, viewType, viewScale, factor, color);
+      }
     }
     for (const wall of store.project.walls) {
       const selected = store.selection?.kind === "wall" && store.selection.id === wall.id;
@@ -599,6 +604,69 @@ export class GridViewport {
       sprite.position.set(center[0], center[1], 0.1);
       this.gridGroup.add(sprite);
     }
+  }
+
+  /** Top of the vertical datum extent: a margin above the tallest wall. */
+  private datumTopZ(): number {
+    const wallTop = store.project.walls.reduce(
+      (top, wall) => Math.max(top, wall.start[2] + wall.height),
+      3,
+    );
+    return wallTop + 1;
+  }
+
+  /**
+   * Revit-style grid datum in an elevation/section: a vertical dashed line
+   * with the head bubble above the top, shown only for grids whose axis is
+   * perpendicular to the view plane (they project to a single position).
+   */
+  private buildDatumGrid(
+    axis: GridDatum,
+    viewType: "ELEVATION" | "SECTION",
+    viewScale: number,
+    factor: number,
+    color: number,
+  ): void {
+    // Screen-horizontal world coordinate: X in elevations, Y in sections.
+    const h = viewType === "ELEVATION" ? 0 : 1;
+    if (Math.abs(axis.start[h] - axis.end[h]) > 0.01) return;
+    const position = (axis.start[h] + axis.end[h]) / 2;
+    const bottom = 0;
+    const top = this.datumTopZ();
+    const toWorld = (offset: number, z: number): [number, number, number] =>
+      viewType === "ELEVATION" ? [position + offset, 0, z] : [0, position + offset, z];
+
+    const pattern = LINE_PATTERNS.get(axis.linePattern) ?? LINE_PATTERNS.get("CONTINUOUS")!;
+    const positions: number[] = [];
+    for (const [from, to] of dashSpans(top - bottom, pattern, viewScale)) {
+      positions.push(...toWorld(0, bottom + from), ...toWorld(0, bottom + to));
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    this.gridGroup.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color })));
+
+    if (axis.headType === "NONE") return;
+    const radius = GRID_HEAD_RADIUS * axis.headScale * factor;
+    const centerZ = top + radius + GRID_HEAD_GAP;
+    const pointCount = axis.headType === "HEXAGON" ? 6 : 48;
+    const headPositions: number[] = [];
+    for (let i = 0; i < pointCount; i += 1) {
+      const a0 = (Math.PI * 2 * i) / pointCount;
+      const a1 = (Math.PI * 2 * (i + 1)) / pointCount;
+      headPositions.push(
+        ...toWorld(radius * Math.cos(a0), centerZ + radius * Math.sin(a0)),
+        ...toWorld(radius * Math.cos(a1), centerZ + radius * Math.sin(a1)),
+      );
+    }
+    const headGeometry = new THREE.BufferGeometry();
+    headGeometry.setAttribute("position", new THREE.Float32BufferAttribute(headPositions, 3));
+    this.gridGroup.add(
+      new THREE.LineSegments(headGeometry, new THREE.LineBasicMaterial({ color })),
+    );
+    const sprite = makeTextSprite(axis.name, radius * 1.6);
+    const [sx, sy, sz] = toWorld(0, centerZ);
+    sprite.position.set(sx, sy, sz + 0.001);
+    this.gridGroup.add(sprite);
   }
 
   private buildWall(wall: WallDatum, color: number): void {

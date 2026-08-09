@@ -129,3 +129,29 @@ describe("walls", () => {
     expect(restored.walls).toEqual([]);
   });
 });
+
+describe("wall join types (domain)", () => {
+  it("defaults to MITER and round-trips overrides", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [4, 0, 0]);
+    expect(wall.joinStart).toBe("MITER");
+    project.updateWall(wall.id, { joinEnd: "BUTT" });
+    const restored = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(restored.walls[0].joinEnd).toBe("BUTT");
+    expect(restored.walls[0].joinStart).toBe("MITER");
+    expect(() => project.updateWall(wall.id, { joinEnd: "WELD" as never })).toThrow(
+      "Unknown wall join type",
+    );
+  });
+
+  it("defaults missing join keys in legacy JSON to MITER", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    project.addWall([0, 0, 0], [4, 0, 0]);
+    const payload = JSON.parse(JSON.stringify(project.toDict()));
+    delete payload.walls[0].join_start;
+    delete payload.walls[0].join_end;
+    const restored = NativeBimProject.fromJson(JSON.stringify(payload));
+    expect(restored.walls[0].joinStart).toBe("MITER");
+    expect(restored.walls[0].joinEnd).toBe("MITER");
+  });
+});

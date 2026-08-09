@@ -18,6 +18,22 @@ export interface GridDatum {
 }
 
 /**
+ * How a wall end joins a neighbour: MITER shares corner points, BUTT lets
+ * the older wall run through while this pair butts, SQUARE disallows the
+ * join entirely (plain square end, no connection relationship).
+ */
+export type WallJoinType = "MITER" | "BUTT" | "SQUARE";
+
+const WALL_JOIN_TYPES: readonly WallJoinType[] = ["MITER", "BUTT", "SQUARE"];
+
+function validateJoinType(value: string): WallJoinType {
+  if (!WALL_JOIN_TYPES.includes(value as WallJoinType)) {
+    throw new Error(`Unknown wall join type: ${value}`);
+  }
+  return value as WallJoinType;
+}
+
+/**
  * Native wall element. Web-first extension: serialized under a "walls" key
  * the Python add-on ignores on load (its wall tool is still IFC-legacy).
  */
@@ -28,6 +44,8 @@ export interface WallDatum {
   end: Point3D;
   thickness: number;
   height: number;
+  joinStart: WallJoinType;
+  joinEnd: WallJoinType;
 }
 
 export type ViewType = "FLOOR_PLAN" | "SECTION" | "ELEVATION";
@@ -139,6 +157,8 @@ export class NativeBimProject {
         end: [...wall.end],
         thickness: wall.thickness,
         height: wall.height,
+        join_start: wall.joinStart,
+        join_end: wall.joinEnd,
       })),
     };
   }
@@ -178,6 +198,8 @@ export class NativeBimProject {
         end: wall.end as Point3D,
         thickness: (wall.thickness as number) ?? 0.2,
         height: (wall.height as number) ?? 3.0,
+        joinStart: validateJoinType((wall.join_start as string) ?? "MITER"),
+        joinEnd: validateJoinType((wall.join_end as string) ?? "MITER"),
       })),
     );
   }
@@ -308,7 +330,12 @@ export class NativeBimProject {
   addWall(
     start: Point3D,
     end: Point3D,
-    options: { thickness?: number; height?: number } = {},
+    options: {
+      thickness?: number;
+      height?: number;
+      joinStart?: WallJoinType;
+      joinEnd?: WallJoinType;
+    } = {},
   ): WallDatum {
     if (pointsEqual(start, end)) {
       throw new Error("Wall endpoints must be different");
@@ -328,6 +355,8 @@ export class NativeBimProject {
       end,
       thickness,
       height,
+      joinStart: validateJoinType(options.joinStart ?? "MITER"),
+      joinEnd: validateJoinType(options.joinEnd ?? "MITER"),
     };
     this.walls.push(wall);
     return wall;
@@ -335,7 +364,14 @@ export class NativeBimProject {
 
   updateWall(
     wallId: string,
-    changes: { start?: Point3D; end?: Point3D; thickness?: number; height?: number },
+    changes: {
+      start?: Point3D;
+      end?: Point3D;
+      thickness?: number;
+      height?: number;
+      joinStart?: WallJoinType;
+      joinEnd?: WallJoinType;
+    },
   ): WallDatum {
     const index = this.walls.findIndex((wall) => wall.id === wallId);
     if (index === -1) {
@@ -348,6 +384,8 @@ export class NativeBimProject {
       end: changes.end ?? wall.end,
       thickness: changes.thickness ?? wall.thickness,
       height: changes.height ?? wall.height,
+      joinStart: validateJoinType(changes.joinStart ?? wall.joinStart),
+      joinEnd: validateJoinType(changes.joinEnd ?? wall.joinEnd),
     };
     if (pointsEqual(updated.start, updated.end)) {
       throw new Error("Wall endpoints must be different");

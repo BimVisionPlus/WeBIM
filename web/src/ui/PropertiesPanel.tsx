@@ -1,6 +1,18 @@
 import { LINE_PATTERNS, LINE_WEIGHTS_MM } from "../domain/lineStyles";
 import { store, useStoreVersion } from "../state/store";
-import type { GridDatum, Point3D, TechnicalView, WallDatum } from "../domain/project";
+import type {
+  GridDatum,
+  Point3D,
+  TechnicalView,
+  WallDatum,
+  WallJoinType,
+} from "../domain/project";
+
+const JOIN_TYPE_LABELS: Array<[WallJoinType, string]> = [
+  ["MITER", "Miter"],
+  ["BUTT", "Butt"],
+  ["SQUARE", "Square (no join)"],
+];
 
 function NumberField(props: {
   label: string;
@@ -163,6 +175,23 @@ function WallProperties({ wall }: { wall: WallDatum }) {
         step={0.1}
         onCommit={(value) => store.updateWall(wall.id, { height: value })}
       />
+      {(["joinStart", "joinEnd"] as const).map((key) => (
+        <label key={key} className="prop-row">
+          <span>{key === "joinStart" ? "Start join" : "End join"}</span>
+          <select
+            value={wall[key]}
+            onChange={(event) =>
+              store.updateWall(wall.id, { [key]: event.target.value as WallJoinType })
+            }
+          >
+            {JOIN_TYPE_LABELS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
       <button className="danger" onClick={() => store.removeWall(wall.id)}>
         Delete wall
       </button>

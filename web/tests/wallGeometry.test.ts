@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { wallFootprint } from "../src/application/wallGeometry";
+import { wallFootprint, wallJoins } from "../src/application/wallGeometry";
 import { NativeBimProject } from "../src/domain/project";
 
 function projectWithWalls(
@@ -186,5 +186,74 @@ describe("wallFootprint T-joins", () => {
     const footprintA = wallFootprint(project.walls[0], project.walls);
     expectPoint(footprintA[1], [3.9, 0.1]);
     expectPoint(footprintA[2], [4.1, -0.1]);
+  });
+});
+
+describe("wall join types", () => {
+  it("BUTT at a corner runs the older wall through to the far face", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    project.addWall([0, 0, 0], [4, 0, 0], { thickness: 0.2, joinEnd: "BUTT" });
+    project.addWall([4, 0, 0], [4, 3, 0], { thickness: 0.2 });
+    const [wallA, wallB] = project.walls;
+    // A (older) runs through: square end at B's far face x = 4.1.
+    const footprintA = wallFootprint(wallA, project.walls);
+    expectPoint(footprintA[1], [4.1, 0.1]);
+    expectPoint(footprintA[2], [4.1, -0.1]);
+    // B butts against A's near face y = 0.1.
+    const footprintB = wallFootprint(wallB, project.walls);
+    expectPoint(footprintB[0], [3.9, 0.1]);
+    expectPoint(footprintB[3], [4.1, 0.1]);
+  });
+
+  it("SQUARE on either end disables the corner join for both walls", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    project.addWall([0, 0, 0], [4, 0, 0], { thickness: 0.2, joinEnd: "SQUARE" });
+    project.addWall([4, 0, 0], [4, 3, 0], { thickness: 0.2 });
+    const footprintA = wallFootprint(project.walls[0], project.walls);
+    expectPoint(footprintA[1], [4, 0.1]);
+    expectPoint(footprintA[2], [4, -0.1]);
+    const footprintB = wallFootprint(project.walls[1], project.walls);
+    expectPoint(footprintB[0], [3.9, 0]);
+    expectPoint(footprintB[3], [4.1, 0]);
+  });
+
+  it("SQUARE disables a T-join trim", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    project.addWall([0, 0, 0], [8, 0, 0], { thickness: 0.2 });
+    project.addWall([4, -3, 0], [4, 0, 0], { thickness: 0.2, joinEnd: "SQUARE" });
+    const footprintB = wallFootprint(project.walls[1], project.walls);
+    expectPoint(footprintB[1], [3.9, 0]);
+    expectPoint(footprintB[2], [4.1, 0]);
+  });
+});
+
+describe("wallJoins", () => {
+  it("records a corner pair once with end connections", () => {
+    const project = projectWithWalls([
+      [[0, 0, 0], [4, 0, 0]],
+      [[4, 0, 0], [4, 3, 0]],
+    ]);
+    const joins = wallJoins(project.walls);
+    expect(joins).toHaveLength(1);
+    expect(joins[0].relating).toEqual({ id: project.walls[0].id, connection: "ATEND" });
+    expect(joins[0].related).toEqual({ id: project.walls[1].id, connection: "ATSTART" });
+  });
+
+  it("records a T-join with ATPATH on the continuous wall", () => {
+    const project = projectWithWalls([
+      [[0, 0, 0], [8, 0, 0]],
+      [[4, -3, 0], [4, 0, 0]],
+    ]);
+    const joins = wallJoins(project.walls);
+    expect(joins).toHaveLength(1);
+    expect(joins[0].relating).toEqual({ id: project.walls[1].id, connection: "ATEND" });
+    expect(joins[0].related).toEqual({ id: project.walls[0].id, connection: "ATPATH" });
+  });
+
+  it("emits nothing for SQUARE ends", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    project.addWall([0, 0, 0], [4, 0, 0], { thickness: 0.2, joinEnd: "SQUARE" });
+    project.addWall([4, 0, 0], [4, 3, 0], { thickness: 0.2 });
+    expect(wallJoins(project.walls)).toHaveLength(0);
   });
 });
