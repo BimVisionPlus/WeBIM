@@ -2,6 +2,7 @@ import { LINE_PATTERNS, LINE_WEIGHTS_MM } from "../domain/lineStyles";
 import { store, useStoreVersion } from "../state/store";
 import type {
   GridDatum,
+  OpeningDatum,
   Point3D,
   TechnicalView,
   WallDatum,
@@ -199,6 +200,48 @@ function WallProperties({ wall }: { wall: WallDatum }) {
   );
 }
 
+function OpeningProperties({ wall, opening }: { wall: WallDatum; opening: OpeningDatum }) {
+  const update = (changes: Parameters<typeof store.updateOpening>[2]) =>
+    store.updateOpening(wall.id, opening.id, changes);
+  return (
+    <>
+      <h3>
+        {opening.kind === "DOOR" ? "Door" : "Window"} {opening.name}
+      </h3>
+      <div className="prop-static">
+        <span>Host wall</span>
+        <span>{wall.name}</span>
+      </div>
+      <NumberField
+        label="Offset (m)"
+        value={opening.offset}
+        onCommit={(value) => update({ offset: value })}
+      />
+      <NumberField
+        label="Width (m)"
+        value={opening.width}
+        step={0.05}
+        onCommit={(value) => update({ width: value })}
+      />
+      <NumberField
+        label="Height (m)"
+        value={opening.height}
+        step={0.05}
+        onCommit={(value) => update({ height: value })}
+      />
+      <NumberField
+        label="Sill height (m)"
+        value={opening.sillHeight}
+        step={0.05}
+        onCommit={(value) => update({ sillHeight: value })}
+      />
+      <button className="danger" onClick={() => store.removeOpening(wall.id, opening.id)}>
+        Delete {opening.kind === "DOOR" ? "door" : "window"}
+      </button>
+    </>
+  );
+}
+
 function ViewProperties({ view }: { view: TechnicalView }) {
   return (
     <>
@@ -252,6 +295,9 @@ export function PropertiesPanel() {
     selection?.kind === "wall"
       ? store.project.walls.find((candidate) => candidate.id === selection.id)
       : undefined;
+  const openingHost =
+    selection?.kind === "opening" ? store.project.openingHost(selection.id) : null;
+  const opening = openingHost?.openings.find((candidate) => candidate.id === selection?.id);
 
   return (
     <aside className="panel properties-panel">
@@ -259,8 +305,9 @@ export function PropertiesPanel() {
       {axis && <GridProperties axis={axis} />}
       {view && <ViewProperties view={view} />}
       {wall && <WallProperties wall={wall} />}
-      {!axis && !view && !wall && (
-        <div className="tree-empty">Select a grid, wall or view.</div>
+      {openingHost && opening && <OpeningProperties wall={openingHost} opening={opening} />}
+      {!axis && !view && !wall && !opening && (
+        <div className="tree-empty">Select a grid, wall, opening or view.</div>
       )}
     </aside>
   );

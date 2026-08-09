@@ -9,9 +9,9 @@
 
 import * as THREE from "three";
 import { snapGridPoint, type SnapResult } from "../application/gridSnapping";
-import { wallFootprint } from "../application/wallGeometry";
+import { openingFootprint, wallPieces } from "../application/wallGeometry";
 import { dashSpans, LINE_PATTERNS } from "../domain/lineStyles";
-import type { GridDatum, Point3D, WallDatum } from "../domain/project";
+import type { GridDatum, OpeningDatum, Point3D, WallDatum } from "../domain/project";
 import { store } from "../state/store";
 
 export const GRID_HEAD_RADIUS = 0.35;
@@ -26,6 +26,8 @@ const COLOR_UNDERLAY = 0x2b2e36;
 const COLOR_UNDERLAY_MAJOR = 0x363a44;
 const COLOR_GRID = 0xc44536;
 const COLOR_WALL = 0x9aa3b2;
+const COLOR_DOOR = 0xb08968;
+const COLOR_WINDOW = 0x7fb3d5;
 const COLOR_SELECTED = 0x4da3ff;
 const COLOR_PREVIEW = 0x8fd460;
 const COLOR_AXIS_LOCK = 0xffb454;
@@ -322,6 +324,65 @@ export class GridViewport {
     return null;
   }
 
+  private pickWall(world: Point3D): WallDatum | null {
+    const pixelThreshold = PICK_PIXELS * this.worldPerPixel();
+    let best: WallDatum | null = null;
+    let bestDistance = Infinity;
+    for (const wall of store.project.walls) {
+      const distance = distanceToSegment(world, wall.start, wall.end);
+      const threshold = Math.max(pixelThreshold, wall.thickness / 2);
+      if (distance < threshold && distance < bestDistance) {
+        bestDistance = distance;
+        best = wall;
+      }
+    }
+    return best;
+  }
+
+  private pickOpening(world: Point3D): { wall: WallDatum; opening: OpeningDatum } | null {
+    const tolerance = PICK_PIXELS * this.worldPerPixel();
+    for (const wall of store.project.walls) {
+      const dx = wall.end[0] - wall.start[0];
+      const dy = wall.end[1] - wall.start[1];
+      const length = Math.hypot(dx, dy);
+      if (length === 0) continue;
+      const along =
+        ((world[0] - wall.start[0]) * dx + (world[1] - wall.start[1]) * dy) / length;
+      const perp =
+        ((world[0] - wall.start[0]) * (-dy / length)) +
+        ((world[1] - wall.start[1]) * (dx / length));
+      for (const opening of wall.openings) {
+        if (
+          Math.abs(along - opening.offset) <= opening.width / 2 &&
+          Math.abs(perp) <= wall.thickness / 2 + tolerance
+        ) {
+          return { wall, opening };
+        }
+      }
+    }
+    return null;
+  }
+
+  private placeOpening(world: Point3D, kind: "DOOR" | "WINDOW"): void {
+    const wall = this.pickWall(world);
+    if (!wall) {
+      store.setStatus("Click on a wall to place the opening");
+      return;
+    }
+    const dx = wall.end[0] - wall.start[0];
+    const dy = wall.end[1] - wall.start[1];
+    const length = Math.hypot(dx, dy);
+    const along = ((world[0] - wall.start[0]) * dx + (world[1] - wall.start[1]) * dy) / length;
+    const width = kind === "DOOR" ? 0.9 : 1.2;
+    const snapped = Math.round(along / store.snapIncrement) * store.snapIncrement;
+    const offset = Math.min(Math.max(snapped, width / 2), length - width / 2);
+    try {
+      store.addOpening(wall.id, kind, Number(offset.toFixed(10)));
+    } catch (error) {
+      store.setStatus((error as Error).message);
+    }
+  }
+
   private pickElement(world: Point3D): { kind: "grid" | "wall"; id: string } | null {
     const pixelThreshold = PICK_PIXELS * this.worldPerPixel();
     let best: { kind: "grid" | "wall"; id: string } | null = null;
@@ -374,6 +435,11 @@ export class GridViewport {
       return;
     }
 
+    if (store.activeTool === "DOOR" || store.activeTool === "WINDOW") {
+      this.placeOpening(world, store.activeTool);
+      return;
+    }
+
     if (store.activeTool === "GRID" || store.activeTool === "WALL") {
       const snap = this.computeSnap(world);
       if (store.pendingStart === null) {
@@ -404,6 +470,11 @@ export class GridViewport {
         this.lastSnap = this.computeSnap(world);
         store.setStatus("Move the endpoint, click to confirm. Esc cancels.");
         this.syncPreview();
+        return;
+      }
+      const openingHit = this.pickOpening(world);
+      if (openingHit) {
+        store.select({ kind: "opening", id: openingHit.opening.id });
         return;
       }
       const hit = this.pickElement(world);
@@ -498,11 +569,20 @@ export class GridViewport {
       store.setTool("GRID");
     } else if ((event.key === "w" || event.key === "W") && store.activeTool !== "WALL") {
       store.setTool("WALL");
+    } else if ((event.key === "d" || event.key === "D") && store.activeTool !== "DOOR") {
+      store.setTool("DOOR");
+    } else if ((event.key === "o" || event.key === "O") && store.activeTool !== "WINDOW") {
+      store.setTool("WINDOW");
     } else if (event.key === "Delete" || event.key === "Backspace") {
       if (store.selection?.kind === "grid") {
         store.removeGridAxis(store.selection.id);
       } else if (store.selection?.kind === "wall") {
         store.removeWall(store.selection.id);
+      } else if (store.selection?.kind === "opening") {
+        const host = store.project.openingHost(store.selection.id);
+        if (host) {
+          store.removeOpening(host.id, store.selection.id);
+        }
       }
     }
   };
@@ -672,29 +752,91 @@ export class GridViewport {
   private buildWall(wall: WallDatum, color: number): void {
     const length = Math.hypot(wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]);
     if (length === 0) return;
-    // Footprint polygon in world XY, mitered against joined walls, extruded up.
-    const corners = wallFootprint(wall, store.project.walls);
-    const shape = new THREE.Shape(corners.map(([x, y]) => new THREE.Vector2(x, y)));
-    const geometry = new THREE.ExtrudeGeometry(shape, {
-      depth: wall.height,
-      bevelEnabled: false,
-    });
-    const material = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0.22,
-      depthWrite: false,
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(0, 0, wall.start[2]);
-    this.wallGroup.add(mesh);
+    // Mitered footprint decomposed into pieces around openings, extruded up.
+    for (const piece of wallPieces(wall, store.project.walls)) {
+      const shape = new THREE.Shape(piece.corners.map(([x, y]) => new THREE.Vector2(x, y)));
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: piece.zTop - piece.zBottom,
+        bevelEnabled: false,
+      });
+      const material = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.22,
+        depthWrite: false,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(0, 0, wall.start[2] + piece.zBottom);
+      this.wallGroup.add(mesh);
 
-    const edges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(geometry),
-      new THREE.LineBasicMaterial({ color }),
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geometry),
+        new THREE.LineBasicMaterial({ color }),
+      );
+      edges.position.copy(mesh.position);
+      this.wallGroup.add(edges);
+    }
+    for (const opening of wall.openings) {
+      this.buildOpening(wall, opening);
+    }
+  }
+
+  private buildOpening(wall: WallDatum, opening: OpeningDatum): void {
+    const selected = store.selection?.kind === "opening" && store.selection.id === opening.id;
+    const fillColor = selected
+      ? COLOR_SELECTED
+      : opening.kind === "DOOR"
+        ? COLOR_DOOR
+        : COLOR_WINDOW;
+    const dx = wall.end[0] - wall.start[0];
+    const dy = wall.end[1] - wall.start[1];
+    const length = Math.hypot(dx, dy);
+    if (length === 0) return;
+    const angle = Math.atan2(dy, dx);
+    const centerX = wall.start[0] + (dx / length) * opening.offset;
+    const centerY = wall.start[1] + (dy / length) * opening.offset;
+
+    // Thin filling panel so doors/windows read in elevations.
+    const panel = new THREE.Mesh(
+      new THREE.BoxGeometry(opening.width, 0.06, opening.height),
+      new THREE.MeshBasicMaterial({
+        color: fillColor,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false,
+      }),
     );
-    edges.position.copy(mesh.position);
-    this.wallGroup.add(edges);
+    panel.position.set(
+      centerX,
+      centerY,
+      wall.start[2] + opening.sillHeight + opening.height / 2,
+    );
+    panel.rotation.z = angle;
+    this.wallGroup.add(panel);
+    const panelEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(panel.geometry as THREE.BoxGeometry),
+      new THREE.LineBasicMaterial({ color: fillColor }),
+    );
+    panelEdges.position.copy(panel.position);
+    panelEdges.rotation.copy(panel.rotation);
+    this.wallGroup.add(panelEdges);
+
+    // Plan marker: opening rectangle drawn above the wall top.
+    const corners = openingFootprint(wall, opening);
+    if (corners.length === 4) {
+      const z = wall.start[2] + wall.height + 0.05;
+      const positions: number[] = [];
+      for (let i = 0; i < 4; i += 1) {
+        const [x0, y0] = corners[i];
+        const [x1, y1] = corners[(i + 1) % 4];
+        positions.push(x0, y0, z, x1, y1, z);
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      this.wallGroup.add(
+        new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: fillColor })),
+      );
+    }
   }
 
   private buildAnchors(): void {

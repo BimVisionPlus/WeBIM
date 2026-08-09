@@ -11,8 +11,18 @@
 // the browser counterpart of create_2pt_wall in webim/core/wall.py, plus
 // corner joins.
 
-import { wallFootprint, wallJoins } from "../application/wallGeometry";
-import type { GridDatum, NativeBimProject, Point3D, WallDatum } from "../domain/project";
+// Openings are exported the standard IFC way: the wall body stays full,
+// an IfcOpeningElement voids it via IfcRelVoidsElement, and an
+// IfcDoor/IfcWindow filling is related through IfcRelFillsElement.
+
+import { openingFootprint, wallFootprint, wallJoins } from "../application/wallGeometry";
+import type {
+  GridDatum,
+  NativeBimProject,
+  OpeningDatum,
+  Point3D,
+  WallDatum,
+} from "../domain/project";
 
 const GUID_ALPHABET =
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
@@ -274,6 +284,10 @@ export function exportProjectToIfc(
     const ref = addWall(step, wall, project.walls, context, storeyPlacement);
     wallRefs.set(wall.id, ref);
     containedProducts.push(ref);
+    for (const opening of wall.openings) {
+      const filling = addOpening(step, wall, opening, ref, context, storeyPlacement);
+      containedProducts.push(filling);
+    }
   }
   // Join relationships mirror the geometric joins: coincident-end pairs and
   // T-joins (ATPATH on the continuous wall). SQUARE ends emit nothing.
@@ -356,4 +370,122 @@ function addWall(
     "$",
     ".STANDARD.",
   ]);
+}
+
+function extrudedPolygonShape(
+  step: StepFile,
+  context: string,
+  corners: ReadonlyArray<readonly [number, number]>,
+  depth: number,
+): string {
+  const points = [...corners, corners[0]].map((corner) =>
+    step.add("IFCCARTESIANPOINT", [`(${real(corner[0])},${real(corner[1])})`]),
+  );
+  const outerCurve = step.add("IFCPOLYLINE", [`(${points.join(",")})`]);
+  const profile = step.add("IFCARBITRARYCLOSEDPROFILEDEF", [".AREA.", "$", outerCurve]);
+  const position = step.add("IFCAXIS2PLACEMENT3D", [
+    step.add("IFCCARTESIANPOINT", ["(0.,0.,0.)"]),
+    "$",
+    "$",
+  ]);
+  const direction = step.add("IFCDIRECTION", ["(0.,0.,1.)"]);
+  const solid = step.add("IFCEXTRUDEDAREASOLID", [profile, position, direction, real(depth)]);
+  const representation = step.add("IFCSHAPEREPRESENTATION", [
+    context,
+    "'Body'",
+    "'SweptSolid'",
+    `(${solid})`,
+  ]);
+  return step.add("IFCPRODUCTDEFINITIONSHAPE", ["$", "$", `(${representation})`]);
+}
+
+function basePlacement(step: StepFile, storeyPlacement: string, z: number): string {
+  const location = step.add("IFCCARTESIANPOINT", [`(0.,0.,${real(z)})`]);
+  const axisPlacement = step.add("IFCAXIS2PLACEMENT3D", [location, "$", "$"]);
+  return step.add("IFCLOCALPLACEMENT", [storeyPlacement, axisPlacement]);
+}
+
+/** Void the wall with an IfcOpeningElement and return the filling ref. */
+function addOpening(
+  step: StepFile,
+  wall: WallDatum,
+  opening: OpeningDatum,
+  wallRef: string,
+  context: string,
+  storeyPlacement: string,
+): string {
+  const baseZ = wall.start[2] + opening.sillHeight;
+  const voidShape = extrudedPolygonShape(
+    step,
+    context,
+    openingFootprint(wall, opening),
+    opening.height,
+  );
+  const openingRef = step.add("IFCOPENINGELEMENT", [
+    text(ifcGuid()),
+    "$",
+    text(opening.name),
+    "$",
+    "$",
+    basePlacement(step, storeyPlacement, baseZ),
+    voidShape,
+    "$",
+    ".OPENING.",
+  ]);
+  step.add("IFCRELVOIDSELEMENT", [text(ifcGuid()), "$", "$", "$", wallRef, openingRef]);
+
+  // Thin filling panel centred on the wall axis.
+  const dx = wall.end[0] - wall.start[0];
+  const dy = wall.end[1] - wall.start[1];
+  const length = Math.hypot(dx, dy);
+  const dir = [dx / length, dy / length];
+  const normal = [-dir[1], dir[0]];
+  const panelHalf = 0.03;
+  const from = opening.offset - opening.width / 2;
+  const to = opening.offset + opening.width / 2;
+  const corner = (t: number, side: number): [number, number] => [
+    wall.start[0] + dir[0] * t + normal[0] * panelHalf * side,
+    wall.start[1] + dir[1] * t + normal[1] * panelHalf * side,
+  ];
+  const panelShape = extrudedPolygonShape(
+    step,
+    context,
+    [corner(from, 1), corner(to, 1), corner(to, -1), corner(from, -1)],
+    opening.height,
+  );
+  const fillingPlacement = basePlacement(step, storeyPlacement, baseZ);
+  const fillingRef =
+    opening.kind === "DOOR"
+      ? step.add("IFCDOOR", [
+          text(ifcGuid()),
+          "$",
+          text(opening.name),
+          "$",
+          "$",
+          fillingPlacement,
+          panelShape,
+          "$",
+          real(opening.height),
+          real(opening.width),
+          ".DOOR.",
+          ".NOTDEFINED.",
+          "$",
+        ])
+      : step.add("IFCWINDOW", [
+          text(ifcGuid()),
+          "$",
+          text(opening.name),
+          "$",
+          "$",
+          fillingPlacement,
+          panelShape,
+          "$",
+          real(opening.height),
+          real(opening.width),
+          ".WINDOW.",
+          ".NOTDEFINED.",
+          "$",
+        ]);
+  step.add("IFCRELFILLSELEMENT", [text(ifcGuid()), "$", "$", "$", openingRef, fillingRef]);
+  return fillingRef;
 }

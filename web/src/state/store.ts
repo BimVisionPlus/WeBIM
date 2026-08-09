@@ -2,10 +2,10 @@ import { useSyncExternalStore } from "react";
 import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
 
-export type ToolId = "SELECT" | "GRID" | "WALL";
+export type ToolId = "SELECT" | "GRID" | "WALL" | "DOOR" | "WINDOW";
 
 export interface Selection {
-  kind: "grid" | "view" | "wall";
+  kind: "grid" | "view" | "wall" | "opening";
   id: string;
 }
 
@@ -98,7 +98,9 @@ class AppStore {
         ? "Grid: click two points per axis. Esc cancels, Enter exits."
         : tool === "WALL"
           ? "Wall: click two points per wall. Esc cancels, Enter exits."
-          : "Ready";
+          : tool === "DOOR" || tool === "WINDOW"
+            ? `${tool === "DOOR" ? "Door" : "Window"}: click on a wall to place. Esc exits.`
+            : "Ready";
     this.commit(false);
   }
 
@@ -163,6 +165,30 @@ class AppStore {
   removeWall(wallId: string): void {
     this.project.removeWall(wallId);
     if (this.selection?.kind === "wall" && this.selection.id === wallId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
+  addOpening(wallId: string, kind: "DOOR" | "WINDOW", offset: number): void {
+    const opening = this.project.addOpening(wallId, kind, offset);
+    this.selection = { kind: "opening", id: opening.id };
+    this.statusMessage = `${kind === "DOOR" ? "Door" : "Window"} ${opening.name} placed`;
+    this.commit();
+  }
+
+  updateOpening(
+    wallId: string,
+    openingId: string,
+    changes: Parameters<NativeBimProject["updateOpening"]>[2],
+  ): void {
+    this.project.updateOpening(wallId, openingId, changes);
+    this.commit();
+  }
+
+  removeOpening(wallId: string, openingId: string): void {
+    this.project.removeOpening(wallId, openingId);
+    if (this.selection?.kind === "opening" && this.selection.id === openingId) {
       this.selection = null;
     }
     this.commit();

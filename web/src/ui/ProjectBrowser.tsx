@@ -83,26 +83,57 @@ export function ProjectBrowser() {
         )}
         <div className="tree-subbranch">Walls</div>
         {project.walls.map((wall) => (
-          <div
-            key={wall.id}
-            className={`tree-leaf ${
-              store.selection?.kind === "wall" && store.selection.id === wall.id ? "selected" : ""
-            }`}
-            onClick={() => store.select({ kind: "wall", id: wall.id })}
-          >
-            <span>
-              Wall {wall.name} <em>{wall.thickness} m</em>
-            </span>
-            <button
-              className="mini"
-              title="Delete wall"
-              onClick={(event) => {
-                event.stopPropagation();
-                store.removeWall(wall.id);
-              }}
+          <div key={wall.id}>
+            <div
+              className={`tree-leaf ${
+                store.selection?.kind === "wall" && store.selection.id === wall.id
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() => store.select({ kind: "wall", id: wall.id })}
             >
-              ×
-            </button>
+              <span>
+                Wall {wall.name} <em>{wall.thickness} m</em>
+              </span>
+              <button
+                className="mini"
+                title="Delete wall"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  store.removeWall(wall.id);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            {wall.openings.map((opening) => (
+              <div
+                key={opening.id}
+                className={`tree-leaf tree-leaf-nested ${
+                  store.selection?.kind === "opening" && store.selection.id === opening.id
+                    ? "selected"
+                    : ""
+                }`}
+                onClick={() => store.select({ kind: "opening", id: opening.id })}
+              >
+                <span>
+                  {opening.kind === "DOOR" ? "Door" : "Window"} {opening.name}{" "}
+                  <em>
+                    {opening.width}×{opening.height} m
+                  </em>
+                </span>
+                <button
+                  className="mini"
+                  title="Delete opening"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    store.removeOpening(wall.id, opening.id);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
           </div>
         ))}
         {project.walls.length === 0 && (

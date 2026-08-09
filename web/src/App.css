@@ -283,3 +283,7 @@ input[type="text"],
   color: var(--muted);
   font-size: 12px;
 }
+
+.tree-leaf-nested {
+  padding-left: 40px;
+}

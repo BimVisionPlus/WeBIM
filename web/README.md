@@ -58,6 +58,17 @@ IFC4 STEP text → .ifc download
   render as vertical dashed lines with the head bubble above the top of
   the walls (Revit-style); grids parallel to the view are hidden, and
   plan linework is not drawn edge-on.
+- Door (`D`) and window (`O`) openings: click a wall to place (door
+  0.9×2.1 m, window 1.2×1.2 m sill 0.9 m; offset snapped and clamped).
+  Walls render as pieces around their openings — real holes with
+  lintels and sills — plus a filling panel and a plan marker. Openings
+  are hosted: they serialize inside the wall's `openings` array, list
+  nested under their wall in the browser, and edit via offset / width /
+  height / sill height.
+- IFC: the wall body stays full and each opening exports as
+  `IfcOpeningElement` (+`IfcRelVoidsElement`) filled by an
+  `IfcDoor`/`IfcWindow` via `IfcRelFillsElement`, contained in the
+  storey.
 - Anchor endpoint editing: select a grid or wall, click an endpoint
   anchor, move, click to confirm (Esc cancels) — same click-move-click
   flow as the add-on.

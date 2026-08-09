@@ -15,7 +15,7 @@
 // BUTT at a corner lets the wall listed first in the project run through
 // to the far face while the other butts against its near face.
 
-import type { Point3D, WallDatum, WallJoinType } from "../domain/project";
+import type { OpeningDatum, Point3D, WallDatum, WallJoinType } from "../domain/project";
 
 export type Point2 = [number, number];
 
@@ -352,4 +352,88 @@ export function wallFootprint(wall: WallDatum, walls: readonly WallDatum[]): Poi
     [endRight, endLeft] = endJoin;
   }
   return [startLeft, endLeft, endRight, startRight];
+}
+
+/** One solid fragment of a wall: a plan polygon spanning [zBottom, zTop]. */
+export interface WallPiece {
+  corners: Point2[];
+  zBottom: number;
+  zTop: number;
+}
+
+/**
+ * Decompose a wall into extrudable pieces around its openings: full-height
+ * segments between openings (keeping mitered end corners), plus lintels
+ * above and sills below each opening. Without openings this is exactly the
+ * footprint at full height.
+ */
+export function wallPieces(wall: WallDatum, walls: readonly WallDatum[]): WallPiece[] {
+  const footprint = wallFootprint(wall, walls);
+  const frame = axisFrame(wall);
+  if (!frame) return [];
+  const half = wall.thickness / 2;
+  const cutPair = (t: number): [Point2, Point2] => [
+    [
+      wall.start[0] + frame.dir[0] * t + frame.normal[0] * half,
+      wall.start[1] + frame.dir[1] * t + frame.normal[1] * half,
+    ],
+    [
+      wall.start[0] + frame.dir[0] * t - frame.normal[0] * half,
+      wall.start[1] + frame.dir[1] * t - frame.normal[1] * half,
+    ],
+  ];
+  // Left/right corner pair at an axis parameter, honouring joined ends.
+  const pairAt = (t: number): [Point2, Point2] => {
+    if (t <= 0) return [footprint[0], footprint[3]];
+    if (t >= frame.length) return [footprint[1], footprint[2]];
+    return cutPair(t);
+  };
+  const polygon = (a: number, b: number): Point2[] => {
+    const [aLeft, aRight] = pairAt(a);
+    const [bLeft, bRight] = pairAt(b);
+    return [aLeft, bLeft, bRight, aRight];
+  };
+
+  const openings = wall.openings
+    .map((opening) => ({
+      opening,
+      from: Math.max(0, opening.offset - opening.width / 2),
+      to: Math.min(frame.length, opening.offset + opening.width / 2),
+    }))
+    .filter(({ from, to }) => to > from)
+    .sort((first, second) => first.from - second.from);
+
+  const pieces: WallPiece[] = [];
+  let cursor = 0;
+  for (const { opening, from, to } of openings) {
+    if (from > cursor) {
+      pieces.push({ corners: polygon(cursor, from), zBottom: 0, zTop: wall.height });
+    }
+    if (opening.sillHeight > 0) {
+      pieces.push({ corners: polygon(from, to), zBottom: 0, zTop: opening.sillHeight });
+    }
+    const head = opening.sillHeight + opening.height;
+    if (head < wall.height) {
+      pieces.push({ corners: polygon(from, to), zBottom: head, zTop: wall.height });
+    }
+    cursor = Math.max(cursor, to);
+  }
+  if (cursor < frame.length) {
+    pieces.push({ corners: polygon(cursor, frame.length), zBottom: 0, zTop: wall.height });
+  }
+  return pieces;
+}
+
+/** Plan rectangle of an opening (world XY), for markers and IFC voids. */
+export function openingFootprint(wall: WallDatum, opening: OpeningDatum): Point2[] {
+  const frame = axisFrame(wall);
+  if (!frame) return [];
+  const half = wall.thickness / 2;
+  const from = opening.offset - opening.width / 2;
+  const to = opening.offset + opening.width / 2;
+  const corner = (t: number, side: number): Point2 => [
+    wall.start[0] + frame.dir[0] * t + frame.normal[0] * half * side,
+    wall.start[1] + frame.dir[1] * t + frame.normal[1] * half * side,
+  ];
+  return [corner(from, 1), corner(to, 1), corner(to, -1), corner(from, -1)];
 }

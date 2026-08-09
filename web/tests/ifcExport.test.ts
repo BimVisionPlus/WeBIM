@@ -147,3 +147,28 @@ describe("wall connection relationships", () => {
     expect(ifc).not.toContain("IFCRELCONNECTSPATHELEMENTS(");
   });
 });
+
+describe("opening export", () => {
+  it("voids the wall and fills with an IfcDoor", () => {
+    const project = projectWith([]);
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    project.addOpening(wall.id, "DOOR", 4);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc.match(/IFCOPENINGELEMENT\(/g)).toHaveLength(1);
+    expect(ifc.match(/IFCRELVOIDSELEMENT\(/g)).toHaveLength(1);
+    expect(ifc.match(/IFCDOOR\(/g)).toHaveLength(1);
+    expect(ifc.match(/IFCRELFILLSELEMENT\(/g)).toHaveLength(1);
+    expect(ifc).toContain(".OPENING.");
+    expect(ifc).toContain("'D1'");
+  });
+
+  it("exports windows as IfcWindow with sill-height placement", () => {
+    const project = projectWith([]);
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    project.addOpening(wall.id, "WINDOW", 4);
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc.match(/IFCWINDOW\(/g)).toHaveLength(1);
+    expect(ifc).toContain("(0.,0.,0.9)");
+    expect(ifc).toContain("'WN1'");
+  });
+});

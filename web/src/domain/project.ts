@@ -33,6 +33,30 @@ function validateJoinType(value: string): WallJoinType {
   return value as WallJoinType;
 }
 
+export type OpeningKind = "DOOR" | "WINDOW";
+
+/**
+ * Rectangular opening hosted by a wall: centred at `offset` metres from
+ * the wall start along its axis, `sillHeight` above the wall base.
+ */
+export interface OpeningDatum {
+  id: string;
+  name: string;
+  kind: OpeningKind;
+  offset: number;
+  width: number;
+  height: number;
+  sillHeight: number;
+}
+
+export const OPENING_DEFAULTS: Record<
+  OpeningKind,
+  { width: number; height: number; sillHeight: number }
+> = {
+  DOOR: { width: 0.9, height: 2.1, sillHeight: 0 },
+  WINDOW: { width: 1.2, height: 1.2, sillHeight: 0.9 },
+};
+
 /**
  * Native wall element. Web-first extension: serialized under a "walls" key
  * the Python add-on ignores on load (its wall tool is still IFC-legacy).
@@ -46,6 +70,7 @@ export interface WallDatum {
   height: number;
   joinStart: WallJoinType;
   joinEnd: WallJoinType;
+  openings: OpeningDatum[];
 }
 
 export type ViewType = "FLOOR_PLAN" | "SECTION" | "ELEVATION";
@@ -159,6 +184,15 @@ export class NativeBimProject {
         height: wall.height,
         join_start: wall.joinStart,
         join_end: wall.joinEnd,
+        openings: wall.openings.map((opening) => ({
+          id: opening.id,
+          name: opening.name,
+          kind: opening.kind,
+          offset: opening.offset,
+          width: opening.width,
+          height: opening.height,
+          sill_height: opening.sillHeight,
+        })),
       })),
     };
   }
@@ -200,6 +234,15 @@ export class NativeBimProject {
         height: (wall.height as number) ?? 3.0,
         joinStart: validateJoinType((wall.join_start as string) ?? "MITER"),
         joinEnd: validateJoinType((wall.join_end as string) ?? "MITER"),
+        openings: ((wall.openings as Record<string, unknown>[]) ?? []).map((opening) => ({
+          id: opening.id as string,
+          name: opening.name as string,
+          kind: opening.kind as OpeningKind,
+          offset: opening.offset as number,
+          width: opening.width as number,
+          height: opening.height as number,
+          sillHeight: (opening.sill_height as number) ?? 0,
+        })),
       })),
     );
   }
@@ -357,6 +400,7 @@ export class NativeBimProject {
       height,
       joinStart: validateJoinType(options.joinStart ?? "MITER"),
       joinEnd: validateJoinType(options.joinEnd ?? "MITER"),
+      openings: [],
     };
     this.walls.push(wall);
     return wall;
@@ -406,6 +450,107 @@ export class NativeBimProject {
       throw new Error(`Unknown WallDatum: ${wallId}`);
     }
     return this.walls.splice(index, 1)[0];
+  }
+
+  private wallById(wallId: string): WallDatum {
+    const wall = this.walls.find((candidate) => candidate.id === wallId);
+    if (!wall) {
+      throw new Error(`Unknown WallDatum: ${wallId}`);
+    }
+    return wall;
+  }
+
+  private validateOpening(wall: WallDatum, opening: OpeningDatum): void {
+    if (opening.width <= 0) {
+      throw new Error("Opening width must be greater than zero");
+    }
+    if (opening.height <= 0) {
+      throw new Error("Opening height must be greater than zero");
+    }
+    if (opening.sillHeight < 0) {
+      throw new Error("Opening sill height cannot be negative");
+    }
+    if (opening.sillHeight + opening.height > wall.height) {
+      throw new Error("Opening must fit within the wall height");
+    }
+    const length = Math.hypot(
+      wall.end[0] - wall.start[0],
+      wall.end[1] - wall.start[1],
+    );
+    if (opening.offset - opening.width / 2 < 0 || opening.offset + opening.width / 2 > length) {
+      throw new Error("Opening must fit within the wall length");
+    }
+  }
+
+  addOpening(
+    wallId: string,
+    kind: OpeningKind,
+    offset: number,
+    options: { width?: number; height?: number; sillHeight?: number } = {},
+  ): OpeningDatum {
+    const wall = this.wallById(wallId);
+    const defaults = OPENING_DEFAULTS[kind];
+    if (!defaults) {
+      throw new Error(`Unknown opening kind: ${kind}`);
+    }
+    const count = this.walls.reduce(
+      (sum, candidate) =>
+        sum + candidate.openings.filter((opening) => opening.kind === kind).length,
+      0,
+    );
+    const opening: OpeningDatum = {
+      id: uuid4Hex(),
+      name: `${kind === "DOOR" ? "D" : "WN"}${count + 1}`,
+      kind,
+      offset,
+      width: options.width ?? defaults.width,
+      height: options.height ?? defaults.height,
+      sillHeight: options.sillHeight ?? defaults.sillHeight,
+    };
+    this.validateOpening(wall, opening);
+    wall.openings.push(opening);
+    return opening;
+  }
+
+  updateOpening(
+    wallId: string,
+    openingId: string,
+    changes: { offset?: number; width?: number; height?: number; sillHeight?: number },
+  ): OpeningDatum {
+    const wall = this.wallById(wallId);
+    const index = wall.openings.findIndex((opening) => opening.id === openingId);
+    if (index === -1) {
+      throw new Error(`Unknown OpeningDatum: ${openingId}`);
+    }
+    const opening = wall.openings[index];
+    const updated: OpeningDatum = {
+      ...opening,
+      offset: changes.offset ?? opening.offset,
+      width: changes.width ?? opening.width,
+      height: changes.height ?? opening.height,
+      sillHeight: changes.sillHeight ?? opening.sillHeight,
+    };
+    this.validateOpening(wall, updated);
+    wall.openings[index] = updated;
+    return updated;
+  }
+
+  removeOpening(wallId: string, openingId: string): OpeningDatum {
+    const wall = this.wallById(wallId);
+    const index = wall.openings.findIndex((opening) => opening.id === openingId);
+    if (index === -1) {
+      throw new Error(`Unknown OpeningDatum: ${openingId}`);
+    }
+    return wall.openings.splice(index, 1)[0];
+  }
+
+  /** Host wall of an opening, or null. */
+  openingHost(openingId: string): WallDatum | null {
+    return (
+      this.walls.find((wall) =>
+        wall.openings.some((opening) => opening.id === openingId),
+      ) ?? null
+    );
   }
 
   removeGridAxis(axisId: string): GridDatum {

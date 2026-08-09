@@ -155,3 +155,47 @@ describe("wall join types (domain)", () => {
     expect(restored.walls[0].joinEnd).toBe("MITER");
   });
 });
+
+describe("wall openings (domain)", () => {
+  it("adds doors and windows with kind defaults and sequential names", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    const door = project.addOpening(wall.id, "DOOR", 2);
+    const window = project.addOpening(wall.id, "WINDOW", 5);
+    expect(door.name).toBe("D1");
+    expect(door.width).toBeCloseTo(0.9);
+    expect(door.height).toBeCloseTo(2.1);
+    expect(door.sillHeight).toBe(0);
+    expect(window.name).toBe("WN1");
+    expect(window.sillHeight).toBeCloseTo(0.9);
+    expect(project.openingHost(door.id)?.id).toBe(wall.id);
+  });
+
+  it("validates opening bounds against the host wall", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0], { height: 3 });
+    expect(() => project.addOpening(wall.id, "DOOR", 0.2)).toThrow("wall length");
+    expect(() => project.addOpening(wall.id, "WINDOW", 4, { sillHeight: 2.5 })).toThrow(
+      "wall height",
+    );
+    const door = project.addOpening(wall.id, "DOOR", 4);
+    expect(() =>
+      project.updateOpening(wall.id, door.id, { width: 0 }),
+    ).toThrow("width");
+  });
+
+  it("round-trips openings through JSON and defaults legacy files", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0]);
+    project.addOpening(wall.id, "DOOR", 2, { width: 1.0 });
+    const restored = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(restored.walls[0].openings).toHaveLength(1);
+    expect(restored.walls[0].openings[0].kind).toBe("DOOR");
+    expect(restored.walls[0].openings[0].width).toBeCloseTo(1.0);
+
+    const payload = JSON.parse(JSON.stringify(project.toDict()));
+    delete payload.walls[0].openings;
+    const legacy = NativeBimProject.fromJson(JSON.stringify(payload));
+    expect(legacy.walls[0].openings).toEqual([]);
+  });
+});

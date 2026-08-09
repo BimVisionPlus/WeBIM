@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { wallFootprint, wallJoins } from "../src/application/wallGeometry";
+import {
+  openingFootprint,
+  wallFootprint,
+  wallJoins,
+  wallPieces,
+} from "../src/application/wallGeometry";
 import { NativeBimProject } from "../src/domain/project";
 
 function projectWithWalls(
@@ -255,5 +260,67 @@ describe("wallJoins", () => {
     project.addWall([0, 0, 0], [4, 0, 0], { thickness: 0.2, joinEnd: "SQUARE" });
     project.addWall([4, 0, 0], [4, 3, 0], { thickness: 0.2 });
     expect(wallJoins(project.walls)).toHaveLength(0);
+  });
+});
+
+describe("wallPieces", () => {
+  it("keeps a wall without openings as one full-height footprint piece", () => {
+    const project = projectWithWalls([[[0, 0, 0], [8, 0, 0]]]);
+    const pieces = wallPieces(project.walls[0], project.walls);
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0].zBottom).toBe(0);
+    expect(pieces[0].zTop).toBeCloseTo(3);
+    expect(pieces[0].corners).toHaveLength(4);
+  });
+
+  it("splits around a door into two segments and a lintel", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0], { height: 3 });
+    project.addOpening(wall.id, "DOOR", 4, { width: 1, height: 2.1 });
+    const pieces = wallPieces(wall, project.walls);
+    expect(pieces).toHaveLength(3);
+    const lintel = pieces.find((piece) => piece.zBottom > 0)!;
+    expect(lintel.zBottom).toBeCloseTo(2.1);
+    expect(lintel.zTop).toBeCloseTo(3);
+    expectPoint(lintel.corners[0], [3.5, 0.1]);
+    expectPoint(lintel.corners[1], [4.5, 0.1]);
+  });
+
+  it("adds a sill piece below a window", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0], { height: 3 });
+    project.addOpening(wall.id, "WINDOW", 4, { width: 1.2, height: 1.2, sillHeight: 0.9 });
+    const pieces = wallPieces(wall, project.walls);
+    expect(pieces).toHaveLength(4);
+    const sill = pieces.find((piece) => piece.zBottom === 0 && piece.zTop < 3)!;
+    expect(sill.zTop).toBeCloseTo(0.9);
+    const lintel = pieces.find((piece) => piece.zBottom > 1)!;
+    expect(lintel.zBottom).toBeCloseTo(2.1);
+  });
+
+  it("preserves mitered end corners in the end segments", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wallA = project.addWall([0, 0, 0], [4, 0, 0]);
+    project.addWall([4, 0, 0], [4, 3, 0]);
+    project.addOpening(wallA.id, "DOOR", 2, { width: 1 });
+    const pieces = wallPieces(wallA, project.walls);
+    const endSegment = pieces.find(
+      (piece) => piece.zBottom === 0 && piece.corners.some(([x]) => x > 3.6),
+    )!;
+    expectPoint(endSegment.corners[1], [3.9, 0.1]);
+    expectPoint(endSegment.corners[2], [4.1, -0.1]);
+  });
+});
+
+describe("openingFootprint", () => {
+  it("spans the opening width across the wall thickness", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [8, 0, 0], { thickness: 0.2 });
+    const door = project.addOpening(wall.id, "DOOR", 4, { width: 1 });
+    const corners = openingFootprint(wall, door);
+    expectPoint(corners[0], [3.5, 0.1]);
+    expectPoint(corners[1], [4.5, 0.1]);
+    expectPoint(corners[2], [4.5, -0.1]);
+    expectPoint(corners[3], [3.5, -0.1]);
   });
 });
