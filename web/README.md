@@ -90,6 +90,20 @@ IFC4 STEP text → .ifc download
   paper space; place any view from the sheet's properties panel — each
   placement is a labelled frame sized by the view's ortho extent at its
   scale, positioned in paper millimetres. Serialized under `sheets`.
+  Frames render the view's LIVE model content (plan or elevation
+  linework, walls, slabs, annotations) scaled to paper and clipped to
+  the frame with local clipping planes.
+- Floor (`F`) and roof (`R`) slabs: two clicks span a rectangle on the
+  active level; the outline is stored as a polygon (`slabs` key) with
+  thickness and a z offset — the top face sits at level + offset, so
+  floors hang below their level and roofs default to the storey top.
+  Slabs render in plans (level-filtered), elevations and sheet frames,
+  and export as `IfcSlab` (`FLOOR`/`ROOF`) in their level's storey.
+- The Blender add-on gains `WeBIM → Rebuild Native Walls`: it builds
+  native walls (joins and openings included) as viewport meshes via a
+  pure-Python port of the wall geometry
+  (`webim/domain/wall_geometry.py`) that is pytest-verified against
+  the web implementation's reference values.
 - The Python add-on domain (`webim/domain/project.py`) now parses and
   preserves `walls`/`openings`/`levels`/`sheets`, so a web-authored
   project survives a Blender round-trip, and the add-on's IFC export

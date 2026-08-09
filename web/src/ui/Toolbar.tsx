@@ -69,6 +69,20 @@ export function Toolbar() {
         >
           Window
         </button>
+        <button
+          className={store.activeTool === "FLOOR" ? "active" : ""}
+          onClick={() => store.setTool("FLOOR")}
+          title="Draw floor slabs (F)"
+        >
+          Floor
+        </button>
+        <button
+          className={store.activeTool === "ROOF" ? "active" : ""}
+          onClick={() => store.setTool("ROOF")}
+          title="Draw roof slabs (R)"
+        >
+          Roof
+        </button>
       </div>
       <label className="field">
         Snap

@@ -55,6 +55,23 @@ export interface SheetDatum {
   placements: SheetViewPlacement[];
 }
 
+export type SlabKind = "FLOOR" | "ROOF";
+
+/**
+ * Horizontal slab: a plan outline extruded downward by its thickness so
+ * the TOP face sits at level elevation + zOffset (Revit-style floors;
+ * roofs default to a zOffset of the storey height).
+ */
+export interface SlabDatum {
+  id: string;
+  name: string;
+  kind: SlabKind;
+  outline: [number, number][];
+  thickness: number;
+  levelId: string;
+  zOffset: number;
+}
+
 export type OpeningKind = "DOOR" | "WINDOW";
 export type HingeEnd = "START" | "END";
 export type SwingSide = "LEFT" | "RIGHT";
@@ -152,6 +169,7 @@ export class NativeBimProject {
   walls: WallDatum[];
   levels: LevelDatum[];
   sheets: SheetDatum[];
+  slabs: SlabDatum[];
 
   constructor(
     id: string,
@@ -164,6 +182,7 @@ export class NativeBimProject {
     walls: WallDatum[] = [],
     levels: LevelDatum[] = [],
     sheets: SheetDatum[] = [],
+    slabs: SlabDatum[] = [],
   ) {
     this.id = id;
     this.name = name;
@@ -175,6 +194,7 @@ export class NativeBimProject {
     this.walls = walls;
     this.levels = levels;
     this.sheets = sheets;
+    this.slabs = slabs;
   }
 
   static create(
@@ -217,6 +237,15 @@ export class NativeBimProject {
         id: level.id,
         name: level.name,
         elevation: level.elevation,
+      })),
+      slabs: this.slabs.map((slab) => ({
+        id: slab.id,
+        name: slab.name,
+        kind: slab.kind,
+        outline: slab.outline.map((point) => [...point]),
+        thickness: slab.thickness,
+        level_id: slab.levelId,
+        z_offset: slab.zOffset,
       })),
       sheets: this.sheets.map((sheet) => ({
         id: sheet.id,
@@ -334,6 +363,15 @@ export class NativeBimProject {
           }),
         ),
       })),
+      ((data.slabs as Record<string, unknown>[]) ?? []).map((slab) => ({
+        id: slab.id as string,
+        name: slab.name as string,
+        kind: slab.kind as SlabKind,
+        outline: slab.outline as [number, number][],
+        thickness: (slab.thickness as number) ?? 0.2,
+        levelId: (slab.level_id as string) ?? defaultLevelId,
+        zOffset: (slab.z_offset as number) ?? 0,
+      })),
     );
   }
 
@@ -415,6 +453,9 @@ export class NativeBimProject {
     if (this.walls.some((wall) => wall.levelId === levelId)) {
       throw new Error("Level still hosts walls");
     }
+    if (this.slabs.some((slab) => slab.levelId === levelId)) {
+      throw new Error("Level still hosts slabs");
+    }
     if (this.views.some((view) => view.levelId === levelId)) {
       throw new Error("Level still has views");
     }
@@ -423,6 +464,88 @@ export class NativeBimProject {
 
   levelById(levelId: string): LevelDatum | null {
     return this.levels.find((level) => level.id === levelId) ?? null;
+  }
+
+  addSlab(
+    kind: SlabKind,
+    outline: [number, number][],
+    options: { thickness?: number; levelId?: string; zOffset?: number } = {},
+  ): SlabDatum {
+    if (outline.length < 3) {
+      throw new Error("A slab outline needs at least three points");
+    }
+    const thickness = options.thickness ?? 0.2;
+    if (thickness <= 0) {
+      throw new Error("Slab thickness must be greater than zero");
+    }
+    if (this.levels.length === 0) {
+      this.addLevel("Level 1", 0);
+    }
+    const level = options.levelId ? this.levelById(options.levelId) : this.levels[0];
+    if (!level) {
+      throw new Error(`Unknown LevelDatum: ${options.levelId}`);
+    }
+    const count = this.slabs.filter((slab) => slab.kind === kind).length;
+    const slab: SlabDatum = {
+      id: uuid4Hex(),
+      name: `${kind === "FLOOR" ? "F" : "R"}${count + 1}`,
+      kind,
+      outline,
+      thickness,
+      levelId: level.id,
+      zOffset: options.zOffset ?? 0,
+    };
+    this.slabs.push(slab);
+    return slab;
+  }
+
+  updateSlab(
+    slabId: string,
+    changes: {
+      outline?: [number, number][];
+      thickness?: number;
+      levelId?: string;
+      zOffset?: number;
+    },
+  ): SlabDatum {
+    const index = this.slabs.findIndex((slab) => slab.id === slabId);
+    if (index === -1) {
+      throw new Error(`Unknown SlabDatum: ${slabId}`);
+    }
+    const slab = this.slabs[index];
+    const levelId = changes.levelId ?? slab.levelId;
+    if (!this.levelById(levelId)) {
+      throw new Error(`Unknown LevelDatum: ${levelId}`);
+    }
+    const updated: SlabDatum = {
+      ...slab,
+      outline: changes.outline ?? slab.outline,
+      thickness: changes.thickness ?? slab.thickness,
+      levelId,
+      zOffset: changes.zOffset ?? slab.zOffset,
+    };
+    if (updated.outline.length < 3) {
+      throw new Error("A slab outline needs at least three points");
+    }
+    if (updated.thickness <= 0) {
+      throw new Error("Slab thickness must be greater than zero");
+    }
+    this.slabs[index] = updated;
+    return updated;
+  }
+
+  removeSlab(slabId: string): SlabDatum {
+    const index = this.slabs.findIndex((slab) => slab.id === slabId);
+    if (index === -1) {
+      throw new Error(`Unknown SlabDatum: ${slabId}`);
+    }
+    return this.slabs.splice(index, 1)[0];
+  }
+
+  /** Absolute z of a slab's top face. */
+  slabTopZ(slab: SlabDatum): number {
+    const level = this.levelById(slab.levelId);
+    return (level?.elevation ?? 0) + slab.zOffset;
   }
 
   addSheet(title: string): SheetDatum {

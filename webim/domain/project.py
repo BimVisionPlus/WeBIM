@@ -77,6 +77,19 @@ class LevelDatum:
 
 
 @dataclass(frozen=True, slots=True)
+class SlabDatum:
+    """Floor/roof slab authored in WeBIM Web (top face at level + z_offset)."""
+
+    id: str
+    name: str
+    kind: str
+    outline: tuple[tuple[float, float], ...]
+    thickness: float = 0.2
+    level_id: str | None = None
+    z_offset: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
 class SheetPlacement:
     id: str
     view_id: str
@@ -104,6 +117,7 @@ class NativeBimProject:
     walls: list[NativeWall] = field(default_factory=list)
     levels: list[LevelDatum] = field(default_factory=list)
     sheets: list[SheetDatum] = field(default_factory=list)
+    slabs: list[SlabDatum] = field(default_factory=list)
 
     @classmethod
     def create(
@@ -198,6 +212,22 @@ class NativeBimProject:
                 }
                 for level in self.levels
             ],
+            "slabs": [
+                {
+                    "id": slab.id,
+                    "name": slab.name,
+                    "kind": slab.kind,
+                    "outline": [list(point) for point in slab.outline],
+                    "thickness": slab.thickness,
+                    **(
+                        {"level_id": slab.level_id}
+                        if slab.level_id is not None
+                        else {}
+                    ),
+                    "z_offset": slab.z_offset,
+                }
+                for slab in self.slabs
+            ],
             "sheets": [
                 {
                     "id": sheet.id,
@@ -286,6 +316,18 @@ class NativeBimProject:
                     elevation=level.get("elevation", 0.0),
                 )
                 for level in data.get("levels", [])
+            ],
+            slabs=[
+                SlabDatum(
+                    id=slab["id"],
+                    name=slab["name"],
+                    kind=slab["kind"],
+                    outline=tuple(tuple(point) for point in slab["outline"]),
+                    thickness=slab.get("thickness", 0.2),
+                    level_id=slab.get("level_id"),
+                    z_offset=slab.get("z_offset", 0.0),
+                )
+                for slab in data.get("slabs", [])
             ],
             sheets=[
                 SheetDatum(

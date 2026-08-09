@@ -62,3 +62,25 @@ class WEBIM_OT_save_ifc(bpy.types.Operator):
             self.filepath = "webim-project.ifc"
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
+
+
+class WEBIM_OT_rebuild_native_walls(bpy.types.Operator):
+    bl_idname = "webim.rebuild_native_walls"
+    bl_label = "Rebuild Native Walls"
+    bl_description = (
+        "Draw the WeBIM Web native walls (joins and openings included) "
+        "as mesh objects in the viewport"
+    )
+    bl_options: ClassVar[set[str]] = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        from .tools.wall import rebuild_native_walls
+
+        try:
+            ensure_project(context.scene)
+            count = rebuild_native_walls(SESSION.native_project)
+        except (RuntimeError, ValueError) as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
+        self.report({"INFO"}, f"Rebuilt {count} native wall(s)")
+        return {"FINISHED"}

@@ -2,10 +2,10 @@ import { useSyncExternalStore } from "react";
 import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
 
-export type ToolId = "SELECT" | "GRID" | "WALL" | "DOOR" | "WINDOW";
+export type ToolId = "SELECT" | "GRID" | "WALL" | "DOOR" | "WINDOW" | "FLOOR" | "ROOF";
 
 export interface Selection {
-  kind: "grid" | "view" | "wall" | "opening" | "level" | "sheet";
+  kind: "grid" | "view" | "wall" | "opening" | "level" | "sheet" | "slab";
   id: string;
 }
 
@@ -117,7 +117,9 @@ class AppStore {
           ? "Wall: click two points per wall. Esc cancels, Enter exits."
           : tool === "DOOR" || tool === "WINDOW"
             ? `${tool === "DOOR" ? "Door" : "Window"}: click on a wall to place. Esc exits.`
-            : "Ready";
+            : tool === "FLOOR" || tool === "ROOF"
+              ? `${tool === "FLOOR" ? "Floor" : "Roof"}: click two opposite corners. Esc cancels.`
+              : "Ready";
     this.commit(false);
   }
 
@@ -183,6 +185,41 @@ class AppStore {
   removeWall(wallId: string): void {
     this.project.removeWall(wallId);
     if (this.selection?.kind === "wall" && this.selection.id === wallId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
+  addSlab(kind: "FLOOR" | "ROOF", cornerA: Point3D, cornerB: Point3D): void {
+    const [x0, y0] = cornerA;
+    const [x1, y1] = cornerB;
+    if (x0 === x1 || y0 === y1) {
+      this.setStatus("Slab corners must span a rectangle");
+      return;
+    }
+    const outline: [number, number][] = [
+      [Math.min(x0, x1), Math.min(y0, y1)],
+      [Math.max(x0, x1), Math.min(y0, y1)],
+      [Math.max(x0, x1), Math.max(y0, y1)],
+      [Math.min(x0, x1), Math.max(y0, y1)],
+    ];
+    const slab = this.project.addSlab(kind, outline, {
+      levelId: this.activeLevel?.id,
+      zOffset: kind === "ROOF" ? this.wallHeight : 0,
+    });
+    this.selection = { kind: "slab", id: slab.id };
+    this.statusMessage = `${kind === "FLOOR" ? "Floor" : "Roof"} ${slab.name} created`;
+    this.commit();
+  }
+
+  updateSlab(slabId: string, changes: Parameters<NativeBimProject["updateSlab"]>[1]): void {
+    this.project.updateSlab(slabId, changes);
+    this.commit();
+  }
+
+  removeSlab(slabId: string): void {
+    this.project.removeSlab(slabId);
+    if (this.selection?.kind === "slab" && this.selection.id === slabId) {
       this.selection = null;
     }
     this.commit();

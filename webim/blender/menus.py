@@ -17,6 +17,11 @@ class WEBIM_MT_add(bpy.types.Menu):
             text="Wall",
             icon="MESH_CUBE",
         )
+        layout.operator(
+            "webim.rebuild_native_walls",
+            text="Rebuild Native Walls",
+            icon="MOD_BUILD",
+        )
         layout.separator()
         layout.operator(
             "webim.create_view",

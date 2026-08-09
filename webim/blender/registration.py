@@ -11,6 +11,7 @@ from .menus import (
 )
 from .operators import (
     WEBIM_OT_create_wall,
+    WEBIM_OT_rebuild_native_walls,
     WEBIM_OT_save_ifc,
 )
 from .persistence import register as register_persistence
@@ -28,6 +29,7 @@ from .views import unregister as unregister_views
 _CLASSES = (
     WEBIMProperties,
     WEBIM_OT_create_wall,
+    WEBIM_OT_rebuild_native_walls,
     WEBIM_OT_save_ifc,
     WEBIM_MT_add,
 )

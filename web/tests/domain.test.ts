@@ -310,3 +310,44 @@ describe("sheets", () => {
     expect(restored.sheets[0].placements[0].viewId).toBe(view.id);
   });
 });
+
+describe("slabs", () => {
+  it("creates floors and roofs with level hosting and top elevation", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const ground = project.addLevel("Level 1", 0);
+    const floor = project.addSlab(
+      "FLOOR",
+      [[0, 0], [8, 0], [8, 5], [0, 5]],
+      { levelId: ground.id },
+    );
+    expect(floor.name).toBe("F1");
+    expect(project.slabTopZ(floor)).toBe(0);
+    const roof = project.addSlab(
+      "ROOF",
+      [[0, 0], [8, 0], [8, 5], [0, 5]],
+      { levelId: ground.id, zOffset: 3 },
+    );
+    expect(roof.name).toBe("R1");
+    expect(project.slabTopZ(roof)).toBe(3);
+    expect(() =>
+      project.addSlab("FLOOR", [[0, 0], [1, 0]], { levelId: ground.id }),
+    ).toThrow("three points");
+    expect(() => project.removeLevel(ground.id)).toThrow();
+  });
+
+  it("round-trips slabs through JSON", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const level = project.addLevel("Level 1", 0);
+    project.addSlab("ROOF", [[0, 0], [4, 0], [4, 4], [0, 4]], {
+      levelId: level.id,
+      zOffset: 3,
+      thickness: 0.25,
+    });
+    const restored = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(restored.slabs).toHaveLength(1);
+    expect(restored.slabs[0].kind).toBe("ROOF");
+    expect(restored.slabs[0].zOffset).toBe(3);
+    expect(restored.slabs[0].thickness).toBe(0.25);
+    expect(restored.slabs[0].outline[2]).toEqual([4, 4]);
+  });
+});

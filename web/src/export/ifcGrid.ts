@@ -21,6 +21,7 @@ import type {
   NativeBimProject,
   OpeningDatum,
   Point3D,
+  SlabDatum,
   WallDatum,
 } from "../domain/project";
 
@@ -314,6 +315,12 @@ export function exportProjectToIfc(
       containedByStorey.get(home.ref)!.push(filling);
     }
   }
+  for (const slab of project.slabs) {
+    const home = storeyByLevel.get(slab.levelId) ?? firstStorey;
+    const ref = addSlab(step, project, slab, context, home.placement);
+    containedByStorey.get(home.ref)!.push(ref);
+  }
+
   // Join relationships mirror the geometric joins: coincident-end pairs and
   // T-joins (ATPATH on the continuous wall). SQUARE ends emit nothing.
   for (const join of wallJoins(project.walls)) {
@@ -515,4 +522,27 @@ function addOpening(
         ]);
   step.add("IFCRELFILLSELEMENT", [text(ifcGuid()), "$", "$", "$", openingRef, fillingRef]);
   return fillingRef;
+}
+
+/** IfcSlab: the plan outline swept downward by the thickness. */
+function addSlab(
+  step: StepFile,
+  project: NativeBimProject,
+  slab: SlabDatum,
+  context: string,
+  storeyPlacement: string,
+): string {
+  const bottomZ = project.slabTopZ(slab) - slab.thickness;
+  const shape = extrudedPolygonShape(step, context, slab.outline, slab.thickness);
+  return step.add("IFCSLAB", [
+    text(ifcGuid()),
+    "$",
+    text(slab.name),
+    "$",
+    "$",
+    basePlacement(step, storeyPlacement, bottomZ),
+    shape,
+    "$",
+    slab.kind === "FLOOR" ? ".FLOOR." : ".ROOF.",
+  ]);
 }

@@ -6,6 +6,7 @@ import type {
   OpeningDatum,
   Point3D,
   SheetDatum,
+  SlabDatum,
   TechnicalView,
   WallDatum,
   WallJoinType,
@@ -286,6 +287,47 @@ function OpeningProperties({ wall, opening }: { wall: WallDatum; opening: Openin
   );
 }
 
+function SlabProperties({ slab }: { slab: SlabDatum }) {
+  return (
+    <>
+      <h3>
+        {slab.kind === "FLOOR" ? "Floor" : "Roof"} {slab.name}
+      </h3>
+      <label className="prop-row">
+        <span>Level</span>
+        <select
+          value={slab.levelId}
+          onChange={(event) => store.updateSlab(slab.id, { levelId: event.target.value })}
+        >
+          {store.project.levels.map((level) => (
+            <option key={level.id} value={level.id}>
+              {level.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <NumberField
+        label="Thickness (m)"
+        value={slab.thickness}
+        step={0.05}
+        onCommit={(value) => store.updateSlab(slab.id, { thickness: value })}
+      />
+      <NumberField
+        label="Offset (m)"
+        value={slab.zOffset}
+        onCommit={(value) => store.updateSlab(slab.id, { zOffset: value })}
+      />
+      <div className="prop-static">
+        <span>Top elevation</span>
+        <span>{store.project.slabTopZ(slab).toFixed(2)} m</span>
+      </div>
+      <button className="danger" onClick={() => store.removeSlab(slab.id)}>
+        Delete slab
+      </button>
+    </>
+  );
+}
+
 function LevelProperties({ level }: { level: LevelDatum }) {
   return (
     <>
@@ -459,6 +501,10 @@ export function PropertiesPanel() {
     selection?.kind === "sheet"
       ? store.project.sheets.find((candidate) => candidate.id === selection.id)
       : undefined;
+  const slab =
+    selection?.kind === "slab"
+      ? store.project.slabs.find((candidate) => candidate.id === selection.id)
+      : undefined;
 
   return (
     <aside className="panel properties-panel">
@@ -469,8 +515,9 @@ export function PropertiesPanel() {
       {openingHost && opening && <OpeningProperties wall={openingHost} opening={opening} />}
       {level && <LevelProperties level={level} />}
       {sheet && <SheetProperties sheet={sheet} />}
-      {!axis && !view && !wall && !opening && !level && !sheet && (
-        <div className="tree-empty">Select a grid, wall, opening, level, sheet or view.</div>
+      {slab && <SlabProperties slab={slab} />}
+      {!axis && !view && !wall && !opening && !level && !sheet && !slab && (
+        <div className="tree-empty">Select an element, level, sheet or view.</div>
       )}
     </aside>
   );

@@ -62,6 +62,17 @@ WEB_PAYLOAD = {
         }
     ],
     "levels": [{"id": "l1", "name": "Level 1", "elevation": 0.0}],
+    "slabs": [
+        {
+            "id": "sl1",
+            "name": "F1",
+            "kind": "FLOOR",
+            "outline": [[0.0, 0.0], [8.0, 0.0], [8.0, 5.0], [0.0, 5.0]],
+            "thickness": 0.2,
+            "level_id": "l1",
+            "z_offset": 0.0,
+        }
+    ],
     "sheets": [
         {
             "id": "s1",
@@ -85,6 +96,8 @@ def test_parses_web_authored_walls_levels_sheets():
     assert project.levels[0].elevation == 0.0
     assert project.sheets[0].placements[0].view_id == "v1"
     assert project.views[0].level_id == "l1"
+    assert project.slabs[0].kind == "FLOOR"
+    assert project.slabs[0].outline[2] == (8.0, 5.0)
 
 
 def test_round_trip_preserves_web_data():
@@ -99,7 +112,7 @@ def test_legacy_payload_without_new_keys_still_loads():
     payload = {
         key: value
         for key, value in WEB_PAYLOAD.items()
-        if key not in {"walls", "levels", "sheets"}
+        if key not in {"walls", "levels", "sheets", "slabs"}
     }
     payload["views"] = [
         {k: v for k, v in view.items() if k != "level_id"}
@@ -109,4 +122,5 @@ def test_legacy_payload_without_new_keys_still_loads():
     assert project.walls == []
     assert project.levels == []
     assert project.sheets == []
+    assert project.slabs == []
     assert project.views[0].level_id is None

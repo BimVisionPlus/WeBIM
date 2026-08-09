@@ -11,7 +11,14 @@ import * as THREE from "three";
 import { snapGridPoint, type SnapResult } from "../application/gridSnapping";
 import { doorSwing, openingFootprint, wallPieces } from "../application/wallGeometry";
 import { dashSpans, LINE_PATTERNS } from "../domain/lineStyles";
-import type { GridDatum, OpeningDatum, Point3D, WallDatum } from "../domain/project";
+import type {
+  GridDatum,
+  OpeningDatum,
+  Point3D,
+  SlabDatum,
+  TechnicalView,
+  WallDatum,
+} from "../domain/project";
 import { store } from "../state/store";
 
 export const GRID_HEAD_RADIUS = 0.35;
@@ -29,6 +36,8 @@ const COLOR_WALL = 0x9aa3b2;
 const COLOR_DOOR = 0xb08968;
 const COLOR_WINDOW = 0x7fb3d5;
 const COLOR_LEVEL = 0x5f9e6e;
+const COLOR_FLOOR = 0x6f7d8c;
+const COLOR_ROOF = 0xa5836f;
 const COLOR_PAPER = 0x23262d;
 const COLOR_PAPER_LINES = 0x8b8f98;
 
@@ -129,6 +138,8 @@ export class GridViewport {
     this.canvas = canvas;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
+    // Sheet frames clip their view content with per-material planes.
+    this.renderer.localClippingEnabled = true;
     this.scene.background = new THREE.Color(COLOR_BACKGROUND);
     const aspect = canvas.clientWidth / Math.max(canvas.clientHeight, 1);
     const half = 20;
@@ -357,8 +368,13 @@ export class GridViewport {
         start = this.endpointEdit.endpoint === "start" ? element.end : element.start;
       }
     }
+    // Axis locking only helps linear tools; slabs snap corners freely.
+    const lockStart =
+      store.activeTool === "GRID" || store.activeTool === "WALL" || this.endpointEdit
+        ? start
+        : null;
     return snapGridPoint(world, {
-      start,
+      start: lockStart,
       endpoint: this.findEndpointSnap(world),
       increment: store.snapIncrement,
     });
@@ -484,6 +500,28 @@ export class GridViewport {
     return wall && opening ? { wall, opening } : null;
   }
 
+  private pickSlab(world: Point3D): SlabDatum | null {
+    const levelId = store.activeLevel?.id;
+    for (const slab of store.project.slabs) {
+      if (levelId && slab.levelId !== levelId) continue;
+      // Ray-cast point-in-polygon on the plan outline.
+      let inside = false;
+      const outline = slab.outline;
+      for (let i = 0, j = outline.length - 1; i < outline.length; j = i, i += 1) {
+        const [xi, yi] = outline[i];
+        const [xj, yj] = outline[j];
+        if (
+          yi > world[1] !== yj > world[1] &&
+          world[0] < ((xj - xi) * (world[1] - yi)) / (yj - yi) + xi
+        ) {
+          inside = !inside;
+        }
+      }
+      if (inside) return slab;
+    }
+    return null;
+  }
+
   private pickElement(world: Point3D): { kind: "grid" | "wall"; id: string } | null {
     const pixelThreshold = PICK_PIXELS * this.worldPerPixel();
     let best: { kind: "grid" | "wall"; id: string } | null = null;
@@ -559,6 +597,19 @@ export class GridViewport {
       return;
     }
 
+    if (store.activeTool === "FLOOR" || store.activeTool === "ROOF") {
+      const snap = this.computeSnap(world);
+      if (store.pendingStart === null) {
+        store.setPendingStart(snap.point);
+        store.setStatus("Click the opposite corner");
+      } else {
+        store.addSlab(store.activeTool, store.pendingStart, snap.point);
+        store.setPendingStart(null);
+      }
+      this.syncPreview();
+      return;
+    }
+
     if (store.activeTool === "GRID" || store.activeTool === "WALL") {
       const snap = this.computeSnap(world);
       if (store.pendingStart === null) {
@@ -608,7 +659,12 @@ export class GridViewport {
         return;
       }
       const hit = this.pickElement(world);
-      store.select(hit ? { kind: hit.kind, id: hit.id } : null);
+      if (hit) {
+        store.select({ kind: hit.kind, id: hit.id });
+        return;
+      }
+      const slab = this.pickSlab(world);
+      store.select(slab ? { kind: "slab", id: slab.id } : null);
     }
   };
 
@@ -640,7 +696,13 @@ export class GridViewport {
       }
       return;
     }
-    if (store.activeTool === "GRID" || store.activeTool === "WALL" || this.endpointEdit) {
+    if (
+      store.activeTool === "GRID" ||
+      store.activeTool === "WALL" ||
+      store.activeTool === "FLOOR" ||
+      store.activeTool === "ROOF" ||
+      this.endpointEdit
+    ) {
       this.lastSnap = this.computeSnap(this.cursorWorld);
       this.syncPreview();
     }
@@ -724,6 +786,10 @@ export class GridViewport {
       store.setTool("DOOR");
     } else if ((event.key === "o" || event.key === "O") && store.activeTool !== "WINDOW") {
       store.setTool("WINDOW");
+    } else if ((event.key === "f" || event.key === "F") && store.activeTool !== "FLOOR") {
+      store.setTool("FLOOR");
+    } else if ((event.key === "r" || event.key === "R") && store.activeTool !== "ROOF") {
+      store.setTool("ROOF");
     } else if (event.key === "Delete" || event.key === "Backspace") {
       if (store.selection?.kind === "grid") {
         store.removeGridAxis(store.selection.id);
@@ -734,6 +800,8 @@ export class GridViewport {
         if (host) {
           store.removeOpening(host.id, store.selection.id);
         }
+      } else if (store.selection?.kind === "slab") {
+        store.removeSlab(store.selection.id);
       }
     }
   };
@@ -793,7 +861,7 @@ export class GridViewport {
     if (viewType !== "FLOOR_PLAN") {
       this.buildLevelLines(viewType, factor);
     }
-    // Floor plans show only their own level's walls; elevations show all.
+    // Floor plans show only their own level's walls/slabs; elevations show all.
     const activeLevelId = store.activeLevel?.id;
     for (const wall of store.project.walls) {
       if (viewType === "FLOOR_PLAN" && activeLevelId && wall.levelId !== activeLevelId) {
@@ -802,12 +870,90 @@ export class GridViewport {
       const selected = store.selection?.kind === "wall" && store.selection.id === wall.id;
       this.buildWall(wall, selected ? COLOR_SELECTED : COLOR_WALL);
     }
+    for (const slab of store.project.slabs) {
+      if (viewType === "FLOOR_PLAN" && activeLevelId && slab.levelId !== activeLevelId) {
+        continue;
+      }
+      const selected = store.selection?.kind === "slab" && store.selection.id === slab.id;
+      this.buildSlab(slab, selected ? COLOR_SELECTED : undefined);
+    }
     this.buildAnchors();
     this.syncPreview();
   }
 
+  private buildSlab(
+    slab: SlabDatum,
+    colorOverride?: number,
+    group: THREE.Group = this.wallGroup,
+  ): void {
+    const color = colorOverride ?? (slab.kind === "FLOOR" ? COLOR_FLOOR : COLOR_ROOF);
+    const shape = new THREE.Shape(slab.outline.map(([x, y]) => new THREE.Vector2(x, y)));
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: slab.thickness,
+      bevelEnabled: false,
+    });
+    const mesh = new THREE.Mesh(
+      geometry,
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.18,
+        depthWrite: false,
+      }),
+    );
+    // Top face at level elevation + zOffset.
+    mesh.position.set(0, 0, store.project.slabTopZ(slab) - slab.thickness);
+    group.add(mesh);
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geometry),
+      new THREE.LineBasicMaterial({ color }),
+    );
+    edges.position.copy(mesh.position);
+    group.add(edges);
+  }
+
+  /**
+   * The full content of a technical view, built into a standalone group —
+   * used to render live model linework inside sheet frames.
+   */
+  private buildViewContent(view: TechnicalView): THREE.Group {
+    const group = new THREE.Group();
+    const factor = Math.max(view.scale, 1) / 100;
+    if (view.viewType === "FLOOR_PLAN") {
+      for (const axis of store.project.gridAxes) {
+        group.add(this.buildAxisLine(axis, view.scale, COLOR_GRID));
+        this.buildAxisHeads(axis, factor, COLOR_GRID, group);
+      }
+      for (const wall of store.project.walls) {
+        if (view.levelId && wall.levelId !== view.levelId) continue;
+        this.buildWall(wall, COLOR_WALL, group, true);
+      }
+      for (const slab of store.project.slabs) {
+        if (view.levelId && slab.levelId !== view.levelId) continue;
+        this.buildSlab(slab, undefined, group);
+      }
+    } else {
+      const viewType = view.viewType as "ELEVATION" | "SECTION";
+      for (const axis of store.project.gridAxes) {
+        this.buildDatumGrid(axis, viewType, view.scale, factor, COLOR_GRID, group);
+      }
+      this.buildLevelLines(viewType, factor, group);
+      for (const wall of store.project.walls) {
+        this.buildWall(wall, COLOR_WALL, group, false);
+      }
+      for (const slab of store.project.slabs) {
+        this.buildSlab(slab, undefined, group);
+      }
+    }
+    return group;
+  }
+
   /** Level datum lines with name tags, drawn in elevations and sections. */
-  private buildLevelLines(viewType: "ELEVATION" | "SECTION", factor: number): void {
+  private buildLevelLines(
+    viewType: "ELEVATION" | "SECTION",
+    factor: number,
+    group: THREE.Group = this.gridGroup,
+  ): void {
     const span = 30;
     for (const level of store.project.levels) {
       const selected = store.selection?.kind === "level" && store.selection.id === level.id;
@@ -820,14 +966,14 @@ export class GridViewport {
         "position",
         new THREE.Float32BufferAttribute([...toWorld(-span), ...toWorld(span)], 3),
       );
-      this.gridGroup.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({ color })));
+      group.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({ color })));
       const label = makeLabelSprite(
         `${level.name}  +${level.elevation.toFixed(2)}`,
         0.45 * factor,
       );
       const [lx, ly, lz] = toWorld(span - 4);
       label.position.set(lx, ly, lz + 0.35 * factor);
-      this.gridGroup.add(label);
+      group.add(label);
     }
   }
 
@@ -898,6 +1044,51 @@ export class GridViewport {
       const label = makeLabelSprite(`${view.name} · 1:${view.scale}`, 0.016);
       label.position.set(x + 0.045, y - 0.014, 0.01);
       this.sheetGroup.add(label);
+
+      // Live view content, scaled to paper and clipped to the frame.
+      const content = this.buildViewContent(view);
+      const s = 1 / view.scale;
+      const frameCx = x + frameWidth / 2;
+      const frameCy = y + frameHeight / 2;
+      if (view.viewType === "FLOOR_PLAN") {
+        // Paper XY = model XY; flatten depth so nothing dips under the paper.
+        content.scale.set(s, s, s * 0.001);
+        content.position.set(frameCx, frameCy, 0.02);
+      } else {
+        // Paper XY = model XZ (elevation) or YZ (section); flatten the
+        // view direction and centre like the live cameras do.
+        const centerZ = view.orthoScale / 4;
+        if (view.viewType === "ELEVATION") {
+          content.scale.set(s, s * 0.001, s);
+          content.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+        } else {
+          content.scale.set(s * 0.001, s, s);
+          const qx = new THREE.Quaternion().setFromAxisAngle(
+            new THREE.Vector3(1, 0, 0),
+            -Math.PI / 2,
+          );
+          const qz = new THREE.Quaternion().setFromAxisAngle(
+            new THREE.Vector3(0, 0, 1),
+            -Math.PI / 2,
+          );
+          content.quaternion.copy(qx).multiply(qz);
+        }
+        content.position.set(frameCx, frameCy - centerZ * s, 0.02);
+      }
+      // Clip to the frame rectangle in paper space.
+      const planes = [
+        new THREE.Plane(new THREE.Vector3(1, 0, 0), -x),
+        new THREE.Plane(new THREE.Vector3(-1, 0, 0), x + frameWidth),
+        new THREE.Plane(new THREE.Vector3(0, 1, 0), -y),
+        new THREE.Plane(new THREE.Vector3(0, -1, 0), y + frameHeight),
+      ];
+      content.traverse((child) => {
+        const material = (child as THREE.Mesh).material as THREE.Material | undefined;
+        if (material) {
+          material.clippingPlanes = planes;
+        }
+      });
+      this.sheetGroup.add(content);
     }
   }
 
@@ -923,7 +1114,12 @@ export class GridViewport {
     return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color }));
   }
 
-  private buildAxisHeads(axis: GridDatum, factor: number, color: number): void {
+  private buildAxisHeads(
+    axis: GridDatum,
+    factor: number,
+    color: number,
+    group: THREE.Group = this.gridGroup,
+  ): void {
     if (axis.headType === "NONE") return;
     const pointCount = axis.headType === "HEXAGON" ? 6 : 48;
     const radius = GRID_HEAD_RADIUS * axis.headScale * factor;
@@ -944,12 +1140,12 @@ export class GridViewport {
       }
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-      this.gridGroup.add(
+      group.add(
         new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color })),
       );
       const sprite = makeTextSprite(axis.name, radius * 1.6);
       sprite.position.set(center[0], center[1], 0.1);
-      this.gridGroup.add(sprite);
+      group.add(sprite);
     }
   }
 
@@ -973,6 +1169,7 @@ export class GridViewport {
     viewScale: number,
     factor: number,
     color: number,
+    group: THREE.Group = this.gridGroup,
   ): void {
     // Screen-horizontal world coordinate: X in elevations, Y in sections.
     const h = viewType === "ELEVATION" ? 0 : 1;
@@ -990,7 +1187,7 @@ export class GridViewport {
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    this.gridGroup.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color })));
+    group.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color })));
 
     if (axis.headType === "NONE") return;
     const radius = GRID_HEAD_RADIUS * axis.headScale * factor;
@@ -1007,16 +1204,21 @@ export class GridViewport {
     }
     const headGeometry = new THREE.BufferGeometry();
     headGeometry.setAttribute("position", new THREE.Float32BufferAttribute(headPositions, 3));
-    this.gridGroup.add(
+    group.add(
       new THREE.LineSegments(headGeometry, new THREE.LineBasicMaterial({ color })),
     );
     const sprite = makeTextSprite(axis.name, radius * 1.6);
     const [sx, sy, sz] = toWorld(0, centerZ);
     sprite.position.set(sx, sy, sz + 0.001);
-    this.gridGroup.add(sprite);
+    group.add(sprite);
   }
 
-  private buildWall(wall: WallDatum, color: number): void {
+  private buildWall(
+    wall: WallDatum,
+    color: number,
+    group: THREE.Group = this.wallGroup,
+    planView: boolean = this.inPlanView,
+  ): void {
     const length = Math.hypot(wall.end[0] - wall.start[0], wall.end[1] - wall.start[1]);
     if (length === 0) return;
     // Mitered footprint decomposed into pieces around openings, extruded up.
@@ -1034,21 +1236,26 @@ export class GridViewport {
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(0, 0, wall.start[2] + piece.zBottom);
-      this.wallGroup.add(mesh);
+      group.add(mesh);
 
       const edges = new THREE.LineSegments(
         new THREE.EdgesGeometry(geometry),
         new THREE.LineBasicMaterial({ color }),
       );
       edges.position.copy(mesh.position);
-      this.wallGroup.add(edges);
+      group.add(edges);
     }
     for (const opening of wall.openings) {
-      this.buildOpening(wall, opening);
+      this.buildOpening(wall, opening, group, planView);
     }
   }
 
-  private buildOpening(wall: WallDatum, opening: OpeningDatum): void {
+  private buildOpening(
+    wall: WallDatum,
+    opening: OpeningDatum,
+    group: THREE.Group = this.wallGroup,
+    planView: boolean = this.inPlanView,
+  ): void {
     const selected = store.selection?.kind === "opening" && store.selection.id === opening.id;
     const fillColor = selected
       ? COLOR_SELECTED
@@ -1079,14 +1286,14 @@ export class GridViewport {
       wall.start[2] + opening.sillHeight + opening.height / 2,
     );
     panel.rotation.z = angle;
-    this.wallGroup.add(panel);
+    group.add(panel);
     const panelEdges = new THREE.LineSegments(
       new THREE.EdgesGeometry(panel.geometry as THREE.BoxGeometry),
       new THREE.LineBasicMaterial({ color: fillColor }),
     );
     panelEdges.position.copy(panel.position);
     panelEdges.rotation.copy(panel.rotation);
-    this.wallGroup.add(panelEdges);
+    group.add(panelEdges);
 
     // Plan marker: opening rectangle drawn above the wall top.
     const corners = openingFootprint(wall, opening);
@@ -1100,13 +1307,13 @@ export class GridViewport {
       }
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-      this.wallGroup.add(
+      group.add(
         new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: fillColor })),
       );
     }
 
     // Door swing symbol, plan views only: open leaf + quarter arc.
-    if (this.inPlanView) {
+    if (planView) {
       const swing = doorSwing(wall, opening);
       if (swing) {
         const positions: number[] = [
@@ -1121,7 +1328,7 @@ export class GridViewport {
         }
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-        this.wallGroup.add(
+        group.add(
           new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: fillColor })),
         );
       }
@@ -1205,7 +1412,11 @@ export class GridViewport {
     }
 
     const snap = this.lastSnap;
-    const drawing = store.activeTool === "GRID" || store.activeTool === "WALL";
+    const drawing =
+      store.activeTool === "GRID" ||
+      store.activeTool === "WALL" ||
+      store.activeTool === "FLOOR" ||
+      store.activeTool === "ROOF";
     if (!drawing && !this.endpointEdit) return;
 
     let previewStart: Point3D | null = store.pendingStart;
@@ -1219,15 +1430,22 @@ export class GridViewport {
     if (previewStart && snap) {
       const color =
         snap.kind === "AXIS_X" || snap.kind === "AXIS_Y" ? COLOR_AXIS_LOCK : COLOR_PREVIEW;
+      const slabTool = store.activeTool === "FLOOR" || store.activeTool === "ROOF";
+      const positions = slabTool
+        ? [
+            previewStart[0], previewStart[1], 0.05, snap.point[0], previewStart[1], 0.05,
+            snap.point[0], previewStart[1], 0.05, snap.point[0], snap.point[1], 0.05,
+            snap.point[0], snap.point[1], 0.05, previewStart[0], snap.point[1], 0.05,
+            previewStart[0], snap.point[1], 0.05, previewStart[0], previewStart[1], 0.05,
+          ]
+        : [previewStart[0], previewStart[1], 0.05, snap.point[0], snap.point[1], 0.05];
       const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute(
-        "position",
-        new THREE.Float32BufferAttribute(
-          [previewStart[0], previewStart[1], 0.05, snap.point[0], snap.point[1], 0.05],
-          3,
-        ),
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      this.previewGroup.add(
+        slabTool
+          ? new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color }))
+          : new THREE.Line(geometry, new THREE.LineBasicMaterial({ color })),
       );
-      this.previewGroup.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({ color })));
     }
     if (snap) {
       const size = 5 * this.worldPerPixel();

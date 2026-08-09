@@ -192,3 +192,22 @@ describe("multi-storey export", () => {
     expect(ifc).toContain(".ELEMENT.,3.");
   });
 });
+
+describe("slab export", () => {
+  it("exports floors and roofs as IfcSlab in their level's storey", () => {
+    const project = projectWith([]);
+    const level = project.addLevel("Level 1", 0);
+    project.addSlab("FLOOR", [[0, 0], [8, 0], [8, 5], [0, 5]], { levelId: level.id });
+    project.addSlab("ROOF", [[0, 0], [8, 0], [8, 5], [0, 5]], {
+      levelId: level.id,
+      zOffset: 3,
+    });
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc.match(/IFCSLAB\(/g)).toHaveLength(2);
+    expect(ifc).toContain(".FLOOR.");
+    expect(ifc).toContain(".ROOF.");
+    // Floor bottom at -thickness, roof bottom at zOffset - thickness.
+    expect(ifc).toContain("(0.,0.,-0.2)");
+    expect(ifc).toContain("(0.,0.,2.8)");
+  });
+});
