@@ -48,6 +48,13 @@ export function Toolbar() {
         >
           Grid
         </button>
+        <button
+          className={store.activeTool === "WALL" ? "active" : ""}
+          onClick={() => store.setTool("WALL")}
+          title="Draw walls (W)"
+        >
+          Wall
+        </button>
       </div>
       <label className="field">
         Snap

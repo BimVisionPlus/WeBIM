@@ -81,6 +81,33 @@ export function ProjectBrowser() {
         {project.gridAxes.length === 0 && (
           <div className="tree-empty">No grids yet — press G and click twice.</div>
         )}
+        <div className="tree-subbranch">Walls</div>
+        {project.walls.map((wall) => (
+          <div
+            key={wall.id}
+            className={`tree-leaf ${
+              store.selection?.kind === "wall" && store.selection.id === wall.id ? "selected" : ""
+            }`}
+            onClick={() => store.select({ kind: "wall", id: wall.id })}
+          >
+            <span>
+              Wall {wall.name} <em>{wall.thickness} m</em>
+            </span>
+            <button
+              className="mini"
+              title="Delete wall"
+              onClick={(event) => {
+                event.stopPropagation();
+                store.removeWall(wall.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        {project.walls.length === 0 && (
+          <div className="tree-empty">No walls yet — press W and click twice.</div>
+        )}
         <div className="tree-branch muted">Sheets</div>
         <div className="tree-branch muted">Schedules</div>
       </div>

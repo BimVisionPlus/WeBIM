@@ -105,3 +105,27 @@ describe("line styles", () => {
     expect(dashSpans(7, LINE_PATTERNS.get("CONTINUOUS")!, 100)).toEqual([[0, 7]]);
   });
 });
+
+describe("walls", () => {
+  it("creates, updates and round-trips walls", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const wall = project.addWall([0, 0, 0], [4, 0, 0]);
+    expect(wall.name).toBe("W1");
+    expect(wall.thickness).toBeCloseTo(0.2);
+    expect(wall.height).toBeCloseTo(3.0);
+    project.updateWall(wall.id, { height: 2.7 });
+    const restored = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(restored.walls).toHaveLength(1);
+    expect(restored.walls[0].height).toBeCloseTo(2.7);
+    expect(() => project.addWall([1, 1, 0], [1, 1, 0])).toThrow("different");
+    expect(() => project.updateWall(wall.id, { thickness: 0 })).toThrow("thickness");
+  });
+
+  it("stays loadable when the walls key is absent (Blender add-on JSON)", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const payload = JSON.parse(JSON.stringify(project.toDict()));
+    delete payload.walls;
+    const restored = NativeBimProject.fromJson(JSON.stringify(payload));
+    expect(restored.walls).toEqual([]);
+  });
+});

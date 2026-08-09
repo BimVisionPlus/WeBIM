@@ -6,7 +6,11 @@
 // (U/V/W); anything else keeps each axis as an IfcAnnotation with
 // ObjectType WEBIM_GRID_AXIS.
 
-import type { GridDatum, NativeBimProject, Point3D } from "../domain/project";
+// Walls export as IfcWall with a SweptSolid body (rectangle profile extruded
+// by the wall height), the browser equivalent of create_2pt_wall in
+// webim/core/wall.py.
+
+import type { GridDatum, NativeBimProject, Point3D, WallDatum } from "../domain/project";
 
 const GUID_ALPHABET =
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
@@ -263,6 +267,10 @@ export function exportProjectToIfc(
     }
   }
 
+  for (const wall of project.walls) {
+    containedProducts.push(addWall(step, wall, context, storeyPlacement));
+  }
+
   if (containedProducts.length > 0) {
     step.add("IFCRELCONTAINEDINSPATIALSTRUCTURE", [
       text(ifcGuid()),
@@ -275,4 +283,68 @@ export function exportProjectToIfc(
   }
 
   return step.render(fileName, timestamp);
+}
+
+function addWall(
+  step: StepFile,
+  wall: WallDatum,
+  context: string,
+  storeyPlacement: string,
+): string {
+  const dx = wall.end[0] - wall.start[0];
+  const dy = wall.end[1] - wall.start[1];
+  const length = Math.hypot(dx, dy);
+  const direction: [number, number] = [dx / length, dy / length];
+
+  // Local placement at the wall start, X axis along the wall axis.
+  const location = step.add("IFCCARTESIANPOINT", [
+    `(${real(wall.start[0])},${real(wall.start[1])},${real(wall.start[2])})`,
+  ]);
+  const zAxis = step.add("IFCDIRECTION", ["(0.,0.,1.)"]);
+  const refDirection = step.add("IFCDIRECTION", [
+    `(${real(direction[0])},${real(direction[1])},0.)`,
+  ]);
+  const axisPlacement = step.add("IFCAXIS2PLACEMENT3D", [location, zAxis, refDirection]);
+  const wallPlacement = step.add("IFCLOCALPLACEMENT", [storeyPlacement, axisPlacement]);
+
+  // Rectangle profile centred on the axis, extruded upward by the height.
+  const profileCenter = step.add("IFCCARTESIANPOINT", [`(${real(length / 2)},0.)`]);
+  const profilePosition = step.add("IFCAXIS2PLACEMENT2D", [profileCenter, "$"]);
+  const profile = step.add("IFCRECTANGLEPROFILEDEF", [
+    ".AREA.",
+    "$",
+    profilePosition,
+    real(length),
+    real(wall.thickness),
+  ]);
+  const solidPosition = step.add("IFCAXIS2PLACEMENT3D", [
+    step.add("IFCCARTESIANPOINT", ["(0.,0.,0.)"]),
+    "$",
+    "$",
+  ]);
+  const extrudeDirection = step.add("IFCDIRECTION", ["(0.,0.,1.)"]);
+  const solid = step.add("IFCEXTRUDEDAREASOLID", [
+    profile,
+    solidPosition,
+    extrudeDirection,
+    real(wall.height),
+  ]);
+  const representation = step.add("IFCSHAPEREPRESENTATION", [
+    context,
+    "'Body'",
+    "'SweptSolid'",
+    `(${solid})`,
+  ]);
+  const shape = step.add("IFCPRODUCTDEFINITIONSHAPE", ["$", "$", `(${representation})`]);
+  return step.add("IFCWALL", [
+    text(ifcGuid()),
+    "$",
+    text(wall.name),
+    "$",
+    "$",
+    wallPlacement,
+    shape,
+    "$",
+    ".STANDARD.",
+  ]);
 }

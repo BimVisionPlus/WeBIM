@@ -2,10 +2,10 @@ import { useSyncExternalStore } from "react";
 import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
 
-export type ToolId = "SELECT" | "GRID";
+export type ToolId = "SELECT" | "GRID" | "WALL";
 
 export interface Selection {
-  kind: "grid" | "view";
+  kind: "grid" | "view" | "wall";
   id: string;
 }
 
@@ -86,10 +86,19 @@ class AppStore {
   }
 
   setTool(tool: ToolId): void {
+    if (tool !== "SELECT" && this.activeView?.viewType !== "FLOOR_PLAN") {
+      this.statusMessage = "Drawing tools need an active floor plan view";
+      this.commit(false);
+      return;
+    }
     this.activeTool = tool;
     this.pendingStart = null;
     this.statusMessage =
-      tool === "GRID" ? "Grid: click two points per axis. Esc cancels, Enter exits." : "Ready";
+      tool === "GRID"
+        ? "Grid: click two points per axis. Esc cancels, Enter exits."
+        : tool === "WALL"
+          ? "Wall: click two points per wall. Esc cancels, Enter exits."
+          : "Ready";
     this.commit(false);
   }
 
@@ -134,6 +143,31 @@ class AppStore {
     this.commit();
   }
 
+  wallThickness = 0.2;
+  wallHeight = 3.0;
+
+  addWall(start: Point3D, end: Point3D): void {
+    const wall = this.project.addWall(start, end, {
+      thickness: this.wallThickness,
+      height: this.wallHeight,
+    });
+    this.statusMessage = `Wall ${wall.name} created`;
+    this.commit();
+  }
+
+  updateWall(wallId: string, changes: Parameters<NativeBimProject["updateWall"]>[1]): void {
+    this.project.updateWall(wallId, changes);
+    this.commit();
+  }
+
+  removeWall(wallId: string): void {
+    this.project.removeWall(wallId);
+    if (this.selection?.kind === "wall" && this.selection.id === wallId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
   addView(viewType: "FLOOR_PLAN" | "SECTION" | "ELEVATION"): void {
     const prefix =
       viewType === "FLOOR_PLAN" ? "Level" : viewType === "SECTION" ? "Section" : "Elevation";
@@ -167,6 +201,11 @@ class AppStore {
   activateView(viewId: string): void {
     this.activeViewId = viewId;
     this.selection = { kind: "view", id: viewId };
+    const view = this.activeView;
+    if (view && view.viewType !== "FLOOR_PLAN" && this.activeTool !== "SELECT") {
+      this.activeTool = "SELECT";
+      this.pendingStart = null;
+    }
     this.commit(false);
   }
 

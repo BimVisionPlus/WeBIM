@@ -31,6 +31,16 @@ IFC4 STEP text → .ifc download
 - Grid drawing tool (`G` or the Grid button): two clicks per axis, tool
   stays active like Revit. Endpoint snapping (screen radius), X/Y axis
   lock inside a 5° cone, increment snapping (configurable).
+- Wall tool (`W`): two clicks per wall on the native domain (thickness /
+  height in the Properties panel); rendered as an extruded solid and
+  exported as `IfcWall` with a SweptSolid body. Walls serialize under a
+  `walls` key the Blender add-on ignores for now.
+- Anchor endpoint editing: select a grid or wall, click an endpoint
+  anchor, move, click to confirm (Esc cancels) — same click-move-click
+  flow as the add-on.
+- Technical views drive the camera: floor plans look down, elevations
+  along +Y, sections along +X, framed by each view's ortho scale;
+  drawing tools stay plan-only.
 - Names auto-assigned `A, B, C…`; both endpoints get grid head bubbles
   (`Circle + Name`, `Hexagon + Name`, or `None`) placed outside the
   endpoint, sized in paper space from the 1:100 baseline of the active

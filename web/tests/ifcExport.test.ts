@@ -99,3 +99,17 @@ describe("exportProjectToIfc", () => {
     }
   });
 });
+
+describe("wall export", () => {
+  it("exports walls as IfcWall with a swept solid body", () => {
+    const project = projectWith([]);
+    project.addWall([0, 0, 0], [5, 0, 0], { thickness: 0.3, height: 2.8 });
+    const ifc = exportProjectToIfc(project, { timestamp: "2026-08-09T00:00:00Z" });
+    expect(ifc.match(/IFCWALL\(/g)).toHaveLength(1);
+    expect(ifc).toContain("IFCEXTRUDEDAREASOLID(");
+    expect(ifc).toContain("IFCRECTANGLEPROFILEDEF(.AREA.,$,");
+    expect(ifc).toContain("'W1'");
+    expect(ifc).toContain("2.8");
+    expect(ifc).toContain("IFCRELCONTAINEDINSPATIALSTRUCTURE(");
+  });
+});

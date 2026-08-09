@@ -17,6 +17,19 @@ export interface GridDatum {
   lineWeightMm: number;
 }
 
+/**
+ * Native wall element. Web-first extension: serialized under a "walls" key
+ * the Python add-on ignores on load (its wall tool is still IFC-legacy).
+ */
+export interface WallDatum {
+  id: string;
+  name: string;
+  start: Point3D;
+  end: Point3D;
+  thickness: number;
+  height: number;
+}
+
 export type ViewType = "FLOOR_PLAN" | "SECTION" | "ELEVATION";
 
 export interface TechnicalView {
@@ -62,6 +75,7 @@ export class NativeBimProject {
   storeyName: string;
   gridAxes: GridDatum[];
   views: TechnicalView[];
+  walls: WallDatum[];
 
   constructor(
     id: string,
@@ -71,6 +85,7 @@ export class NativeBimProject {
     storeyName: string,
     gridAxes: GridDatum[] = [],
     views: TechnicalView[] = [],
+    walls: WallDatum[] = [],
   ) {
     this.id = id;
     this.name = name;
@@ -79,6 +94,7 @@ export class NativeBimProject {
     this.storeyName = storeyName;
     this.gridAxes = gridAxes;
     this.views = views;
+    this.walls = walls;
   }
 
   static create(
@@ -116,6 +132,14 @@ export class NativeBimProject {
         scale: view.scale,
         ortho_scale: view.orthoScale,
       })),
+      walls: this.walls.map((wall) => ({
+        id: wall.id,
+        name: wall.name,
+        start: [...wall.start],
+        end: [...wall.end],
+        thickness: wall.thickness,
+        height: wall.height,
+      })),
     };
   }
 
@@ -146,6 +170,14 @@ export class NativeBimProject {
         viewType: view.view_type as ViewType,
         scale: (view.scale as number) ?? 100,
         orthoScale: (view.ortho_scale as number) ?? 20.0,
+      })),
+      (data.walls ?? []).map((wall: Record<string, unknown>) => ({
+        id: wall.id as string,
+        name: wall.name as string,
+        start: wall.start as Point3D,
+        end: wall.end as Point3D,
+        thickness: (wall.thickness as number) ?? 0.2,
+        height: (wall.height as number) ?? 3.0,
       })),
     );
   }
@@ -271,6 +303,71 @@ export class NativeBimProject {
     }
     this.gridAxes[index] = updated;
     return updated;
+  }
+
+  addWall(
+    start: Point3D,
+    end: Point3D,
+    options: { thickness?: number; height?: number } = {},
+  ): WallDatum {
+    if (pointsEqual(start, end)) {
+      throw new Error("Wall endpoints must be different");
+    }
+    const thickness = options.thickness ?? 0.2;
+    const height = options.height ?? 3.0;
+    if (thickness <= 0) {
+      throw new Error("Wall thickness must be greater than zero");
+    }
+    if (height <= 0) {
+      throw new Error("Wall height must be greater than zero");
+    }
+    const wall: WallDatum = {
+      id: uuid4Hex(),
+      name: `W${this.walls.length + 1}`,
+      start,
+      end,
+      thickness,
+      height,
+    };
+    this.walls.push(wall);
+    return wall;
+  }
+
+  updateWall(
+    wallId: string,
+    changes: { start?: Point3D; end?: Point3D; thickness?: number; height?: number },
+  ): WallDatum {
+    const index = this.walls.findIndex((wall) => wall.id === wallId);
+    if (index === -1) {
+      throw new Error(`Unknown WallDatum: ${wallId}`);
+    }
+    const wall = this.walls[index];
+    const updated: WallDatum = {
+      ...wall,
+      start: changes.start ?? wall.start,
+      end: changes.end ?? wall.end,
+      thickness: changes.thickness ?? wall.thickness,
+      height: changes.height ?? wall.height,
+    };
+    if (pointsEqual(updated.start, updated.end)) {
+      throw new Error("Wall endpoints must be different");
+    }
+    if (updated.thickness <= 0) {
+      throw new Error("Wall thickness must be greater than zero");
+    }
+    if (updated.height <= 0) {
+      throw new Error("Wall height must be greater than zero");
+    }
+    this.walls[index] = updated;
+    return updated;
+  }
+
+  removeWall(wallId: string): WallDatum {
+    const index = this.walls.findIndex((wall) => wall.id === wallId);
+    if (index === -1) {
+      throw new Error(`Unknown WallDatum: ${wallId}`);
+    }
+    return this.walls.splice(index, 1)[0];
   }
 
   removeGridAxis(axisId: string): GridDatum {

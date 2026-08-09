@@ -1,6 +1,6 @@
 import { LINE_PATTERNS, LINE_WEIGHTS_MM } from "../domain/lineStyles";
 import { store, useStoreVersion } from "../state/store";
-import type { GridDatum, Point3D, TechnicalView } from "../domain/project";
+import type { GridDatum, Point3D, TechnicalView, WallDatum } from "../domain/project";
 
 function NumberField(props: {
   label: string;
@@ -118,6 +118,58 @@ function GridProperties({ axis }: { axis: GridDatum }) {
   );
 }
 
+function WallProperties({ wall }: { wall: WallDatum }) {
+  const updatePoint = (key: "start" | "end", index: number, value: number) => {
+    const point = [...wall[key]] as Point3D;
+    point[index] = value;
+    store.updateWall(wall.id, { [key]: point });
+  };
+
+  return (
+    <>
+      <h3>Wall {wall.name}</h3>
+      {(["start", "end"] as const).map((key) => (
+        <div key={key} className="prop-point">
+          <span className="prop-point-label">{key === "start" ? "Start" : "End"}</span>
+          {[0, 1].map((index) => (
+            <input
+              key={index}
+              type="number"
+              step={0.1}
+              value={wall[key][index]}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                if (!Number.isNaN(value)) {
+                  try {
+                    updatePoint(key, index, value);
+                  } catch (error) {
+                    store.setStatus((error as Error).message);
+                  }
+                }
+              }}
+            />
+          ))}
+        </div>
+      ))}
+      <NumberField
+        label="Thickness (m)"
+        value={wall.thickness}
+        step={0.05}
+        onCommit={(value) => store.updateWall(wall.id, { thickness: value })}
+      />
+      <NumberField
+        label="Height (m)"
+        value={wall.height}
+        step={0.1}
+        onCommit={(value) => store.updateWall(wall.id, { height: value })}
+      />
+      <button className="danger" onClick={() => store.removeWall(wall.id)}>
+        Delete wall
+      </button>
+    </>
+  );
+}
+
 function ViewProperties({ view }: { view: TechnicalView }) {
   return (
     <>
@@ -167,13 +219,20 @@ export function PropertiesPanel() {
     selection?.kind === "view"
       ? store.project.views.find((candidate) => candidate.id === selection.id)
       : undefined;
+  const wall =
+    selection?.kind === "wall"
+      ? store.project.walls.find((candidate) => candidate.id === selection.id)
+      : undefined;
 
   return (
     <aside className="panel properties-panel">
       <h2>Properties</h2>
       {axis && <GridProperties axis={axis} />}
       {view && <ViewProperties view={view} />}
-      {!axis && !view && <div className="tree-empty">Select a grid or a view.</div>}
+      {wall && <WallProperties wall={wall} />}
+      {!axis && !view && !wall && (
+        <div className="tree-empty">Select a grid, wall or view.</div>
+      )}
     </aside>
   );
 }
