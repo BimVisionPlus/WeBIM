@@ -22,7 +22,31 @@ collaboration covers them for free; only binaries touch the server):
   viewport renders (openings deducted, typed walls split per material
   layer), slab volumes, opening counts, CSV export.
 - **Clash** — separating-axis footprint overlap × z-range checks with
-  legitimate wall joins excluded and slab bearing tolerated. The native BIM domain from `webim/domain` is ported 1:1 to
+  legitimate wall joins excluded and slab bearing tolerated.
+
+Platform server hardening:
+
+- **Auth/roles** — token login (`POST /auth/login`) against
+  `relay/users.json` (scrypt; generate entries with
+  `node relay/auth.mjs hash <password>`), roles admin/editor/viewer
+  enforced server-side: viewers read files and receive sync but their
+  uploads are 403'd and their model-sync frames dropped by the relay
+  (presence still passes). No users.json = open dev mode.
+- **BYO storage** — `relay/storage.mjs` adapters: local disk (default)
+  or any S3-compatible endpoint (AWS/MinIO) via hand-rolled SigV4 —
+  set `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`
+  (+ `S3_REGION`). Tested against a fake S3 verifying signature shape.
+- **AI drawing reader** — `POST /ai/read-drawing` sends a stored PDF
+  plus the question to Claude (`@anthropic-ai/sdk`, adaptive thinking)
+  and returns the answer into the Drawings module's "Hỏi AI" box;
+  requires `ANTHROPIC_API_KEY` on the server, otherwise a clear 501.
+- **Standards corpus** — `npm run import-corpus` (scripts/
+  import-corpus.mjs) parses the machine-checkable qcvn-conflict-map
+  repo (registry + cross-regulation conflicts) into corpus.json; the
+  catalog merges corpus over seed with source badges, conflict refs
+  and the corpus's own edition_verified honesty flag. Two seed
+  supersessions verified against web sources 2026-08-10:
+  QCVN 07:2016→07:2023/BXD, TCVN 5575:2012→5575:2024. The native BIM domain from `webim/domain` is ported 1:1 to
 TypeScript; the Blender viewport adapter is replaced by a Three.js
 orthographic floor-plan viewport.
 

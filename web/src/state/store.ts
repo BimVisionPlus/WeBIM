@@ -37,6 +37,40 @@ export function fileServerBase(): string {
   return `http://${window.location.hostname}:8787`;
 }
 
+const AUTH_KEY = "webim.auth";
+
+export interface AuthSession {
+  token: string;
+  username: string;
+  role: "admin" | "editor" | "viewer";
+}
+
+export function authSession(): AuthSession | null {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    return raw ? (JSON.parse(raw) as AuthSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function authHeaders(): Record<string, string> {
+  const session = authSession();
+  return session ? { Authorization: `Bearer ${session.token}` } : {};
+}
+
+/** Fetch a stored file with credentials and hand back an object URL. */
+export async function fetchFileUrl(key: string): Promise<string> {
+  const response = await fetch(
+    `${fileServerBase()}/files/${encodeURIComponent(key)}`,
+    { headers: authHeaders() },
+  );
+  if (!response.ok) {
+    throw new Error(`Download failed (${response.status})`);
+  }
+  return URL.createObjectURL(await response.blob());
+}
+
 const STORAGE_KEY = "webim.native_project";
 const ACTIVE_VIEW_KEY = "webim.active_view";
 
@@ -73,6 +107,9 @@ class AppStore {
   pendingStart: Point3D | null = null;
   statusMessage = "Ready";
   activeModule: ModuleId = "MODEL";
+  /** Whether the platform server requires login (null until probed). */
+  authRequired: boolean | null = null;
+  auth: AuthSession | null = authSession();
 
   private version = 0;
   private listeners = new Set<() => void>();
@@ -301,6 +338,48 @@ class AppStore {
     this.commit();
   }
 
+  async probeAuthMode(): Promise<void> {
+    try {
+      const response = await fetch(`${fileServerBase()}/auth/mode`);
+      this.authRequired = ((await response.json()) as { enabled: boolean }).enabled;
+    } catch {
+      this.authRequired = null;
+    }
+    this.commit(false);
+  }
+
+  async login(username: string, password: string): Promise<void> {
+    try {
+      const response = await fetch(`${fileServerBase()}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!response.ok) {
+        throw new Error("Sai tên đăng nhập hoặc mật khẩu");
+      }
+      this.auth = (await response.json()) as AuthSession;
+      localStorage.setItem(AUTH_KEY, JSON.stringify(this.auth));
+      this.statusMessage = `Đã đăng nhập: ${this.auth.username} (${this.auth.role})`;
+      this.sync?.reconnectRelay();
+      this.commit(false);
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  logout(): void {
+    this.auth = null;
+    localStorage.removeItem(AUTH_KEY);
+    this.sync?.reconnectRelay();
+    this.setStatus("Đã đăng xuất");
+  }
+
+  get canEdit(): boolean {
+    if (this.authRequired === false || this.authRequired === null) return true;
+    return this.auth != null && this.auth.role !== "viewer";
+  }
+
   setModule(module: ModuleId): void {
     this.activeModule = module;
     if (module !== "MODEL" && this.activeTool !== "SELECT") {
@@ -342,7 +421,7 @@ class AppStore {
       const key = `${this.project.id}/${documentId}/${Date.now()}-${file.name}`;
       const response = await fetch(
         `${fileServerBase()}/files/${encodeURIComponent(key)}`,
-        { method: "PUT", body: file },
+        { method: "PUT", body: file, headers: authHeaders() },
       );
       if (!response.ok) {
         throw new Error(`Upload failed (${response.status})`);

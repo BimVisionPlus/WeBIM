@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "username": "sophie",
+      "role": "admin",
+      "salt": "generate with: node relay/auth.mjs hash <password>",
+      "hash": "then paste salt/hash here and rename this file to users.json"
+    }
+  ]
+}

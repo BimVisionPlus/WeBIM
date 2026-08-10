@@ -543,3 +543,68 @@ input[type="text"],
   border-radius: 4px;
   background: #fff;
 }
+
+.source-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 3px;
+  padding: 1px 6px;
+  background: #3a3020;
+  color: #d8b45a;
+}
+
+.source-badge.corpus {
+  background: #1e3a2a;
+  color: #5f9e6e;
+}
+
+.conflict-ref {
+  font-size: 11px;
+  color: #e06c75;
+  cursor: help;
+}
+
+.auth-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auth-controls input {
+  width: 90px;
+}
+
+.auth-user em {
+  color: var(--muted);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #4da3ff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 12.5px;
+}
+
+.ai-ask {
+  margin-top: 16px;
+}
+
+.ai-ask h3 {
+  font-size: 12px;
+  margin: 0 0 6px;
+  color: var(--muted);
+}
+
+.ai-answer {
+  white-space: pre-wrap;
+  font-size: 12.5px;
+  border-left: 2px solid #5f9e6e;
+  padding: 6px 10px;
+  margin-top: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}

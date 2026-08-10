@@ -1,0 +1,205 @@
+{
+  "importedFrom": "/Users/vsf-thuynt519-l/Documents/GitHub/qcvn-conflict-map",
+  "entries": [
+    {
+      "key": "qcvn06",
+      "code": "QCVN 06:2022/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về An toàn cháy cho nhà và công trình",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Có ít nhất một sửa đổi đã ban hành sau bản 2022; cần xác nhận bản hợp nhất đang áp dụng.",
+      "conflicts": [
+        {
+          "id": "CF-0001",
+          "title": "Lưu lượng nước chữa cháy ngoài nhà: yêu cầu của quy chuẩn cháy vượt năng lực mạng cấp nước quy hoạch",
+          "severity": "blocking"
+        },
+        {
+          "id": "CF-0003",
+          "title": "Nhà ở liên kế: bề rộng thang thoát nạn của quy chuẩn cháy không lọt vào lô đất mà tiêu chuẩn nhà liên kế cho phép",
+          "severity": "blocking"
+        },
+        {
+          "id": "CF-0005",
+          "title": "Chuyển đổi công năng công trình cũ: giới hạn chịu lửa theo giấy phép gốc thấp hơn quy chuẩn hiện hành",
+          "severity": "blocking"
+        },
+        {
+          "id": "CF-0006",
+          "title": "Chứng nhận hợp quy vật liệu chống cháy: yêu cầu đúng luật nhưng năng lực thử nghiệm trong nước không đáp ứng",
+          "severity": "blocking"
+        },
+        {
+          "id": "CF-0007",
+          "title": "Buồng thang thông gió tự nhiên đòi tiếp giáp mặt ngoài, mặt bằng chung cư lõi kín thì không có mặt ngoài để tiếp giáp",
+          "severity": "blocking"
+        },
+        {
+          "id": "CF-0008",
+          "title": "Khoảng cách phòng cháy giữa hai nhà lớn hơn khoảng lùi mà quy hoạch cho phép trên lô hiện hữu",
+          "severity": "blocking"
+        },
+        {
+          "id": "CF-0009",
+          "title": "Tầng hầm để xe: diện tích cần cho chỉ tiêu chỗ đỗ vượt trần diện tích một khoang cháy",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "key": "qcvn04",
+      "code": "QCVN 04:2021/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Nhà chung cư",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": null,
+      "conflicts": [
+        {
+          "id": "CF-0007",
+          "title": "Buồng thang thông gió tự nhiên đòi tiếp giáp mặt ngoài, mặt bằng chung cư lõi kín thì không có mặt ngoài để tiếp giáp",
+          "severity": "blocking"
+        }
+      ]
+    },
+    {
+      "key": "qcvn01",
+      "code": "QCVN 01:2021/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Quy hoạch xây dựng",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": null,
+      "conflicts": [
+        {
+          "id": "CF-0008",
+          "title": "Khoảng cách phòng cháy giữa hai nhà lớn hơn khoảng lùi mà quy hoạch cho phép trên lô hiện hữu",
+          "severity": "blocking"
+        }
+      ]
+    },
+    {
+      "key": "qcvn07",
+      "code": "QCVN 07:2016/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Các công trình hạ tầng kỹ thuật",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Bộ nhiều phần (cấp nước, thoát nước, giao thông, chiếu sáng…); cần ghi rõ phần khi pin điều khoản.",
+      "conflicts": [
+        {
+          "id": "CF-0001",
+          "title": "Lưu lượng nước chữa cháy ngoài nhà: yêu cầu của quy chuẩn cháy vượt năng lực mạng cấp nước quy hoạch",
+          "severity": "blocking"
+        },
+        {
+          "id": "CF-0009",
+          "title": "Tầng hầm để xe: diện tích cần cho chỉ tiêu chỗ đỗ vượt trần diện tích một khoang cháy",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "key": "qcvn09",
+      "code": "QCVN 09:2017/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Các công trình xây dựng sử dụng năng lượng hiệu quả",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": null,
+      "conflicts": [
+        {
+          "id": "CF-0002",
+          "title": "Chiếu sáng văn phòng: trần công suất của quy chuẩn năng lượng thấp hơn mức cần để đạt độ rọi tiêu chuẩn",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "key": "tcvn2622",
+      "code": "TCVN 2622:1995",
+      "title": "Phòng cháy, chống cháy cho nhà và công trình — Yêu cầu thiết kế",
+      "kind": "TCVN",
+      "inForce": false,
+      "editionVerified": false,
+      "note": "Cơ sở của nhiều giấy phép cũ. Tình trạng hiệu lực hiện nay cần xác minh — đây chính là nội dung CF-0005.",
+      "conflicts": [
+        {
+          "id": "CF-0005",
+          "title": "Chuyển đổi công năng công trình cũ: giới hạn chịu lửa theo giấy phép gốc thấp hơn quy chuẩn hiện hành",
+          "severity": "blocking"
+        }
+      ]
+    },
+    {
+      "key": "tcvn9411",
+      "code": "TCVN 9411:2012",
+      "title": "Nhà ở liên kế — Tiêu chuẩn thiết kế",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": null,
+      "conflicts": [
+        {
+          "id": "CF-0003",
+          "title": "Nhà ở liên kế: bề rộng thang thoát nạn của quy chuẩn cháy không lọt vào lô đất mà tiêu chuẩn nhà liên kế cho phép",
+          "severity": "blocking"
+        }
+      ]
+    },
+    {
+      "key": "tcvn7114",
+      "code": "TCVN 7114-1:2008",
+      "title": "Ecgônômi — Chiếu sáng nơi làm việc — Phần 1: Trong nhà",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": null,
+      "conflicts": [
+        {
+          "id": "CF-0002",
+          "title": "Chiếu sáng văn phòng: trần công suất của quy chuẩn năng lượng thấp hơn mức cần để đạt độ rọi tiêu chuẩn",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "key": "tcxd25",
+      "code": "TCXD 25:1991",
+      "title": "Đặt đường dẫn điện trong nhà ở và công trình công cộng — Tiêu chuẩn thiết kế",
+      "kind": "TCXD",
+      "inForce": false,
+      "editionVerified": false,
+      "note": "Ký hiệu TCXD/TCXDVN thuộc hệ cũ, phần lớn chưa được tuyên bố bãi bỏ rõ ràng — nội dung CF-0004.",
+      "conflicts": [
+        {
+          "id": "CF-0004",
+          "title": "Tiêu chuẩn hệ TCXD/TCXDVN: vẫn được viện dẫn trong hồ sơ nhưng tình trạng hiệu lực không rõ",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "key": "nd06",
+      "code": "Nghị định 06/2021/NĐ-CP",
+      "title": "Quy định chi tiết một số nội dung về quản lý chất lượng, thi công xây dựng và bảo trì công trình xây dựng",
+      "kind": "NGHI_DINH",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Khung nghiệm thu. Điều chỉnh bởi các nghị định sửa đổi sau đó; cần xác nhận bản hợp nhất.",
+      "conflicts": [
+        {
+          "id": "CF-0004",
+          "title": "Tiêu chuẩn hệ TCXD/TCXDVN: vẫn được viện dẫn trong hồ sơ nhưng tình trạng hiệu lực không rõ",
+          "severity": "major"
+        },
+        {
+          "id": "CF-0006",
+          "title": "Chứng nhận hợp quy vật liệu chống cháy: yêu cầu đúng luật nhưng năng lực thử nghiệm trong nước không đáp ứng",
+          "severity": "blocking"
+        }
+      ]
+    }
+  ]
+}

@@ -3,20 +3,55 @@
 // Metadata lives in the synced project; binaries go to the platform
 // server via the store's upload helper.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   searchStandards,
   supersessionChain,
   STANDARDS_CATALOG,
 } from "../standards/catalog";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
-import { fileServerBase, store, useStoreVersion } from "../state/store";
+import {
+  authHeaders,
+  fetchFileUrl,
+  fileServerBase,
+  store,
+  useStoreVersion,
+} from "../state/store";
 
 const DOCUMENT_STATUSES: DocumentStatus[] = ["WIP", "SHARED", "PUBLISHED", "ARCHIVED"];
 const TASK_STATUSES: TaskStatus[] = ["NOT_STARTED", "IN_PROGRESS", "DONE", "BLOCKED"];
 
-function fileUrl(key: string): string {
-  return `${fileServerBase()}/files/${encodeURIComponent(key)}`;
+/** Renders a stored file through an authenticated blob URL. */
+function StoredFileFrame({ fileKey, title }: { fileKey: string; title: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let revoked: string | null = null;
+    setUrl(null);
+    setError(null);
+    fetchFileUrl(fileKey)
+      .then((objectUrl) => {
+        revoked = objectUrl;
+        setUrl(objectUrl);
+      })
+      .catch((cause) => setError((cause as Error).message));
+    return () => {
+      if (revoked) URL.revokeObjectURL(revoked);
+    };
+  }, [fileKey]);
+  if (error) return <p className="module-hint">Không tải được file: {error}</p>;
+  if (!url) return <p className="module-hint">Đang tải…</p>;
+  return <iframe className="drawing-frame" title={title} src={url} />;
+}
+
+function downloadStoredFile(fileKey: string, fileName: string): void {
+  void fetchFileUrl(fileKey).then((url) => {
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  });
 }
 
 export function CdeModule() {
@@ -166,9 +201,14 @@ function DocumentDetail({ document }: { document: DocumentDatum }) {
               <td>{revision.note}</td>
               <td>
                 {revision.fileKey ? (
-                  <a href={fileUrl(revision.fileKey)} target="_blank" rel="noreferrer">
+                  <button
+                    className="link-button"
+                    onClick={() =>
+                      downloadStoredFile(revision.fileKey!, revision.fileName ?? "file")
+                    }
+                  >
                     {revision.fileName}
-                  </a>
+                  </button>
                 ) : (
                   "—"
                 )}
@@ -293,9 +333,11 @@ export function StandardsModule() {
     <div className="module-host">
       <h2>Standards — tra cứu QCVN / TCVN</h2>
       <p className="module-hint">
-        Danh mục khởi tạo ({STANDARDS_CATALOG.length} văn bản) — đối chiếu văn bản gốc
-        trước khi áp dụng. Nguồn dài hạn: corpus machine-checkable
-        (qcvn-conflict-map / plancheck).
+        {STANDARDS_CATALOG.length} văn bản ·{" "}
+        {STANDARDS_CATALOG.filter((entry) => entry.source === "corpus").length} từ
+        corpus machine-checkable (qcvn-conflict-map, kèm xung đột liên-quy-chuẩn) ·
+        còn lại là seed đã đối chiếu nguồn thứ cấp. Chưa mục nào đối chiếu công báo
+        (edition_verified) — luôn kiểm tra văn bản gốc trước khi áp dụng.
       </p>
       <div className="module-form">
         <input
@@ -312,7 +354,9 @@ export function StandardsModule() {
             <th>Tên</th>
             <th>Hiệu lực</th>
             <th>Thay thế</th>
-            <th>Tags</th>
+            <th>Nguồn</th>
+            <th>Xung đột</th>
+            <th>Tags / Ghi chú</th>
           </tr>
         </thead>
         <tbody>
@@ -322,11 +366,69 @@ export function StandardsModule() {
               <td>{entry.title}</td>
               <td>{entry.status === "HIEN_HANH" ? "Hiện hành" : "Hết hiệu lực"}</td>
               <td>{supersessionChain(entry).join(" → ") || "—"}</td>
-              <td>{entry.tags.join(", ")}</td>
+              <td>
+                <span className={`source-badge ${entry.source}`}>
+                  {entry.source === "corpus" ? "corpus" : "seed"}
+                </span>
+              </td>
+              <td>
+                {entry.conflicts.length === 0
+                  ? "—"
+                  : entry.conflicts.map((conflict) => (
+                      <div key={conflict.id} className="conflict-ref" title={conflict.title}>
+                        {conflict.id} ({conflict.severity})
+                      </div>
+                    ))}
+              </td>
+              <td>{[entry.tags.join(", "), entry.note].filter(Boolean).join(" · ")}</td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function AiAskBox({ fileKey }: { fileKey: string | null }) {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const ask = async () => {
+    if (!fileKey || !question.trim() || busy) return;
+    setBusy(true);
+    setAnswer(null);
+    try {
+      const response = await fetch(`${fileServerBase()}/ai/read-drawing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ key: fileKey, question }),
+      });
+      const body = (await response.json()) as { answer?: string; error?: string };
+      setAnswer(response.ok ? (body.answer ?? "") : `⚠ ${body.error}`);
+    } catch (error) {
+      setAnswer(`⚠ ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="ai-ask">
+      <h3>AI đọc bản vẽ</h3>
+      <div className="module-form">
+        <input
+          placeholder="Hỏi về bản vẽ này… (vd: liệt kê các trục và khoảng cách)"
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") void ask();
+          }}
+          style={{ minWidth: 240 }}
+        />
+        <button disabled={!fileKey || busy} onClick={() => void ask()}>
+          {busy ? "Đang đọc…" : "Hỏi AI"}
+        </button>
+      </div>
+      {answer && <div className="ai-answer">{answer}</div>}
     </div>
   );
 }
@@ -389,17 +491,14 @@ export function DrawingsModule() {
                     Note
                   </button>
                 </div>
-                <p className="module-hint">
-                  AI đọc bản vẽ: nối qua endpoint server (chưa cấu hình khoá — stub).
-                </p>
+                <AiAskBox fileKey={latestPdf?.fileKey ?? null} />
               </>
             )}
           </div>
           {latestPdf?.fileKey && (
-            <iframe
-              className="drawing-frame"
+            <StoredFileFrame
+              fileKey={latestPdf.fileKey}
               title={latestPdf.fileName ?? "drawing"}
-              src={fileUrl(latestPdf.fileKey)}
             />
           )}
         </div>

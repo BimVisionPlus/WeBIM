@@ -101,8 +101,8 @@ describe("standards catalog", () => {
   });
 
   it("follows supersession chains", () => {
-    const fire = STANDARDS_CATALOG.find((entry) => entry.id === "qcvn-06-2022")!;
-    expect(supersessionChain(fire)).toContain("QCVN 06:2021/BXD");
+    const loads = STANDARDS_CATALOG.find((entry) => entry.code === "TCVN 2737:2023")!;
+    expect(supersessionChain(loads)).toContain("TCVN 2737:1995");
   });
 });
 

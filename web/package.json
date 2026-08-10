@@ -9,9 +9,11 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "relay": "node relay/server.mjs"
+    "relay": "node relay/server.mjs",
+    "import-corpus": "node scripts/import-corpus.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
     "@types/three": "^0.185.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

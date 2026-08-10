@@ -349,25 +349,7 @@ export class SyncEngine {
     if (typeof BroadcastChannel !== "undefined") {
       this.transports.push(new BroadcastChannelTransport(onMessage));
     }
-    const relayUrl =
-      new URLSearchParams(window.location.search).get("relay") ??
-      localStorage.getItem(RELAY_URL_KEY) ??
-      `ws://${window.location.hostname}:8787`;
-    this.transports.push(
-      new WebSocketTransport(
-        relayUrl,
-        onMessage,
-        () => {
-          // Late joiners converge from whoever announces state on open.
-          this.broadcastState();
-          this.broadcastPresence();
-        },
-        (connected) => {
-          this.relayConnected = connected;
-          this.hooks.onRelayStatus?.(connected);
-        },
-      ),
-    );
+    this.connectRelay(onMessage);
     window.addEventListener("beforeunload", () => {
       this.send({ type: "leave", clientId: this.clientId });
     });
@@ -385,6 +367,53 @@ export class SyncEngine {
     if (this.heartbeat) clearInterval(this.heartbeat);
     this.send({ type: "leave", clientId: this.clientId });
     for (const transport of this.transports) transport.close();
+  }
+
+  private connectRelay(onMessage: (message: WireMessage) => void): void {
+    const base =
+      new URLSearchParams(window.location.search).get("relay") ??
+      localStorage.getItem(RELAY_URL_KEY) ??
+      `ws://${window.location.hostname}:8787`;
+    // Browsers cannot set headers on a WebSocket upgrade, so the auth
+    // token rides the query string; the server validates it on connect.
+    let token: string | null = null;
+    try {
+      token = (JSON.parse(localStorage.getItem("webim.auth") ?? "null") as {
+        token?: string;
+      } | null)?.token ?? null;
+    } catch {
+      token = null;
+    }
+    const relayUrl = token
+      ? `${base}${base.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`
+      : base;
+    this.transports.push(
+      new WebSocketTransport(
+        relayUrl,
+        onMessage,
+        () => {
+          // Late joiners converge from whoever announces state on open.
+          this.broadcastState();
+          this.broadcastPresence();
+        },
+        (connected) => {
+          this.relayConnected = connected;
+          this.hooks.onRelayStatus?.(connected);
+        },
+      ),
+    );
+  }
+
+  /** Drop and re-open the relay connection (after login/logout). */
+  reconnectRelay(): void {
+    const websocket = this.transports.find(
+      (transport) => transport instanceof WebSocketTransport,
+    );
+    if (websocket) {
+      websocket.close();
+      this.transports = this.transports.filter((t) => t !== websocket);
+    }
+    this.connectRelay((message) => this.onRemote(message));
   }
 
   private send(message: WireMessage): void {

@@ -10,3 +10,4 @@ build/
 blender-probe.exe
 .venv-mac/
 relay/data/
+relay/users.json

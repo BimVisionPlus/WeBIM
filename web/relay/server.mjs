@@ -1,46 +1,113 @@
-// WeBIM platform server: sync relay (WebSocket) + CDE file storage (HTTP).
+// WeBIM platform server: sync relay (WebSocket) + CDE file storage (HTTP)
+// + auth/roles + AI drawing reader.
 //
 // The relay half is deliberately dumb: it never inspects project
 // payloads. Every frame from one socket is forwarded verbatim to every
 // other socket; clients already filter by projectId and merge
-// idempotently (state-based LWW). The only server-side smarts is
-// presence hygiene: a synthetic "leave" is broadcast when a socket
-// whose clientId was registered disconnects.
+// idempotently (state-based LWW). Server-side smarts are limited to
+// presence hygiene (synthetic "leave" on disconnect) and authorization
+// (viewer clients' model-sync frames are dropped; presence passes).
 //
-// The HTTP half is one storage adapter behind the CDE: PUT/GET/LIST of
-// opaque blobs under ./data. Document metadata (ISO 19650 codes,
-// statuses, revisions, audit) lives in the synced project itself — this
-// server can be swapped for S3-compatible/BYO storage without touching
-// the client's CDE model.
+// Storage is a swappable adapter (relay/storage.mjs): local disk by
+// default, any S3-compatible endpoint via env (BYO storage). Document
+// metadata lives in the synced project itself.
+//
+// Auth (relay/auth.mjs): token login against relay/users.json with
+// admin/editor/viewer roles; absent users.json = open dev mode.
+//
+// AI (POST /ai/read-drawing): reads a stored PDF and answers a question
+// about it with Claude. Requires ANTHROPIC_API_KEY; otherwise 501.
 //
 // Run: npm run relay   (defaults to port 8787, override with PORT)
 
 import { createServer } from "node:http";
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
-import { dirname, join, normalize } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
+import { createAuth } from "./auth.mjs";
+import { createStorage } from "./storage.mjs";
 
 const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "data");
 
-function safeKeyToPath(key) {
+function safeKey(key) {
   const decoded = decodeURIComponent(key);
   if (decoded.includes("..") || decoded.startsWith("/")) return null;
-  return join(DATA_DIR, normalize(decoded));
+  return decoded;
 }
 
 function corsHeaders(extra = {}) {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, PUT, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     ...extra,
   };
 }
 
-export function startRelay(port = 8787) {
+async function readBody(request) {
+  const chunks = [];
+  for await (const chunk of request) chunks.push(chunk);
+  return Buffer.concat(chunks);
+}
+
+async function answerDrawingQuestion(storage, key, question) {
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic();
+  const pdf = await storage.get(key);
+  const stream = client.messages.stream({
+    model: "claude-opus-5",
+    max_tokens: 16000,
+    thinking: { type: "adaptive" },
+    system:
+      "Bạn là kỹ sư xây dựng đọc bản vẽ kỹ thuật. Trả lời ngắn gọn, chính xác," +
+      " bằng ngôn ngữ của câu hỏi. Nếu bản vẽ không đủ thông tin, nói rõ điều đó" +
+      " thay vì suy đoán. Khi trích số liệu, nêu vị trí trên bản vẽ nếu xác định được.",
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: {
+              type: "base64",
+              media_type: "application/pdf",
+              data: pdf.toString("base64"),
+            },
+          },
+          { type: "text", text: question },
+        ],
+      },
+    ],
+  });
+  const message = await stream.finalMessage();
+  return message.content
+    .filter((block) => block.type === "text")
+    .map((block) => block.text)
+    .join("\n");
+}
+
+export function startRelay(port = 8787, options = {}) {
+  const auth = options.auth ?? createAuth();
+  const storage = options.storage ?? createStorage(DATA_DIR);
+  if (!auth.enabled) {
+    console.warn(
+      "[webim] auth OPEN mode — create relay/users.json to require login " +
+        "(node relay/auth.mjs hash <password>)",
+    );
+  }
+
+  const identityOf = (request) => {
+    const header = request.headers.authorization ?? "";
+    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+    return auth.verify(token);
+  };
+
   const httpServer = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
+    const reply = (status, body, type = "application/json") => {
+      response.writeHead(status, corsHeaders({ "Content-Type": type }));
+      response.end(typeof body === "string" ? body : JSON.stringify(body));
+    };
     if (request.method === "OPTIONS") {
       response.writeHead(204, corsHeaders());
       response.end();
@@ -48,85 +115,101 @@ export function startRelay(port = 8787) {
     }
     try {
       if (url.pathname === "/health") {
-        response.writeHead(200, corsHeaders({ "Content-Type": "application/json" }));
-        response.end(JSON.stringify({ ok: true }));
-        return;
+        return reply(200, { ok: true, storage: storage.kind, auth: auth.enabled });
       }
+      if (url.pathname === "/auth/mode") {
+        return reply(200, { enabled: auth.enabled });
+      }
+      if (url.pathname === "/auth/login" && request.method === "POST") {
+        const { username, password } = JSON.parse((await readBody(request)).toString());
+        const session = auth.login(username, password);
+        return session ? reply(200, session) : reply(401, { error: "invalid credentials" });
+      }
+
+      const identity = identityOf(request);
+
       if (url.pathname.startsWith("/files/")) {
-        const key = url.pathname.slice("/files/".length);
-        const filePath = safeKeyToPath(key);
-        if (!filePath) {
-          response.writeHead(400, corsHeaders());
-          response.end("bad key");
-          return;
-        }
+        const key = safeKey(url.pathname.slice("/files/".length));
+        if (!key) return reply(400, { error: "bad key" });
         if (request.method === "PUT") {
-          const chunks = [];
-          for await (const chunk of request) chunks.push(chunk);
-          await mkdir(dirname(filePath), { recursive: true });
-          await writeFile(filePath, Buffer.concat(chunks));
-          response.writeHead(200, corsHeaders({ "Content-Type": "application/json" }));
-          response.end(JSON.stringify({ ok: true, key: decodeURIComponent(key) }));
-          return;
+          if (!auth.allows(identity, "editor")) {
+            return reply(identity ? 403 : 401, { error: "editor role required" });
+          }
+          await storage.put(key, await readBody(request));
+          return reply(200, { ok: true, key });
         }
         if (request.method === "GET") {
-          const body = await readFile(filePath);
+          if (!auth.allows(identity, "viewer")) {
+            return reply(401, { error: "login required" });
+          }
+          const body = await storage.get(key);
           response.writeHead(200, corsHeaders({ "Content-Type": "application/octet-stream" }));
           response.end(body);
           return;
         }
       }
+
       if (url.pathname === "/list" && request.method === "GET") {
-        const prefix = url.searchParams.get("prefix") ?? "";
-        const root = safeKeyToPath(prefix) ?? DATA_DIR;
-        const entries = [];
-        const walk = async (directory, relative) => {
-          let names = [];
-          try {
-            names = await readdir(directory);
-          } catch {
-            return;
-          }
-          for (const name of names) {
-            const full = join(directory, name);
-            const info = await stat(full);
-            if (info.isDirectory()) {
-              await walk(full, `${relative}${name}/`);
-            } else {
-              entries.push({ key: `${relative}${name}`, size: info.size });
-            }
-          }
-        };
-        await walk(root, prefix ? `${decodeURIComponent(prefix)}/` : "");
-        response.writeHead(200, corsHeaders({ "Content-Type": "application/json" }));
-        response.end(JSON.stringify({ files: entries }));
-        return;
+        if (!auth.allows(identity, "viewer")) {
+          return reply(401, { error: "login required" });
+        }
+        const prefix = safeKey(url.searchParams.get("prefix") ?? "") ?? "";
+        return reply(200, { files: await storage.list(prefix) });
       }
-      response.writeHead(404, corsHeaders());
-      response.end("not found");
+
+      if (url.pathname === "/ai/read-drawing" && request.method === "POST") {
+        if (!auth.allows(identity, "editor")) {
+          return reply(identity ? 403 : 401, { error: "editor role required" });
+        }
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return reply(501, {
+            error:
+              "AI chưa cấu hình — đặt ANTHROPIC_API_KEY trên platform server để bật đọc bản vẽ.",
+          });
+        }
+        const { key, question } = JSON.parse((await readBody(request)).toString());
+        const cleanKey = safeKey(key ?? "");
+        if (!cleanKey || !question?.trim()) {
+          return reply(400, { error: "key and question required" });
+        }
+        const answer = await answerDrawingQuestion(storage, cleanKey, question.trim());
+        return reply(200, { answer });
+      }
+
+      reply(404, { error: "not found" });
     } catch (error) {
-      response.writeHead(error.code === "ENOENT" ? 404 : 500, corsHeaders());
-      response.end(String(error.message ?? error));
+      reply(error.code === "ENOENT" ? 404 : 500, {
+        error: String(error.message ?? error),
+      });
     }
   });
 
   const server = new WebSocketServer({ server: httpServer });
-  const clients = new Map(); // socket -> clientId | null
+  const clients = new Map(); // socket -> {clientId, role}
 
-  server.on("connection", (socket) => {
-    clients.set(socket, null);
+  server.on("connection", (socket, request) => {
+    const url = new URL(request.url ?? "/", "http://localhost");
+    const identity = auth.verify(url.searchParams.get("token"));
+    if (!identity) {
+      socket.close(4401, "login required");
+      return;
+    }
+    clients.set(socket, { clientId: null, role: identity.role });
 
     socket.on("message", (data) => {
       const text = data.toString();
-      let clientId = null;
+      let frame;
       try {
-        clientId = JSON.parse(text).clientId ?? null;
+        frame = JSON.parse(text);
       } catch {
         return; // drop malformed frames
       }
-      if (clientId && clients.get(socket) === null) {
-        clients.set(socket, clientId);
+      const state = clients.get(socket);
+      if (frame.clientId && state.clientId === null) {
+        state.clientId = frame.clientId;
       }
+      // Authorization: viewers may broadcast presence, never model state.
+      if (frame.type === "sync" && state.role === "viewer") return;
       for (const [peer] of clients) {
         if (peer !== socket && peer.readyState === peer.OPEN) {
           peer.send(text);
@@ -135,10 +218,10 @@ export function startRelay(port = 8787) {
     });
 
     socket.on("close", () => {
-      const clientId = clients.get(socket);
+      const state = clients.get(socket);
       clients.delete(socket);
-      if (!clientId) return;
-      const leave = JSON.stringify({ type: "leave", clientId });
+      if (!state?.clientId) return;
+      const leave = JSON.stringify({ type: "leave", clientId: state.clientId });
       for (const [peer] of clients) {
         if (peer.readyState === peer.OPEN) {
           peer.send(leave);
@@ -162,6 +245,6 @@ if (isMain) {
   const port = Number(process.env.PORT ?? 8787);
   startRelay(port);
   console.log(
-    `WeBIM platform server on :${port} — ws relay + /files file storage`,
+    `WeBIM platform server on :${port} — ws relay + /files storage + /auth + /ai`,
   );
 }

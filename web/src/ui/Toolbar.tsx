@@ -1,5 +1,47 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { store, useStoreVersion } from "../state/store";
+
+function AuthControls() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  useEffect(() => {
+    if (store.authRequired === null) void store.probeAuthMode();
+  }, []);
+  if (!store.authRequired) return null;
+  if (store.auth) {
+    return (
+      <span className="auth-controls">
+        <span className="auth-user">
+          {store.auth.username} <em>({store.auth.role})</em>
+        </span>
+        <button onClick={() => store.logout()}>Sign out</button>
+      </span>
+    );
+  }
+  return (
+    <span className="auth-controls">
+      <input
+        placeholder="user"
+        value={username}
+        onChange={(event) => setUsername(event.target.value)}
+      />
+      <input
+        placeholder="password"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+      />
+      <button
+        onClick={() => {
+          void store.login(username, password);
+          setPassword("");
+        }}
+      >
+        Sign in
+      </button>
+    </span>
+  );
+}
 
 function download(fileName: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -105,6 +147,7 @@ export function Toolbar() {
         </select>
       </label>
       <div className="spacer" />
+      <AuthControls />
       <div className="presence">
         <span
           className={`relay-dot ${store.relayConnected ? "on" : ""}`}

@@ -6,8 +6,16 @@
 // disclaimer. The long-term source of truth is the machine-checkable
 // corpus (qcvn-conflict-map / plancheck).
 
-export type StandardKind = "QCVN" | "TCVN";
+import corpusData from "./corpus.json";
+
+export type StandardKind = "QCVN" | "TCVN" | "VBPL";
 export type StandardStatus = "HIEN_HANH" | "HET_HIEU_LUC";
+
+export interface StandardConflict {
+  id: string;
+  title: string;
+  severity: string;
+}
 
 export interface StandardEntry {
   id: string;
@@ -19,9 +27,16 @@ export interface StandardEntry {
   /** Code of the standard this one replaces, if known. */
   replaces?: string;
   tags: string[];
+  /** Where the entry comes from: machine-checkable corpus or the seed list. */
+  source: "corpus" | "seed";
+  /** True only when the corpus has checked the entry against công báo. */
+  editionVerified: boolean;
+  /** Known cross-regulation conflicts referencing this document. */
+  conflicts: StandardConflict[];
+  note?: string;
 }
 
-export const STANDARDS_CATALOG: StandardEntry[] = [
+const SEED_CATALOG: Omit<StandardEntry, "source" | "editionVerified" | "conflicts">[] = [
   {
     id: "qcvn-06-2022",
     kind: "QCVN",
@@ -91,13 +106,15 @@ export const STANDARDS_CATALOG: StandardEntry[] = [
     tags: ["tiếp cận", "người khuyết tật", "ramp dốc"],
   },
   {
-    id: "qcvn-07-2016",
+    id: "qcvn-07-2023",
     kind: "QCVN",
-    code: "QCVN 07:2016/BXD",
-    title: "Quy chuẩn kỹ thuật quốc gia về Các công trình hạ tầng kỹ thuật (bộ 07:2016, đang được thay thế dần bởi bộ 07:2023)",
+    code: "QCVN 07:2023/BXD",
+    title:
+      "Quy chuẩn kỹ thuật quốc gia về Hệ thống công trình hạ tầng kỹ thuật (10 phần; TT 15/2023/TT-BXD, hiệu lực 01/07/2024 — xác minh web 2026-08-10)",
     agency: "Bộ Xây dựng",
     status: "HIEN_HANH",
-    tags: ["hạ tầng", "cấp nước", "thoát nước", "chiếu sáng"],
+    replaces: "QCVN 07:2016/BXD",
+    tags: ["hạ tầng", "cấp nước", "thoát nước", "chiếu sáng", "giao thông"],
   },
   {
     id: "tcvn-2737-2023",
@@ -120,12 +137,14 @@ export const STANDARDS_CATALOG: StandardEntry[] = [
     tags: ["bê tông cốt thép", "kết cấu", "thiết kế"],
   },
   {
-    id: "tcvn-5575-2012",
+    id: "tcvn-5575-2024",
     kind: "TCVN",
-    code: "TCVN 5575:2012",
-    title: "Kết cấu thép — Tiêu chuẩn thiết kế",
+    code: "TCVN 5575:2024",
+    title:
+      "Thiết kế kết cấu thép (ban hành 24/12/2024, thay TCVN 5575:2012 — xác minh web 2026-08-10)",
     agency: "Bộ KH&CN",
     status: "HIEN_HANH",
+    replaces: "TCVN 5575:2012",
     tags: ["kết cấu thép", "thiết kế"],
   },
   {
@@ -183,6 +202,63 @@ export const STANDARDS_CATALOG: StandardEntry[] = [
     tags: ["chống sét", "MEP"],
   },
 ];
+
+interface CorpusEntry {
+  key: string;
+  code: string;
+  title: string;
+  kind: string;
+  inForce: boolean;
+  editionVerified: boolean;
+  note: string | null;
+  conflicts: StandardConflict[];
+}
+
+function corpusKind(kind: string, code: string): StandardKind {
+  if (kind === "QCVN" || kind === "TCVN") return kind;
+  if (code.startsWith("TCXD") || code.startsWith("TCVN")) return "TCVN";
+  return "VBPL";
+}
+
+/** Corrections verified against secondary web sources on 2026-08-10 —
+ * applied on top of the corpus until its công báo check lands. */
+const VERIFIED_SUPERSESSIONS: Record<string, string> = {
+  "QCVN 07:2016/BXD": "QCVN 07:2023/BXD",
+  "TCVN 5575:2012": "TCVN 5575:2024",
+};
+
+function buildCatalog(): StandardEntry[] {
+  const corpusEntries: StandardEntry[] = (
+    (corpusData as { entries: CorpusEntry[] }).entries
+  ).map((entry) => ({
+    id: `corpus-${entry.key}`,
+    kind: corpusKind(entry.kind, entry.code),
+    code: entry.code,
+    title: entry.title,
+    agency: entry.code.includes("BXD") ? "Bộ Xây dựng" : "—",
+    status:
+      entry.inForce && !VERIFIED_SUPERSESSIONS[entry.code]
+        ? "HIEN_HANH"
+        : "HET_HIEU_LUC",
+    tags: [],
+    source: "corpus",
+    editionVerified: entry.editionVerified,
+    conflicts: entry.conflicts,
+    note: entry.note ?? undefined,
+  }));
+  const corpusCodes = new Set(corpusEntries.map((entry) => entry.code));
+  const seedEntries: StandardEntry[] = SEED_CATALOG.filter(
+    (entry) => !corpusCodes.has(entry.code),
+  ).map((entry) => ({
+    ...entry,
+    source: "seed",
+    editionVerified: false,
+    conflicts: [],
+  }));
+  return [...corpusEntries, ...seedEntries];
+}
+
+export const STANDARDS_CATALOG: StandardEntry[] = buildCatalog();
 
 /** Case/diacritic-insensitive search across code, title and tags. */
 export function searchStandards(
