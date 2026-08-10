@@ -1,0 +1,21 @@
+# WeBIM production entry point — automatic HTTPS via Let's Encrypt.
+# Set WEBIM_DOMAIN (and an email for ACME) in deploy/.env.
+
+{$WEBIM_DOMAIN} {
+	encode zstd gzip
+
+	# Platform server: files + auth + AI + WebSocket sync relay.
+	# handle_path strips /api before proxying, and Caddy upgrades
+	# WebSocket connections automatically — the client uses
+	# wss://<domain>/api for sync.
+	handle_path /api/* {
+		reverse_proxy relay:8787
+	}
+
+	# Static SPA build.
+	handle {
+		root * /srv/webim
+		try_files {path} /index.html
+		file_server
+	}
+}

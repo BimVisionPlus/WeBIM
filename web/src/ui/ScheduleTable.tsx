@@ -4,7 +4,7 @@ import {
   wallScheduleRows,
 } from "../application/schedules";
 import { qtoCsv, qtoRows, qtoSummary } from "../application/qto";
-import { clashReport } from "../application/clash";
+import { clashReport, externalClashes } from "../application/clash";
 import type { ScheduleDatum } from "../domain/project";
 import { store, useStoreVersion } from "../state/store";
 
@@ -179,13 +179,46 @@ function QtoTable() {
 }
 
 function ClashTable() {
-  const clashes = clashReport(store.project);
+  const internal = clashReport(store.project);
+  const external = store.linkedModels.flatMap((model) =>
+    externalClashes(store.project, model.elements),
+  );
+  const clashes = [...internal, ...external].sort((a, b) => b.depth - a.depth);
+  const onPickIfc = async (file: File | undefined) => {
+    if (!file) return;
+    store.linkIfcModel(file.name, await file.text());
+  };
   return (
     <>
+      <div className="module-form">
+        <label className="upload-button">
+          Link IFC…
+          <input
+            type="file"
+            accept=".ifc"
+            style={{ display: "none" }}
+            onChange={(event) => {
+              void onPickIfc(event.target.files?.[0]);
+              event.target.value = "";
+            }}
+          />
+        </label>
+        {store.linkedModels.map((model) => (
+          <span key={model.name} className="peer-chip">
+            {model.name} · {model.elements.length} phần tử
+            {model.skipped > 0 ? ` (bỏ qua ${model.skipped})` : ""}
+            <button className="mini" onClick={() => store.unlinkIfcModel(model.name)}>
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
       <p className="module-hint">
         {clashes.length === 0
           ? "Không phát hiện va chạm cứng — các liên kết tường hợp lệ đã được loại trừ."
-          : `${clashes.length} va chạm, sắp xếp theo độ xuyên sâu.`}
+          : `${clashes.length} va chạm (${external.length} với model IFC link), sắp xếp theo độ xuyên sâu.`}{" "}
+        Va chạm với IFC link ở mức AABB (sàng lọc kiểu Navisworks) — chỉ đọc thân
+        SweptSolid.
       </p>
       <table>
         <thead>
@@ -199,7 +232,7 @@ function ClashTable() {
         <tbody>
           {clashes.map((clash, index) => (
             <tr key={index}>
-              <td>{clash.kind.replace("_", " × ")}</td>
+              <td>{clash.kind === "NATIVE_IFC" ? "Native × IFC link" : clash.kind.replace("_", " × ")}</td>
               <td>{clash.aName}</td>
               <td>{clash.bName}</td>
               <td>{clash.depth.toFixed(3)}</td>

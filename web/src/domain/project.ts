@@ -141,6 +141,8 @@ export interface TaskDatum {
   start: string;
   end: string;
   progress: number;
+  /** Ids of tasks that must finish before this one starts. */
+  dependsOn: string[];
 }
 
 export type ScheduleKind = "WALL" | "OPENING" | "SLAB" | "QTO" | "CLASH";
@@ -380,6 +382,7 @@ export class NativeBimProject {
         start: task.start,
         end: task.end,
         progress: task.progress,
+        depends_on: task.dependsOn,
       })),
       wall_types: this.wallTypes.map((wallType) => ({
         id: wallType.id,
@@ -574,6 +577,7 @@ export class NativeBimProject {
         start: (task.start as string) ?? "",
         end: (task.end as string) ?? "",
         progress: (task.progress as number) ?? 0,
+        dependsOn: (task.depends_on as string[]) ?? [],
       })),
     );
   }
@@ -929,6 +933,7 @@ export class NativeBimProject {
       start,
       end,
       progress: 0,
+      dependsOn: [],
     };
     this.tasks.push(task);
     return task;
@@ -946,6 +951,16 @@ export class NativeBimProject {
     if (progress < 0 || progress > 100) {
       throw new Error("Progress must be between 0 and 100");
     }
+    if (changes.dependsOn) {
+      for (const dependencyId of changes.dependsOn) {
+        if (dependencyId === taskId) {
+          throw new Error("A task cannot depend on itself");
+        }
+        if (!this.tasks.some((task) => task.id === dependencyId)) {
+          throw new Error(`Unknown dependency: ${dependencyId}`);
+        }
+      }
+    }
     this.tasks[index] = { ...this.tasks[index], ...changes, progress };
     return this.tasks[index];
   }
@@ -955,7 +970,11 @@ export class NativeBimProject {
     if (index === -1) {
       throw new Error(`Unknown TaskDatum: ${taskId}`);
     }
-    return this.tasks.splice(index, 1)[0];
+    const removed = this.tasks.splice(index, 1)[0];
+    for (const task of this.tasks) {
+      task.dependsOn = task.dependsOn.filter((id) => id !== taskId);
+    }
+    return removed;
   }
 
   addSheet(title: string): SheetDatum {

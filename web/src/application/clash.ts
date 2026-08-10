@@ -8,6 +8,7 @@
 // the authoring tools produce.
 
 import type { NativeBimProject, SlabDatum, WallDatum } from "../domain/project";
+import type { LinkedElement } from "../ifc/parseIfc";
 import { tJoinTarget, wallFootprint, type Point2 } from "./wallGeometry";
 
 export interface ClashItem {
@@ -15,7 +16,7 @@ export interface ClashItem {
   aName: string;
   bId: string;
   bName: string;
-  kind: "WALL_WALL" | "WALL_SLAB" | "SLAB_SLAB";
+  kind: "WALL_WALL" | "WALL_SLAB" | "SLAB_SLAB" | "NATIVE_IFC";
   /** Penetration depth estimate in metres (minimum separating overlap). */
   depth: number;
 }
@@ -170,5 +171,76 @@ export function clashReport(project: NativeBimProject): ClashItem[] {
     }
   }
 
+  return clashes.sort((first, second) => second.depth - first.depth);
+}
+
+interface Aabb {
+  name: string;
+  min: [number, number, number];
+  max: [number, number, number];
+}
+
+function nativeAabbs(project: NativeBimProject): Aabb[] {
+  const boxes: Aabb[] = [];
+  for (const wall of project.walls) {
+    const footprint = wallFootprint(wall, project.walls);
+    const xs = footprint.map((point) => point[0]);
+    const ys = footprint.map((point) => point[1]);
+    boxes.push({
+      name: wall.name,
+      min: [Math.min(...xs), Math.min(...ys), wall.start[2]],
+      max: [Math.max(...xs), Math.max(...ys), wall.start[2] + wall.height],
+    });
+  }
+  for (const slab of project.slabs) {
+    const xs = slab.outline.map((point) => point[0]);
+    const ys = slab.outline.map((point) => point[1]);
+    const top = project.slabTopZ(slab);
+    boxes.push({
+      name: slab.name,
+      min: [Math.min(...xs), Math.min(...ys), top - slab.thickness],
+      max: [Math.max(...xs), Math.max(...ys), top],
+    });
+  }
+  return boxes;
+}
+
+function aabbOverlapDepth(a: Aabb, b: Aabb): number {
+  let depth = Infinity;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const overlap = Math.min(a.max[axis], b.max[axis]) - Math.max(a.min[axis], b.min[axis]);
+    if (overlap <= TOUCH_TOLERANCE) return 0;
+    depth = Math.min(depth, overlap);
+  }
+  return depth;
+}
+
+/** Hard-clash screen of the native model against linked IFC elements
+ * (AABB level — Navisworks-style first pass, not exact geometry). */
+export function externalClashes(
+  project: NativeBimProject,
+  linked: readonly LinkedElement[],
+): ClashItem[] {
+  const clashes: ClashItem[] = [];
+  const natives = nativeAabbs(project);
+  for (const native of natives) {
+    for (const element of linked) {
+      const depth = aabbOverlapDepth(native, {
+        name: element.name,
+        min: element.min,
+        max: element.max,
+      });
+      if (depth > TOUCH_TOLERANCE) {
+        clashes.push({
+          aId: native.name,
+          aName: native.name,
+          bId: element.name,
+          bName: `${element.name} (${element.ifcType})`,
+          kind: "NATIVE_IFC",
+          depth,
+        });
+      }
+    }
+  }
   return clashes.sort((first, second) => second.depth - first.depth);
 }

@@ -228,24 +228,31 @@ const VERIFIED_SUPERSESSIONS: Record<string, string> = {
 };
 
 function buildCatalog(): StandardEntry[] {
+  const seedByCode = new Map(SEED_CATALOG.map((entry) => [entry.code, entry]));
   const corpusEntries: StandardEntry[] = (
     (corpusData as { entries: CorpusEntry[] }).entries
-  ).map((entry) => ({
-    id: `corpus-${entry.key}`,
-    kind: corpusKind(entry.kind, entry.code),
-    code: entry.code,
-    title: entry.title,
-    agency: entry.code.includes("BXD") ? "Bộ Xây dựng" : "—",
-    status:
-      entry.inForce && !VERIFIED_SUPERSESSIONS[entry.code]
-        ? "HIEN_HANH"
-        : "HET_HIEU_LUC",
-    tags: [],
-    source: "corpus",
-    editionVerified: entry.editionVerified,
-    conflicts: entry.conflicts,
-    note: entry.note ?? undefined,
-  }));
+  ).map((entry) => {
+    // The corpus does not track supersession/tags yet — inherit them
+    // from the seed entry with the same code when one exists.
+    const seed = seedByCode.get(entry.code);
+    return {
+      id: `corpus-${entry.key}`,
+      kind: corpusKind(entry.kind, entry.code),
+      code: entry.code,
+      title: entry.title,
+      agency: seed?.agency ?? (entry.code.includes("BXD") ? "Bộ Xây dựng" : "—"),
+      status:
+        entry.inForce && !VERIFIED_SUPERSESSIONS[entry.code]
+          ? "HIEN_HANH"
+          : "HET_HIEU_LUC",
+      replaces: seed?.replaces,
+      tags: seed?.tags ?? [],
+      source: "corpus",
+      editionVerified: entry.editionVerified,
+      conflicts: entry.conflicts,
+      note: entry.note ?? undefined,
+    } satisfies StandardEntry;
+  });
   const corpusCodes = new Set(corpusEntries.map((entry) => entry.code));
   const seedEntries: StandardEntry[] = SEED_CATALOG.filter(
     (entry) => !corpusCodes.has(entry.code),

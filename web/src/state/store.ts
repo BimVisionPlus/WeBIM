@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
 import { SyncEngine, type PeerPresence } from "../sync/syncEngine";
+import { parseIfc, type LinkedElement } from "../ifc/parseIfc";
 
 export type ToolId =
   | "SELECT"
@@ -38,9 +39,11 @@ export type ModuleId =
   | "DRAWINGS"
   | "CLIMATE";
 
+import { apiBase } from "../config";
+
 /** Platform file API base (same host as the sync relay). */
 export function fileServerBase(): string {
-  return `http://${window.location.hostname}:8787`;
+  return apiBase();
 }
 
 const AUTH_KEY = "webim.auth";
@@ -78,6 +81,13 @@ export async function fetchFileUrl(key: string): Promise<string> {
 }
 
 const STORAGE_KEY = "webim.native_project";
+const LINKED_MODELS_KEY = "webim.linked_models";
+
+export interface LinkedModel {
+  name: string;
+  elements: LinkedElement[];
+  skipped: number;
+}
 const ACTIVE_VIEW_KEY = "webim.active_view";
 
 function defaultProject(): NativeBimProject {
@@ -113,6 +123,14 @@ class AppStore {
   pendingStart: Point3D | null = null;
   statusMessage = "Ready";
   activeModule: ModuleId = "MODEL";
+  /** External IFC models linked for clash checking (local, not synced). */
+  linkedModels: LinkedModel[] = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(LINKED_MODELS_KEY) ?? "[]");
+    } catch {
+      return [];
+    }
+  })();
   /** Whether the platform server requires login (null until probed). */
   authRequired: boolean | null = null;
   auth: AuthSession | null = authSession();
@@ -342,6 +360,31 @@ class AppStore {
       this.selection = null;
     }
     this.commit();
+  }
+
+  linkIfcModel(name: string, text: string): void {
+    const parsed = parseIfc(text);
+    if (parsed.elements.length === 0) {
+      this.setStatus(
+        `Không đọc được phần tử nào từ ${name} (chỉ hỗ trợ thân SweptSolid; bị bỏ qua: ${parsed.skipped}).`,
+      );
+      return;
+    }
+    this.linkedModels = [
+      ...this.linkedModels.filter((model) => model.name !== name),
+      { name, elements: parsed.elements, skipped: parsed.skipped },
+    ];
+    localStorage.setItem(LINKED_MODELS_KEY, JSON.stringify(this.linkedModels));
+    this.statusMessage = `Đã link ${name}: ${parsed.elements.length} phần tử${
+      parsed.skipped ? `, bỏ qua ${parsed.skipped} (thân không hỗ trợ)` : ""
+    }`;
+    this.commit(false);
+  }
+
+  unlinkIfcModel(name: string): void {
+    this.linkedModels = this.linkedModels.filter((model) => model.name !== name);
+    localStorage.setItem(LINKED_MODELS_KEY, JSON.stringify(this.linkedModels));
+    this.commit(false);
   }
 
   async probeAuthMode(): Promise<void> {

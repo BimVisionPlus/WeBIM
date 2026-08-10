@@ -643,3 +643,22 @@ input[type="text"],
   border-left-color: #e0996c;
   color: #e0b48c;
 }
+
+.view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 12px;
+}
+
+.view-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.gantt-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: #14161b;
+  padding: 6px;
+}

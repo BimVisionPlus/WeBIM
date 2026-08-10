@@ -8,7 +8,7 @@
       "kind": "QCVN",
       "inForce": true,
       "editionVerified": false,
-      "note": "Có ít nhất một sửa đổi đã ban hành sau bản 2022; cần xác nhận bản hợp nhất đang áp dụng.",
+      "note": "Ban hành TT 06/2022/TT-BXD (Công báo số 921–926, 20-12-2022); Sửa đổi 1:2023 ban hành TT 09/2023/TT-BXD. Đường dẫn công báo xác nhận tồn tại 2026-08-10; PDF chưa đối chiếu từng trang nên edition_verified giữ false.",
       "conflicts": [
         {
           "id": "CF-0001",
@@ -84,9 +84,9 @@
       "code": "QCVN 07:2016/BXD",
       "title": "Quy chuẩn kỹ thuật quốc gia về Các công trình hạ tầng kỹ thuật",
       "kind": "QCVN",
-      "inForce": true,
+      "inForce": false,
       "editionVerified": false,
-      "note": "Bộ nhiều phần (cấp nước, thoát nước, giao thông, chiếu sáng…); cần ghi rõ phần khi pin điều khoản.",
+      "note": "Bị QCVN 07:2023/BXD thay thế từ 01/07/2024 (TT 15/2023/TT-BXD, 29-12-2023) — kiểm tra nguồn thứ cấp moc.gov.vn 2026-08-10, chưa đối chiếu công báo. Bộ nhiều phần; các conflict pin điều khoản 2016 cần rà lại theo bản 2023.",
       "conflicts": [
         {
           "id": "CF-0001",
@@ -200,6 +200,136 @@
           "severity": "blocking"
         }
       ]
+    },
+    {
+      "key": "qcvn07_2023",
+      "code": "QCVN 07:2023/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Hệ thống công trình hạ tầng kỹ thuật",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "10 phần; ban hành TT 15/2023/TT-BXD (29-12-2023), hiệu lực 01/07/2024, thay QCVN 07:2016/BXD. Nguồn thứ cấp moc.gov.vn, kiểm tra 2026-08-10.",
+      "conflicts": []
+    },
+    {
+      "key": "qcvn02",
+      "code": "QCVN 02:2022/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Số liệu điều kiện tự nhiên dùng trong xây dựng",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Thay QCVN 02:2009/BXD. Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "qcvn03",
+      "code": "QCVN 03:2022/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Phân cấp công trình phục vụ thiết kế xây dựng",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "qcvn10",
+      "code": "QCVN 10:2023/BXD",
+      "title": "Quy chuẩn kỹ thuật quốc gia về Xây dựng công trình đảm bảo người khuyết tật tiếp cận sử dụng",
+      "kind": "QCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Thay QCVN 10:2014/BXD. Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn2737",
+      "code": "TCVN 2737:2023",
+      "title": "Tải trọng và tác động — Tiêu chuẩn thiết kế",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Thay TCVN 2737:1995. Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn5574",
+      "code": "TCVN 5574:2018",
+      "title": "Thiết kế kết cấu bê tông và bê tông cốt thép",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn5575",
+      "code": "TCVN 5575:2024",
+      "title": "Thiết kế kết cấu thép",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Công bố 24-12-2024, thay TCVN 5575:2012 — kiểm tra nguồn thứ cấp 2026-08-10, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn9362",
+      "code": "TCVN 9362:2012",
+      "title": "Tiêu chuẩn thiết kế nền nhà và công trình",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn10304",
+      "code": "TCVN 10304:2014",
+      "title": "Móng cọc — Tiêu chuẩn thiết kế",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn9386",
+      "code": "TCVN 9386:2012",
+      "title": "Thiết kế công trình chịu động đất",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn4453",
+      "code": "TCVN 4453:1995",
+      "title": "Kết cấu bê tông và bê tông cốt thép toàn khối — Quy phạm thi công và nghiệm thu",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn4055",
+      "code": "TCVN 4055:2012",
+      "title": "Công trình xây dựng — Tổ chức thi công",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
+    },
+    {
+      "key": "tcvn9385",
+      "code": "TCVN 9385:2012",
+      "title": "Chống sét cho công trình xây dựng — Hướng dẫn thiết kế, kiểm tra và bảo trì hệ thống",
+      "kind": "TCVN",
+      "inForce": true,
+      "editionVerified": false,
+      "note": "Gieo từ nguồn thứ cấp, chưa đối chiếu công báo.",
+      "conflicts": []
     }
   ]
 }

@@ -313,6 +313,8 @@ interface EngineHooks {
 }
 
 const CLOCKS_KEY = "webim.sync_clocks";
+import { relayBase } from "../config";
+
 const RELAY_URL_KEY = "webim.relay_url";
 
 export class SyncEngine {
@@ -373,7 +375,7 @@ export class SyncEngine {
     const base =
       new URLSearchParams(window.location.search).get("relay") ??
       localStorage.getItem(RELAY_URL_KEY) ??
-      `ws://${window.location.hostname}:8787`;
+      relayBase();
     // Browsers cannot set headers on a WebSocket upgrade, so the auth
     // token rides the query string; the server validates it on connect.
     let token: string | null = null;

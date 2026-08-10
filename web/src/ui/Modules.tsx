@@ -10,6 +10,7 @@ import {
   STANDARDS_CATALOG,
 } from "../standards/catalog";
 import { climateFindings, facadeByOrientation } from "../application/climate";
+import { ganttChart, weekTicks } from "../application/gantt";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
 import {
   authHeaders,
@@ -223,12 +224,127 @@ function DocumentDetail({ document }: { document: DocumentDatum }) {
   );
 }
 
+const GANTT_DAY_WIDTH = 18;
+const GANTT_ROW_HEIGHT = 26;
+const GANTT_LABEL_WIDTH = 180;
+
+function GanttView() {
+  const chart = ganttChart(store.project, new Date().toISOString().slice(0, 10));
+  if (!chart) {
+    return (
+      <p className="module-hint">
+        Chưa có hạng mục nào có ngày bắt đầu/kết thúc — nhập ngày để vẽ Gantt.
+      </p>
+    );
+  }
+  const width = GANTT_LABEL_WIDTH + chart.totalDays * GANTT_DAY_WIDTH + 20;
+  const height = chart.bars.length * GANTT_ROW_HEIGHT + 30;
+  const x = (day: number) => GANTT_LABEL_WIDTH + day * GANTT_DAY_WIDTH;
+  const y = (row: number) => 24 + row * GANTT_ROW_HEIGHT;
+  const statusColor: Record<string, string> = {
+    NOT_STARTED: "#4b5563",
+    IN_PROGRESS: "#4da3ff",
+    DONE: "#5f9e6e",
+    BLOCKED: "#e06c75",
+  };
+  return (
+    <div className="gantt-scroll">
+      <svg width={width} height={height}>
+        {weekTicks(chart).map((tick) => (
+          <g key={tick.day}>
+            <line
+              x1={x(tick.day)}
+              y1={16}
+              x2={x(tick.day)}
+              y2={height}
+              stroke="#262a32"
+            />
+            <text x={x(tick.day) + 2} y={12} fill="#8b93a3" fontSize={9}>
+              {tick.label}
+            </text>
+          </g>
+        ))}
+        {chart.todayDay !== null && (
+          <line
+            x1={x(chart.todayDay)}
+            y1={16}
+            x2={x(chart.todayDay)}
+            y2={height}
+            stroke="#e0996c"
+            strokeDasharray="4 3"
+          />
+        )}
+        {chart.bars.map((bar) => (
+          <g key={bar.task.id}>
+            <text
+              x={4}
+              y={y(bar.row) + 12}
+              fill="#d7dae0"
+              fontSize={11}
+            >
+              {bar.task.name.slice(0, 26)}
+            </text>
+            {bar.startDay !== null && bar.endDay !== null && (
+              <>
+                <rect
+                  x={x(bar.startDay)}
+                  y={y(bar.row)}
+                  width={(bar.endDay - bar.startDay) * GANTT_DAY_WIDTH}
+                  height={16}
+                  rx={3}
+                  fill={statusColor[bar.task.status] ?? "#4b5563"}
+                  opacity={0.35}
+                />
+                <rect
+                  x={x(bar.startDay)}
+                  y={y(bar.row)}
+                  width={
+                    (bar.endDay - bar.startDay) *
+                    GANTT_DAY_WIDTH *
+                    (bar.task.progress / 100)
+                  }
+                  height={16}
+                  rx={3}
+                  fill={statusColor[bar.task.status] ?? "#4b5563"}
+                />
+              </>
+            )}
+          </g>
+        ))}
+        {chart.links.map((link, index) => {
+          const x1 = x(link.fromEndDay);
+          const y1 = y(link.fromRow) + 8;
+          const x2 = x(link.toStartDay);
+          const y2 = y(link.toRow) + 8;
+          const mid = x1 + Math.max(6, (x2 - x1) / 2);
+          return (
+            <g key={index} stroke={link.violated ? "#e06c75" : "#8b93a3"} fill="none">
+              <path d={`M ${x1} ${y1} H ${mid} V ${y2} H ${x2}`} />
+              <path
+                d={`M ${x2 - 5} ${y2 - 4} L ${x2} ${y2} L ${x2 - 5} ${y2 + 4}`}
+                fill={link.violated ? "#e06c75" : "#8b93a3"}
+              />
+            </g>
+          );
+        })}
+      </svg>
+      {chart.links.some((link) => link.violated) && (
+        <p className="module-hint climate-finding warning">
+          Có phụ thuộc bị vi phạm (đường đỏ): công việc bắt đầu trước khi công
+          việc tiền nhiệm kết thúc.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function PlanModule() {
   useStoreVersion();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [view, setView] = useState<"TABLE" | "GANTT">("TABLE");
   const tasks = store.project.tasks;
   const done = tasks.filter((task) => task.status === "DONE").length;
 
@@ -265,7 +381,24 @@ export function PlanModule() {
         >
           Add task
         </button>
+        <span className="view-toggle">
+          <button
+            className={view === "TABLE" ? "active" : ""}
+            onClick={() => setView("TABLE")}
+          >
+            Bảng
+          </button>
+          <button
+            className={view === "GANTT" ? "active" : ""}
+            onClick={() => setView("GANTT")}
+          >
+            Gantt
+          </button>
+        </span>
       </div>
+      {view === "GANTT" && <GanttView />}
+      {view === "TABLE" && (
+      <>
       <table>
         <thead>
           <tr>
@@ -274,6 +407,7 @@ export function PlanModule() {
             <th>Bắt đầu</th>
             <th>Kết thúc</th>
             <th>Trạng thái</th>
+            <th>Phụ thuộc</th>
             <th style={{ minWidth: 160 }}>Tiến độ</th>
             <th />
           </tr>
@@ -300,6 +434,36 @@ export function PlanModule() {
                 </select>
               </td>
               <td>
+                <select
+                  value=""
+                  title={task.dependsOn
+                    .map((id) => tasks.find((t) => t.id === id)?.name ?? "?")
+                    .join(", ")}
+                  onChange={(event) => {
+                    const id = event.target.value;
+                    if (!id) return;
+                    const next = task.dependsOn.includes(id)
+                      ? task.dependsOn.filter((d) => d !== id)
+                      : [...task.dependsOn, id];
+                    store.updateTask(task.id, { dependsOn: next });
+                  }}
+                >
+                  <option value="">
+                    {task.dependsOn.length === 0
+                      ? "—"
+                      : `${task.dependsOn.length} tiền nhiệm`}
+                  </option>
+                  {tasks
+                    .filter((candidate) => candidate.id !== task.id)
+                    .map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {(task.dependsOn.includes(candidate.id) ? "✓ " : "") +
+                          candidate.name}
+                      </option>
+                    ))}
+                </select>
+              </td>
+              <td>
                 <div className="progress-cell">
                   <input
                     type="range"
@@ -322,6 +486,8 @@ export function PlanModule() {
           ))}
         </tbody>
       </table>
+      </>
+      )}
     </div>
   );
 }

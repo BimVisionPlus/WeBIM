@@ -1,0 +1,41 @@
+# WeBIM production stack: Caddy (HTTPS + static + /api proxy) + platform
+# server. Configure deploy/.env from .env.example first.
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - WEBIM_DOMAIN=${WEBIM_DOMAIN}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - relay
+
+  relay:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.relay
+    environment:
+      - WEBIM_SECRET=${WEBIM_SECRET}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - S3_ENDPOINT=${S3_ENDPOINT:-}
+      - S3_BUCKET=${S3_BUCKET:-}
+      - S3_REGION=${S3_REGION:-ap-southeast-1}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-}
+    volumes:
+      # users.json (auth) and local file storage when S3 is not set.
+      - relay_users:/app/relay/users
+      - relay_data:/app/relay/data
+      - ./users.json:/app/relay/users.json:ro
+
+volumes:
+  caddy_data:
+  caddy_config:
+  relay_users:
+  relay_data:

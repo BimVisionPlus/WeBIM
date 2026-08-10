@@ -175,6 +175,7 @@ class TaskDatum:
     start: str = ""
     end: str = ""
     progress: float = 0.0
+    depends_on: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -366,6 +367,7 @@ class NativeBimProject:
                     "start": task.start,
                     "end": task.end,
                     "progress": task.progress,
+                    "depends_on": list(task.depends_on),
                 }
                 for task in self.tasks
             ],
@@ -568,6 +570,7 @@ class NativeBimProject:
                     start=task.get("start", ""),
                     end=task.get("end", ""),
                     progress=task.get("progress", 0.0),
+                    depends_on=tuple(task.get("depends_on", [])),
                 )
                 for task in data.get("tasks", [])
             ],

@@ -12,7 +12,10 @@ collaboration covers them for free; only binaries touch the server):
   PUBLISHED/ARCHIVED status, P/C revision numbering, notes, upload/
   download through the platform server's `/files` API (a swappable
   BYO-storage adapter).
-- **Plan** — hạng mục/tasks with category, dates, status and progress.
+- **Plan** — hạng mục/tasks with category, dates, status, progress,
+  finish-to-start dependencies and a Gantt view (SVG timeline with week
+  ticks, status-colored bars with progress fill, today line, dependency
+  arrows — red when a task starts before its predecessor ends).
 - **Standards** — QCVN/TCVN lookup with diacritic-insensitive search,
   tags and supersession chains (seed catalog; long-term source is the
   machine-checkable corpus).
@@ -22,7 +25,12 @@ collaboration covers them for free; only binaries touch the server):
   viewport renders (openings deducted, typed walls split per material
   layer), slab volumes, opening counts, CSV export.
 - **Clash** — separating-axis footprint overlap × z-range checks with
-  legitimate wall joins excluded and slab bearing tolerated.
+  legitimate wall joins excluded and slab bearing tolerated; plus
+  Navisworks-style linked-model screening: "Link IFC…" reads external
+  IFC files (src/ifc/parseIfc.ts — SweptSolid extrusions with
+  polyline/rectangle profiles and translation + z-rotation placement
+  chains; unsupported bodies are counted and reported) into world AABBs
+  and reports native-vs-linked hard clashes.
 
 - **Climate** — per-orientation envelope screening (mục 9): façade
   and glazing areas plus WWR across 8 compass sectors (+Y = North,
@@ -227,6 +235,14 @@ IFC4 STEP text → .ifc download
   exits; `Delete` removes the selected grid. Wheel zooms to cursor;
   middle/right/Shift-drag pans.
 - Autosaves to `localStorage`.
+
+## Deploy (HTTPS + domain)
+
+See `../deploy/`: Caddy terminates TLS automatically (Let's Encrypt)
+and serves the SPA + proxies `/api/*` (WebSocket included) to the
+platform server; `docker compose --env-file .env up -d --build` after
+pointing DNS and filling `.env`. The client auto-targets same-origin
+`/api` in production (override with `VITE_API_BASE`).
 
 ## Develop
 
