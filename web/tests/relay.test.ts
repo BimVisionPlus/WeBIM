@@ -23,12 +23,16 @@ function nextMessage(socket: WebSocket): Promise<Record<string, unknown>> {
 
 beforeAll(async () => {
   server = startRelay(0);
-  await new Promise((resolve) => server.once("listening", resolve));
-  port = (server.address() as { port: number }).port;
+  const httpServer = (server as unknown as { httpServer: import("node:http").Server })
+    .httpServer;
+  if (!httpServer.listening) {
+    await new Promise((resolve) => httpServer.once("listening", resolve));
+  }
+  port = (httpServer.address() as { port: number }).port;
 });
 
-afterAll(() => {
-  server.close();
+afterAll(async () => {
+  await new Promise((resolve) => server.close(() => resolve(null)));
 });
 
 describe("sync relay", () => {
@@ -74,5 +78,37 @@ describe("sync relay", () => {
     expect(await bobGot).toMatchObject({ clientId: "alice" });
     alice.close();
     bob.close();
+  });
+});
+
+
+describe("file storage API", () => {
+  it("stores, lists and returns blobs under safe keys", async () => {
+    const key = encodeURIComponent(`proj1/doc1/${Date.now()}-test.txt`);
+    const put = await fetch(`http://127.0.0.1:${port}/files/${key}`, {
+      method: "PUT",
+      body: "hello CDE",
+    });
+    expect(put.status).toBe(200);
+    const get = await fetch(`http://127.0.0.1:${port}/files/${key}`);
+    expect(await get.text()).toBe("hello CDE");
+    const list = await fetch(`http://127.0.0.1:${port}/list?prefix=proj1`);
+    const body = (await list.json()) as { files: { key: string }[] };
+    expect(body.files.some((file) => file.key.includes("test.txt"))).toBe(true);
+  });
+
+  it("rejects path traversal keys", async () => {
+    const put = await fetch(
+      `http://127.0.0.1:${port}/files/${encodeURIComponent("../escape.txt")}`,
+      { method: "PUT", body: "nope" },
+    );
+    expect(put.status).toBe(400);
+  });
+
+  it("404s for missing files and reports health", async () => {
+    const missing = await fetch(`http://127.0.0.1:${port}/files/none/missing.bin`);
+    expect(missing.status).toBe(404);
+    const health = await fetch(`http://127.0.0.1:${port}/health`);
+    expect((await health.json()).ok).toBe(true);
   });
 });

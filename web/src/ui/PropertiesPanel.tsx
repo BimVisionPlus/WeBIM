@@ -472,6 +472,8 @@ function ScheduleProperties({ schedule }: { schedule: ScheduleDatum }) {
           <option value="WALL">Walls</option>
           <option value="OPENING">Doors/Windows</option>
           <option value="SLAB">Slabs</option>
+          <option value="QTO">Quantity take-off</option>
+          <option value="CLASH">Clash report</option>
         </select>
       </label>
       <button className="danger" onClick={() => store.removeSchedule(schedule.id)}>

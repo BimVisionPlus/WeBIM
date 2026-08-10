@@ -134,6 +134,50 @@ class DimensionDatum:
 
 
 @dataclass(frozen=True, slots=True)
+class DocumentRevision:
+    id: str
+    rev: str
+    note: str = ""
+    file_key: str | None = None
+    file_name: str | None = None
+    uploaded_at: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentNote:
+    id: str
+    text: str
+    author: str = ""
+    at: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentDatum:
+    """CDE document container (ISO 19650 metadata) authored in WeBIM Web."""
+
+    id: str
+    code: str
+    title: str = ""
+    status: str = "WIP"
+    revisions: tuple[DocumentRevision, ...] = ()
+    notes: tuple[DocumentNote, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class TaskDatum:
+    """Construction work item (hạng mục) authored in WeBIM Web."""
+
+    id: str
+    name: str
+    category: str = ""
+    assignee: str = ""
+    status: str = "NOT_STARTED"
+    start: str = ""
+    end: str = ""
+    progress: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
 class ScheduleDatum:
     """Derived element table authored in WeBIM Web (name + kind only)."""
 
@@ -158,6 +202,8 @@ class NativeBimProject:
     schedules: list[ScheduleDatum] = field(default_factory=list)
     wall_types: list[WallTypeDatum] = field(default_factory=list)
     dimensions: list[DimensionDatum] = field(default_factory=list)
+    documents: list[DocumentDatum] = field(default_factory=list)
+    tasks: list[TaskDatum] = field(default_factory=list)
 
     @classmethod
     def create(
@@ -280,6 +326,48 @@ class NativeBimProject:
                     "kind": schedule.kind,
                 }
                 for schedule in self.schedules
+            ],
+            "documents": [
+                {
+                    "id": document.id,
+                    "code": document.code,
+                    "title": document.title,
+                    "status": document.status,
+                    "revisions": [
+                        {
+                            "id": revision.id,
+                            "rev": revision.rev,
+                            "note": revision.note,
+                            "file_key": revision.file_key,
+                            "file_name": revision.file_name,
+                            "uploaded_at": revision.uploaded_at,
+                        }
+                        for revision in document.revisions
+                    ],
+                    "notes": [
+                        {
+                            "id": note.id,
+                            "text": note.text,
+                            "author": note.author,
+                            "at": note.at,
+                        }
+                        for note in document.notes
+                    ],
+                }
+                for document in self.documents
+            ],
+            "tasks": [
+                {
+                    "id": task.id,
+                    "name": task.name,
+                    "category": task.category,
+                    "assignee": task.assignee,
+                    "status": task.status,
+                    "start": task.start,
+                    "end": task.end,
+                    "progress": task.progress,
+                }
+                for task in self.tasks
             ],
             "wall_types": [
                 {
@@ -440,6 +528,48 @@ class NativeBimProject:
                     offset=dimension.get("offset", 1.0),
                 )
                 for dimension in data.get("dimensions", [])
+            ],
+            documents=[
+                DocumentDatum(
+                    id=document["id"],
+                    code=document["code"],
+                    title=document.get("title", ""),
+                    status=document.get("status", "WIP"),
+                    revisions=tuple(
+                        DocumentRevision(
+                            id=revision["id"],
+                            rev=revision["rev"],
+                            note=revision.get("note", ""),
+                            file_key=revision.get("file_key"),
+                            file_name=revision.get("file_name"),
+                            uploaded_at=revision.get("uploaded_at", ""),
+                        )
+                        for revision in document.get("revisions", [])
+                    ),
+                    notes=tuple(
+                        DocumentNote(
+                            id=note["id"],
+                            text=note["text"],
+                            author=note.get("author", ""),
+                            at=note.get("at", ""),
+                        )
+                        for note in document.get("notes", [])
+                    ),
+                )
+                for document in data.get("documents", [])
+            ],
+            tasks=[
+                TaskDatum(
+                    id=task["id"],
+                    name=task["name"],
+                    category=task.get("category", ""),
+                    assignee=task.get("assignee", ""),
+                    status=task.get("status", "NOT_STARTED"),
+                    start=task.get("start", ""),
+                    end=task.get("end", ""),
+                    progress=task.get("progress", 0.0),
+                )
+                for task in data.get("tasks", [])
             ],
             sheets=[
                 SheetDatum(

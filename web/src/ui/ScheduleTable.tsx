@@ -3,6 +3,8 @@ import {
   slabScheduleRows,
   wallScheduleRows,
 } from "../application/schedules";
+import { qtoCsv, qtoRows, qtoSummary } from "../application/qto";
+import { clashReport } from "../application/clash";
 import type { ScheduleDatum } from "../domain/project";
 import { store, useStoreVersion } from "../state/store";
 
@@ -124,6 +126,91 @@ function SlabTable() {
   );
 }
 
+function QtoTable() {
+  const rows = qtoRows(store.project);
+  const summary = qtoSummary(rows);
+  const download = () => {
+    const blob = new Blob([qtoCsv(store.project)], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${store.project.name}-qto.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <>
+      <button onClick={download}>Export CSV</button>
+      <table>
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Category</th>
+            <th>Material</th>
+            <th>Unit</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={index}>
+              <td>{row.element}</td>
+              <td>{row.category}</td>
+              <td>{row.material}</td>
+              <td>{row.unit}</td>
+              <td>{row.quantity.toFixed(3)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          {summary.map((row, index) => (
+            <tr key={index}>
+              <td>Σ</td>
+              <td>{row.category}</td>
+              <td>{row.material}</td>
+              <td>{row.unit}</td>
+              <td>{row.quantity.toFixed(3)}</td>
+            </tr>
+          ))}
+        </tfoot>
+      </table>
+    </>
+  );
+}
+
+function ClashTable() {
+  const clashes = clashReport(store.project);
+  return (
+    <>
+      <p className="module-hint">
+        {clashes.length === 0
+          ? "Không phát hiện va chạm cứng — các liên kết tường hợp lệ đã được loại trừ."
+          : `${clashes.length} va chạm, sắp xếp theo độ xuyên sâu.`}
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Loại</th>
+            <th>Phần tử A</th>
+            <th>Phần tử B</th>
+            <th>Độ xuyên (m)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {clashes.map((clash, index) => (
+            <tr key={index}>
+              <td>{clash.kind.replace("_", " × ")}</td>
+              <td>{clash.aName}</td>
+              <td>{clash.bName}</td>
+              <td>{clash.depth.toFixed(3)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
 export function ScheduleTable({ schedule }: { schedule: ScheduleDatum }) {
   useStoreVersion();
   return (
@@ -132,6 +219,8 @@ export function ScheduleTable({ schedule }: { schedule: ScheduleDatum }) {
       {schedule.kind === "WALL" && <WallTable />}
       {schedule.kind === "OPENING" && <OpeningTable />}
       {schedule.kind === "SLAB" && <SlabTable />}
+      {schedule.kind === "QTO" && <QtoTable />}
+      {schedule.kind === "CLASH" && <ClashTable />}
     </div>
   );
 }

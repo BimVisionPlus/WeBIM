@@ -9,3 +9,4 @@ build/
 *.ifc
 blender-probe.exe
 .venv-mac/
+relay/data/

@@ -1,7 +1,28 @@
 # WeBIM Web
 
-Web-app port of the WeBIM Blender add-on: Revit-style BIM authoring in the
-browser. The native BIM domain from `webim/domain` is ported 1:1 to
+Web-app port of the WeBIM Blender add-on grown into a construction
+lifecycle workspace: Revit-style BIM authoring plus the platform modules
+of the WeBIM concept — **Model | CDE | Plan | Standards | Drawings**,
+with QTO and clash detection as live schedule kinds.
+
+Platform modules (all metadata lives in the synced project, so realtime
+collaboration covers them for free; only binaries touch the server):
+
+- **CDE** — ISO 19650-style document containers: code, WIP/SHARED/
+  PUBLISHED/ARCHIVED status, P/C revision numbering, notes, upload/
+  download through the platform server's `/files` API (a swappable
+  BYO-storage adapter).
+- **Plan** — hạng mục/tasks with category, dates, status and progress.
+- **Standards** — QCVN/TCVN lookup with diacritic-insensitive search,
+  tags and supersession chains (seed catalog; long-term source is the
+  machine-checkable corpus).
+- **Drawings** — PDF viewing straight from CDE revisions plus synced
+  notes (AI reading hook stubbed until a key is configured).
+- **QTO** — net quantities from the same wallPieces geometry the
+  viewport renders (openings deducted, typed walls split per material
+  layer), slab volumes, opening counts, CSV export.
+- **Clash** — separating-axis footprint overlap × z-range checks with
+  legitimate wall joins excluded and slab bearing tolerated. The native BIM domain from `webim/domain` is ported 1:1 to
 TypeScript; the Blender viewport adapter is replaced by a Three.js
 orthographic floor-plan viewport.
 

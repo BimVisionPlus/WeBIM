@@ -398,3 +398,148 @@ input[type="text"],
   margin-left: 6px;
   vertical-align: middle;
 }
+
+.module-bar {
+  display: flex;
+  gap: 2px;
+  padding: 0 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.module-bar button {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 6px 14px;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+
+.module-bar button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+  background: transparent;
+  font-weight: 600;
+}
+
+.module-host {
+  height: 100%;
+  overflow: auto;
+  padding: 18px 24px;
+}
+
+.module-host h2 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.module-hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
+.module-form {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.module-form input {
+  min-width: 160px;
+}
+
+.module-host table {
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.module-host th,
+.module-host td {
+  border: 1px solid var(--panel-border);
+  padding: 5px 12px;
+  text-align: left;
+  font-size: 12.5px;
+}
+
+.module-host th {
+  background: var(--panel);
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+
+.module-host tr.row-selected td {
+  background: rgba(77, 163, 255, 0.12);
+}
+
+.module-detail {
+  margin-top: 18px;
+}
+
+.module-detail h3 {
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+.upload-button {
+  display: inline-block;
+  background: #262a32;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+
+.progress-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-cell input[type="range"] {
+  width: 110px;
+}
+
+.drawings-body {
+  display: flex;
+  gap: 14px;
+  height: calc(100% - 60px);
+}
+
+.drawings-list {
+  width: 280px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.drawings-list h3 {
+  font-size: 12px;
+  margin: 14px 0 6px;
+  color: var(--muted);
+}
+
+.drawing-note {
+  font-size: 12px;
+  color: var(--text);
+  padding: 4px 6px;
+  border-left: 2px solid var(--panel-border);
+  margin-bottom: 4px;
+}
+
+.drawing-note em {
+  color: var(--muted);
+  margin-right: 6px;
+}
+
+.drawing-frame {
+  flex: 1;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: #fff;
+}

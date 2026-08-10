@@ -93,6 +93,37 @@ WEB_PAYLOAD = {
             "offset": 1.5,
         }
     ],
+    "documents": [
+        {
+            "id": "doc1",
+            "code": "WBM-XYZ-00-GF-DR-A-0001",
+            "title": "Ground floor plan",
+            "status": "SHARED",
+            "revisions": [
+                {
+                    "id": "rev1",
+                    "rev": "P01",
+                    "note": "first issue",
+                    "file_key": "p1/doc1/plan.pdf",
+                    "file_name": "plan.pdf",
+                    "uploaded_at": "2026-08-10T00:00:00Z",
+                }
+            ],
+            "notes": [{"id": "n1", "text": "check axis B", "author": "sophie", "at": ""}],
+        }
+    ],
+    "tasks": [
+        {
+            "id": "t1",
+            "name": "Ket cau tang 1",
+            "category": "Ket cau",
+            "assignee": "",
+            "status": "IN_PROGRESS",
+            "start": "2026-08-01",
+            "end": "2026-09-01",
+            "progress": 40.0,
+        }
+    ],
     "sheets": [
         {
             "id": "s1",
@@ -121,6 +152,9 @@ def test_parses_web_authored_walls_levels_sheets():
     assert project.schedules[0].kind == "WALL"
     assert project.wall_types[0].layers[1].material == "Brick"
     assert project.dimensions[0].offset == 1.5
+    assert project.documents[0].status == "SHARED"
+    assert project.documents[0].revisions[0].file_key == "p1/doc1/plan.pdf"
+    assert project.tasks[0].progress == 40.0
 
 
 def test_round_trip_preserves_web_data():
@@ -135,7 +169,7 @@ def test_legacy_payload_without_new_keys_still_loads():
     payload = {
         key: value
         for key, value in WEB_PAYLOAD.items()
-        if key not in {"walls", "levels", "sheets", "slabs", "schedules", "wall_types", "dimensions"}
+        if key not in {"walls", "levels", "sheets", "slabs", "schedules", "wall_types", "dimensions", "documents", "tasks"}
     }
     payload["views"] = [
         {k: v for k, v in view.items() if k != "level_id"}
@@ -149,6 +183,8 @@ def test_legacy_payload_without_new_keys_still_loads():
     assert project.schedules == []
     assert project.wall_types == []
     assert project.dimensions == []
+    assert project.documents == []
+    assert project.tasks == []
     assert project.views[0].level_id is None
 
 

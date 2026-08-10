@@ -24,8 +24,17 @@ export interface Selection {
     | "slab"
     | "schedule"
     | "walltype"
-    | "dimension";
+    | "dimension"
+    | "document"
+    | "task";
   id: string;
+}
+
+export type ModuleId = "MODEL" | "CDE" | "PLAN" | "STANDARDS" | "DRAWINGS";
+
+/** Platform file API base (same host as the sync relay). */
+export function fileServerBase(): string {
+  return `http://${window.location.hostname}:8787`;
 }
 
 const STORAGE_KEY = "webim.native_project";
@@ -63,6 +72,7 @@ class AppStore {
   snapIncrement = 0.1;
   pendingStart: Point3D | null = null;
   statusMessage = "Ready";
+  activeModule: ModuleId = "MODEL";
 
   private version = 0;
   private listeners = new Set<() => void>();
@@ -286,6 +296,112 @@ class AppStore {
   removeDimension(dimensionId: string): void {
     this.project.removeDimension(dimensionId);
     if (this.selection?.kind === "dimension" && this.selection.id === dimensionId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
+  setModule(module: ModuleId): void {
+    this.activeModule = module;
+    if (module !== "MODEL" && this.activeTool !== "SELECT") {
+      this.activeTool = "SELECT";
+      this.pendingStart = null;
+    }
+    this.commit(false);
+  }
+
+  addDocument(code: string, title: string): void {
+    try {
+      const document = this.project.addDocument(code, title);
+      this.selection = { kind: "document", id: document.id };
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  updateDocument(
+    documentId: string,
+    changes: Parameters<NativeBimProject["updateDocument"]>[1],
+  ): void {
+    this.project.updateDocument(documentId, changes);
+    this.commit();
+  }
+
+  removeDocument(documentId: string): void {
+    this.project.removeDocument(documentId);
+    if (this.selection?.kind === "document" && this.selection.id === documentId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
+  /** Upload a revision file to the platform server, then record it. */
+  async uploadDocumentRevision(documentId: string, file: File, note: string): Promise<void> {
+    try {
+      const key = `${this.project.id}/${documentId}/${Date.now()}-${file.name}`;
+      const response = await fetch(
+        `${fileServerBase()}/files/${encodeURIComponent(key)}`,
+        { method: "PUT", body: file },
+      );
+      if (!response.ok) {
+        throw new Error(`Upload failed (${response.status})`);
+      }
+      this.project.addDocumentRevision(
+        documentId,
+        note,
+        key,
+        file.name,
+        new Date().toISOString(),
+      );
+      this.statusMessage = `Revision uploaded (${file.name})`;
+      this.commit();
+    } catch (error) {
+      this.setStatus(
+        `Upload failed — is the platform server running? (${(error as Error).message})`,
+      );
+    }
+  }
+
+  /** Record a metadata-only revision (file stays on external storage). */
+  addDocumentRevisionMeta(documentId: string, note: string): void {
+    this.project.addDocumentRevision(documentId, note, null, null, new Date().toISOString());
+    this.commit();
+  }
+
+  addDocumentNote(documentId: string, text: string): void {
+    if (!text.trim()) return;
+    this.project.addDocumentNote(
+      documentId,
+      text.trim(),
+      this.sync?.name ?? "me",
+      new Date().toISOString(),
+    );
+    this.commit();
+  }
+
+  addTask(name: string, category: string, start: string, end: string): void {
+    try {
+      const task = this.project.addTask(name, category, start, end);
+      this.selection = { kind: "task", id: task.id };
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  updateTask(taskId: string, changes: Parameters<NativeBimProject["updateTask"]>[1]): void {
+    try {
+      this.project.updateTask(taskId, changes);
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  removeTask(taskId: string): void {
+    this.project.removeTask(taskId);
+    if (this.selection?.kind === "task" && this.selection.id === taskId) {
       this.selection = null;
     }
     this.commit();
