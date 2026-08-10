@@ -9,6 +9,7 @@ import {
   supersessionChain,
   STANDARDS_CATALOG,
 } from "../standards/catalog";
+import { climateFindings, facadeByOrientation } from "../application/climate";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
 import {
   authHeaders,
@@ -503,6 +504,65 @@ export function DrawingsModule() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+export function ClimateModule() {
+  useStoreVersion();
+  const rows = facadeByOrientation(store.project);
+  const findings = climateFindings(rows);
+  return (
+    <div className="module-host">
+      <h2>Climate — phân tích vi khí hậu theo hướng</h2>
+      <p className="module-hint">
+        Sàng lọc sơ bộ vỏ bao che theo định hướng OTTV của QCVN 09:2017/BXD —
+        diện tích mặt đứng/kính và WWR theo 8 hướng (+Y = Bắc; mặt ngoài xác
+        định bằng pháp tuyến hướng ra khỏi tâm mặt bằng). KHÔNG thay thế tính
+        toán năng lượng đầy đủ.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Hướng</th>
+            <th>Số tường</th>
+            <th>Mặt đứng (m²)</th>
+            <th>Kính (m²)</th>
+            <th>Cửa đi (m²)</th>
+            <th style={{ minWidth: 180 }}>WWR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.orientation}>
+              <td>{row.orientation}</td>
+              <td>{row.wallCount}</td>
+              <td>{row.wallArea.toFixed(1)}</td>
+              <td>{row.windowArea.toFixed(1)}</td>
+              <td>{row.doorArea.toFixed(1)}</td>
+              <td>
+                <div className="wwr-cell">
+                  <div className="wwr-bar">
+                    <div
+                      className={`wwr-fill ${row.wwr > 0.3 ? "hot" : ""}`}
+                      style={{ width: `${Math.min(100, row.wwr * 100)}%` }}
+                    />
+                  </div>
+                  <span>{(row.wwr * 100).toFixed(1)}%</span>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="module-detail">
+        <h3>Đánh giá</h3>
+        {findings.map((finding, index) => (
+          <div key={index} className={`climate-finding ${finding.severity}`}>
+            {finding.text}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

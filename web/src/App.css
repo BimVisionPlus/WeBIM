@@ -608,3 +608,38 @@ input[type="text"],
   max-height: 300px;
   overflow-y: auto;
 }
+
+.wwr-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wwr-bar {
+  width: 110px;
+  height: 8px;
+  border-radius: 4px;
+  background: #262a32;
+  overflow: hidden;
+}
+
+.wwr-fill {
+  height: 100%;
+  background: #5f9e6e;
+}
+
+.wwr-fill.hot {
+  background: #e0996c;
+}
+
+.climate-finding {
+  font-size: 12.5px;
+  padding: 5px 10px;
+  margin-bottom: 5px;
+  border-left: 2px solid #5f9e6e;
+}
+
+.climate-finding.warning {
+  border-left-color: #e0996c;
+  color: #e0b48c;
+}

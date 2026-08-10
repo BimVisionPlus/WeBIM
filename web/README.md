@@ -24,6 +24,12 @@ collaboration covers them for free; only binaries touch the server):
 - **Clash** — separating-axis footprint overlap × z-range checks with
   legitimate wall joins excluded and slab bearing tolerated.
 
+- **Climate** — per-orientation envelope screening (mục 9): façade
+  and glazing areas plus WWR across 8 compass sectors (+Y = North,
+  exterior face = normal pointing away from the plan centroid), with
+  hot-humid-climate shading guidance in the spirit of QCVN 09:2017/BXD.
+  An early-design screen, not an OTTV/energy calculation.
+
 Platform server hardening:
 
 - **Auth/roles** — token login (`POST /auth/login`) against

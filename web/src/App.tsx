@@ -4,6 +4,7 @@ import { PropertiesPanel } from "./ui/PropertiesPanel";
 import { ScheduleTable } from "./ui/ScheduleTable";
 import {
   CdeModule,
+  ClimateModule,
   DrawingsModule,
   PlanModule,
   StandardsModule,
@@ -19,6 +20,7 @@ const MODULES: Array<[ModuleId, string]> = [
   ["PLAN", "Plan"],
   ["STANDARDS", "Standards"],
   ["DRAWINGS", "Drawings"],
+  ["CLIMATE", "Climate"],
 ];
 
 export default function App() {
@@ -52,6 +54,8 @@ export default function App() {
             <StandardsModule />
           ) : module === "DRAWINGS" ? (
             <DrawingsModule />
+          ) : module === "CLIMATE" ? (
+            <ClimateModule />
           ) : activeSchedule ? (
             <ScheduleTable schedule={activeSchedule} />
           ) : (

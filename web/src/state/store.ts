@@ -30,7 +30,13 @@ export interface Selection {
   id: string;
 }
 
-export type ModuleId = "MODEL" | "CDE" | "PLAN" | "STANDARDS" | "DRAWINGS";
+export type ModuleId =
+  | "MODEL"
+  | "CDE"
+  | "PLAN"
+  | "STANDARDS"
+  | "DRAWINGS"
+  | "CLIMATE";
 
 /** Platform file API base (same host as the sync relay). */
 export function fileServerBase(): string {
