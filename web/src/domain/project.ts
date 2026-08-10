@@ -72,6 +72,30 @@ export interface SlabDatum {
   zOffset: number;
 }
 
+/** One material layer of a wall assembly, thickness in metres. */
+export interface WallLayer {
+  name: string;
+  material: string;
+  thickness: number;
+}
+
+/** Reusable layered wall assembly; wall thickness = sum of layers. */
+export interface WallTypeDatum {
+  id: string;
+  name: string;
+  layers: WallLayer[];
+}
+
+/** Linear dimension annotation, owned by one floor plan view. */
+export interface DimensionDatum {
+  id: string;
+  viewId: string;
+  start: [number, number];
+  end: [number, number];
+  /** Signed perpendicular distance of the dimension line from A-B. */
+  offset: number;
+}
+
 export type ScheduleKind = "WALL" | "OPENING" | "SLAB";
 
 /** A schedule view: a derived element table, persisted by name and kind. */
@@ -126,6 +150,8 @@ export interface WallDatum {
   joinEnd: WallJoinType;
   openings: OpeningDatum[];
   levelId: string;
+  /** Optional wall type; when set, thickness is derived from its layers. */
+  typeId?: string;
 }
 
 export type ViewType = "FLOOR_PLAN" | "SECTION" | "ELEVATION";
@@ -180,6 +206,8 @@ export class NativeBimProject {
   sheets: SheetDatum[];
   slabs: SlabDatum[];
   schedules: ScheduleDatum[];
+  wallTypes: WallTypeDatum[];
+  dimensions: DimensionDatum[];
 
   constructor(
     id: string,
@@ -194,6 +222,8 @@ export class NativeBimProject {
     sheets: SheetDatum[] = [],
     slabs: SlabDatum[] = [],
     schedules: ScheduleDatum[] = [],
+    wallTypes: WallTypeDatum[] = [],
+    dimensions: DimensionDatum[] = [],
   ) {
     this.id = id;
     this.name = name;
@@ -207,6 +237,8 @@ export class NativeBimProject {
     this.sheets = sheets;
     this.slabs = slabs;
     this.schedules = schedules;
+    this.wallTypes = wallTypes;
+    this.dimensions = dimensions;
   }
 
   static create(
@@ -259,6 +291,22 @@ export class NativeBimProject {
         level_id: slab.levelId,
         z_offset: slab.zOffset,
       })),
+      dimensions: this.dimensions.map((dimension) => ({
+        id: dimension.id,
+        view_id: dimension.viewId,
+        start: [...dimension.start],
+        end: [...dimension.end],
+        offset: dimension.offset,
+      })),
+      wall_types: this.wallTypes.map((wallType) => ({
+        id: wallType.id,
+        name: wallType.name,
+        layers: wallType.layers.map((layer) => ({
+          name: layer.name,
+          material: layer.material,
+          thickness: layer.thickness,
+        })),
+      })),
       schedules: this.schedules.map((schedule) => ({
         id: schedule.id,
         name: schedule.name,
@@ -285,6 +333,7 @@ export class NativeBimProject {
         join_start: wall.joinStart,
         join_end: wall.joinEnd,
         level_id: wall.levelId,
+        ...(wall.typeId ? { type_id: wall.typeId } : {}),
         openings: wall.openings.map((opening) => ({
           id: opening.id,
           name: opening.name,
@@ -354,6 +403,7 @@ export class NativeBimProject {
         joinStart: validateJoinType((wall.join_start as string) ?? "MITER"),
         joinEnd: validateJoinType((wall.join_end as string) ?? "MITER"),
         levelId: (wall.level_id as string) ?? defaultLevelId,
+        typeId: (wall.type_id as string) ?? undefined,
         openings: ((wall.openings as Record<string, unknown>[]) ?? []).map((opening) => ({
           id: opening.id as string,
           name: opening.name as string,
@@ -393,6 +443,22 @@ export class NativeBimProject {
         id: schedule.id as string,
         name: schedule.name as string,
         kind: schedule.kind as ScheduleKind,
+      })),
+      ((data.wall_types as Record<string, unknown>[]) ?? []).map((wallType) => ({
+        id: wallType.id as string,
+        name: wallType.name as string,
+        layers: ((wallType.layers as Record<string, unknown>[]) ?? []).map((layer) => ({
+          name: layer.name as string,
+          material: layer.material as string,
+          thickness: layer.thickness as number,
+        })),
+      })),
+      ((data.dimensions as Record<string, unknown>[]) ?? []).map((dimension) => ({
+        id: dimension.id as string,
+        viewId: dimension.view_id as string,
+        start: dimension.start as [number, number],
+        end: dimension.end as [number, number],
+        offset: (dimension.offset as number) ?? 1,
       })),
     );
   }
@@ -610,6 +676,49 @@ export class NativeBimProject {
     return this.schedules.splice(index, 1)[0];
   }
 
+  addDimension(
+    viewId: string,
+    start: [number, number],
+    end: [number, number],
+    offset: number,
+  ): DimensionDatum {
+    if (!this.views.some((view) => view.id === viewId)) {
+      throw new Error(`Unknown TechnicalView: ${viewId}`);
+    }
+    if (start[0] === end[0] && start[1] === end[1]) {
+      throw new Error("A dimension needs two different points");
+    }
+    const dimension: DimensionDatum = {
+      id: uuid4Hex(),
+      viewId,
+      start,
+      end,
+      offset,
+    };
+    this.dimensions.push(dimension);
+    return dimension;
+  }
+
+  updateDimension(dimensionId: string, changes: { offset?: number }): DimensionDatum {
+    const index = this.dimensions.findIndex((dimension) => dimension.id === dimensionId);
+    if (index === -1) {
+      throw new Error(`Unknown DimensionDatum: ${dimensionId}`);
+    }
+    this.dimensions[index] = {
+      ...this.dimensions[index],
+      offset: changes.offset ?? this.dimensions[index].offset,
+    };
+    return this.dimensions[index];
+  }
+
+  removeDimension(dimensionId: string): DimensionDatum {
+    const index = this.dimensions.findIndex((dimension) => dimension.id === dimensionId);
+    if (index === -1) {
+      throw new Error(`Unknown DimensionDatum: ${dimensionId}`);
+    }
+    return this.dimensions.splice(index, 1)[0];
+  }
+
   addSheet(title: string): SheetDatum {
     const sheet: SheetDatum = {
       id: uuid4Hex(),
@@ -786,6 +895,74 @@ export class NativeBimProject {
     return updated;
   }
 
+  wallTypeById(typeId: string): WallTypeDatum | null {
+    return this.wallTypes.find((wallType) => wallType.id === typeId) ?? null;
+  }
+
+  static wallTypeThickness(wallType: WallTypeDatum): number {
+    return wallType.layers.reduce((sum, layer) => sum + layer.thickness, 0);
+  }
+
+  private validateWallTypeLayers(layers: WallLayer[]): void {
+    if (layers.length === 0) {
+      throw new Error("A wall type needs at least one layer");
+    }
+    if (layers.some((layer) => layer.thickness <= 0)) {
+      throw new Error("Layer thickness must be greater than zero");
+    }
+  }
+
+  addWallType(name?: string, layers?: WallLayer[]): WallTypeDatum {
+    const resolvedLayers = layers ?? [
+      { name: "Core", material: "Concrete", thickness: 0.2 },
+    ];
+    this.validateWallTypeLayers(resolvedLayers);
+    const wallType: WallTypeDatum = {
+      id: uuid4Hex(),
+      name: name ?? `Type ${this.wallTypes.length + 1}`,
+      layers: resolvedLayers,
+    };
+    this.wallTypes.push(wallType);
+    return wallType;
+  }
+
+  updateWallType(
+    typeId: string,
+    changes: { name?: string; layers?: WallLayer[] },
+  ): WallTypeDatum {
+    const index = this.wallTypes.findIndex((wallType) => wallType.id === typeId);
+    if (index === -1) {
+      throw new Error(`Unknown WallTypeDatum: ${typeId}`);
+    }
+    const wallType = this.wallTypes[index];
+    const updated: WallTypeDatum = {
+      ...wallType,
+      name: changes.name ?? wallType.name,
+      layers: changes.layers ?? wallType.layers,
+    };
+    this.validateWallTypeLayers(updated.layers);
+    this.wallTypes[index] = updated;
+    // Typed walls keep their thickness derived from the assembly.
+    const total = NativeBimProject.wallTypeThickness(updated);
+    for (let wallIndex = 0; wallIndex < this.walls.length; wallIndex += 1) {
+      if (this.walls[wallIndex].typeId === typeId) {
+        this.walls[wallIndex] = { ...this.walls[wallIndex], thickness: total };
+      }
+    }
+    return updated;
+  }
+
+  removeWallType(typeId: string): WallTypeDatum {
+    const index = this.wallTypes.findIndex((wallType) => wallType.id === typeId);
+    if (index === -1) {
+      throw new Error(`Unknown WallTypeDatum: ${typeId}`);
+    }
+    if (this.walls.some((wall) => wall.typeId === typeId)) {
+      throw new Error("Wall type is still in use");
+    }
+    return this.wallTypes.splice(index, 1)[0];
+  }
+
   addWall(
     start: Point3D,
     end: Point3D,
@@ -795,6 +972,7 @@ export class NativeBimProject {
       joinStart?: WallJoinType;
       joinEnd?: WallJoinType;
       levelId?: string;
+      typeId?: string;
     } = {},
   ): WallDatum {
     if (pointsEqual(start, end)) {
@@ -811,7 +989,14 @@ export class NativeBimProject {
     }
     start = [start[0], start[1], level.elevation];
     end = [end[0], end[1], level.elevation];
-    const thickness = options.thickness ?? 0.2;
+    let thickness = options.thickness ?? 0.2;
+    if (options.typeId) {
+      const wallType = this.wallTypeById(options.typeId);
+      if (!wallType) {
+        throw new Error(`Unknown WallTypeDatum: ${options.typeId}`);
+      }
+      thickness = NativeBimProject.wallTypeThickness(wallType);
+    }
     const height = options.height ?? 3.0;
     if (thickness <= 0) {
       throw new Error("Wall thickness must be greater than zero");
@@ -830,6 +1015,7 @@ export class NativeBimProject {
       joinEnd: validateJoinType(options.joinEnd ?? "MITER"),
       openings: [],
       levelId: level.id,
+      typeId: options.typeId,
     };
     this.walls.push(wall);
     return wall;
@@ -845,6 +1031,7 @@ export class NativeBimProject {
       joinStart?: WallJoinType;
       joinEnd?: WallJoinType;
       levelId?: string;
+      typeId?: string | null;
     },
   ): WallDatum {
     const index = this.walls.findIndex((wall) => wall.id === wallId);
@@ -857,13 +1044,24 @@ export class NativeBimProject {
     if (!level) {
       throw new Error(`Unknown LevelDatum: ${levelId}`);
     }
+    const typeId =
+      changes.typeId === null ? undefined : (changes.typeId ?? wall.typeId);
+    let thickness = changes.thickness ?? wall.thickness;
+    if (typeId) {
+      const wallType = this.wallTypeById(typeId);
+      if (!wallType) {
+        throw new Error(`Unknown WallTypeDatum: ${typeId}`);
+      }
+      thickness = NativeBimProject.wallTypeThickness(wallType);
+    }
     const start = changes.start ?? wall.start;
     const end = changes.end ?? wall.end;
     const updated: WallDatum = {
       ...wall,
       start: [start[0], start[1], level.elevation],
       end: [end[0], end[1], level.elevation],
-      thickness: changes.thickness ?? wall.thickness,
+      thickness,
+      typeId,
       height: changes.height ?? wall.height,
       joinStart: validateJoinType(changes.joinStart ?? wall.joinStart),
       joinEnd: validateJoinType(changes.joinEnd ?? wall.joinEnd),

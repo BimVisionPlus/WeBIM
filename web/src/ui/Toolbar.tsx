@@ -83,6 +83,13 @@ export function Toolbar() {
         >
           Roof
         </button>
+        <button
+          className={store.activeTool === "DIM" ? "active" : ""}
+          onClick={() => store.setTool("DIM")}
+          title="Place dimensions (M)"
+        >
+          Dim
+        </button>
       </div>
       <label className="field">
         Snap

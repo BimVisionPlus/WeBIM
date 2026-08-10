@@ -1,11 +1,30 @@
 import { useSyncExternalStore } from "react";
 import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
+import { SyncEngine } from "../sync/syncEngine";
 
-export type ToolId = "SELECT" | "GRID" | "WALL" | "DOOR" | "WINDOW" | "FLOOR" | "ROOF";
+export type ToolId =
+  | "SELECT"
+  | "GRID"
+  | "WALL"
+  | "DOOR"
+  | "WINDOW"
+  | "FLOOR"
+  | "ROOF"
+  | "DIM";
 
 export interface Selection {
-  kind: "grid" | "view" | "wall" | "opening" | "level" | "sheet" | "slab" | "schedule";
+  kind:
+    | "grid"
+    | "view"
+    | "wall"
+    | "opening"
+    | "level"
+    | "sheet"
+    | "slab"
+    | "schedule"
+    | "walltype"
+    | "dimension";
   id: string;
 }
 
@@ -21,6 +40,14 @@ function defaultProject(): NativeBimProject {
   );
   const level = project.addLevel("Level 1", 0);
   project.addView("Level 1", "FLOOR_PLAN", 100, 40, level.id);
+  project.addWallType("Generic 200", [
+    { name: "Core", material: "Concrete", thickness: 0.2 },
+  ]);
+  project.addWallType("Brick 220 + Plaster", [
+    { name: "Finish", material: "Plaster", thickness: 0.01 },
+    { name: "Core", material: "Brick", thickness: 0.2 },
+    { name: "Finish", material: "Plaster", thickness: 0.01 },
+  ]);
   return project;
 }
 
@@ -67,6 +94,9 @@ class AppStore {
 
   getVersion = (): number => this.version;
 
+  /** Wired up after construction; broadcasts persisted commits to peers. */
+  sync: SyncEngine | null = null;
+
   private commit(persist = true): void {
     this.version += 1;
     if (persist) {
@@ -74,7 +104,23 @@ class AppStore {
       if (this.activeViewId) {
         localStorage.setItem(ACTIVE_VIEW_KEY, this.activeViewId);
       }
+      this.sync?.onLocalCommit();
     }
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+
+  /** Replace the project with a merged state received from a peer. */
+  applyRemoteProject(projectDict: Record<string, unknown>): void {
+    this.project = NativeBimProject.fromJson(JSON.stringify(projectDict));
+    if (!this.project.views.some((view) => view.id === this.activeViewId)) {
+      this.activeViewId = this.project.views[0]?.id ?? null;
+    }
+    this.pendingStart = null;
+    this.statusMessage = "Synced changes from a collaborator";
+    this.version += 1;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.project.toDict()));
     for (const listener of this.listeners) {
       listener();
     }
@@ -130,7 +176,9 @@ class AppStore {
             ? `${tool === "DOOR" ? "Door" : "Window"}: click on a wall to place. Esc exits.`
             : tool === "FLOOR" || tool === "ROOF"
               ? `${tool === "FLOOR" ? "Floor" : "Roof"}: click two opposite corners. Esc cancels.`
-              : "Ready";
+              : tool === "DIM"
+                ? "Dimension: click two points, then place the line. Esc cancels."
+                : "Ready";
     this.commit(false);
   }
 
@@ -199,6 +247,68 @@ class AppStore {
       this.selection = null;
     }
     this.commit();
+  }
+
+  addDimension(start: [number, number], end: [number, number], offset: number): void {
+    const view = this.activeView;
+    if (!view || view.viewType !== "FLOOR_PLAN") {
+      this.setStatus("Dimensions need an active floor plan view");
+      return;
+    }
+    try {
+      const dimension = this.project.addDimension(view.id, start, end, offset);
+      this.selection = { kind: "dimension", id: dimension.id };
+      this.statusMessage = "Dimension placed";
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  updateDimension(
+    dimensionId: string,
+    changes: Parameters<NativeBimProject["updateDimension"]>[1],
+  ): void {
+    this.project.updateDimension(dimensionId, changes);
+    this.commit();
+  }
+
+  removeDimension(dimensionId: string): void {
+    this.project.removeDimension(dimensionId);
+    if (this.selection?.kind === "dimension" && this.selection.id === dimensionId) {
+      this.selection = null;
+    }
+    this.commit();
+  }
+
+  addWallType(): void {
+    const wallType = this.project.addWallType();
+    this.selection = { kind: "walltype", id: wallType.id };
+    this.commit();
+  }
+
+  updateWallType(
+    typeId: string,
+    changes: Parameters<NativeBimProject["updateWallType"]>[1],
+  ): void {
+    try {
+      this.project.updateWallType(typeId, changes);
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  removeWallType(typeId: string): void {
+    try {
+      this.project.removeWallType(typeId);
+      if (this.selection?.kind === "walltype" && this.selection.id === typeId) {
+        this.selection = null;
+      }
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
   }
 
   addSlab(kind: "FLOOR" | "ROOF", cornerA: Point3D, cornerB: Point3D): void {
@@ -471,6 +581,12 @@ class AppStore {
 }
 
 export const store = new AppStore();
+
+store.sync = new SyncEngine({
+  getProjectDict: () => store.project.toDict(),
+  getProjectId: () => store.project.id,
+  applyRemote: (projectDict) => store.applyRemoteProject(projectDict),
+});
 
 export function useStoreVersion(): number {
   return useSyncExternalStore(store.subscribe, store.getVersion);

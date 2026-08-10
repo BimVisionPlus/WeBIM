@@ -121,6 +121,25 @@ IFC4 STEP text → .ifc download
 - Blender draws door swing symbols (`NativeDoorSwing` curves: open
   leaf + quarter arc) from the same `door_swing` geometry as the web,
   pytest-matched to the web reference values.
+- Wall types with layered assemblies: `WallTypeDatum` (named layers
+  with material and thickness, serialized under `wall_types` and
+  preserved by the Python domain). Typed walls derive their thickness
+  from the layer sum — editing the assembly re-derives every instance —
+  and draw layer interface lines in plan. IFC associates one
+  `IfcMaterialLayerSet` (+`IfcMaterial` per material) with all walls of
+  a type via `IfcRelAssociatesMaterial`.
+- Dimension annotations (`M`): three clicks — two measured points
+  (with full snapping) and a placement click choosing the line's side
+  and offset. Rendered per owning floor plan (and in its sheet frames)
+  with extension lines, 45° ticks and the measured value; offset
+  editable, serialized under `dimensions`.
+- Multi-user sync: element-level last-writer-wins merge (Lamport
+  clocks, client id tie-break) — peers editing different elements merge
+  cleanly, same-element conflicts take the newest edit, deletions
+  propagate. Transport is a BroadcastChannel (tabs of one browser);
+  the message shape is transport-agnostic so a WebSocket relay can
+  carry the same payloads between machines. Pure merge logic in
+  `src/sync/syncEngine.ts` with tests.
 - Schedules — the last Project Browser branch: `ScheduleDatum`
   (name + kind, serialized under `schedules`, preserved by the Python
   domain) renders live derived tables in the main area — Walls

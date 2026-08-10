@@ -15,9 +15,11 @@ import {
   slabSectionCuts,
   wallSectionCuts,
 } from "../application/sectionCuts";
+import { dimensionGeometry, distanceToDimension } from "../application/dimensions";
 import { paperMmToModelUnits } from "../domain/lineStyles";
 import { dashSpans, LINE_PATTERNS } from "../domain/lineStyles";
 import type {
+  DimensionDatum,
   GridDatum,
   OpeningDatum,
   Point3D,
@@ -42,6 +44,7 @@ const COLOR_WALL = 0x9aa3b2;
 const COLOR_DOOR = 0xb08968;
 const COLOR_WINDOW = 0x7fb3d5;
 const COLOR_LEVEL = 0x5f9e6e;
+const COLOR_DIM = 0xd9b45a;
 const COLOR_FLOOR = 0x6f7d8c;
 const COLOR_ROOF = 0xa5836f;
 const COLOR_PAPER = 0x23262d;
@@ -132,6 +135,7 @@ export class GridViewport {
   private lastSnap: SnapResult | null = null;
   private endpointEdit: EndpointEdit | null = null;
   private openingDrag: { wallId: string; openingId: string; offset: number } | null = null;
+  private dimPoints: [number, number][] = [];
   private panning = false;
   private panStart = new THREE.Vector2();
   private cameraStart = new THREE.Vector3();
@@ -506,6 +510,19 @@ export class GridViewport {
     return wall && opening ? { wall, opening } : null;
   }
 
+  private pickDimension(world: Point3D): DimensionDatum | null {
+    const view = store.activeView;
+    if (!view) return null;
+    const threshold = PICK_PIXELS * this.worldPerPixel();
+    for (const dimension of store.project.dimensions) {
+      if (dimension.viewId !== view.id) continue;
+      if (distanceToDimension(dimension, [world[0], world[1]]) < threshold) {
+        return dimension;
+      }
+    }
+    return null;
+  }
+
   private pickSlab(world: Point3D): SlabDatum | null {
     const levelId = store.activeLevel?.id;
     for (const slab of store.project.slabs) {
@@ -603,6 +620,30 @@ export class GridViewport {
       return;
     }
 
+    if (store.activeTool === "DIM") {
+      const snap = this.computeSnap(world);
+      if (this.dimPoints.length < 2) {
+        this.dimPoints.push([snap.point[0], snap.point[1]]);
+        store.setStatus(
+          this.dimPoints.length === 1
+            ? "Dimension: click the second point"
+            : "Dimension: click to place the line",
+        );
+      } else {
+        const [a, b] = this.dimPoints;
+        const dx = b[0] - a[0];
+        const dy = b[1] - a[1];
+        const axisLength = Math.hypot(dx, dy);
+        const offset =
+          ((world[0] - a[0]) * (-dy / axisLength) +
+            (world[1] - a[1]) * (dx / axisLength));
+        store.addDimension(a, b, Number(offset.toFixed(4)));
+        this.dimPoints = [];
+      }
+      this.syncPreview();
+      return;
+    }
+
     if (store.activeTool === "FLOOR" || store.activeTool === "ROOF") {
       const snap = this.computeSnap(world);
       if (store.pendingStart === null) {
@@ -664,6 +705,11 @@ export class GridViewport {
         store.select({ kind: "opening", id: openingHit.opening.id });
         return;
       }
+      const dimensionHit = this.pickDimension(world);
+      if (dimensionHit) {
+        store.select({ kind: "dimension", id: dimensionHit.id });
+        return;
+      }
       const hit = this.pickElement(world);
       if (hit) {
         store.select({ kind: hit.kind, id: hit.id });
@@ -707,6 +753,7 @@ export class GridViewport {
       store.activeTool === "WALL" ||
       store.activeTool === "FLOOR" ||
       store.activeTool === "ROOF" ||
+      store.activeTool === "DIM" ||
       this.endpointEdit
     ) {
       this.lastSnap = this.computeSnap(this.cursorWorld);
@@ -766,6 +813,12 @@ export class GridViewport {
       return;
     }
     if (event.key === "Escape") {
+      if (store.activeTool === "DIM" && this.dimPoints.length > 0) {
+        this.dimPoints = [];
+        store.setStatus("Dimension: click the first point");
+        this.syncPreview();
+        return;
+      }
       if (this.openingDrag) {
         this.openingDrag = null;
         store.setStatus("Opening move cancelled");
@@ -796,6 +849,9 @@ export class GridViewport {
       store.setTool("FLOOR");
     } else if ((event.key === "r" || event.key === "R") && store.activeTool !== "ROOF") {
       store.setTool("ROOF");
+    } else if ((event.key === "m" || event.key === "M") && store.activeTool !== "DIM") {
+      this.dimPoints = [];
+      store.setTool("DIM");
     } else if (event.key === "Delete" || event.key === "Backspace") {
       if (store.selection?.kind === "grid") {
         store.removeGridAxis(store.selection.id);
@@ -808,6 +864,8 @@ export class GridViewport {
         }
       } else if (store.selection?.kind === "slab") {
         store.removeSlab(store.selection.id);
+      } else if (store.selection?.kind === "dimension") {
+        store.removeDimension(store.selection.id);
       }
     }
   };
@@ -886,6 +944,19 @@ export class GridViewport {
     if (viewType === "SECTION") {
       this.buildSectionHatches(viewScale, this.wallGroup);
     }
+    if (viewType === "FLOOR_PLAN" && store.activeView) {
+      for (const dimension of store.project.dimensions) {
+        if (dimension.viewId !== store.activeView.id) continue;
+        const selected =
+          store.selection?.kind === "dimension" && store.selection.id === dimension.id;
+        this.buildDimension(
+          dimension,
+          factor,
+          selected ? COLOR_SELECTED : COLOR_DIM,
+          this.gridGroup,
+        );
+      }
+    }
     this.buildAnchors();
     this.syncPreview();
   }
@@ -919,6 +990,29 @@ export class GridViewport {
     );
     edges.position.copy(mesh.position);
     group.add(edges);
+  }
+
+  /** Draw one dimension annotation (extensions, line, ticks, text). */
+  private buildDimension(
+    dimension: DimensionDatum,
+    factor: number,
+    color: number,
+    group: THREE.Group,
+  ): void {
+    const geometry = dimensionGeometry(dimension);
+    const z = 0.06;
+    const positions: number[] = [];
+    const pushSegment = (a: [number, number], b: [number, number]) =>
+      positions.push(a[0], a[1], z, b[0], b[1], z);
+    pushSegment(geometry.line[0], geometry.line[1]);
+    for (const [from, to] of geometry.extensions) pushSegment(from, to);
+    for (const [from, to] of geometry.ticks) pushSegment(from, to);
+    const buffer = new THREE.BufferGeometry();
+    buffer.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    group.add(new THREE.LineSegments(buffer, new THREE.LineBasicMaterial({ color })));
+    const label = makeLabelSprite(geometry.value.toFixed(2), 0.35 * factor);
+    label.position.set(geometry.textPosition[0], geometry.textPosition[1], z + 0.01);
+    group.add(label);
   }
 
   /**
@@ -977,6 +1071,10 @@ export class GridViewport {
       for (const slab of store.project.slabs) {
         if (view.levelId && slab.levelId !== view.levelId) continue;
         this.buildSlab(slab, undefined, group);
+      }
+      for (const dimension of store.project.dimensions) {
+        if (dimension.viewId !== view.id) continue;
+        this.buildDimension(dimension, factor, COLOR_DIM, group);
       }
     } else {
       const viewType = view.viewType as "ELEVATION" | "SECTION";
@@ -1297,6 +1395,41 @@ export class GridViewport {
     for (const opening of wall.openings) {
       this.buildOpening(wall, opening, group, planView);
     }
+    if (planView && wall.typeId) {
+      this.buildWallLayerLines(wall, group);
+    }
+  }
+
+  /** Interface lines between assembly layers, drawn along the wall axis. */
+  private buildWallLayerLines(wall: WallDatum, group: THREE.Group): void {
+    const wallType = store.project.wallTypeById(wall.typeId ?? "");
+    if (!wallType || wallType.layers.length < 2) return;
+    const dx = wall.end[0] - wall.start[0];
+    const dy = wall.end[1] - wall.start[1];
+    const length = Math.hypot(dx, dy);
+    if (length === 0) return;
+    const nx = -dy / length;
+    const ny = dx / length;
+    const half = wall.thickness / 2;
+    const z = wall.start[2] + wall.height + 0.04;
+    const positions: number[] = [];
+    let cumulative = 0;
+    for (let i = 0; i < wallType.layers.length - 1; i += 1) {
+      cumulative += wallType.layers[i].thickness;
+      const offset = -half + cumulative;
+      positions.push(
+        wall.start[0] + nx * offset, wall.start[1] + ny * offset, z,
+        wall.end[0] + nx * offset, wall.end[1] + ny * offset, z,
+      );
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    group.add(
+      new THREE.LineSegments(
+        geometry,
+        new THREE.LineBasicMaterial({ color: COLOR_UNDERLAY_MAJOR }),
+      ),
+    );
   }
 
   private buildOpening(
@@ -1456,6 +1589,64 @@ export class GridViewport {
             new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: COLOR_PREVIEW })),
           );
         }
+      }
+      return;
+    }
+
+    // Dimension tool ghost: segment after one point, full symbol after two.
+    if (store.activeTool === "DIM") {
+      const cursor: [number, number] = [this.cursorWorld[0], this.cursorWorld[1]];
+      if (this.dimPoints.length === 1 && this.lastSnap) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(
+            [
+              this.dimPoints[0][0], this.dimPoints[0][1], 0.06,
+              this.lastSnap.point[0], this.lastSnap.point[1], 0.06,
+            ],
+            3,
+          ),
+        );
+        this.previewGroup.add(
+          new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: COLOR_PREVIEW })),
+        );
+      } else if (this.dimPoints.length === 2) {
+        const [a, b] = this.dimPoints;
+        const dx = b[0] - a[0];
+        const dy = b[1] - a[1];
+        const axisLength = Math.hypot(dx, dy);
+        const offset =
+          ((cursor[0] - a[0]) * (-dy / axisLength) +
+            (cursor[1] - a[1]) * (dx / axisLength));
+        if (Math.abs(offset) > 1e-6) {
+          this.buildDimension(
+            { id: "__preview__", viewId: "", start: a, end: b, offset },
+            store.annotationViewFactor,
+            COLOR_PREVIEW,
+            this.previewGroup,
+          );
+        }
+      }
+      if (this.lastSnap) {
+        const size = 5 * this.worldPerPixel();
+        const marker = new THREE.BufferGeometry();
+        const [x, y] = this.lastSnap.point;
+        marker.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(
+            [
+              x - size, y - size, 0.06, x + size, y - size, 0.06,
+              x + size, y - size, 0.06, x + size, y + size, 0.06,
+              x + size, y + size, 0.06, x - size, y + size, 0.06,
+              x - size, y + size, 0.06, x - size, y - size, 0.06,
+            ],
+            3,
+          ),
+        );
+        this.previewGroup.add(
+          new THREE.LineSegments(marker, new THREE.LineBasicMaterial({ color: COLOR_PREVIEW })),
+        );
       }
       return;
     }

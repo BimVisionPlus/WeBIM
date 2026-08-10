@@ -170,6 +170,43 @@ export function ProjectBrowser() {
         {project.walls.length === 0 && (
           <div className="tree-empty">No walls yet — press W and click twice.</div>
         )}
+        <div className="tree-subbranch">
+          Wall Types
+          <button className="mini" title="Add wall type" onClick={() => store.addWallType()}>
+            +
+          </button>
+        </div>
+        {project.wallTypes.map((wallType) => (
+          <div
+            key={wallType.id}
+            className={`tree-leaf ${
+              store.selection?.kind === "walltype" && store.selection.id === wallType.id
+                ? "selected"
+                : ""
+            }`}
+            onClick={() => store.select({ kind: "walltype", id: wallType.id })}
+          >
+            <span>
+              {wallType.name}{" "}
+              <em>
+                {wallType.layers
+                  .reduce((sum, layer) => sum + layer.thickness, 0)
+                  .toFixed(2)}{" "}
+                m
+              </em>
+            </span>
+            <button
+              className="mini"
+              title="Delete wall type"
+              onClick={(event) => {
+                event.stopPropagation();
+                store.removeWallType(wallType.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
         <div className="tree-subbranch">Slabs</div>
         {project.slabs.map((slab) => (
           <div

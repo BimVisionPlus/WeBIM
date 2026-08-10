@@ -67,6 +67,7 @@ class NativeWall:
     join_end: str = "MITER"
     level_id: str | None = None
     openings: tuple[WallOpening, ...] = ()
+    type_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +107,33 @@ class SheetDatum:
 
 
 @dataclass(frozen=True, slots=True)
+class WallLayer:
+    name: str
+    material: str
+    thickness: float
+
+
+@dataclass(frozen=True, slots=True)
+class WallTypeDatum:
+    """Layered wall assembly authored in WeBIM Web."""
+
+    id: str
+    name: str
+    layers: tuple[WallLayer, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class DimensionDatum:
+    """Linear dimension annotation bound to one floor plan view."""
+
+    id: str
+    view_id: str
+    start: tuple[float, float]
+    end: tuple[float, float]
+    offset: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
 class ScheduleDatum:
     """Derived element table authored in WeBIM Web (name + kind only)."""
 
@@ -128,6 +156,8 @@ class NativeBimProject:
     sheets: list[SheetDatum] = field(default_factory=list)
     slabs: list[SlabDatum] = field(default_factory=list)
     schedules: list[ScheduleDatum] = field(default_factory=list)
+    wall_types: list[WallTypeDatum] = field(default_factory=list)
+    dimensions: list[DimensionDatum] = field(default_factory=list)
 
     @classmethod
     def create(
@@ -197,6 +227,11 @@ class NativeBimProject:
                         if wall.level_id is not None
                         else {}
                     ),
+                    **(
+                        {"type_id": wall.type_id}
+                        if wall.type_id is not None
+                        else {}
+                    ),
                     "openings": [
                         {
                             "id": opening.id,
@@ -245,6 +280,31 @@ class NativeBimProject:
                     "kind": schedule.kind,
                 }
                 for schedule in self.schedules
+            ],
+            "wall_types": [
+                {
+                    "id": wall_type.id,
+                    "name": wall_type.name,
+                    "layers": [
+                        {
+                            "name": layer.name,
+                            "material": layer.material,
+                            "thickness": layer.thickness,
+                        }
+                        for layer in wall_type.layers
+                    ],
+                }
+                for wall_type in self.wall_types
+            ],
+            "dimensions": [
+                {
+                    "id": dimension.id,
+                    "view_id": dimension.view_id,
+                    "start": list(dimension.start),
+                    "end": list(dimension.end),
+                    "offset": dimension.offset,
+                }
+                for dimension in self.dimensions
             ],
             "sheets": [
                 {
@@ -310,6 +370,7 @@ class NativeBimProject:
                     join_start=wall.get("join_start", "MITER"),
                     join_end=wall.get("join_end", "MITER"),
                     level_id=wall.get("level_id"),
+                    type_id=wall.get("type_id"),
                     openings=tuple(
                         WallOpening(
                             id=opening["id"],
@@ -354,6 +415,31 @@ class NativeBimProject:
                     kind=schedule.get("kind", "WALL"),
                 )
                 for schedule in data.get("schedules", [])
+            ],
+            wall_types=[
+                WallTypeDatum(
+                    id=wall_type["id"],
+                    name=wall_type["name"],
+                    layers=tuple(
+                        WallLayer(
+                            name=layer["name"],
+                            material=layer["material"],
+                            thickness=layer["thickness"],
+                        )
+                        for layer in wall_type.get("layers", [])
+                    ),
+                )
+                for wall_type in data.get("wall_types", [])
+            ],
+            dimensions=[
+                DimensionDatum(
+                    id=dimension["id"],
+                    view_id=dimension["view_id"],
+                    start=tuple(dimension["start"]),
+                    end=tuple(dimension["end"]),
+                    offset=dimension.get("offset", 1.0),
+                )
+                for dimension in data.get("dimensions", [])
             ],
             sheets=[
                 SheetDatum(

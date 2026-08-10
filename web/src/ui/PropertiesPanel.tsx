@@ -1,8 +1,10 @@
 import { LINE_PATTERNS, LINE_WEIGHTS_MM } from "../domain/lineStyles";
 import { store, useStoreVersion } from "../state/store";
 import type {
+  DimensionDatum,
   GridDatum,
   LevelDatum,
+  WallTypeDatum,
   ScheduleDatum,
   ScheduleKind,
   OpeningDatum,
@@ -195,6 +197,24 @@ function WallProperties({ wall }: { wall: WallDatum }) {
           ))}
         </select>
       </label>
+      <label className="prop-row">
+        <span>Type</span>
+        <select
+          value={wall.typeId ?? ""}
+          onChange={(event) =>
+            store.updateWall(wall.id, {
+              typeId: event.target.value === "" ? null : event.target.value,
+            })
+          }
+        >
+          <option value="">(none — manual thickness)</option>
+          {store.project.wallTypes.map((wallType) => (
+            <option key={wallType.id} value={wallType.id}>
+              {wallType.name}
+            </option>
+          ))}
+        </select>
+      </label>
       {(["joinStart", "joinEnd"] as const).map((key) => (
         <label key={key} className="prop-row">
           <span>{key === "joinStart" ? "Start join" : "End join"}</span>
@@ -325,6 +345,106 @@ function SlabProperties({ slab }: { slab: SlabDatum }) {
       </div>
       <button className="danger" onClick={() => store.removeSlab(slab.id)}>
         Delete slab
+      </button>
+    </>
+  );
+}
+
+function WallTypeProperties({ wallType }: { wallType: WallTypeDatum }) {
+  const total = wallType.layers.reduce((sum, layer) => sum + layer.thickness, 0);
+  const setLayer = (index: number, patch: Partial<WallTypeDatum["layers"][number]>) => {
+    const layers = wallType.layers.map((layer, i) =>
+      i === index ? { ...layer, ...patch } : layer,
+    );
+    store.updateWallType(wallType.id, { layers });
+  };
+  return (
+    <>
+      <h3>{wallType.name}</h3>
+      <label className="prop-row">
+        <span>Name</span>
+        <input
+          value={wallType.name}
+          onChange={(event) => store.updateWallType(wallType.id, { name: event.target.value })}
+        />
+      </label>
+      <div className="prop-static">
+        <span>Total thickness</span>
+        <span>{total.toFixed(3)} m</span>
+      </div>
+      {wallType.layers.map((layer, index) => (
+        <div key={index} className="layer-row">
+          <input
+            value={layer.name}
+            title="Layer name"
+            onChange={(event) => setLayer(index, { name: event.target.value })}
+          />
+          <input
+            value={layer.material}
+            title="Material"
+            onChange={(event) => setLayer(index, { material: event.target.value })}
+          />
+          <input
+            type="number"
+            step={0.005}
+            value={layer.thickness}
+            title="Thickness (m)"
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              if (!Number.isNaN(value)) setLayer(index, { thickness: value });
+            }}
+          />
+          <button
+            className="mini"
+            title="Remove layer"
+            onClick={() =>
+              store.updateWallType(wallType.id, {
+                layers: wallType.layers.filter((_, i) => i !== index),
+              })
+            }
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() =>
+          store.updateWallType(wallType.id, {
+            layers: [
+              ...wallType.layers,
+              { name: "Layer", material: "Generic", thickness: 0.05 },
+            ],
+          })
+        }
+      >
+        Add layer
+      </button>
+      <button className="danger" onClick={() => store.removeWallType(wallType.id)}>
+        Delete wall type
+      </button>
+    </>
+  );
+}
+
+function DimensionProperties({ dimension }: { dimension: DimensionDatum }) {
+  const length = Math.hypot(
+    dimension.end[0] - dimension.start[0],
+    dimension.end[1] - dimension.start[1],
+  );
+  return (
+    <>
+      <h3>Dimension</h3>
+      <div className="prop-static">
+        <span>Value</span>
+        <span>{length.toFixed(2)} m</span>
+      </div>
+      <NumberField
+        label="Line offset (m)"
+        value={dimension.offset}
+        onCommit={(value) => store.updateDimension(dimension.id, { offset: value })}
+      />
+      <button className="danger" onClick={() => store.removeDimension(dimension.id)}>
+        Delete dimension
       </button>
     </>
   );
@@ -542,6 +662,14 @@ export function PropertiesPanel() {
     selection?.kind === "schedule"
       ? store.project.schedules.find((candidate) => candidate.id === selection.id)
       : undefined;
+  const wallType =
+    selection?.kind === "walltype"
+      ? store.project.wallTypes.find((candidate) => candidate.id === selection.id)
+      : undefined;
+  const dimension =
+    selection?.kind === "dimension"
+      ? store.project.dimensions.find((candidate) => candidate.id === selection.id)
+      : undefined;
 
   return (
     <aside className="panel properties-panel">
@@ -554,7 +682,18 @@ export function PropertiesPanel() {
       {sheet && <SheetProperties sheet={sheet} />}
       {slab && <SlabProperties slab={slab} />}
       {schedule && <ScheduleProperties schedule={schedule} />}
-      {!axis && !view && !wall && !opening && !level && !sheet && !slab && !schedule && (
+      {wallType && <WallTypeProperties wallType={wallType} />}
+      {dimension && <DimensionProperties dimension={dimension} />}
+      {!axis &&
+        !view &&
+        !wall &&
+        !opening &&
+        !level &&
+        !sheet &&
+        !slab &&
+        !schedule &&
+        !wallType &&
+        !dimension && (
         <div className="tree-empty">Select an element, level, sheet or view.</div>
       )}
     </aside>

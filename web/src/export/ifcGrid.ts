@@ -321,6 +321,49 @@ export function exportProjectToIfc(
     containedByStorey.get(home.ref)!.push(ref);
   }
 
+  // Layered assemblies: one IfcMaterialLayerSet per wall type, associated
+  // with every wall instance using that type.
+  const materialRefs = new Map<string, string>();
+  const materialRef = (name: string): string => {
+    let ref = materialRefs.get(name);
+    if (!ref) {
+      ref = step.add("IFCMATERIAL", [text(name), "$", "$"]);
+      materialRefs.set(name, ref);
+    }
+    return ref;
+  };
+  for (const wallType of project.wallTypes) {
+    const users = project.walls
+      .filter((wall) => wall.typeId === wallType.id)
+      .map((wall) => wallRefs.get(wall.id)!)
+      .filter(Boolean);
+    if (users.length === 0) continue;
+    const layerRefs = wallType.layers.map((layer) =>
+      step.add("IFCMATERIALLAYER", [
+        materialRef(layer.material),
+        real(layer.thickness),
+        "$",
+        text(layer.name),
+        "$",
+        "$",
+        "$",
+      ]),
+    );
+    const layerSet = step.add("IFCMATERIALLAYERSET", [
+      `(${layerRefs.join(",")})`,
+      text(wallType.name),
+      "$",
+    ]);
+    step.add("IFCRELASSOCIATESMATERIAL", [
+      text(ifcGuid()),
+      "$",
+      "$",
+      "$",
+      `(${users.join(",")})`,
+      layerSet,
+    ]);
+  }
+
   // Join relationships mirror the geometric joins: coincident-end pairs and
   // T-joins (ATPATH on the continuous wall). SQUARE ends emit nothing.
   for (const join of wallJoins(project.walls)) {

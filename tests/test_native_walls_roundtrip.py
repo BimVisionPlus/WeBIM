@@ -74,6 +74,25 @@ WEB_PAYLOAD = {
         }
     ],
     "schedules": [{"id": "sc1", "name": "Wall Schedule", "kind": "WALL"}],
+    "wall_types": [
+        {
+            "id": "wt1",
+            "name": "Brick 220",
+            "layers": [
+                {"name": "Finish", "material": "Plaster", "thickness": 0.01},
+                {"name": "Core", "material": "Brick", "thickness": 0.2},
+            ],
+        }
+    ],
+    "dimensions": [
+        {
+            "id": "dim1",
+            "view_id": "v1",
+            "start": [0.0, 0.0],
+            "end": [8.0, 0.0],
+            "offset": 1.5,
+        }
+    ],
     "sheets": [
         {
             "id": "s1",
@@ -100,6 +119,8 @@ def test_parses_web_authored_walls_levels_sheets():
     assert project.slabs[0].kind == "FLOOR"
     assert project.slabs[0].outline[2] == (8.0, 5.0)
     assert project.schedules[0].kind == "WALL"
+    assert project.wall_types[0].layers[1].material == "Brick"
+    assert project.dimensions[0].offset == 1.5
 
 
 def test_round_trip_preserves_web_data():
@@ -114,7 +135,7 @@ def test_legacy_payload_without_new_keys_still_loads():
     payload = {
         key: value
         for key, value in WEB_PAYLOAD.items()
-        if key not in {"walls", "levels", "sheets", "slabs", "schedules"}
+        if key not in {"walls", "levels", "sheets", "slabs", "schedules", "wall_types", "dimensions"}
     }
     payload["views"] = [
         {k: v for k, v in view.items() if k != "level_id"}
@@ -126,6 +147,8 @@ def test_legacy_payload_without_new_keys_still_loads():
     assert project.sheets == []
     assert project.slabs == []
     assert project.schedules == []
+    assert project.wall_types == []
+    assert project.dimensions == []
     assert project.views[0].level_id is None
 
 

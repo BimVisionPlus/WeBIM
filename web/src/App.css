@@ -344,3 +344,14 @@ input[type="text"],
   color: var(--muted);
   background: var(--panel);
 }
+
+.layer-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 64px 24px;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.layer-row input {
+  width: 100%;
+}
