@@ -42,13 +42,17 @@ services:
       replicas: 0
 
   postgres:
+    restart: unless-stopped
     ports: !override []
   redis:
+    restart: unless-stopped
     ports: !override []
   minio:
+    restart: unless-stopped
     ports: !override []
 
   web:
+    restart: unless-stopped
     environment:
       HOSTNAME: 0.0.0.0
       # The host's Ollama, reached through the gateway rather than loopback,
@@ -63,14 +67,19 @@ services:
         aliases: [atlas]
 
   landing:
+    restart: unless-stopped
     environment:
       HOSTNAME: 0.0.0.0
 
   worker:
+    restart: unless-stopped
     environment:
       OLLAMA_BASE_URL: http://host.docker.internal:11434
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  scraper:
+    restart: unless-stopped
 
 networks:
   workbench:
