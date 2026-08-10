@@ -355,3 +355,46 @@ input[type="text"],
 .layer-row input {
   width: 100%;
 }
+
+.presence {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.relay-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4b5563;
+}
+
+.relay-dot.on {
+  background: #5f9e6e;
+  box-shadow: 0 0 4px #5f9e6e;
+}
+
+.peer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 2px 9px 2px 6px;
+  font-size: 11.5px;
+  color: var(--text);
+}
+
+.peer-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.peer-dots {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}

@@ -888,6 +888,12 @@ export class GridViewport {
     group.clear();
   }
 
+  /** Peer color for an element a collaborator has selected, if any. */
+  private peerColor(elementId: string): number | null {
+    const peer = store.peersOnElement(elementId)[0];
+    return peer ? parseInt(peer.color.slice(1), 16) : null;
+  }
+
   syncProject(): void {
     this.applyViewCamera();
     this.disposeGroup(this.gridGroup);
@@ -914,7 +920,7 @@ export class GridViewport {
     const viewType = store.activeView?.viewType ?? "FLOOR_PLAN";
     for (const axis of store.project.gridAxes) {
       const selected = store.selection?.kind === "grid" && store.selection.id === axis.id;
-      const color = selected ? COLOR_SELECTED : COLOR_GRID;
+      const color = selected ? COLOR_SELECTED : (this.peerColor(axis.id) ?? COLOR_GRID);
       if (viewType === "FLOOR_PLAN") {
         this.gridGroup.add(this.buildAxisLine(axis, viewScale, color));
         this.buildAxisHeads(axis, factor, color);
@@ -932,14 +938,20 @@ export class GridViewport {
         continue;
       }
       const selected = store.selection?.kind === "wall" && store.selection.id === wall.id;
-      this.buildWall(wall, selected ? COLOR_SELECTED : COLOR_WALL);
+      this.buildWall(
+        wall,
+        selected ? COLOR_SELECTED : (this.peerColor(wall.id) ?? COLOR_WALL),
+      );
     }
     for (const slab of store.project.slabs) {
       if (viewType === "FLOOR_PLAN" && activeLevelId && slab.levelId !== activeLevelId) {
         continue;
       }
       const selected = store.selection?.kind === "slab" && store.selection.id === slab.id;
-      this.buildSlab(slab, selected ? COLOR_SELECTED : undefined);
+      this.buildSlab(
+        slab,
+        selected ? COLOR_SELECTED : (this.peerColor(slab.id) ?? undefined),
+      );
     }
     if (viewType === "SECTION") {
       this.buildSectionHatches(viewScale, this.wallGroup);

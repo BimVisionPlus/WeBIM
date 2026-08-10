@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
-import { SyncEngine } from "../sync/syncEngine";
+import { SyncEngine, type PeerPresence } from "../sync/syncEngine";
 
 export type ToolId =
   | "SELECT"
@@ -96,6 +96,9 @@ class AppStore {
 
   /** Wired up after construction; broadcasts persisted commits to peers. */
   sync: SyncEngine | null = null;
+  /** Collaborators currently online (excluding this client). */
+  peers: PeerPresence[] = [];
+  relayConnected = false;
 
   private commit(persist = true): void {
     this.version += 1;
@@ -167,6 +170,7 @@ class AppStore {
     }
     this.activeTool = tool;
     this.pendingStart = null;
+    this.sync?.broadcastPresence();
     this.statusMessage =
       tool === "GRID"
         ? "Grid: click two points per axis. Esc cancels, Enter exits."
@@ -202,6 +206,12 @@ class AppStore {
   select(selection: Selection | null): void {
     this.selection = selection;
     this.commit(false);
+    this.sync?.broadcastPresence();
+  }
+
+  /** Peers currently pointing at the given element. */
+  peersOnElement(elementId: string): PeerPresence[] {
+    return this.peers.filter((peer) => peer.selection?.id === elementId);
   }
 
   addGridAxis(start: Point3D, end: Point3D): void {
@@ -586,6 +596,19 @@ store.sync = new SyncEngine({
   getProjectDict: () => store.project.toDict(),
   getProjectId: () => store.project.id,
   applyRemote: (projectDict) => store.applyRemoteProject(projectDict),
+  getPresence: () => ({ selection: store.selection, tool: store.activeTool }),
+  onPeersChanged: (peers) => {
+    store.peers = peers;
+    store.setStatus(
+      peers.length > 0
+        ? `${peers.length} collaborator${peers.length > 1 ? "s" : ""} online`
+        : store.statusMessage,
+    );
+  },
+  onRelayStatus: (connected) => {
+    store.relayConnected = connected;
+    store.setStatus(connected ? "Relay connected" : "Relay offline — tab sync only");
+  },
 });
 
 export function useStoreVersion(): number {

@@ -81,3 +81,22 @@ describe("sync merge", () => {
     expect(result.project.name).toBe("Renamed by peer");
   });
 });
+
+describe("presence helpers", () => {
+  it("assigns deterministic peer colors", async () => {
+    const { colorForClient } = await import("../src/sync/syncEngine");
+    expect(colorForClient("abc")).toBe(colorForClient("abc"));
+    expect(colorForClient("abc")).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it("prunes stale peers", async () => {
+    const { prunePeers } = await import("../src/sync/syncEngine");
+    const peers = new Map([
+      ["fresh", { clientId: "fresh", name: "", color: "", selection: null, tool: "", lastSeen: 1000 }],
+      ["stale", { clientId: "stale", name: "", color: "", selection: null, tool: "", lastSeen: 0 }],
+    ]);
+    const changed = prunePeers(peers, 26000, 25000);
+    expect(changed).toBe(true);
+    expect([...peers.keys()]).toEqual(["fresh"]);
+  });
+});

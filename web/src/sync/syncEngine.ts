@@ -1,11 +1,14 @@
-// Multi-user sync: element-level last-writer-wins merge.
+// Multi-user sync: element-level last-writer-wins merge plus presence.
 //
 // Every element collection in the project dict is keyed by id, so two
 // peers editing DIFFERENT elements always merge cleanly; edits to the
-// SAME element resolve by Lamport clock (client id breaks ties). The
-// transport here is a BroadcastChannel (tabs of the same browser); the
-// message shape is transport-agnostic, so a WebSocket relay can carry
-// the same payloads between machines.
+// SAME element resolve by Lamport clock (client id breaks ties).
+//
+// Transports are pluggable and run in parallel: a BroadcastChannel links
+// tabs of one browser, a WebSocket connects to the relay service
+// (web/relay/server.mjs) for peers on other machines. State-based sync
+// makes duplicate delivery harmless. Presence messages carry each peer's
+// name, color and current selection for per-element indicators.
 
 export const SYNCED_COLLECTIONS = [
   "grid_axes",
@@ -29,11 +32,78 @@ export interface Clock {
 }
 export type ElementClocks = Record<string, Clock>;
 
-export interface SyncMessage {
+export interface SyncStateMessage {
+  type: "sync";
   projectId: string;
   clientId: string;
   clocks: ElementClocks;
   project: ProjectDict;
+}
+
+export interface PresenceMessage {
+  type: "presence";
+  projectId: string;
+  clientId: string;
+  name: string;
+  color: string;
+  selection: { kind: string; id: string } | null;
+  tool: string;
+}
+
+export interface LeaveMessage {
+  type: "leave";
+  clientId: string;
+}
+
+export type WireMessage = SyncStateMessage | PresenceMessage | LeaveMessage;
+
+export interface PeerPresence {
+  clientId: string;
+  name: string;
+  color: string;
+  selection: { kind: string; id: string } | null;
+  tool: string;
+  lastSeen: number;
+}
+
+/** Transports deliver opaque wire messages between peers. */
+export interface SyncTransport {
+  send(message: WireMessage): void;
+  close(): void;
+}
+
+const PEER_COLORS = [
+  "#e06c75",
+  "#61afef",
+  "#98c379",
+  "#e5c07b",
+  "#c678dd",
+  "#56b6c2",
+];
+
+/** Deterministic per-client color. */
+export function colorForClient(clientId: string): string {
+  let hash = 0;
+  for (const char of clientId) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+  return PEER_COLORS[hash % PEER_COLORS.length];
+}
+
+/** Drop peers not heard from within maxAgeMs; returns true if changed. */
+export function prunePeers(
+  peers: Map<string, PeerPresence>,
+  now: number,
+  maxAgeMs = 25000,
+): boolean {
+  let changed = false;
+  for (const [clientId, peer] of peers) {
+    if (now - peer.lastSeen > maxAgeMs) {
+      peers.delete(clientId);
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 type ElementRecord = { collection: string; json: string };
@@ -136,22 +206,128 @@ export function mergeRemote(
   return { project: merged, clocks, changed };
 }
 
+class BroadcastChannelTransport implements SyncTransport {
+  private channel: BroadcastChannel;
+
+  constructor(onMessage: (message: WireMessage) => void) {
+    this.channel = new BroadcastChannel("webim-sync");
+    this.channel.onmessage = (event: MessageEvent<WireMessage>) =>
+      onMessage(event.data);
+  }
+
+  send(message: WireMessage): void {
+    this.channel.postMessage(message);
+  }
+
+  close(): void {
+    this.channel.close();
+  }
+}
+
+/** WebSocket transport to the relay; reconnects with backoff, silent when
+ * no relay is running. */
+class WebSocketTransport implements SyncTransport {
+  private socket: WebSocket | null = null;
+  private closed = false;
+  private retryMs = 1000;
+  private url: string;
+  private onMessage: (message: WireMessage) => void;
+  private onOpen: () => void;
+  private onStatus: (connected: boolean) => void;
+  connected = false;
+
+  constructor(
+    url: string,
+    onMessage: (message: WireMessage) => void,
+    onOpen: () => void,
+    onStatus: (connected: boolean) => void,
+  ) {
+    this.url = url;
+    this.onMessage = onMessage;
+    this.onOpen = onOpen;
+    this.onStatus = onStatus;
+    this.connect();
+  }
+
+  private connect(): void {
+    if (this.closed) return;
+    try {
+      this.socket = new WebSocket(this.url);
+    } catch {
+      this.scheduleReconnect();
+      return;
+    }
+    this.socket.onopen = () => {
+      this.retryMs = 1000;
+      this.connected = true;
+      this.onStatus(true);
+      this.onOpen();
+    };
+    this.socket.onmessage = (event) => {
+      try {
+        this.onMessage(JSON.parse(event.data as string) as WireMessage);
+      } catch {
+        // Ignore malformed frames.
+      }
+    };
+    this.socket.onclose = () => {
+      if (this.connected) {
+        this.connected = false;
+        this.onStatus(false);
+      }
+      this.scheduleReconnect();
+    };
+    this.socket.onerror = () => {
+      this.socket?.close();
+    };
+  }
+
+  private scheduleReconnect(): void {
+    if (this.closed) return;
+    setTimeout(() => this.connect(), this.retryMs);
+    this.retryMs = Math.min(this.retryMs * 2, 15000);
+  }
+
+  send(message: WireMessage): void {
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(message));
+    }
+  }
+
+  close(): void {
+    this.closed = true;
+    this.socket?.close();
+  }
+}
+
 interface EngineHooks {
   getProjectDict: () => ProjectDict;
   getProjectId: () => string;
   applyRemote: (project: ProjectDict) => void;
+  getPresence: () => {
+    selection: { kind: string; id: string } | null;
+    tool: string;
+  };
+  onPeersChanged: (peers: PeerPresence[]) => void;
+  onRelayStatus?: (connected: boolean) => void;
 }
 
 const CLOCKS_KEY = "webim.sync_clocks";
+const RELAY_URL_KEY = "webim.relay_url";
 
 export class SyncEngine {
   readonly clientId: string;
-  private channel: BroadcastChannel | null = null;
+  readonly name: string;
+  readonly color: string;
+  relayConnected = false;
+  private transports: SyncTransport[] = [];
   private lamport = 0;
   private clocks: ElementClocks = {};
   private shadow: Map<string, ElementRecord>;
   private hooks: EngineHooks;
   private applying = false;
+  private peers = new Map<string, PeerPresence>();
+  private heartbeat: ReturnType<typeof setInterval> | null = null;
 
   constructor(hooks: EngineHooks) {
     this.hooks = hooks;
@@ -159,6 +335,8 @@ export class SyncEngine {
       sessionStorage.getItem("webim.sync_client") ??
       Math.random().toString(36).slice(2, 10);
     sessionStorage.setItem("webim.sync_client", this.clientId);
+    this.name = `User-${this.clientId.slice(0, 4)}`;
+    this.color = colorForClient(this.clientId);
     try {
       this.clocks = JSON.parse(localStorage.getItem(CLOCKS_KEY) ?? "{}");
       this.lamport = Math.max(0, ...Object.values(this.clocks).map((c) => c.t));
@@ -166,12 +344,63 @@ export class SyncEngine {
       this.clocks = {};
     }
     this.shadow = collectElements(hooks.getProjectDict());
+
+    const onMessage = (message: WireMessage) => this.onRemote(message);
     if (typeof BroadcastChannel !== "undefined") {
-      this.channel = new BroadcastChannel("webim-sync");
-      this.channel.onmessage = (event: MessageEvent<SyncMessage>) =>
-        this.onRemote(event.data);
+      this.transports.push(new BroadcastChannelTransport(onMessage));
     }
-    this.broadcast();
+    const relayUrl =
+      new URLSearchParams(window.location.search).get("relay") ??
+      localStorage.getItem(RELAY_URL_KEY) ??
+      `ws://${window.location.hostname}:8787`;
+    this.transports.push(
+      new WebSocketTransport(
+        relayUrl,
+        onMessage,
+        () => {
+          // Late joiners converge from whoever announces state on open.
+          this.broadcastState();
+          this.broadcastPresence();
+        },
+        (connected) => {
+          this.relayConnected = connected;
+          this.hooks.onRelayStatus?.(connected);
+        },
+      ),
+    );
+    window.addEventListener("beforeunload", () => {
+      this.send({ type: "leave", clientId: this.clientId });
+    });
+    this.heartbeat = setInterval(() => {
+      this.broadcastPresence();
+      if (prunePeers(this.peers, Date.now())) {
+        this.emitPeers();
+      }
+    }, 10000);
+    this.broadcastState();
+    this.broadcastPresence();
+  }
+
+  dispose(): void {
+    if (this.heartbeat) clearInterval(this.heartbeat);
+    this.send({ type: "leave", clientId: this.clientId });
+    for (const transport of this.transports) transport.close();
+  }
+
+  private send(message: WireMessage): void {
+    for (const transport of this.transports) {
+      transport.send(message);
+    }
+  }
+
+  peerList(): PeerPresence[] {
+    return [...this.peers.values()].sort((a, b) =>
+      a.clientId.localeCompare(b.clientId),
+    );
+  }
+
+  private emitPeers(): void {
+    this.hooks.onPeersChanged(this.peerList());
   }
 
   /** Called after every persisted local commit. */
@@ -188,22 +417,57 @@ export class SyncEngine {
     }
     this.shadow = next;
     if (changed.length > 0) {
-      this.broadcast();
+      this.broadcastState();
     }
   }
 
-  private broadcast(): void {
-    this.channel?.postMessage({
+  /** Called when the local selection or tool changes. */
+  broadcastPresence(): void {
+    const presence = this.hooks.getPresence();
+    this.send({
+      type: "presence",
+      projectId: this.hooks.getProjectId(),
+      clientId: this.clientId,
+      name: this.name,
+      color: this.color,
+      selection: presence.selection,
+      tool: presence.tool,
+    });
+  }
+
+  private broadcastState(): void {
+    this.send({
+      type: "sync",
       projectId: this.hooks.getProjectId(),
       clientId: this.clientId,
       clocks: this.clocks,
       project: this.hooks.getProjectDict(),
-    } satisfies SyncMessage);
+    });
   }
 
-  private onRemote(message: SyncMessage): void {
+  private onRemote(message: WireMessage): void {
+    if (message.type === "leave") {
+      if (this.peers.delete(message.clientId)) {
+        this.emitPeers();
+      }
+      return;
+    }
     if (message.clientId === this.clientId) return;
     if (message.projectId !== this.hooks.getProjectId()) return;
+
+    if (message.type === "presence") {
+      this.peers.set(message.clientId, {
+        clientId: message.clientId,
+        name: message.name,
+        color: message.color,
+        selection: message.selection,
+        tool: message.tool,
+        lastSeen: Date.now(),
+      });
+      this.emitPeers();
+      return;
+    }
+
     const remoteMax = Math.max(0, ...Object.values(message.clocks).map((c) => c.t));
     this.lamport = Math.max(this.lamport, remoteMax);
     const result = mergeRemote(

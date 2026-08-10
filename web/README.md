@@ -136,10 +136,17 @@ IFC4 STEP text → .ifc download
 - Multi-user sync: element-level last-writer-wins merge (Lamport
   clocks, client id tie-break) — peers editing different elements merge
   cleanly, same-element conflicts take the newest edit, deletions
-  propagate. Transport is a BroadcastChannel (tabs of one browser);
-  the message shape is transport-agnostic so a WebSocket relay can
-  carry the same payloads between machines. Pure merge logic in
-  `src/sync/syncEngine.ts` with tests.
+  propagate. Two parallel transports: a BroadcastChannel between tabs
+  and a WebSocket to the relay service (`npm run relay`, port 8787 or
+  `?relay=ws://…`), reconnecting with backoff and converging late
+  joiners via state announce. The relay (`relay/server.mjs`) is a dumb
+  fan-out that never inspects payloads; its only smarts is broadcasting
+  a synthetic `leave` when a socket drops — tested with real sockets.
+- Presence: each client broadcasts name, color, tool and current
+  selection (heartbeat + on change, stale peers pruned). The toolbar
+  shows a relay status dot and one chip per collaborator; elements a
+  peer has selected get their colored dot in the Project Browser and
+  render tinted in the peer's color in the viewport.
 - Schedules — the last Project Browser branch: `ScheduleDatum`
   (name + kind, serialized under `schedules`, preserved by the Python
   domain) renders live derived tables in the main area — Walls

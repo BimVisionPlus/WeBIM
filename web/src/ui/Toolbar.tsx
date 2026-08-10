@@ -105,6 +105,23 @@ export function Toolbar() {
         </select>
       </label>
       <div className="spacer" />
+      <div className="presence">
+        <span
+          className={`relay-dot ${store.relayConnected ? "on" : ""}`}
+          title={store.relayConnected ? "Relay connected" : "Relay offline — tab sync only"}
+        />
+        {store.peers.map((peer) => (
+          <span
+            key={peer.clientId}
+            className="peer-chip"
+            style={{ borderColor: peer.color }}
+            title={`${peer.name} — ${peer.tool.toLowerCase()} tool`}
+          >
+            <span className="peer-dot" style={{ background: peer.color }} />
+            {peer.name}
+          </span>
+        ))}
+      </div>
       <div className="tool-group">
         <button onClick={() => store.newProject()}>New</button>
         <button onClick={() => fileInput.current?.click()}>Open JSON</button>

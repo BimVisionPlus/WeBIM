@@ -1,4 +1,22 @@
 import { store, useStoreVersion } from "../state/store";
+
+/** Colored dots for collaborators currently pointing at an element. */
+function PeerDots({ elementId }: { elementId: string }) {
+  const peers = store.peersOnElement(elementId);
+  if (peers.length === 0) return null;
+  return (
+    <span className="peer-dots">
+      {peers.map((peer) => (
+        <span
+          key={peer.clientId}
+          className="peer-dot"
+          style={{ background: peer.color }}
+          title={peer.name}
+        />
+      ))}
+    </span>
+  );
+}
 import type { TechnicalView } from "../domain/project";
 
 const VIEW_SECTIONS: Array<{ label: string; type: TechnicalView["viewType"] }> = [
@@ -96,6 +114,7 @@ export function ProjectBrowser() {
           >
             <span>
               Grid {axis.name} <em>{axis.systemName}</em>
+              <PeerDots elementId={axis.id} />
             </span>
             <button
               className="mini"
@@ -125,6 +144,7 @@ export function ProjectBrowser() {
             >
               <span>
                 Wall {wall.name} <em>{wall.thickness} m</em>
+                <PeerDots elementId={wall.id} />
               </span>
               <button
                 className="mini"
@@ -152,6 +172,7 @@ export function ProjectBrowser() {
                   <em>
                     {opening.width}×{opening.height} m
                   </em>
+                  <PeerDots elementId={opening.id} />
                 </span>
                 <button
                   className="mini"
@@ -221,6 +242,7 @@ export function ProjectBrowser() {
             <span>
               {slab.kind === "FLOOR" ? "Floor" : "Roof"} {slab.name}{" "}
               <em>{slab.thickness} m</em>
+              <PeerDots elementId={slab.id} />
             </span>
             <button
               className="mini"
