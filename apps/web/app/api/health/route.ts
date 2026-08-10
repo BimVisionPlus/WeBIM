@@ -112,6 +112,11 @@ export async function GET() {
 
   return NextResponse.json(
     {
+      // Names who answered. A gateway that only asks whether *something*
+      // replied on a port can be fooled by any process that happens to hold
+      // it, and would then link users into an unrelated application. The
+      // workbench checks this field before routing /atlas/* here.
+      service: "atlas",
       ok: hardOk,
       time: new Date().toISOString(),
       hard: {
