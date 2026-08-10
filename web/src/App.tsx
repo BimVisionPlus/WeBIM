@@ -8,6 +8,7 @@ import {
   DrawingsModule,
   PlanModule,
   StandardsModule,
+  ViewerModule,
 } from "./ui/Modules";
 import type { ModuleId } from "./state/store";
 import { Toolbar } from "./ui/Toolbar";
@@ -16,6 +17,7 @@ import { store, useStoreVersion } from "./state/store";
 
 const MODULES: Array<[ModuleId, string]> = [
   ["MODEL", "Model"],
+  ["VIEWER", "3D Viewer"],
   ["CDE", "CDE"],
   ["PLAN", "Plan"],
   ["STANDARDS", "Standards"],
@@ -56,6 +58,8 @@ export default function App() {
             <DrawingsModule />
           ) : module === "CLIMATE" ? (
             <ClimateModule />
+          ) : module === "VIEWER" ? (
+            <ViewerModule />
           ) : activeSchedule ? (
             <ScheduleTable schedule={activeSchedule} />
           ) : (

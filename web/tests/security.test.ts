@@ -115,6 +115,34 @@ describe("auth + roles", () => {
     viewer.close();
   });
 
+  it("gates /ai/render-concept: 401 anonymous, 501 without key, 400 bad body", async () => {
+    const original = process.env.ANTHROPIC_API_KEY;
+    const anonymous = await fetch(`http://127.0.0.1:${port}/ai/render-concept`, {
+      method: "POST",
+      body: JSON.stringify({ image: "data:image/png;base64,AAAA", style: "x" }),
+    });
+    expect(anonymous.status).toBe(401);
+    delete process.env.ANTHROPIC_API_KEY;
+    try {
+      const noKey = await fetch(`http://127.0.0.1:${port}/ai/render-concept`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${editorToken}` },
+        body: JSON.stringify({ image: "data:image/png;base64,AAAA", style: "x" }),
+      });
+      expect(noKey.status).toBe(501);
+      process.env.ANTHROPIC_API_KEY = "test-key-not-used";
+      const badBody = await fetch(`http://127.0.0.1:${port}/ai/render-concept`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${editorToken}` },
+        body: JSON.stringify({ image: "not-a-data-url", style: "x" }),
+      });
+      expect(badBody.status).toBe(400);
+    } finally {
+      if (original) process.env.ANTHROPIC_API_KEY = original;
+      else delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
+
   it("returns 501 from /ai/read-drawing without an API key", async () => {
     const original = process.env.ANTHROPIC_API_KEY;
     delete process.env.ANTHROPIC_API_KEY;

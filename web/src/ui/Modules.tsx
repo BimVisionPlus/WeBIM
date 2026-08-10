@@ -3,7 +3,7 @@
 // Metadata lives in the synced project; binaries go to the platform
 // server via the store's upload helper.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   searchStandards,
   supersessionChain,
@@ -11,6 +11,7 @@ import {
 } from "../standards/catalog";
 import { climateFindings, facadeByOrientation } from "../application/climate";
 import { ganttChart, weekTicks } from "../application/gantt";
+import { Viewer3D } from "../viewport/Viewer3D";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
 import {
   authHeaders,
@@ -729,6 +730,114 @@ export function ClimateModule() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+const RENDER_STYLES = [
+  "Hiện đại nhiệt đới (tropical modern)",
+  "Tối giản đương đại",
+  "Tân cổ điển",
+  "Công nghiệp (industrial)",
+];
+
+export function ViewerModule() {
+  const version = useStoreVersion();
+  const captureRef = useRef<(() => string) | null>(null);
+  const [style, setStyle] = useState(RENDER_STYLES[0]);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{
+    brief_vi?: string;
+    prompt_en?: string;
+    image?: string | null;
+    error?: string;
+  } | null>(null);
+
+  const renderConcept = async () => {
+    const capture = captureRef.current;
+    if (!capture || busy) return;
+    setBusy(true);
+    setResult(null);
+    try {
+      const response = await fetch(`${fileServerBase()}/ai/render-concept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ image: capture(), style }),
+      });
+      const body = await response.json();
+      setResult(response.ok ? body : { error: body.error });
+    } catch (error) {
+      setResult({ error: (error as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onPickIfc = async (file: File | undefined) => {
+    if (!file) return;
+    store.linkIfcModel(file.name, await file.text());
+  };
+
+  return (
+    <div className="module-host viewer-module">
+      <div className="module-form">
+        <span className="module-hint" style={{ margin: 0 }}>
+          Kéo xoay · lăn chuột zoom · chuột phải pan
+        </span>
+        <label className="upload-button">
+          Link IFC…
+          <input
+            type="file"
+            accept=".ifc"
+            style={{ display: "none" }}
+            onChange={(event) => {
+              void onPickIfc(event.target.files?.[0]);
+              event.target.value = "";
+            }}
+          />
+        </label>
+        {store.linkedModels.map((model) => (
+          <span key={model.name} className="peer-chip">
+            {model.name} · {model.elements.length} phần tử
+            <button className="mini" onClick={() => store.unlinkIfcModel(model.name)}>
+              ×
+            </button>
+          </span>
+        ))}
+        <select value={style} onChange={(event) => setStyle(event.target.value)}>
+          {RENDER_STYLES.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <button disabled={busy} onClick={() => void renderConcept()}>
+          {busy ? "Đang render…" : "Render concept AI"}
+        </button>
+      </div>
+      <Viewer3D
+        project={store.project}
+        linked={store.linkedModels}
+        version={version}
+        onReady={(capture) => {
+          captureRef.current = capture;
+        }}
+      />
+      {result && (
+        <div className="render-result">
+          {result.error && <div className="climate-finding warning">⚠ {result.error}</div>}
+          {result.image && (
+            <img src={result.image} alt="AI concept render" className="render-image" />
+          )}
+          {result.brief_vi && (
+            <div className="ai-answer">
+              <strong>Kịch bản render:</strong> {result.brief_vi}
+              {"\n\n"}
+              <strong>Prompt:</strong> {result.prompt_en}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

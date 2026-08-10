@@ -8,6 +8,15 @@ with QTO and clash detection as live schedule kinds.
 Platform modules (all metadata lives in the synced project, so realtime
 collaboration covers them for free; only binaries touch the server):
 
+- **3D Viewer** — online BIM viewing (mục 1): orbit/zoom/pan perspective
+  view built from the same wallPieces the 2D viewport uses (openings
+  cut for real), slabs, per-level coloring, and linked IFC models as
+  translucent boxes. "Render concept AI" (mục 11) captures the current
+  view and sends it to the platform server: Claude writes a Vietnamese
+  render brief + an English image prompt grounded in the massing
+  (ANTHROPIC_API_KEY), and with STABILITY_API_KEY the server also
+  returns a real img2img concept render (Stable Image sketch control).
+
 - **CDE** — ISO 19650-style document containers: code, WIP/SHARED/
   PUBLISHED/ARCHIVED status, P/C revision numbering, notes, upload/
   download through the platform server's `/files` API (a swappable

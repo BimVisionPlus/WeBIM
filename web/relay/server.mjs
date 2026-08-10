@@ -86,6 +86,89 @@ async function answerDrawingQuestion(storage, key, question) {
     .join("\n");
 }
 
+async function writeRenderBrief(image, style) {
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const client = new Anthropic();
+  const base64 = image.replace(/^data:image\/png;base64,/, "");
+  const response = await client.messages.create({
+    model: "claude-opus-5",
+    max_tokens: 4096,
+    thinking: { type: "adaptive" },
+    output_config: {
+      format: {
+        type: "json_schema",
+        schema: {
+          type: "object",
+          properties: {
+            brief_vi: {
+              type: "string",
+              description:
+                "Kịch bản render tiếng Việt: vật liệu, ánh sáng, bối cảnh, góc máy — bám hình khối trong ảnh",
+            },
+            prompt_en: {
+              type: "string",
+              description:
+                "One-paragraph English image-generation prompt for the same concept (photorealistic architectural render)",
+            },
+          },
+          required: ["brief_vi", "prompt_en"],
+          additionalProperties: false,
+        },
+      },
+    },
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: "image/png", data: base64 },
+          },
+          {
+            type: "text",
+            text:
+              "Đây là ảnh chụp khối mô hình BIM (massing) của một công trình. " +
+              `Phong cách mong muốn: ${style}. Viết kịch bản render concept bám đúng ` +
+              "hình khối này (không bịa thêm khối mới) và một prompt tiếng Anh cho " +
+              "công cụ sinh ảnh.",
+          },
+        ],
+      },
+    ],
+  });
+  const text = response.content.find((block) => block.type === "text")?.text ?? "{}";
+  return JSON.parse(text);
+}
+
+async function renderWithStability(image, prompt) {
+  const base64 = image.replace(/^data:image\/png;base64,/, "");
+  const form = new FormData();
+  form.append(
+    "image",
+    new Blob([Buffer.from(base64, "base64")], { type: "image/png" }),
+    "model.png",
+  );
+  form.append("prompt", prompt);
+  form.append("control_strength", "0.7");
+  form.append("output_format", "png");
+  const response = await fetch(
+    "https://api.stability.ai/v2beta/stable-image/control/sketch",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
+        Accept: "image/*",
+      },
+      body: form,
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Stability ${response.status}: ${await response.text()}`);
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  return `data:image/png;base64,${bytes.toString("base64")}`;
+}
+
 export function startRelay(port = 8787, options = {}) {
   const auth = options.auth ?? createAuth();
   const storage = options.storage ?? createStorage(DATA_DIR);
@@ -174,6 +257,29 @@ export function startRelay(port = 8787, options = {}) {
         }
         const answer = await answerDrawingQuestion(storage, cleanKey, question.trim());
         return reply(200, { answer });
+      }
+
+      if (url.pathname === "/ai/render-concept" && request.method === "POST") {
+        if (!auth.allows(identity, "editor")) {
+          return reply(identity ? 403 : 401, { error: "editor role required" });
+        }
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return reply(501, {
+            error:
+              "AI chưa cấu hình — đặt ANTHROPIC_API_KEY để viết kịch bản render " +
+              "(thêm STABILITY_API_KEY nếu muốn sinh ảnh thật).",
+          });
+        }
+        const { image, style } = JSON.parse((await readBody(request)).toString());
+        if (!image?.startsWith("data:image/png;base64,") || !style?.trim()) {
+          return reply(400, { error: "image (png data URL) and style required" });
+        }
+        const brief = await writeRenderBrief(image, style.trim());
+        let rendered = null;
+        if (process.env.STABILITY_API_KEY) {
+          rendered = await renderWithStability(image, brief.prompt_en);
+        }
+        return reply(200, { ...brief, image: rendered });
       }
 
       reply(404, { error: "not found" });

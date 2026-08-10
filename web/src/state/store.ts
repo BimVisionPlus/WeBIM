@@ -33,6 +33,7 @@ export interface Selection {
 
 export type ModuleId =
   | "MODEL"
+  | "VIEWER"
   | "CDE"
   | "PLAN"
   | "STANDARDS"
