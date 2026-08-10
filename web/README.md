@@ -236,6 +236,15 @@ IFC4 STEP text → .ifc download
   middle/right/Shift-drag pans.
 - Autosaves to `localStorage`.
 
+## Demo
+
+`demo/demo-project.webim.json` — a complete sample project (12×8 m
+two-storey house: grids with bubbles, mitered walls with doors/windows
+and swing symbols, floor/roof slabs, dimension, sheet A101, wall type
+with layered assembly, WALL/QTO/CLASH schedules, a CDE document with a
+P01 revision, and five tasks with dependencies for the Gantt view).
+Load it with **Open JSON** in the toolbar.
+
 ## Deploy (HTTPS + domain)
 
 See `../deploy/`: Caddy terminates TLS automatically (Let's Encrypt)
