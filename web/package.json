@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "relay": "node relay/server.mjs",
-    "import-corpus": "node scripts/import-corpus.mjs"
+    "import-corpus": "node scripts/import-corpus.mjs",
+    "build:demo": "VITE_STANDALONE=1 tsc -b && VITE_STANDALONE=1 vite build"
   },
   "dependencies": {
     "@types/three": "^0.185.4",

@@ -276,6 +276,33 @@ with layered assembly, WALL/QTO/CLASH schedules, a CDE document with a
 P01 revision, and five tasks with dependencies for the Gantt view).
 Load it with **Open JSON** in the toolbar.
 
+## Demo tĩnh (miễn phí, không cần máy chủ)
+
+```bash
+npm run build:demo     # VITE_STANDALONE=1 → không mở socket nào
+```
+
+`dist/` ~950 KB, tải lên bất kỳ host tĩnh nào. Không có router nên không
+cần cấu hình SPA fallback.
+
+**Chạy được**: Model · 3D Viewer · Standards · Climate · QTO · Clash ·
+Plan/Gantt · Export IFC · Open/Save JSON. Mọi thứ lưu trong `localStorage`.
+
+**Cần máy chủ**: CDE + Drawings (kho file), cộng tác nhiều máy, AI. Ở chế
+độ này chúng báo rõ lý do thay vì ném lỗi `Failed to fetch`.
+
+Cloudflare Pages (miễn phí, nhận cả repo private, gắn được domain riêng):
+
+| Thiết lập | Giá trị |
+|-----------|---------|
+| Build command | `cd web && npm ci && npm run build:demo` |
+| Output directory | `web/dist` |
+| Environment variable | `VITE_STANDALONE=1` |
+
+GitHub Pages cũng được, nhưng repo private cần gói trả phí — mà repo này
+chưa công khai được vì phần mã kế thừa từ `Hoangduong314/WeBIM` chưa rõ
+giấy phép (xem **Nguồn gốc** ở trên).
+
 ## Deploy (HTTPS + domain)
 
 See `../deploy/`: Caddy terminates TLS automatically (Let's Encrypt)

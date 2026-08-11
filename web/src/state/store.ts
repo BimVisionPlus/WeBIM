@@ -70,8 +70,13 @@ export function authHeaders(): Record<string, string> {
   return session ? { Authorization: `Bearer ${session.token}` } : {};
 }
 
+/** Thrown instead of a bare "Failed to fetch" when there is no server at all. */
+export const NO_PLATFORM_SERVER =
+  "Chế độ độc lập — chưa có máy chủ nền tảng nên chưa lưu/đọc được file.";
+
 /** Fetch a stored file with credentials and hand back an object URL. */
 export async function fetchFileUrl(key: string): Promise<string> {
+  if (store.standalone) throw new Error(NO_PLATFORM_SERVER);
   const response = await fetch(
     `${fileServerBase()}/files/${encodeURIComponent(key)}`,
     { headers: authHeaders() },
@@ -172,6 +177,8 @@ class AppStore {
   /** Collaborators currently online (excluding this client). */
   peers: PeerPresence[] = [];
   relayConnected = false;
+  /** No platform server reachable — modeling works, sharing and files do not. */
+  standalone = false;
 
   private commit(persist = true): void {
     this.version += 1;
@@ -468,6 +475,10 @@ class AppStore {
 
   /** Upload a revision file to the platform server, then record it. */
   async uploadDocumentRevision(documentId: string, file: File, note: string): Promise<void> {
+    if (this.standalone) {
+      this.setStatus(NO_PLATFORM_SERVER);
+      return;
+    }
     try {
       const key = `${this.project.id}/${documentId}/${Date.now()}-${file.name}`;
       const response = await fetch(
@@ -853,7 +864,16 @@ store.sync = new SyncEngine({
   },
   onRelayStatus: (connected) => {
     store.relayConnected = connected;
+    store.standalone = false;
     store.setStatus(connected ? "Relay connected" : "Relay offline — tab sync only");
+  },
+  onStandalone: () => {
+    store.relayConnected = false;
+    store.standalone = true;
+    store.setStatus(
+      "Chế độ độc lập — không có máy chủ nền tảng. Mô hình lưu trong trình duyệt này;" +
+        " CDE, Drawings và cộng tác nhiều máy cần máy chủ.",
+    );
   },
 });
 

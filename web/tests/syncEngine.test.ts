@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   changedElementIds,
   collectElements,
   mergeRemote,
+  WebSocketTransport,
   type ElementClocks,
 } from "../src/sync/syncEngine";
 import { NativeBimProject } from "../src/domain/project";
@@ -98,5 +99,99 @@ describe("presence helpers", () => {
     const changed = prunePeers(peers, 26000, 25000);
     expect(changed).toBe(true);
     expect([...peers.keys()]).toEqual(["fresh"]);
+  });
+});
+
+/**
+ * A socket that never opens, driven by hand. The relay's retry policy is the
+ * difference between a static demo that looks broken (a console full of red,
+ * forever) and one that quietly says it is standalone.
+ */
+class DeadSocket {
+  static instances: DeadSocket[] = [];
+  onopen: (() => void) | null = null;
+  onclose: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  onmessage: ((event: { data: string }) => void) | null = null;
+  readyState = 0;
+  constructor(public url: string) {
+    DeadSocket.instances.push(this);
+  }
+  close() {
+    this.readyState = 3;
+    this.onclose?.();
+  }
+  send() {}
+  /** Simulate the server accepting the connection. */
+  accept() {
+    this.readyState = 1;
+    this.onopen?.();
+  }
+}
+
+describe("relay retry policy", () => {
+  beforeEach(() => {
+    DeadSocket.instances = [];
+    vi.stubGlobal("WebSocket", DeadSocket);
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  function connect(onStandalone = () => {}) {
+    return new WebSocketTransport(
+      "ws://nowhere/api",
+      () => {},
+      () => {},
+      () => {},
+      onStandalone,
+    );
+  }
+
+  it("gives up into standalone after three failures, and stops dialling", () => {
+    let standalone = false;
+    const transport = connect(() => {
+      standalone = true;
+    });
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      DeadSocket.instances.at(-1)!.close();
+      vi.advanceTimersByTime(60_000);
+    }
+
+    expect(standalone).toBe(true);
+    expect(transport.standalone).toBe(true);
+    const dialled = DeadSocket.instances.length;
+    vi.advanceTimersByTime(600_000);
+    expect(DeadSocket.instances).toHaveLength(dialled);
+  });
+
+  it("keeps retrying forever once a relay has answered — a restart is not standalone", () => {
+    let standalone = false;
+    connect(() => {
+      standalone = true;
+    });
+
+    DeadSocket.instances[0].accept();
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      DeadSocket.instances.at(-1)!.close();
+      vi.advanceTimersByTime(60_000);
+    }
+
+    expect(standalone).toBe(false);
+    expect(DeadSocket.instances.length).toBeGreaterThan(6);
+  });
+
+  it("backs off between attempts instead of hammering", () => {
+    connect();
+    DeadSocket.instances[0].close();
+    expect(DeadSocket.instances).toHaveLength(1);
+    vi.advanceTimersByTime(999);
+    expect(DeadSocket.instances).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(DeadSocket.instances).toHaveLength(2);
   });
 });

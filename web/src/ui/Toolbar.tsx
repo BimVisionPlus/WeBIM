@@ -151,7 +151,13 @@ export function Toolbar() {
       <div className="presence">
         <span
           className={`relay-dot ${store.relayConnected ? "on" : ""}`}
-          title={store.relayConnected ? "Relay connected" : "Relay offline — tab sync only"}
+          title={
+            store.relayConnected
+              ? "Relay connected"
+              : store.standalone
+                ? "Chế độ độc lập — không có máy chủ nền tảng"
+                : "Relay offline — tab sync only"
+          }
         />
         {store.peers.map((peer) => (
           <span

@@ -224,33 +224,52 @@ class BroadcastChannelTransport implements SyncTransport {
   }
 }
 
-/** WebSocket transport to the relay; reconnects with backoff, silent when
- * no relay is running. */
-class WebSocketTransport implements SyncTransport {
+/**
+ * How many opening attempts to make before deciding no relay exists here.
+ * A build served as static files (a demo on Pages, a folder opened over
+ * HTTP) has no relay and never will, and an unbounded backoff loop turns
+ * that into a console full of red for the whole session.
+ *
+ * Only the FIRST connection is bounded. Once a relay has answered, a later
+ * drop is a restart worth waiting out, so retries continue forever.
+ */
+const RELAY_ATTEMPTS_BEFORE_STANDALONE = 3;
+
+/** WebSocket transport to the relay; reconnects with backoff, and gives up
+ * quietly into standalone mode when there was never a relay to reach.
+ * Exported for tests — the retry policy is the part worth pinning down. */
+export class WebSocketTransport implements SyncTransport {
   private socket: WebSocket | null = null;
   private closed = false;
   private retryMs = 1000;
+  private attempts = 0;
+  private everConnected = false;
   private url: string;
   private onMessage: (message: WireMessage) => void;
   private onOpen: () => void;
   private onStatus: (connected: boolean) => void;
+  private onStandalone: () => void;
   connected = false;
+  standalone = false;
 
   constructor(
     url: string,
     onMessage: (message: WireMessage) => void,
     onOpen: () => void,
     onStatus: (connected: boolean) => void,
+    onStandalone: () => void = () => {},
   ) {
     this.url = url;
     this.onMessage = onMessage;
     this.onOpen = onOpen;
     this.onStatus = onStatus;
+    this.onStandalone = onStandalone;
     this.connect();
   }
 
   private connect(): void {
     if (this.closed) return;
+    this.attempts += 1;
     try {
       this.socket = new WebSocket(this.url);
     } catch {
@@ -259,6 +278,8 @@ class WebSocketTransport implements SyncTransport {
     }
     this.socket.onopen = () => {
       this.retryMs = 1000;
+      this.attempts = 0;
+      this.everConnected = true;
       this.connected = true;
       this.onStatus(true);
       this.onOpen();
@@ -284,6 +305,12 @@ class WebSocketTransport implements SyncTransport {
 
   private scheduleReconnect(): void {
     if (this.closed) return;
+    if (!this.everConnected && this.attempts >= RELAY_ATTEMPTS_BEFORE_STANDALONE) {
+      this.closed = true;
+      this.standalone = true;
+      this.onStandalone();
+      return;
+    }
     setTimeout(() => this.connect(), this.retryMs);
     this.retryMs = Math.min(this.retryMs * 2, 15000);
   }
@@ -310,6 +337,8 @@ interface EngineHooks {
   };
   onPeersChanged: (peers: PeerPresence[]) => void;
   onRelayStatus?: (connected: boolean) => void;
+  /** No relay here and there never was one — a static build, or offline. */
+  onStandalone?: () => void;
 }
 
 const CLOCKS_KEY = "webim.sync_clocks";
@@ -372,6 +401,13 @@ export class SyncEngine {
   }
 
   private connectRelay(onMessage: (message: WireMessage) => void): void {
+    // A demo build ships without a platform server; not opening a socket at
+    // all is cleaner than opening one that is designed to fail.
+    if (import.meta.env?.VITE_STANDALONE === "1") {
+      this.standalone = true;
+      this.hooks.onStandalone?.();
+      return;
+    }
     const base =
       new URLSearchParams(window.location.search).get("relay") ??
       localStorage.getItem(RELAY_URL_KEY) ??
@@ -400,14 +436,23 @@ export class SyncEngine {
         },
         (connected) => {
           this.relayConnected = connected;
+          this.standalone = false;
           this.hooks.onRelayStatus?.(connected);
+        },
+        () => {
+          this.standalone = true;
+          this.hooks.onStandalone?.();
         },
       ),
     );
   }
 
+  /** True when there is no relay to talk to: tab-local sync only. */
+  standalone = false;
+
   /** Drop and re-open the relay connection (after login/logout). */
   reconnectRelay(): void {
+    this.standalone = false;
     const websocket = this.transports.find(
       (transport) => transport instanceof WebSocketTransport,
     );
