@@ -18,7 +18,7 @@ export default async function TrustPage() {
       <header>
         <h1 className="text-2xl font-bold">Trust — Model Cards & MLOps</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Viwase Quản lý công việc chạy mọi tính năng AI bằng mô hình open-source, tự host. Trang này công khai
+          Atlas chạy mọi tính năng AI bằng mô hình open-source, tự host. Trang này công khai
           danh sách model, dataset huấn luyện, kết quả benchmark, và mức độ trôi (drift) trong
           30 ngày gần nhất — để bạn kiểm tra trước khi tin AI.
         </p>

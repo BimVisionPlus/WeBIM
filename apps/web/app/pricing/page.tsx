@@ -10,7 +10,7 @@ export default async function PricingPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-6 py-10">
       <header className="text-center">
-        <h1 className="text-3xl font-bold">Bảng giá Viwase Quản lý công việc</h1>
+        <h1 className="text-3xl font-bold">Bảng giá Atlas</h1>
         <p className="mt-2 text-sm text-slate-600">
           Self-serve. Không "liên hệ tư vấn". Pay-per-AI-action tách rời phí seat — bạn chỉ trả khi dùng.
         </p>

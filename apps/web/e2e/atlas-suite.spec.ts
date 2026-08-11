@@ -148,7 +148,7 @@ test.describe("Atlas Suite — module 04 Compliance", () => {
 test.describe("Atlas Suite — module 05 Field (PWA)", () => {
   test("/field renders mobile-first shell with 6 tap targets", async ({ page }) => {
     await page.goto("/field");
-    await expect(page.locator("text=Viwase Field")).toBeVisible();
+    await expect(page.locator("text=Atlas Field")).toBeVisible();
     await expect(page.locator("text=Chấm công vào")).toBeVisible();
     await expect(page.locator("text=Báo cáo bằng giọng nói")).toBeVisible();
     await expect(page.locator("text=Báo sự cố")).toBeVisible();
@@ -160,7 +160,7 @@ test.describe("Atlas Suite — module 05 Field (PWA)", () => {
     expect(r.ok()).toBeTruthy();
     expect(r.headers()["content-type"]).toContain("manifest");
     const j = await r.json();
-    expect(j.name).toBe("Viwase Field — Báo cáo công trường");
+    expect(j.name).toBe("Atlas Field — Báo cáo công trường");
     expect(j.display).toBe("standalone");
     expect(j.scope).toBe("/field");
   });
@@ -244,16 +244,16 @@ test.describe("Cross-cutting — customer-facing pages", () => {
     await expect(page.locator("text=Enterprise (on-prem)")).toBeVisible();
   });
 
-  test("/compare renders score hero + Viwase column wins", async ({ page }) => {
+  test("/compare renders score hero + Atlas column wins", async ({ page }) => {
     await page.goto("/compare");
-    await expect(page.locator("text=Viwase").first()).toBeVisible();
+    await expect(page.locator("text=Atlas").first()).toBeVisible();
     await expect(page.locator("text=Procore").first()).toBeVisible();
     await expect(page.locator("text=Autodesk Construction Cloud").first()).toBeVisible();
   });
 
   test("/api-docs renders REST reference", async ({ page }) => {
     await page.goto("/api-docs");
-    await expect(page.locator("text=Viwase API")).toBeVisible();
+    await expect(page.locator("text=Atlas API")).toBeVisible();
     await expect(page.locator("text=/api/me")).toBeVisible();
     await expect(page.locator("text=/api/vendor/contracts")).toBeVisible();
     await expect(page.locator("text=/api/cost-norm/search")).toBeVisible();

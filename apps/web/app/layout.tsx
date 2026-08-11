@@ -6,13 +6,13 @@ import { TenantBanner } from "@/components/tenant-banner";
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.aecplatform.vn"),
   title: {
-    default: "Viwase Quản lý công việc — Module #1 của AEC Platform",
-    template: "%s · Viwase Quản lý công việc",
+    default: "Atlas — AEC Platform",
+    template: "%s · Atlas",
   },
   description:
-    "Viwase Quản lý công việc là module đầu tiên của AEC Platform — Atlassian-style PM cho ngành Kiến trúc Xây dựng VN. Gắn chặt NĐ 06/2021, Luật ĐT 22/2023, chữ ký số VNPT/Viettel-CA.",
+    "Atlas là module đầu tiên của AEC Platform — Atlassian-style PM cho ngành Kiến trúc Xây dựng VN. Gắn chặt NĐ 06/2021, Luật ĐT 22/2023, chữ ký số VNPT/Viettel-CA.",
   openGraph: {
-    title: "Viwase Quản lý công việc — Module #1 của AEC Platform",
+    title: "Atlas — AEC Platform",
     siteName: "AEC Platform",
     locale: "vi_VN",
     type: "website",

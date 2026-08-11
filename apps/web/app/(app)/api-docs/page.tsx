@@ -110,7 +110,7 @@ export default function ApiDocsPage() {
   const totalRoutes = SECTIONS.reduce((s, sec) => s + sec.routes.length, 0);
 
   return (
-    <AecModuleShell group="API" name="Viwase API — Reference" subtitle={`${totalRoutes} REST endpoints. JSON request/response. Auth qua NextAuth session cookie hoặc API key (Enterprise tier).`}>
+    <AecModuleShell group="API" name="Atlas API — Reference" subtitle={`${totalRoutes} REST endpoints. JSON request/response. Auth qua NextAuth session cookie hoặc API key (Enterprise tier).`}>
       <Card className="border-blue-200 bg-blue-50/40">
         <CardBody>
           <CardTitle>Quick start</CardTitle>

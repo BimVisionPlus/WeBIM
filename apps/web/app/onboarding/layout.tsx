@@ -17,7 +17,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
             <div className="grid h-8 w-8 place-items-center rounded-md bg-blue-600 font-bold text-white">A</div>
             <div className="flex flex-col leading-tight">
               <span className="text-[10px] uppercase tracking-wider text-slate-500">AEC Platform</span>
-              <span className="text-base font-semibold text-slate-900">Viwase Quản lý công việc <span className="text-[10px] font-medium text-slate-400">· Module #1</span></span>
+              <span className="text-base font-semibold text-slate-900">Atlas <span className="text-[10px] font-medium text-slate-400">· Module #1</span></span>
             </div>
           </Link>
           <span className="text-xs text-slate-500">Khởi tạo</span>

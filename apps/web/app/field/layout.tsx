@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Viwase Field — Báo cáo công trường",
+  title: "Atlas Field — Báo cáo công trường",
   description: "PWA cho công nhân hiện trường: voice-to-form, chấm công GPS, báo cáo 1-tap. Offline-first.",
   manifest: "/manifest.webmanifest",
   themeColor: "#1d4ed8",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Viwase Field",
+    title: "Atlas Field",
   },
 };
 

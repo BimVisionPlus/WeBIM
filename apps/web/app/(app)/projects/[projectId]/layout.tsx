@@ -27,7 +27,7 @@ export default async function ProjectLayout({
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <a href="https://aecplatform.vn" className="hover:text-slate-900" title="AEC Platform">AEC Platform</a>
             <span>/</span>
-            <Link href="/" className="hover:text-slate-900">Viwase Quản lý công việc</Link>
+            <Link href="/" className="hover:text-slate-900">Atlas</Link>
             <span>/</span>
             <Link href="/" className="hover:text-slate-900">Dự án</Link>
             <span>/</span>

@@ -7,7 +7,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         <div className="mx-auto flex max-w-3xl items-center px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-md bg-blue-600 font-bold text-white">A</div>
-            <span className="text-lg font-semibold">Viwase Quản lý công việc</span>
+            <span className="text-lg font-semibold">Atlas</span>
           </Link>
         </div>
       </header>

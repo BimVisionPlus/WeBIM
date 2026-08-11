@@ -91,7 +91,7 @@ export function FieldApp({ projects, latestAttendance }: { projects: Project[]; 
       <header className="sticky top-0 z-10 bg-blue-700 px-4 py-3 shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-lg font-bold tracking-tight">Viwase Field</div>
+            <div className="text-lg font-bold tracking-tight">Atlas Field</div>
             <div className="text-[11px] opacity-80">Báo cáo hiện trường — tiếng Việt</div>
           </div>
           <div className="text-right text-[10px]">

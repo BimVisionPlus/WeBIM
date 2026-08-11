@@ -131,7 +131,7 @@ export default async function BillingPage() {
           <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
             <div className="font-medium text-slate-700">Chuyển khoản:</div>
             <div className="mt-1">
-              {process.env.BANK_NAME ?? "Vietcombank"} · {process.env.BANK_ACCOUNT ?? "0011 002 345 678"} · {process.env.BANK_HOLDER ?? "CTCP Viwase"}
+              {process.env.BANK_NAME ?? "Vietcombank"} · {process.env.BANK_ACCOUNT ?? "0011 002 345 678"} · {process.env.BANK_HOLDER ?? "CTCP Atlas"}
             </div>
             <div>Nội dung: ATLAS-UPGRADE-{org.slug.toUpperCase()}-{plan?.code === "free" ? "PRO" : "BUSINESS"}</div>
           </div>

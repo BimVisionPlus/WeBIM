@@ -207,7 +207,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
               <a href="https://aecplatform.vn" className="text-[10px] uppercase tracking-wider text-slate-500 hover:text-slate-900">
                 AEC Platform
               </a>
-              <span className="text-base font-semibold text-slate-900">Viwase Quản lý công việc</span>
+              <span className="text-base font-semibold text-slate-900">Atlas</span>
             </div>
             <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">v1 · LIVE</span>
           </div>

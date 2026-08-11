@@ -152,7 +152,7 @@ export default async function DemoLaunchpad() {
       <div className="border-b border-slate-200 bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
         <div className="mx-auto max-w-7xl px-6 py-8">
           <div className="text-xs uppercase tracking-wider text-blue-100">Demo launchpad · {flagshipProject?.ownerOrg.name ?? "Cofico"}</div>
-          <h1 className="mt-1 text-3xl font-bold">Viwase Quản lý công việc</h1>
+          <h1 className="mt-1 text-3xl font-bold">Atlas</h1>
           <p className="mt-2 max-w-3xl text-sm text-blue-100">
             Atlassian-style cho ngành xây dựng VN. Gắn chặt NĐ 06/2021 · VBHN 06/VBHN-BXD · NĐ 15/2021 · NĐ 123/2020 · Luật BHXH. AI = Groq Llama + Cloudflare bge-m3 (OSS-only).
           </p>

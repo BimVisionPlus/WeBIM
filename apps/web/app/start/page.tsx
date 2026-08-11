@@ -7,7 +7,7 @@
 import { StartForm } from "./StartForm";
 
 export const metadata = {
-  title: "Bắt đầu sandbox riêng — Viwase Quản lý công việc",
+  title: "Bắt đầu sandbox riêng — Atlas",
   description: "Tạo sandbox riêng tại <công-ty>.aecplatform.vn với 5 dự án mẫu, 38 module, 11 AI feature. Miễn phí 14 ngày, không cần thẻ.",
 };
 
@@ -21,7 +21,7 @@ export default function StartPage() {
             Sandbox riêng · Miễn phí 14 ngày · Không cần thẻ
           </div>
           <h1 className="mt-3 text-4xl font-bold leading-tight md:text-5xl">
-            Tự nghịch Viwase với <span className="text-blue-300">dữ liệu của riêng bạn</span>
+            Tự nghịch Atlas với <span className="text-blue-300">dữ liệu của riêng bạn</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-slate-300 md:text-lg">
             Sandbox 5 dự án mẫu sẵn 384 dòng BoQ, 969 issue, AI tóm tắt / dự đoán / hồ sơ hoàn công.

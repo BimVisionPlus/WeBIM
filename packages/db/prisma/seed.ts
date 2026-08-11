@@ -102,7 +102,7 @@ async function main() {
   await prisma.consultantContract.deleteMany(); // → Organization (ConsultantContractTvOrg)
   await prisma.consultantTimesheet.deleteMany(); // → Organization (ConsultantTimeOrg)
   await prisma.invite.deleteMany(); // → User (InvitedBy)
-  // Viwase QLCV — dept content + drill-down
+  // Atlas QLCV — dept content + drill-down
   await prisma.projectStatusUpdate.deleteMany();
   await prisma.internalDocument.deleteMany();
   await prisma.socialInsuranceRecord.deleteMany();
@@ -177,7 +177,7 @@ async function main() {
       startDate: new Date("2025-09-01"),
       endDate: new Date("2027-12-31"),
       status: "IN_PROGRESS",
-      department: "CONG_VIEC", // Viwase QLCV: dự án công việc của công ty
+      department: "CONG_VIEC", // Atlas QLCV: dự án công việc của công ty
       permitNumber: "92/GPXD-SXD",
       permitDate: new Date("2025-07-15"),
       warrantyMonths: 24,
@@ -193,7 +193,7 @@ async function main() {
     ],
   });
 
-  // ─── Extra demo projects spread across 6 departments (Viwase QLCV) ────────
+  // ─── Extra demo projects spread across 6 departments (Atlas QLCV) ────────
   // So all 7 tabs on the home page have visible content. ownerOrgId = cofico
   // so the demo user (Anh @cofico) sees them via the access filter.
   const extraProjects = [

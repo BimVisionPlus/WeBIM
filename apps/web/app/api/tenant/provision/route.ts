@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     // Welcome email — fire-and-forget; failure shouldn't block response.
     sendEmail({
       to: d.email,
-      subject: `Sandbox Viwase đã sẵn sàng — ${d.name}`,
+      subject: `Sandbox Atlas đã sẵn sàng — ${d.name}`,
       html: `<div style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px">
         <h2 style="color:#0f172a">Chào ${d.prospectName ?? "bạn"}!</h2>
         <p>Sandbox riêng của bạn đã được tạo với <strong>${result.stats.projects} dự án mẫu</strong>, <strong>${result.stats.boqLines} dòng BoQ</strong>, ${result.stats.issues} issue (RFI/NCR/Submittal), ${result.stats.scheduleTasks} công việc, ${result.stats.dailyLogs} nhật ký.</p>
