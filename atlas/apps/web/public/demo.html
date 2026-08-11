@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Atlas AEC — Demo</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b1220;
+    --panel: #111a30;
+    --accent: #3b82f6;
+    --muted: #8b9bb4;
+    --text: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 80px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 18px;
+    max-width: 1100px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+  }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  .stage {
+    width: 100%;
+    max-width: 1280px;
+    background: var(--panel);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 18px 60px rgba(0,0,0,0.5);
+    border: 1px solid #1f2a44;
+  }
+  .meta {
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid #1f2a44;
+    background: linear-gradient(180deg, #14203a 0%, var(--panel) 100%);
+  }
+  .meta .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .meta .title { font-size: 18px; font-weight: 600; margin-top: 2px; }
+  .meta .count { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+  .frame { background: #f8fafc; aspect-ratio: 1280 / 800; max-height: 70vh; overflow: hidden; }
+  .frame img { display: block; width: 100%; height: auto; object-fit: cover; object-position: top; transition: opacity 220ms ease; }
+  .narration { padding: 14px 22px 16px; font-size: 13.5px; line-height: 1.55; color: #cbd5e1; }
+  .narration b { color: var(--text); }
+  .controls {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  button {
+    background: var(--accent);
+    color: white;
+    border: 0;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  button.secondary { background: #1f2a44; color: var(--text); }
+  button:hover { filter: brightness(1.1); }
+  .timeline {
+    margin: 14px 0 0;
+    height: 4px;
+    width: 100%;
+    max-width: 1280px;
+    background: #1f2a44;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .timeline > div {
+    height: 100%;
+    background: var(--accent);
+    width: 0;
+    transition: width 100ms linear;
+  }
+  .dots {
+    margin-top: 12px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 1100px;
+  }
+  .dots > span {
+    width: 24px;
+    height: 4px;
+    border-radius: 2px;
+    background: #1f2a44;
+    cursor: pointer;
+  }
+  .dots > span.active { background: var(--accent); }
+  kbd { background: #0b1220; padding: 1px 6px; border: 1px solid #1f2a44; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Atlas AEC — v2 Demo</h1>
+    <p>Layer 1 (6 modules) + Trust + Pricing — live screenshots of the seeded build. <kbd>←</kbd>/<kbd>→</kbd> to navigate · <kbd>space</kbd> to pause.</p>
+  </header>
+
+  <div class="stage">
+    <div class="meta">
+      <div>
+        <div class="label">Scene <span id="num">1</span> / <span id="total">14</span></div>
+        <div class="title" id="title">Đăng nhập</div>
+      </div>
+      <div class="count" id="count">~7s</div>
+    </div>
+    <div class="frame"><img id="img" alt="" /></div>
+    <div class="narration" id="narration"></div>
+  </div>
+
+  <div class="timeline"><div id="bar"></div></div>
+
+  <div class="controls">
+    <button class="secondary" id="prev">← Trước</button>
+    <button id="play">⏸ Tạm dừng</button>
+    <button class="secondary" id="next">Tiếp →</button>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <script>
+    const scenes = [
+      { src: "/demo-screens/01-signin.png", title: "1. Đăng nhập", narration: "Sign-in form, Vietnamese-first UX, brute-force lockout active. Use <b>anh.nguyen@cofico.vn</b> / <b>demo1234!</b>." },
+      { src: "/demo-screens/02-home.png", title: "2. Trang chủ — 6 mô-đun mới trên nav", narration: "Dashboard for the seeded <b>Vinhomes Grand Park — Lô S9</b> project. Top nav now has <b>WinWork · Portfolio · Trust · Giá</b> alongside the original tabs." },
+      { src: "/demo-screens/03-winwork.png", title: "3. WinWork — Bidding Intelligence overview", narration: "<b>Layer 1.1</b>. 3 opportunities scraped, 2 bids in pipeline, 1 active bond. Win-rate awaits decisions. Below: recent tenders + recent bids." },
+      { src: "/demo-screens/04-winwork-tenders.png", title: "4. Cơ hội đấu thầu — 3 nguồn", narration: "Tenders aggregated from <b>MUASAMCONG</b> (official MPI), <b>DAUTHAU_ASIA</b> (private), and <b>MANUAL</b>. Each row deep-links to source." },
+      { src: "/demo-screens/05-winwork-bids.png", title: "5. Hồ sơ dự thầu — bid lifecycle", narration: "<b>BID-COFICO-001</b> is in READY state with 1 bond and 3 passing compliance rows. <b>BID-COFICO-002</b> is DRAFT." },
+      { src: "/demo-screens/06-winwork-bid-detail.png", title: "6. Bid detail — Luật ĐT 22/2023 engine run live", narration: "The compliance engine ran in &lt;100 ms — 9 rules evaluated. <b>2 BLOCKING failures</b> (capacity docs, technical proposal docs) prevent transition to SUBMITTED. Server-side enforced." },
+      { src: "/demo-screens/07-winwork-bonds.png", title: "7. Bảo lãnh tracker", narration: "BLDT / BL thực hiện / BL tạm ứng / BL bảo hành in one place. 1 active BLDT — 8.4 tỉ Vietcombank, expires 01/08/2026." },
+      { src: "/demo-screens/08-codeguard.png", title: "8. CodeGuard — TCVN/QCVN + NĐ 15/2021 dossier", narration: "<b>Layer 1.2</b>. 19-item dossier checklist per NĐ 15/2021 Phụ lục I. TCVN/QCVN library below with rule counts." },
+      { src: "/demo-screens/09-drawbridge.png", title: "9. DrawBridge — clash detection run live", narration: "<b>Layer 1.3</b>. 8 BIM elements → AABB detector found <b>8 clashes</b>, including 3 high-severity cross-discipline (Dầm × HVAC, Dầm × PCCC, HVAC × PCCC)." },
+      { src: "/demo-screens/10-siteeye.png", title: "10. SiteEye — weather alert via live open-meteo", narration: "<b>Layer 1.4</b>. Real HTTP call: 27.1 °C · 90 % RH · 0 mm/h. Below: 1-tap incident reporter (Luật ATVSLĐ 84/2015 Điều 39) + PPE feed wired to qwen2.5-vl." },
+      { src: "/demo-screens/11-costpulse.png", title: "11. CostPulse — EVM math on live BoQ", narration: "<b>Layer 1.5</b>. BAC 122.5 tỉ · EV 69.9 tỉ · AC 48.7 tỉ · <b>CPI 1.44</b> · EAC 85.3 tỉ · VAC 37.2 tỉ. Pure-function math, swappable engine." },
+      { src: "/demo-screens/12-portfolio.png", title: "12. ProjectPulse — 5-dim risk heatmap", narration: "<b>Layer 1.6</b>. Cost/Schedule/Safety/Quality LOW, Compliance HIGH (dossier 16%). Profit forecast 1.76 nghìn tỉ. The CEO/COO surface." },
+      { src: "/demo-screens/13-trust.png", title: "13. Trust — public model cards", narration: "<b>Layer 4 MLOps moat</b>. Every AI feature publishes its OSS model, version, training data, limitations, citations. No closed-API model hidden." },
+      { src: "/demo-screens/14-pricing.png", title: "14. Pricing — self-serve 4-tier", narration: "<b>Layer 8 GTM</b>. Public bảng giá. Free → Pro → Business → Enterprise. Pay-per-AI-action separates from per-seat — the thing MISA + Base both punt on." },
+    ];
+
+    const HOLD = 7000;       // ms per scene
+    const FRAME = 100;        // bar tick
+    let i = 0, playing = true, ticker = 0, hold = 0;
+
+    const img = document.getElementById("img");
+    const title = document.getElementById("title");
+    const narration = document.getElementById("narration");
+    const num = document.getElementById("num");
+    const total = document.getElementById("total");
+    const count = document.getElementById("count");
+    const bar = document.getElementById("bar");
+    const dots = document.getElementById("dots");
+
+    total.textContent = scenes.length;
+    scenes.forEach((_, idx) => {
+      const d = document.createElement("span");
+      d.onclick = () => go(idx);
+      dots.appendChild(d);
+    });
+
+    function go(idx) {
+      i = (idx + scenes.length) % scenes.length;
+      hold = 0;
+      const s = scenes[i];
+      img.style.opacity = 0;
+      const bust = `${s.src}?v=${Date.now()}`; const next = new Image();
+      next.onload = () => { img.src = bust; img.style.opacity = 1; };
+      next.src = bust;
+      title.textContent = s.title;
+      narration.innerHTML = s.narration;
+      num.textContent = i + 1;
+      count.textContent = `~${Math.round(HOLD / 1000)}s`;
+      [...dots.children].forEach((d, j) => d.classList.toggle("active", j === i));
+    }
+
+    function tick() {
+      if (!playing) return;
+      hold += FRAME;
+      bar.style.width = Math.min(100, (hold / HOLD) * 100) + "%";
+      if (hold >= HOLD) {
+        bar.style.width = "0%";
+        go(i + 1);
+      }
+    }
+    setInterval(tick, FRAME);
+
+    document.getElementById("prev").onclick = () => go(i - 1);
+    document.getElementById("next").onclick = () => go(i + 1);
+    document.getElementById("play").onclick = (e) => {
+      playing = !playing;
+      e.currentTarget.textContent = playing ? "⏸ Tạm dừng" : "▶ Tiếp tục";
+    };
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") go(i - 1);
+      if (e.key === "ArrowRight") go(i + 1);
+      if (e.key === " ") { e.preventDefault(); document.getElementById("play").click(); }
+    });
+
+    go(0);
+  </script>
+</body>
+</html>

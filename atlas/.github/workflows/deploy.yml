@@ -1,0 +1,96 @@
+name: deploy → aecplatform.vn
+
+# Triggers:
+#   push to main           → auto deploy
+#   workflow_dispatch      → manual deploy from Actions tab
+#
+# Required secrets (Settings → Secrets → Actions):
+#   VPS_HOST           — e.g. "5.75.123.45" or "deploy.aecplatform.vn"
+#   VPS_USER           — typically "root" (Hetzner) or "ubuntu" (AWS/DO)
+#   VPS_SSH_KEY        — full content of the deploy private key (ed25519)
+#   VPS_ENV_PRODUCTION — full content of .env.production (Neon URL, R2 keys, ...)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "scripts/**"
+      - "caddy/**"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false   # never abort a half-finished deploy
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atlas/db generate
+      - run: pnpm --filter @atlas/web typecheck
+      - run: pnpm --filter @atlas/landing build
+        env:
+          STANDALONE_BUILD: "1"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Rsync repo to VPS
+        run: |
+          rsync -az --delete \
+            --exclude=node_modules --exclude=.next --exclude=.git \
+            --exclude=apps/web/e2e/.auth.json --exclude=e2e-screenshots \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/atlas-aec/"
+
+      - name: Sync .env.production from GitHub secret
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "umask 077 && cat > /opt/atlas-aec/.env.production" <<< "${{ secrets.VPS_ENV_PRODUCTION }}"
+
+      - name: Run deploy.sh on VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "cd /opt/atlas-aec && ./scripts/deploy.sh"
+
+      - name: Smoke test (post-deploy)
+        run: |
+          for i in {1..6}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://app.aecplatform.vn/api/health || echo "000")
+            [ "$code" = "200" ] && echo "✓ health 200" && exit 0
+            echo "  wait $i/6 (got $code)..."; sleep 15
+          done
+          echo "✗ health never returned 200"
+          exit 1
+
+      - name: Slack notify (optional — add SLACK_WEBHOOK secret to enable)
+        if: always() && env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          STATUS="${{ job.status }}"
+          curl -X POST -H 'Content-Type: application/json' \
+            -d "{\"text\":\":rocket: deploy $STATUS — \`$(git rev-parse --short HEAD)\` — https://app.aecplatform.vn\"}" \
+            "$SLACK_WEBHOOK"

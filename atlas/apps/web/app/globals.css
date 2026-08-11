@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* One palette for the whole platform, matching the workbench and the marketing
+   site, and following the reader's OS theme the way they do. Atlas was
+   light-only, which is why it looked like a different company on a machine set
+   to dark — not a design decision, an omission.
+
+   Every neutral in the app is expressed through these, rather than through
+   Tailwind's slate scale directly, so the theme is one edit and not 3,105.
+
+   `inverse` is the pair that must NOT follow the others: buttons and overlays
+   deliberately invert against the page. Mapping those onto the surface tokens
+   would have made every primary button vanish into its own background in one
+   theme or the other. */
+:root {
+  --paper: 251 250 247;
+  --surface: 255 255 255;
+  --raised: 248 250 252;
+  --ink: 20 22 26;
+  --ink-2: 45 50 58;
+  --muted: 90 96 105;
+  --muted-2: 130 137 147;
+  --line: 229 227 220;
+  --line-2: 214 212 205;
+  --inverse-bg: 30 41 59;
+  --inverse-ink: 248 250 252;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: 14 17 22;
+    --surface: 22 26 33;
+    --raised: 28 33 41;
+    --ink: 232 234 237;
+    --ink-2: 208 212 218;
+    --muted: 152 161 173;
+    --muted-2: 124 133 145;
+    --line: 38 44 53;
+    --line-2: 52 60 71;
+    --inverse-bg: 226 232 240;
+    --inverse-ink: 15 23 42;
+  }
+}
+
+html, body { height: 100%; }
+body {
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  /* Form controls carried no background class at all, so they fell through to
+     the user agent's white. Invisible while the app was light-only; glaring the
+     moment it followed a dark OS theme. Fixed here rather than on each input,
+     because the next one someone adds would have the same hole.
+
+     Checkbox and radio are excluded: the browser draws those, and overriding
+     their background removes the tick. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--ink));
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--muted-2));
+  }
+}

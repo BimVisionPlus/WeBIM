@@ -1,0 +1,21 @@
+{
+  "name": "Viwase Field — Báo cáo công trường",
+  "short_name": "Viwase Field",
+  "description": "Ứng dụng mobile cho công nhân hiện trường: voice-to-form, chấm công GPS, báo cáo 1-tap. Offline-first.",
+  "start_url": "/field?source=pwa",
+  "scope": "/field",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#1d4ed8",
+  "lang": "vi",
+  "icons": [
+    { "src": "/icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["productivity", "business"],
+  "shortcuts": [
+    { "name": "Chấm công vào", "short_name": "Vào", "url": "/field?action=checkin", "icons": [{ "src": "/icon.png", "sizes": "96x96" }] },
+    { "name": "Báo cáo bằng giọng nói", "short_name": "Voice", "url": "/field?action=voice", "icons": [{ "src": "/icon.png", "sizes": "96x96" }] }
+  ]
+}

@@ -1,0 +1,140 @@
+# Atlas AEC — production docker-compose for aecplatform.vn.
+#
+# Boot with:
+#   ./scripts/deploy.sh
+# or manually:
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# Assumes:
+#   - Managed Postgres + Redis (host names in DATABASE_URL / REDIS_URL)
+#   - DNS A records: aecplatform.vn + app.aecplatform.vn + status.aecplatform.vn → VPS public IP
+#   - Ports 80 + 443 open on the VPS (Caddy terminates TLS via Let's Encrypt)
+#
+# Services:
+#   - landing  → marketing site on aecplatform.vn (Next.js)
+#   - web      → Next.js app on app.aecplatform.vn (auth + 47 modules)
+#   - worker   → cron (bond-expiry · scrape · drift-snapshot)
+#   - scraper  → Python sidecar → muasamcong / dauthau.asia
+#   - minio    → S3-compatible object storage (self-hosted, swap to R2/AWS later)
+#   - caddy    → TLS reverse proxy (auto Let's Encrypt for 3 hostnames)
+
+services:
+  minio:
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-atlas}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9000"
+      - "9001"
+    restart: unless-stopped
+    healthcheck:
+      # MinIO image has curl, not wget. Unauth liveness endpoint.
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  # One-shot: create the 4 buckets on first boot if they don't exist.
+  minio-init:
+    image: minio/mc:RELEASE.2024-10-08T09-37-26Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-atlas}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+    entrypoint: >
+      sh -c "
+        mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+        for b in atlas-models atlas-drawings atlas-markups atlas-attachments; do
+          mc mb -p local/$$b 2>/dev/null || true;
+          mc anonymous set download local/$$b 2>/dev/null || true;
+        done;
+        echo 'MinIO buckets ready';
+      "
+    restart: "no"
+
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    image: atlas-aec/landing:${VERSION:-latest}
+    env_file: .env.production
+    expose:
+      - "3001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: atlas-aec/web:${VERSION:-latest}
+    env_file: .env.production
+    expose:
+      - "3000"
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    image: atlas-aec/worker:${VERSION:-latest}
+    env_file: .env.production
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+
+  scraper:
+    build:
+      context: services/scraper-py
+    image: atlas-aec/scraper:${VERSION:-latest}
+    environment:
+      ATLAS_BASE_URL: "http://web:3000"
+      WINWORK_SCRAPE_SECRET: "${WINWORK_SCRAPE_SECRET}"
+      SCRAPE_INTERVAL_HOURS: "24"
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      landing:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:
+  minio_data:

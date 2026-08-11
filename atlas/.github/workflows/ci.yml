@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas
+          POSTGRES_DB: atlas_aec
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://atlas:atlas@localhost:5432/atlas_aec?schema=public
+      AUTH_SECRET: test-secret-test-secret-test-secret-32x
+      AUTH_URL: http://localhost:3000
+      # NextAuth refuses to set cookies / generate csrf tokens when host
+      # mismatches AUTH_URL unless told to trust the host. CI uses plain
+      # http://localhost:3000 (no proxy), which v5 flags as suspicious in
+      # production builds — leading to a 301 on /api/auth/csrf and a
+      # cascade failure across the entire smoke-flow.
+      AUTH_TRUST_HOST: "true"
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      S3_ENDPOINT: http://localhost:9000
+      S3_ACCESS_KEY: test
+      S3_SECRET_KEY: testtesttest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @atlas/db generate
+      - run: pnpm --filter @atlas/db push
+      - run: pnpm --filter @atlas/db seed
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm --filter @atlas/workflows test
+      - run: pnpm --filter @atlas/web build
+      # End-to-end flow: start the built server, run the smoke flow against it.
+      - name: Smoke flow (server + 27 assertions)
+        run: |
+          pnpm --filter @atlas/web start &
+          SERVER_PID=$!
+          # Wait up to 60 s for the server to come up
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/signin | grep -q '^[23]'; then break; fi
+            sleep 2
+          done
+          BASE=http://localhost:3000 packages/db/node_modules/.bin/tsx scripts/smoke-flow.ts
+          STATUS=$?
+          kill $SERVER_PID || true
+          exit $STATUS
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          tags: atlas-aec/web:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

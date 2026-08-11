@@ -1,0 +1,75 @@
+# Atlas AEC — Caddy reverse proxy with automatic Let's Encrypt TLS.
+# Routes:
+#   aecplatform.vn        → landing (marketing + 47 module cards)
+#   app.aecplatform.vn    → web app (auth-gated workflow)
+#   status.aecplatform.vn → public Site Status pages (no auth)
+#
+# Boot:
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+# Caddy auto-provisions TLS once DNS A records point at the VPS public IP.
+
+{
+    email ops@aecplatform.vn
+    # Uncomment to dry-run TLS against staging before going live:
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+# ─── Marketing landing ──────────────────────────────────────────────────────
+aecplatform.vn, www.aecplatform.vn {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+    @www host www.aecplatform.vn
+    redir @www https://aecplatform.vn{uri} 301
+
+    reverse_proxy landing:3001 {
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}
+
+# ─── Authenticated app ──────────────────────────────────────────────────────
+app.aecplatform.vn {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(self)"
+    }
+
+    handle /api/health {
+        reverse_proxy web:3000
+    }
+
+    handle {
+        reverse_proxy web:3000 {
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}
+
+# ─── Public Site Status (no auth) ──────────────────────────────────────────
+status.aecplatform.vn {
+    reverse_proxy web:3000 {
+        header_up X-Forwarded-Proto {scheme}
+    }
+    log {
+        output stdout
+        format json
+    }
+}

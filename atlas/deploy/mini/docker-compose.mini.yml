@@ -1,0 +1,87 @@
+# Running Atlas on the Mac mini, behind the workbench's Caddy.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#                  -f deploy/mini/docker-compose.mini.yml up -d
+#
+# The base files assume Atlas owns the machine and the domain. On the mini it
+# owns neither, so four things change — each one a collision with something
+# already running and serving traffic.
+#
+# 1. No `caddy`. Atlas's Caddyfile claims aecplatform.vn, www.aecplatform.vn,
+#    app.aecplatform.vn and status.aecplatform.vn, binds :80 and :443, and asks
+#    Let's Encrypt for certificates. All four names are already live — the apex
+#    on GitHub Pages, app. on the workbench through a Cloudflare tunnel — so
+#    starting it would take the platform down and fail the challenges anyway.
+#    The workbench's Caddy is the only front door; this one proxies /atlas/*.
+#
+# 2. No `ollama` and no `whisper`. The host runs Ollama.app on 11434 already,
+#    with the models pulled; a second server cannot bind the port. Whisper is
+#    CPU-only here and would idle several GB on a machine that also holds
+#    Nextcloud and the Suite.
+#
+# 3. No published ports. Postgres, Redis and MinIO are reached over the compose
+#    network by the services that need them and by nothing else.
+#
+# 4. HOSTNAME=0.0.0.0 on the Next apps. Their standalone server binds to
+#    process.env.HOSTNAME, which Docker sets to the container ID; on a
+#    container attached to two networks that binds only the first, and Caddy —
+#    on the other one — gets connection refused from a name that resolves.
+
+services:
+  caddy:
+    deploy:
+      replicas: 0
+  ollama:
+    deploy:
+      replicas: 0
+  ollama-init:
+    deploy:
+      replicas: 0
+  whisper:
+    deploy:
+      replicas: 0
+
+  postgres:
+    restart: unless-stopped
+    ports: !override []
+  redis:
+    restart: unless-stopped
+    ports: !override []
+  minio:
+    restart: unless-stopped
+    ports: !override []
+
+  web:
+    restart: unless-stopped
+    environment:
+      HOSTNAME: 0.0.0.0
+      # The host's Ollama, reached through the gateway rather than loopback,
+      # which is what OrbStack allows from a container.
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      default: {}
+      workbench:
+        # The name deploy/macos/Caddyfile.tunnel proxies /atlas/* to.
+        aliases: [atlas]
+
+  landing:
+    restart: unless-stopped
+    environment:
+      HOSTNAME: 0.0.0.0
+
+  worker:
+    restart: unless-stopped
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  scraper:
+    restart: unless-stopped
+
+networks:
+  workbench:
+    external: true
+    name: aec-workbench_default
