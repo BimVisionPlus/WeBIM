@@ -11,6 +11,53 @@ giấy phép, nên phần mã kế thừa từ đó vẫn thuộc bản quyền 
 làm rõ giấy phép trước khi phát hành công khai.
 
 
+## Atlas AEC — quản lý dự án
+
+`atlas/` là Atlas AEC, nửa quản lý dự án của nền tảng (Site/RFI/submittal,
+nghiệm thu NĐ 06/2021, hồ sơ hoàn công, Models + canvas review). Nó được
+đưa vào đây bằng `git subtree`, giữ nguyên lịch sử của repo gốc:
+
+```bash
+# kéo bản mới từ upstream
+git subtree pull --prefix=atlas atlas main
+
+# đẩy thay đổi trong atlas/ ngược lên upstream
+git subtree push --prefix=atlas atlas main
+```
+
+Remote `atlas` trỏ tới `git@github.com:aec-platform/atlas.git`; thêm lại
+sau khi clone bằng `git remote add atlas <url>`.
+
+### Cầu nối WeBIM → Atlas Models
+
+WeBIM dựng model, Atlas chạy giấy tờ quanh nó. Module **Atlas** trong
+WeBIM Web xuất IFC ngay trên trình duyệt rồi đăng vào Models của một dự
+án Atlas:
+
+```text
+WeBIM Web  ──POST /api/webim/presign──►  Atlas   (xin quyền, kiểm định dạng)
+           ──PUT  presigned URL──────►  S3/MinIO (bytes không qua Atlas)
+           ──POST /api/webim/commit──►  Atlas   (tạo Model + chạy APS)
+```
+
+Ba route nằm ở `atlas/apps/web/app/api/webim/`, xác thực bằng `ApiKey`
+theo tổ chức thay vì session — WeBIM Web chạy ở origin riêng nên không
+có cookie Auth.js.
+
+```bash
+# phát hành key (chỉ hiện một lần)
+cd atlas
+pnpm exec tsx scripts/webim-issue-key.ts --user ky.su@congty.vn --days 180
+pnpm exec tsx scripts/webim-issue-key.ts --revoke wbm_1a2b3c4d
+
+# origin của WeBIM Web mà Atlas chấp nhận (mặc định: vite 5173/5174)
+WEBIM_ALLOWED_ORIGINS=https://webim.congty.vn
+```
+
+Key mang quyền `projects:read` + `models:write`, chỉ thấy dự án thuộc
+tổ chức của chính nó, và ghi audit dưới tên người phát hành. Đẩy lại
+cùng tên + phiên bản sẽ ghi đè bản cũ thay vì tạo trùng.
+
 ## Kiến trúc
 
 ```text

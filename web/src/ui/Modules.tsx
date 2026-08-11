@@ -12,6 +12,17 @@ import {
 import { climateFindings, facadeByOrientation } from "../application/climate";
 import { ganttChart, weekTicks } from "../application/gantt";
 import { Viewer3D } from "../viewport/Viewer3D";
+import {
+  ATLAS_DISCIPLINES,
+  listAtlasProjects,
+  loadAtlasConfig,
+  publishToAtlas,
+  saveAtlasConfig,
+  type AtlasConfig,
+  type AtlasDiscipline,
+  type AtlasProject,
+  type PublishResult,
+} from "../sync/atlasBridge";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
 import {
   authHeaders,
@@ -836,6 +847,182 @@ export function ViewerModule() {
               <strong>Prompt:</strong> {result.prompt_en}
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Atlas — the project-management half of the platform (atlas/ in this repo).
+ *
+ * WeBIM authors the model; Atlas runs the paperwork around it (RFI, submittal,
+ * nghiệm thu, hồ sơ hoàn công). This module is the seam: it exports the native
+ * project to IFC in the browser and publishes it into an Atlas project's
+ * Models module, where it becomes a normal versioned model — viewable, and
+ * referenceable from every Atlas workflow.
+ */
+export function AtlasModule() {
+  useStoreVersion();
+  const [config, setConfig] = useState<AtlasConfig>(() => loadAtlasConfig());
+  const [projects, setProjects] = useState<AtlasProject[] | null>(null);
+  const [modelName, setModelName] = useState(store.project.name);
+  const [busy, setBusy] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [published, setPublished] = useState<PublishResult | null>(null);
+
+  const update = (patch: Partial<AtlasConfig>) => {
+    const next = { ...config, ...patch };
+    setConfig(next);
+    saveAtlasConfig(next);
+  };
+
+  const connect = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const found = await listAtlasProjects(config);
+      setProjects(found);
+      // Keep an already-chosen project if the org still has it; otherwise the
+      // stored id is stale (revoked key, different org) and must be re-picked.
+      const stillThere = found.some((project) => project.id === config.projectId);
+      if (!stillThere) {
+        const first = found[0];
+        update({
+          projectId: first?.id ?? "",
+          projectLabel: first ? `${first.key} — ${first.name}` : "",
+        });
+      }
+    } catch (cause) {
+      setProjects(null);
+      setError((cause as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const publish = async () => {
+    setBusy(true);
+    setError(null);
+    setPublished(null);
+    setLog([]);
+    try {
+      const result = await publishToAtlas({
+        config,
+        ifc: store.exportIfc(),
+        modelName,
+        webimProjectId: store.project.id,
+        onProgress: (message) => setLog((lines) => [...lines, message]),
+      });
+      setPublished(result);
+      store.setStatus(
+        result.replaced
+          ? `Atlas: đã thay thế ${modelName} ${config.revision}`
+          : `Atlas: đã đăng ${modelName} ${config.revision}`,
+      );
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="module-host">
+      <p className="module-hint">
+        Đẩy model native của WeBIM sang Atlas dưới dạng IFC. File đi thẳng lên kho
+        của Atlas; WeBIM chỉ xin quyền và đăng ký bản ghi.
+      </p>
+
+      <div className="module-form">
+        <input
+          value={config.baseUrl}
+          placeholder="https://atlas.aecplatform.vn"
+          onChange={(event) => update({ baseUrl: event.target.value })}
+        />
+        <input
+          type="password"
+          value={config.apiKey}
+          placeholder="API key (wbm_…)"
+          onChange={(event) => update({ apiKey: event.target.value })}
+        />
+        <button disabled={busy || !config.baseUrl || !config.apiKey} onClick={() => void connect()}>
+          {busy ? "Đang gọi…" : "Kết nối"}
+        </button>
+      </div>
+
+      {projects !== null && (
+        <div className="module-form">
+          <select
+            value={config.projectId}
+            onChange={(event) => {
+              const picked = projects.find((project) => project.id === event.target.value);
+              update({
+                projectId: event.target.value,
+                projectLabel: picked ? `${picked.key} — ${picked.name}` : "",
+              });
+            }}
+          >
+            {projects.length === 0 && <option value="">Tổ chức chưa có dự án nào</option>}
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.key} — {project.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="module-form">
+        <input
+          value={modelName}
+          placeholder="Tên model"
+          onChange={(event) => setModelName(event.target.value)}
+        />
+        <input
+          value={config.revision}
+          placeholder="Phiên bản"
+          onChange={(event) => update({ revision: event.target.value })}
+        />
+        <select
+          value={config.discipline}
+          onChange={(event) => update({ discipline: event.target.value as AtlasDiscipline })}
+        >
+          {ATLAS_DISCIPLINES.map(([id, label]) => (
+            <option key={id} value={id}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button disabled={busy || !config.projectId} onClick={() => void publish()}>
+          {busy ? "Đang đẩy…" : "Đẩy IFC sang Atlas"}
+        </button>
+      </div>
+
+      {config.projectLabel && (
+        <p className="module-hint">
+          Dự án đích: <strong>{config.projectLabel}</strong> · cùng tên + phiên bản sẽ
+          ghi đè bản cũ thay vì tạo trùng.
+        </p>
+      )}
+
+      {log.map((line, index) => (
+        <p key={index} className="module-hint">
+          {line}
+        </p>
+      ))}
+
+      {error && <div className="climate-finding warning">⚠ {error}</div>}
+
+      {published && (
+        <div className="ai-answer">
+          {published.replaced ? "Đã thay thế model" : "Đã tạo model"} ·{" "}
+          {(published.sizeBytes / 1024).toFixed(0)} KB
+          {"\n"}
+          <a href={published.viewerUrl} target="_blank" rel="noreferrer">
+            Mở trong Atlas Models →
+          </a>
         </div>
       )}
     </div>

@@ -38,7 +38,8 @@ export type ModuleId =
   | "PLAN"
   | "STANDARDS"
   | "DRAWINGS"
-  | "CLIMATE";
+  | "CLIMATE"
+  | "ATLAS";
 
 import { apiBase } from "../config";
 

@@ -2,8 +2,8 @@
 
 Web-app port of the WeBIM Blender add-on grown into a construction
 lifecycle workspace: Revit-style BIM authoring plus the platform modules
-of the WeBIM concept — **Model | CDE | Plan | Standards | Drawings**,
-with QTO and clash detection as live schedule kinds.
+of the WeBIM concept — **Model | CDE | Plan | Standards | Drawings |
+Atlas**, with QTO and clash detection as live schedule kinds.
 
 Platform modules (all metadata lives in the synced project, so realtime
 collaboration covers them for free; only binaries touch the server):
@@ -46,6 +46,16 @@ collaboration covers them for free; only binaries touch the server):
   exterior face = normal pointing away from the plan centroid), with
   hot-humid-climate shading guidance in the spirit of QCVN 09:2017/BXD.
   An early-design screen, not an OTTV/energy calculation.
+
+- **Atlas** — publishes the native project into Atlas AEC (`../atlas/`,
+  the project-management half of the platform) as a versioned model.
+  Exports IFC in the browser, then presign → PUT to Atlas's S3/MinIO →
+  register: the bytes never pass through the Atlas server. Authenticates
+  with an org-scoped API key (`wbm_…`) rather than a session, because
+  WeBIM Web runs on its own origin. Same model name + revision replaces
+  the previous upload instead of stacking duplicates, so retrying a
+  flaky push is safe. See `../README.md` → **Atlas AEC** for how to mint
+  the key and which origins Atlas will accept.
 
 Platform server hardening:
 

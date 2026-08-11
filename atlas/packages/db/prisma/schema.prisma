@@ -3485,6 +3485,10 @@ model ApiKey {
   lastUsedAt DateTime?
   revokedAt  DateTime?
   createdAt  DateTime  @default(now())
+  // Who issued the key. A key acts on that person's behalf, so this is the
+  // actorId recorded on everything it writes (WeBIM bridge → Model rows).
+  // Nullable: keys minted before the bridge existed have no issuer.
+  createdByUserId String?
 
   @@index([orgId])
 }
