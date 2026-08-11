@@ -1,9 +1,9 @@
 // Where the platform server (files + auth + AI + ws relay) lives.
 //
 // - Dev (vite on 5173/5174): a separately-run relay on :8787.
-// - Production (built app served behind the reverse proxy): same-origin
-//   under /api — deploy/Caddyfile terminates HTTPS and proxies /api/*
-//   (WebSocket included) to the relay, so no CORS and wss for free.
+// - Production (https://webim.vn, built app behind the reverse proxy):
+//   same-origin under /api — deploy/Caddyfile terminates HTTPS and proxies
+//   /api/* (WebSocket included) to the relay, so no CORS and wss for free.
 // - Override either with VITE_API_BASE at build time.
 
 const DEV_PORTS = new Set(["5173", "5174"]);

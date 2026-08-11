@@ -67,8 +67,16 @@ export const IFC_CONTENT_TYPE = "application/x-step";
 
 const CONFIG_KEY = "webim.atlas";
 
+/**
+ * Production Atlas lives on its own subdomain; a dev machine points elsewhere
+ * with VITE_ATLAS_BASE. This is only the first-run default — the value the
+ * user picks is what gets persisted.
+ */
+const DEFAULT_ATLAS_BASE =
+  (import.meta.env?.VITE_ATLAS_BASE as string | undefined) ?? "https://atlas.webim.vn";
+
 export const DEFAULT_ATLAS_CONFIG: AtlasConfig = {
-  baseUrl: "http://localhost:3000",
+  baseUrl: DEFAULT_ATLAS_BASE,
   apiKey: "",
   projectId: "",
   projectLabel: "",
