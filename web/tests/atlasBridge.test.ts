@@ -4,6 +4,7 @@ import {
   IFC_CONTENT_TYPE,
   ifcFileName,
   listAtlasProjects,
+  discoverAtlas,
   loadAtlasConfig,
   probeAtlas,
   publishToAtlas,
@@ -212,5 +213,88 @@ describe("probeAtlas", () => {
     const { calls, fetchImpl } = recorder([{}]);
     await expect(probeAtlas("", fetchImpl)).resolves.toBe(false);
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe("discoverAtlas", () => {
+  /** Answers only for the hosts named; everything else fails like DNS would. */
+  function onlyUp(...up: string[]) {
+    return (async (url: unknown) => {
+      if (up.some((host) => String(url).startsWith(host))) return {} as Response;
+      throw new TypeError("Failed to fetch");
+    }) as unknown as typeof fetch;
+  }
+
+  it("finds the running Atlas so nobody has to type an address", async () => {
+    const found = await discoverAtlas(
+      ["https://atlas.webim.vn", "http://localhost:3170"],
+      onlyUp("http://localhost:3170"),
+    );
+    expect(found).toBe("http://localhost:3170");
+  });
+
+  it("prefers candidate order, not whichever answered first", async () => {
+    const candidates = ["https://a.test", "http://localhost:3170"];
+    const found = await discoverAtlas(candidates, onlyUp("https://a.test", "http://localhost:3170"));
+    // Both are up; a stable answer keeps the address from flipping on reload.
+    expect(found).toBe("https://a.test");
+  });
+
+  it("returns null when nothing is running", async () => {
+    await expect(
+      discoverAtlas(["https://a.test", "https://b.test"], onlyUp()),
+    ).resolves.toBeNull();
+  });
+});
+
+describe("probeAtlas — same origin", () => {
+  const ORIGIN = "http://localhost:5174";
+
+  beforeEach(() => {
+    vi.stubGlobal("window", { location: { origin: ORIGIN } });
+  });
+
+  /**
+   * The bug this pins: a Vite dev server answers 200 + index.html for any
+   * path, so a reachability-only probe of our own origin "finds" an Atlas
+   * and the tab frames WeBIM inside WeBIM.
+   */
+  it("rejects our own dev server answering HTML for anything", async () => {
+    const fetchImpl = (async () => ({
+      ok: true,
+      json: async () => {
+        throw new SyntaxError("Unexpected token < in JSON");
+      },
+    })) as unknown as typeof fetch;
+    await expect(probeAtlas(`${ORIGIN}/atlas`, fetchImpl)).resolves.toBe(false);
+  });
+
+  it("rejects a JSON service that is not Atlas", async () => {
+    const fetchImpl = (async () => ({
+      ok: true,
+      json: async () => ({ service: "webim-relay", ok: true }),
+    })) as unknown as typeof fetch;
+    await expect(probeAtlas(`${ORIGIN}/atlas`, fetchImpl)).resolves.toBe(false);
+  });
+
+  it("accepts an Atlas that names itself", async () => {
+    const calls: RequestInit[] = [];
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      calls.push(init);
+      return { ok: true, json: async () => ({ service: "atlas", ok: true }) };
+    }) as unknown as typeof fetch;
+    await expect(probeAtlas(`${ORIGIN}/atlas`, fetchImpl)).resolves.toBe(true);
+    // Readable body is the whole point same-origin; no-cors would hide it.
+    expect(calls[0].mode).toBe("cors");
+  });
+
+  it("still only asks reachability of another origin, where the body is hidden", async () => {
+    const calls: RequestInit[] = [];
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      calls.push(init);
+      return {} as Response;
+    }) as unknown as typeof fetch;
+    await expect(probeAtlas("http://localhost:3170", fetchImpl)).resolves.toBe(true);
+    expect(calls[0].mode).toBe("no-cors");
   });
 });

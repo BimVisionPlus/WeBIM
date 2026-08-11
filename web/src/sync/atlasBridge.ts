@@ -152,18 +152,31 @@ export async function listAtlasProjects(
   return body.projects ?? [];
 }
 
+/** Atlas's health route names itself; nothing else here answers "atlas". */
+const ATLAS_HEALTH_SERVICE = "atlas";
+
+function isSameOrigin(url: string): boolean {
+  if (typeof window === "undefined") return false;
+  return url === window.location.origin || url.startsWith(`${window.location.origin}/`);
+}
+
 /**
  * Is there an Atlas at this address at all?
  *
- * A cross-origin iframe cannot tell us it failed to load — a wrong host, a
- * name that does not resolve, a server that is down and one that refuses the
- * embed all look identical from out here: an opaque rectangle, or worse, the
- * browser's own error page rendered inside our layout. So ask the network
- * directly before framing anything.
+ * A cross-origin iframe cannot report that it failed to load — a wrong host, a
+ * name with no DNS, a server that is down and one refusing the embed are
+ * indistinguishable from outside: an opaque rectangle, or worse, the browser's
+ * own error page rendered inside our layout. So ask the network first.
  *
- * `no-cors` because we only care whether the request reaches a server; an
- * opaque response is a yes. DNS and connection failures reject, which is the
- * signal worth acting on.
+ * Two modes, because "something answered" is not the same question as "Atlas
+ * answered":
+ *
+ *  - Same origin, where the body is readable: demand that the health route
+ *    identify itself. A dev server answers 200 with index.html for any path,
+ *    so a reachability-only check here finds *us* and frames WeBIM inside
+ *    WeBIM.
+ *  - Cross origin, where CORS hides the body: an opaque response is the most
+ *    that can be known. Good enough for an explicit host:port.
  */
 export async function probeAtlas(
   baseUrl: string,
@@ -172,20 +185,58 @@ export async function probeAtlas(
 ): Promise<boolean> {
   const url = baseUrl.replace(/\/+$/, "");
   if (!url) return false;
+  const strict = isSameOrigin(url);
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeoutMs);
   try {
-    await fetchImpl(`${url}/api/health`, {
-      mode: "no-cors",
+    const response = await fetchImpl(`${url}/api/health`, {
+      mode: strict ? "cors" : "no-cors",
       signal: abort.signal,
       cache: "no-store",
     });
-    return true;
+    if (!strict) return true;
+    if (!response.ok) return false;
+    const body = (await response.json()) as { service?: string };
+    return body?.service === ATLAS_HEALTH_SERVICE;
   } catch {
     return false;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Where an Atlas usually is, in the order worth trying.
+ *
+ * Same-origin first: a deployment that reverse-proxies Atlas under /atlas
+ * needs no configuration at all. Then the port `atlas/apps/web` binds in
+ * dev, then plain 3000 for anyone who changed it.
+ */
+export function atlasCandidates(): string[] {
+  const here = typeof window === "undefined" ? "" : window.location.origin;
+  return [
+    ...(here ? [`${here}/atlas`] : []),
+    "http://localhost:3170",
+    "http://localhost:3000",
+  ];
+}
+
+/**
+ * Find an Atlas without asking the user to type an address.
+ *
+ * Probes every candidate at once and returns the first one that answers *in
+ * candidate order*, not in whichever-was-fastest order — otherwise the
+ * chosen address would change between reloads on a machine running two.
+ */
+export async function discoverAtlas(
+  candidates: string[] = atlasCandidates(),
+  fetchImpl: typeof fetch = fetch,
+): Promise<string | null> {
+  const results = await Promise.all(
+    candidates.map((candidate) => probeAtlas(candidate, fetchImpl)),
+  );
+  const index = results.findIndex(Boolean);
+  return index === -1 ? null : candidates[index];
 }
 
 export interface PublishOptions {

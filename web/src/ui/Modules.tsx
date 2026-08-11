@@ -16,6 +16,7 @@ import { ganttChart, weekTicks } from "../application/gantt";
 import { Viewer3D } from "../viewport/Viewer3D";
 import {
   ATLAS_DISCIPLINES,
+  discoverAtlas,
   listAtlasProjects,
   loadAtlasConfig,
   probeAtlas,
@@ -963,13 +964,31 @@ export function AtlasModule() {
   const atlasUrl = config.baseUrl.replace(/\/+$/, "");
 
   // Probe before framing: a dead host would otherwise render the browser's
-  // own error page inside the app, with nothing to act on.
+  // own error page inside the app, with nothing to act on. When the
+  // configured address is dead, go looking rather than making the user type
+  // one — an Atlas running on this machine is the common case.
   useEffect(() => {
     let cancelled = false;
     setReach("checking");
-    void probeAtlas(atlasUrl).then((up) => {
-      if (!cancelled) setReach(up ? "up" : "down");
-    });
+    void (async () => {
+      if (await probeAtlas(atlasUrl)) {
+        if (!cancelled) setReach("up");
+        return;
+      }
+      const found = await discoverAtlas();
+      if (cancelled) return;
+      if (found && found !== atlasUrl) {
+        // Set through the updater rather than `update`, which is rebuilt every
+        // render — depending on it here would re-run the probe in a loop.
+        setConfig((previous) => {
+          const next = { ...previous, baseUrl: found };
+          saveAtlasConfig(next);
+          return next;
+        });
+        return; // the config change re-runs this effect
+      }
+      setReach("down");
+    })();
     return () => {
       cancelled = true;
     };
@@ -1008,10 +1027,20 @@ export function AtlasModule() {
 
         {atlasUrl && reach === "down" && (
           <div className="climate-finding warning">
-            ⚠ Không tới được <strong>{atlasUrl}</strong>. Thường là một trong ba:
-            tên miền chưa trỏ DNS · Atlas chưa chạy · sai địa chỉ. Sửa ở ô trên,
-            hoặc chạy Atlas rồi bấm <strong>Kiểm tra lại</strong>. Khi phát triển
-            trên máy, địa chỉ thường là <code>http://localhost:3170</code>.
+            ⚠ Không tìm thấy Atlas nào đang chạy — đã thử{" "}
+            <strong>{atlasUrl}</strong> và các địa chỉ quen thuộc (
+            <code>/atlas</code>, <code>localhost:3170</code>,{" "}
+            <code>localhost:3000</code>).
+            {"\n\n"}
+            Atlas nằm ngay trong repo này. Khởi động rồi bấm{" "}
+            <strong>Kiểm tra lại</strong> — tab sẽ tự nhận ra, không cần nhập
+            địa chỉ:
+            {"\n"}
+            <code>cd atlas && docker compose up -d postgres redis minio</code>
+            {"\n"}
+            <code>pnpm --filter @atlas/web dev</code>
+            {"\n\n"}
+            Nếu Atlas chạy ở nơi khác thì nhập địa chỉ vào ô trên.
           </div>
         )}
 
