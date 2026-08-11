@@ -2,6 +2,15 @@
 
 WeBIM là add-on BIM authoring độc lập cho Blender, hướng đến workflow giống Revit. Native BIM domain là nguồn dữ liệu authoring; Blender phục vụ viewport/UI và IFC là định dạng import/export qua IfcOpenShell. Dự án không import API nội bộ của Bonsai.
 
+
+## Nguồn gốc
+
+Dự án khởi đầu từ `Hoangduong314/WeBIM` (commit `a5e6ad3`, khởi tạo Blender
+extension) và từ đó được phát triển độc lập trong repo này. Kho gốc chưa công bố
+giấy phép, nên phần mã kế thừa từ đó vẫn thuộc bản quyền của tác giả gốc — cần
+làm rõ giấy phép trước khi phát hành công khai.
+
+
 ## Kiến trúc
 
 ```text
