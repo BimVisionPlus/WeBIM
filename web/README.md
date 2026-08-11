@@ -60,13 +60,13 @@ collaboration covers them for free; only binaries touch the server):
   `:3000`, taking the first that identifies itself through Atlas's
   CORS-enabled `/api/webim/health`. Reachability alone picks up whatever
   else owns the port.
-  The "Đẩy model" pane publishes the native project into an Atlas
-  project's Models module: export IFC in the browser, presign → PUT to
-  Atlas's S3/MinIO → register, so the bytes never pass through the Atlas
-  server. It authenticates with an org-scoped API key (`wbm_…`) rather
-  than a session. Same model name + revision replaces the previous
-  upload instead of stacking duplicates, so retrying a flaky push is
-  safe. See `../README.md` → **Atlas AEC** for how to mint the key.
+  The tab is the application and nothing else — uploading a model is
+  something Atlas already does, so a second way to do it here was one
+  panel too many. The publish bridge (`sync/atlasBridge`: export IFC in
+  the browser, presign → PUT to Atlas's S3/MinIO → register, so the bytes
+  never pass through the Atlas server, authenticated by an org-scoped
+  `wbm_…` key) is still there and still wired on the Atlas side; it just
+  has no button of its own. See `../README.md` → **Atlas AEC**.
 
 Platform server hardening:
 

@@ -15,18 +15,12 @@ import { climateFindings, facadeByOrientation } from "../application/climate";
 import { ganttChart, weekTicks } from "../application/gantt";
 import { Viewer3D } from "../viewport/Viewer3D";
 import {
-  ATLAS_DISCIPLINES,
   discoverAtlas,
   identifyAtlas,
-  listAtlasProjects,
   loadAtlasConfig,
   probeAtlas,
-  publishToAtlas,
   saveAtlasConfig,
   type AtlasConfig,
-  type AtlasDiscipline,
-  type AtlasProject,
-  type PublishResult,
 } from "../sync/atlasBridge";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
 import {
@@ -885,82 +879,27 @@ export function ViewerModule() {
  * framed at its own origin, which keeps its session, routing and streaming
  * intact while making it one more tab of WeBIM.
  *
+ * The tab is the application and nothing else: uploading a model is something
+ * Atlas already does, so a second way to do it here was one panel too many.
+ * The publish bridge itself is still in `sync/atlasBridge` and still wired on
+ * the Atlas side — it just has no button of its own.
+ *
  * Atlas must permit the embed: it sends X-Frame-Options SAMEORIGIN unless
  * FRAME_ANCESTORS names this origin (see atlas/apps/web/next.config.mjs).
  * The browser cannot report a refused frame to us cross-origin, so the header
  * always offers "mở tab mới" instead of leaving a blank rectangle.
- *
- * "Đẩy model" is the other half of the seam: it exports the native project to
- * IFC here and publishes it into an Atlas project's Models module.
  */
 export function AtlasModule() {
   useStoreVersion();
   const [config, setConfig] = useState<AtlasConfig>(() => loadAtlasConfig());
-  const [pane, setPane] = useState<"app" | "publish">("app");
   const [reach, setReach] = useState<"checking" | "up" | "down">("checking");
   const [identified, setIdentified] = useState(true);
   const [probeAt, setProbeAt] = useState(0);
-  const [projects, setProjects] = useState<AtlasProject[] | null>(null);
-  const [modelName, setModelName] = useState(store.project.name);
-  const [busy, setBusy] = useState(false);
-  const [log, setLog] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [published, setPublished] = useState<PublishResult | null>(null);
 
   const update = (patch: Partial<AtlasConfig>) => {
     const next = { ...config, ...patch };
     setConfig(next);
     saveAtlasConfig(next);
-  };
-
-  const connect = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const found = await listAtlasProjects(config);
-      setProjects(found);
-      // Keep an already-chosen project if the org still has it; otherwise the
-      // stored id is stale (revoked key, different org) and must be re-picked.
-      const stillThere = found.some((project) => project.id === config.projectId);
-      if (!stillThere) {
-        const first = found[0];
-        update({
-          projectId: first?.id ?? "",
-          projectLabel: first ? `${first.key} — ${first.name}` : "",
-        });
-      }
-    } catch (cause) {
-      setProjects(null);
-      setError((cause as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const publish = async () => {
-    setBusy(true);
-    setError(null);
-    setPublished(null);
-    setLog([]);
-    try {
-      const result = await publishToAtlas({
-        config,
-        ifc: store.exportIfc(),
-        modelName,
-        webimProjectId: store.project.id,
-        onProgress: (message) => setLog((lines) => [...lines, message]),
-      });
-      setPublished(result);
-      store.setStatus(
-        result.replaced
-          ? `Atlas: đã thay thế ${modelName} ${config.revision}`
-          : `Atlas: đã đăng ${modelName} ${config.revision}`,
-      );
-    } catch (cause) {
-      setError((cause as Error).message);
-    } finally {
-      setBusy(false);
-    }
   };
 
   const atlasUrl = config.baseUrl.replace(/\/+$/, "");
@@ -1014,191 +953,79 @@ export function AtlasModule() {
     };
   }, [atlasUrl, manualUrl, probeAt]);
 
-  if (pane === "app") {
-    return (
-      <div className="atlas-host">
-        <div className="atlas-tabs">
-          <button className="active" onClick={() => setPane("app")}>
-            Ứng dụng
-          </button>
-          <button onClick={() => setPane("publish")}>Đẩy model</button>
-          <span className="spacer" />
-          <input
-            value={config.baseUrl}
-            placeholder="https://atlas.webim.vn — bỏ trống để tự dò"
-            style={{ minWidth: 260 }}
-            onChange={(event) =>
-              update({
-                baseUrl: event.target.value,
-                // Typed, therefore deliberate: stop second-guessing it.
-                baseUrlSource: event.target.value.trim() ? "manual" : "auto",
-              })
-            }
-          />
-          <button onClick={() => setProbeAt((n) => n + 1)}>Kiểm tra lại</button>
-          {atlasUrl && (
-            <a href={atlasUrl} target="_blank" rel="noreferrer">
-              Mở tab mới ↗
-            </a>
-          )}
-        </div>
-
-        {!atlasUrl && (
-          <p className="module-hint">Nhập địa chỉ Atlas ở ô trên rồi bấm Kiểm tra lại.</p>
-        )}
-
-        {atlasUrl && reach === "checking" && (
-          <p className="module-hint">Đang kiểm tra {atlasUrl}…</p>
-        )}
-
-        {atlasUrl && reach === "down" && (
-          <div className="climate-finding warning">
-            <p>
-              ⚠ Không tìm thấy Atlas nào đang chạy — đã thử các địa chỉ quen
-              thuộc (<code>/atlas</code>, <code>localhost:3170</code>,{" "}
-              <code>localhost:3000</code>).
-            </p>
-            <p>
-              Atlas nằm ngay trong repo này. Khởi động rồi bấm{" "}
-              <strong>Kiểm tra lại</strong> — tab sẽ tự nhận ra, không cần nhập
-              địa chỉ:
-            </p>
-            <pre className="atlas-commands">
-              cd atlas{"\n"}
-              docker compose up -d postgres redis minio{"\n"}
-              FRAME_ANCESTORS={window.location.origin}{" "}
-              WEBIM_ALLOWED_ORIGINS={window.location.origin}{" \\"}
-              {"\n"}
-              {"  "}pnpm --filter @atlas/web dev
-            </pre>
-            <p>
-              Hai biến đó là thứ cho phép nhúng và gọi API từ origin này —
-              thiếu chúng thì Atlas chạy nhưng tab vẫn trống. Lần đầu còn cần{" "}
-              <code>pnpm install</code> và một <code>.env</code>; xem{" "}
-              <strong>Quick start</strong> trong <code>atlas/README.md</code>.
-            </p>
-            <p>Nếu Atlas chạy ở nơi khác thì nhập địa chỉ vào ô trên.</p>
-          </div>
-        )}
-
-        {atlasUrl && reach === "up" && !identified && manualUrl && (
-          <div className="climate-finding warning">
-            ⚠ <strong>{atlasUrl}</strong> có trả lời, nhưng không tự nhận là
-            Atlas — nhiều khả năng đây là ứng dụng khác đang giữ cổng đó (cổng
-            3000 hay bị Dagster/Grafana chiếm). Sửa địa chỉ ở ô trên, hoặc bỏ
-            trống rồi bấm <strong>Kiểm tra lại</strong> để dò lại từ đầu.
-          </div>
-        )}
-
-        {atlasUrl && reach === "up" && (
-          <iframe className="atlas-frame" title="Atlas AEC" src={atlasUrl} />
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="module-host">
+    <div className="atlas-host">
       <div className="atlas-tabs">
-        <button onClick={() => setPane("app")}>Ứng dụng</button>
-        <button className="active" onClick={() => setPane("publish")}>
-          Đẩy model
-        </button>
-      </div>
-      <p className="module-hint">
-        Đẩy model native của WeBIM sang Atlas dưới dạng IFC. File đi thẳng lên kho
-        của Atlas; WeBIM chỉ xin quyền và đăng ký bản ghi.
-      </p>
-
-      <div className="module-form">
         <input
           value={config.baseUrl}
-          placeholder="https://atlas.aecplatform.vn"
-          onChange={(event) => update({ baseUrl: event.target.value })}
+          placeholder="https://atlas.webim.vn — bỏ trống để tự dò"
+          style={{ minWidth: 260 }}
+          onChange={(event) =>
+            update({
+              baseUrl: event.target.value,
+              // Typed, therefore deliberate: stop second-guessing it.
+              baseUrlSource: event.target.value.trim() ? "manual" : "auto",
+            })
+          }
         />
-        <input
-          type="password"
-          value={config.apiKey}
-          placeholder="API key (wbm_…)"
-          onChange={(event) => update({ apiKey: event.target.value })}
-        />
-        <button disabled={busy || !config.baseUrl || !config.apiKey} onClick={() => void connect()}>
-          {busy ? "Đang gọi…" : "Kết nối"}
-        </button>
-      </div>
-
-      {projects !== null && (
-        <div className="module-form">
-          <select
-            value={config.projectId}
-            onChange={(event) => {
-              const picked = projects.find((project) => project.id === event.target.value);
-              update({
-                projectId: event.target.value,
-                projectLabel: picked ? `${picked.key} — ${picked.name}` : "",
-              });
-            }}
-          >
-            {projects.length === 0 && <option value="">Tổ chức chưa có dự án nào</option>}
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.key} — {project.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      <div className="module-form">
-        <input
-          value={modelName}
-          placeholder="Tên model"
-          onChange={(event) => setModelName(event.target.value)}
-        />
-        <input
-          value={config.revision}
-          placeholder="Phiên bản"
-          onChange={(event) => update({ revision: event.target.value })}
-        />
-        <select
-          value={config.discipline}
-          onChange={(event) => update({ discipline: event.target.value as AtlasDiscipline })}
-        >
-          {ATLAS_DISCIPLINES.map(([id, label]) => (
-            <option key={id} value={id}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <button disabled={busy || !config.projectId} onClick={() => void publish()}>
-          {busy ? "Đang đẩy…" : "Đẩy IFC sang Atlas"}
-        </button>
-      </div>
-
-      {config.projectLabel && (
-        <p className="module-hint">
-          Dự án đích: <strong>{config.projectLabel}</strong> · cùng tên + phiên bản sẽ
-          ghi đè bản cũ thay vì tạo trùng.
-        </p>
-      )}
-
-      {log.map((line, index) => (
-        <p key={index} className="module-hint">
-          {line}
-        </p>
-      ))}
-
-      {error && <div className="climate-finding warning">⚠ {error}</div>}
-
-      {published && (
-        <div className="ai-answer">
-          {published.replaced ? "Đã thay thế model" : "Đã tạo model"} ·{" "}
-          {(published.sizeBytes / 1024).toFixed(0)} KB
-          {"\n"}
-          <a href={published.viewerUrl} target="_blank" rel="noreferrer">
-            Mở trong Atlas Models →
+        <button onClick={() => setProbeAt((n) => n + 1)}>Kiểm tra lại</button>
+        <span className="spacer" />
+        {atlasUrl && (
+          <a href={atlasUrl} target="_blank" rel="noreferrer">
+            Mở tab mới ↗
           </a>
+        )}
+      </div>
+
+      {!atlasUrl && (
+        <p className="module-hint">Nhập địa chỉ Atlas ở ô trên rồi bấm Kiểm tra lại.</p>
+      )}
+
+      {atlasUrl && reach === "checking" && (
+        <p className="module-hint">Đang kiểm tra {atlasUrl}…</p>
+      )}
+
+      {atlasUrl && reach === "down" && (
+        <div className="climate-finding warning">
+          <p>
+            ⚠ Không tìm thấy Atlas nào đang chạy — đã thử các địa chỉ quen
+            thuộc (<code>/atlas</code>, <code>localhost:3170</code>,{" "}
+            <code>localhost:3000</code>).
+          </p>
+          <p>
+            Atlas nằm ngay trong repo này. Khởi động rồi bấm{" "}
+            <strong>Kiểm tra lại</strong> — tab sẽ tự nhận ra, không cần nhập
+            địa chỉ:
+          </p>
+          <pre className="atlas-commands">
+            cd atlas{"\n"}
+            docker compose up -d postgres redis minio{"\n"}
+            FRAME_ANCESTORS={window.location.origin}{" "}
+            WEBIM_ALLOWED_ORIGINS={window.location.origin}{" \\"}
+            {"\n"}
+            {"  "}pnpm --filter @atlas/web dev
+          </pre>
+          <p>
+            Hai biến đó là thứ cho phép nhúng và gọi API từ origin này —
+            thiếu chúng thì Atlas chạy nhưng tab vẫn trống. Lần đầu còn cần{" "}
+            <code>pnpm install</code> và một <code>.env</code>; xem{" "}
+            <strong>Quick start</strong> trong <code>atlas/README.md</code>.
+          </p>
+          <p>Nếu Atlas chạy ở nơi khác thì nhập địa chỉ vào ô trên.</p>
         </div>
+      )}
+
+      {atlasUrl && reach === "up" && !identified && manualUrl && (
+        <div className="climate-finding warning">
+          ⚠ <strong>{atlasUrl}</strong> có trả lời, nhưng không tự nhận là
+          Atlas — nhiều khả năng đây là ứng dụng khác đang giữ cổng đó (cổng
+          3000 hay bị Dagster/Grafana chiếm). Sửa địa chỉ ở ô trên, hoặc bỏ
+          trống rồi bấm <strong>Kiểm tra lại</strong> để dò lại từ đầu.
+        </div>
+      )}
+
+      {atlasUrl && reach === "up" && (
+        <iframe className="atlas-frame" title="Atlas AEC" src={atlasUrl} />
       )}
     </div>
   );
