@@ -1,0 +1,82 @@
+name: Standards corpus
+
+# Re-import the machine-checkable QCVN/TCVN corpus once a week so the
+# Standards module does not quietly drift behind the upstream registry.
+#
+# The importer leaves corpus.json alone when nothing changed, so a quiet
+# week produces no commit at all — a diff here always means the corpus
+# actually moved.
+
+on:
+  schedule:
+    # Monday 01:00 UTC = 08:00 giờ Hà Nội.
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: standards-corpus
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout WeBIM
+        uses: actions/checkout@v4
+
+      - name: Checkout qcvn-conflict-map
+        uses: actions/checkout@v4
+        with:
+          repository: aec-platform/qcvn-conflict-map
+          path: corpus
+          # Provenance pins the revision, so the full history is not needed —
+          # but the SHA must be real, which a shallow checkout still gives.
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+        working-directory: web
+
+      - name: Import corpus
+        working-directory: web
+        run: node scripts/import-corpus.mjs "$GITHUB_WORKSPACE/corpus"
+
+      - name: Stop early if nothing moved
+        id: diff
+        run: |
+          if git diff --quiet -- web/src/standards/corpus.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Corpus unchanged this week."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git --no-pager diff --stat -- web/src/standards/corpus.json
+          fi
+
+      # The catalog merges corpus over seed, so a corpus change can break
+      # search, supersession or the kind mapping. Never commit past red.
+      - name: Test against the new corpus
+        if: steps.diff.outputs.changed == 'true'
+        working-directory: web
+        run: |
+          npm test
+          npx tsc -b
+
+      - name: Commit the refreshed corpus
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          revision=$(git -C corpus rev-parse --short HEAD)
+          count=$(node -e "process.stdout.write(String(require('./web/src/standards/corpus.json').entries.length))")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/src/standards/corpus.json
+          git commit -m "chore: refresh standards corpus to ${revision}" \
+                     -m "${count} văn bản QCVN/TCVN, nhập tự động từ aec-platform/qcvn-conflict-map@${revision}."
+          git push

@@ -5,8 +5,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  corpusImportedOn,
   searchStandards,
   supersessionChain,
+  CORPUS_PROVENANCE,
   STANDARDS_CATALOG,
 } from "../standards/catalog";
 import { climateFindings, facadeByOrientation } from "../application/climate";
@@ -517,6 +519,23 @@ export function StandardsModule() {
         corpus machine-checkable (qcvn-conflict-map, kèm xung đột liên-quy-chuẩn) ·
         còn lại là seed đã đối chiếu nguồn thứ cấp. Chưa mục nào đối chiếu công báo
         (edition_verified) — luôn kiểm tra văn bản gốc trước khi áp dụng.
+      </p>
+      <p className="module-hint">
+        {corpusImportedOn()
+          ? `Corpus tự động cập nhật hằng tuần · lần nhập gần nhất ${corpusImportedOn()}`
+          : "Corpus chưa ghi mốc nhập — chạy npm run import-corpus"}
+        {CORPUS_PROVENANCE.revision && (
+          <>
+            {" · "}
+            <a
+              href={`${CORPUS_PROVENANCE.source}/commit/${CORPUS_PROVENANCE.revision}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {CORPUS_PROVENANCE.revision.slice(0, 8)}
+            </a>
+          </>
+        )}
       </p>
       <div className="module-form">
         <input

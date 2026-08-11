@@ -267,6 +267,35 @@ function buildCatalog(): StandardEntry[] {
 
 export const STANDARDS_CATALOG: StandardEntry[] = buildCatalog();
 
+/**
+ * Where the corpus half of the catalog came from and when. A weekly job
+ * (.github/workflows/standards-corpus.yml) re-imports it, so the UI shows
+ * this rather than letting a stale build pass for a current one. Files
+ * written before provenance was recorded have no source — hence optional.
+ */
+export interface CorpusProvenance {
+  source?: string;
+  revision?: string;
+  importedAt?: string;
+}
+
+export const CORPUS_PROVENANCE: CorpusProvenance = {
+  source: (corpusData as CorpusProvenance).source,
+  revision: (corpusData as CorpusProvenance).revision,
+  importedAt: (corpusData as CorpusProvenance).importedAt,
+};
+
+/** "10/08/2026" — the import date, or null when the file predates tracking. */
+export function corpusImportedOn(
+  provenance: CorpusProvenance = CORPUS_PROVENANCE,
+): string | null {
+  if (!provenance.importedAt) return null;
+  const date = new Date(provenance.importedAt);
+  return Number.isNaN(date.getTime())
+    ? null
+    : date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+}
+
 /** Case/diacritic-insensitive search across code, title and tags. */
 export function searchStandards(
   query: string,
