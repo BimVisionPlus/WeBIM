@@ -14,7 +14,16 @@ Domain chính thức: **webim.vn** (Atlas nằm ở `atlas.webim.vn`, xem
    | A | `www.webim.vn` | IP máy chủ (tuỳ chọn) |
    | A | `atlas.webim.vn` | IP máy chủ chạy Atlas |
 
-   Kiểm tra trước khi deploy: `dig +short webim.vn` phải ra đúng IP.
+   Kiểm tra trước khi deploy:
+
+   ```bash
+   bash deploy/check-dns.sh webim.vn <IP-máy-chủ>
+   ```
+
+   Script phân biệt ba thứ mà `dig` báo giống hệt nhau (đều là "không có
+   gì"): chưa đăng ký · zone chưa bật ở nhà cung cấp DNS · chưa thêm bản
+   ghi A. Nó hỏi thẳng nameserver được uỷ quyền nên một NXDOMAIN còn kẹt
+   trong cache không làm cấu hình đúng trông như hỏng.
 3. `cp deploy/.env.example deploy/.env` và điền:
    - `WEBIM_DOMAIN` — Caddy tự xin chứng chỉ Let's Encrypt cho domain này.
    - `WEBIM_SECRET` — `openssl rand -hex 32`.
