@@ -1064,9 +1064,19 @@ export function AtlasModule() {
               địa chỉ:
             </p>
             <pre className="atlas-commands">
-              cd atlas && docker compose up -d postgres redis minio{"\n"}
-              pnpm --filter @atlas/web dev
+              cd atlas{"\n"}
+              docker compose up -d postgres redis minio{"\n"}
+              FRAME_ANCESTORS={window.location.origin}{" "}
+              WEBIM_ALLOWED_ORIGINS={window.location.origin}{" \\"}
+              {"\n"}
+              {"  "}pnpm --filter @atlas/web dev
             </pre>
+            <p>
+              Hai biến đó là thứ cho phép nhúng và gọi API từ origin này —
+              thiếu chúng thì Atlas chạy nhưng tab vẫn trống. Lần đầu còn cần{" "}
+              <code>pnpm install</code> và một <code>.env</code>; xem{" "}
+              <strong>Quick start</strong> trong <code>atlas/README.md</code>.
+            </p>
             <p>Nếu Atlas chạy ở nơi khác thì nhập địa chỉ vào ô trên.</p>
           </div>
         )}
