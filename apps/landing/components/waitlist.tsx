@@ -49,7 +49,7 @@ export function WaitlistForm() {
         placeholder="email@cong-ty.vn"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="flex-1 rounded-md border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="flex-1 rounded-md border border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))] px-4 py-2.5 text-sm text-[rgb(var(--inverse-ink))] placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       />
       <input type="hidden" value={name} onChange={(e) => setName(e.target.value)} />
       <input type="hidden" value={company} onChange={(e) => setCompany(e.target.value)} />
@@ -57,7 +57,7 @@ export function WaitlistForm() {
       <button
         type="submit"
         disabled={busy}
-        className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+        className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-500 disabled:opacity-50"
       >
         {busy ? "Đang gửi…" : "Đăng ký dùng thử"}
       </button>

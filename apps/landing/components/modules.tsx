@@ -388,29 +388,29 @@ const aecPlatformModules = [
 
 export function Modules() {
   return (
-    <section className="border-y border-slate-800 bg-slate-900/30 py-20">
+    <section className="border-y border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))]/30 py-20">
       <div className="mx-auto max-w-6xl px-6">
         {/* Section banner */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
             <span className="font-mono">01</span> · Sản phẩm · LIVE
           </div>
-          <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-bold text-[rgb(var(--inverse-ink))] sm:text-4xl">
             47 mô-đun chạy thực — 2 suite, 1 tài khoản
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-slate-400">
+          <p className="mx-auto mt-3 max-w-2xl text-[rgb(var(--muted-2))]">
             Atlas AEC (suite ngang kiểu Atlassian) + aec-platform (PM dọc cho nhà
             thầu VN). Đăng nhập 1 lần, chuyển qua lại không reload.{" "}
-            <span className="text-slate-300">Bấm vào card để mở thẳng.</span>
+            <span className="text-[rgb(var(--inverse-ink))]">Bấm vào card để mở thẳng.</span>
           </p>
         </div>
 
         {/* ─── Atlas AEC suite ─────────────────────────────────────── */}
         <div className="mt-16">
-          <div className="flex items-baseline justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-xl font-semibold text-white">
+          <div className="flex items-baseline justify-between border-b border-[rgb(var(--inverse-bg))] pb-3">
+            <h3 className="text-xl font-semibold text-[rgb(var(--inverse-ink))]">
               Atlas AEC{" "}
-              <span className="ml-2 text-sm font-normal text-slate-500">
+              <span className="ml-2 text-sm font-normal text-[rgb(var(--muted))]">
                 Suite ngang · 13 mô-đun
               </span>
             </h3>
@@ -427,10 +427,10 @@ export function Modules() {
 
         {/* ─── aec-platform PM suite ───────────────────────────────── */}
         <div className="mt-16">
-          <div className="flex items-baseline justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-xl font-semibold text-white">
+          <div className="flex items-baseline justify-between border-b border-[rgb(var(--inverse-bg))] pb-3">
+            <h3 className="text-xl font-semibold text-[rgb(var(--inverse-ink))]">
               aec-platform{" "}
-              <span className="ml-2 text-sm font-normal text-slate-500">
+              <span className="ml-2 text-sm font-normal text-[rgb(var(--muted))]">
                 PM dọc cho nhà thầu VN · 34 mô-đun
               </span>
             </h3>
@@ -462,7 +462,7 @@ function ModuleCard({ module: m }: { module: Module }) {
   return (
     <a
       href={m.href}
-      className="group rounded-lg border border-slate-800 bg-slate-900/60 p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/60 hover:bg-slate-900 hover:shadow-lg hover:shadow-emerald-500/5"
+      className="group rounded-lg border border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))]/60 p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/60 hover:bg-[rgb(var(--inverse-bg))] hover:shadow-lg hover:shadow-emerald-500/5"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="text-2xl">{m.icon}</div>
@@ -472,15 +472,15 @@ function ModuleCard({ module: m }: { module: Module }) {
         </span>
       </div>
       <div className="mt-3 flex items-baseline gap-2">
-        <h3 className="text-lg font-semibold text-white">{m.name}</h3>
-        <span className="text-xs text-slate-500">· {m.sub}</span>
+        <h3 className="text-lg font-semibold text-[rgb(var(--inverse-ink))]">{m.name}</h3>
+        <span className="text-xs text-[rgb(var(--muted))]">· {m.sub}</span>
       </div>
       {m.group ? (
         <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-400">
           {m.group}
         </p>
       ) : null}
-      <p className="mt-1 text-sm text-slate-400">{m.desc}</p>
+      <p className="mt-1 text-sm text-[rgb(var(--muted-2))]">{m.desc}</p>
       <div className="mt-3 text-[11px] font-medium text-emerald-400 opacity-0 transition group-hover:opacity-100">
         Mở mô-đun →
       </div>

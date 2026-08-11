@@ -13,18 +13,18 @@ const rows = [
 
 export function Compare() {
   return (
-    <section className="bg-slate-950/50 py-20">
+    <section className="bg-[rgb(var(--inverse-bg))]/50 py-20">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">So với Procore, Autodesk ACC, Excel</h2>
-          <p className="mt-3 text-slate-400">
+          <h2 className="text-3xl font-bold text-[rgb(var(--inverse-ink))] sm:text-4xl">So với Procore, Autodesk ACC, Excel</h2>
+          <p className="mt-3 text-[rgb(var(--muted-2))]">
             Atlas AEC là duy nhất được thiết kế cho khung pháp lý xây dựng Việt Nam.
           </p>
         </div>
 
-        <div className="mt-10 overflow-x-auto rounded-lg border border-slate-800">
+        <div className="mt-10 overflow-x-auto rounded-lg border border-[rgb(var(--inverse-bg))]">
           <table className="w-full text-sm">
-            <thead className="bg-slate-900 text-left text-xs uppercase tracking-wide text-slate-400">
+            <thead className="bg-[rgb(var(--inverse-bg))] text-left text-xs uppercase tracking-wide text-[rgb(var(--muted-2))]">
               <tr>
                 <th className="px-4 py-3">Tính năng</th>
                 <th className="px-4 py-3 text-blue-400">Atlas AEC</th>
@@ -33,14 +33,14 @@ export function Compare() {
                 <th className="px-4 py-3">Excel + Zalo</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-[rgb(var(--inverse-bg))]">
               {rows.map((r) => (
                 <tr key={r.label}>
-                  <td className="px-4 py-3 text-slate-300">{r.label}</td>
+                  <td className="px-4 py-3 text-[rgb(var(--inverse-ink))]">{r.label}</td>
                   <td className="px-4 py-3 font-medium text-blue-300">{r.atlas}</td>
-                  <td className="px-4 py-3 text-slate-400">{r.procore}</td>
-                  <td className="px-4 py-3 text-slate-400">{r.acc}</td>
-                  <td className="px-4 py-3 text-slate-400">{r.excel}</td>
+                  <td className="px-4 py-3 text-[rgb(var(--muted-2))]">{r.procore}</td>
+                  <td className="px-4 py-3 text-[rgb(var(--muted-2))]">{r.acc}</td>
+                  <td className="px-4 py-3 text-[rgb(var(--muted-2))]">{r.excel}</td>
                 </tr>
               ))}
             </tbody>

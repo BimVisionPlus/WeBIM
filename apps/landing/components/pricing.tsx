@@ -46,11 +46,11 @@ const tiers = [
 
 export function Pricing() {
   return (
-    <section className="bg-slate-900/30 py-20">
+    <section className="bg-[rgb(var(--inverse-bg))]/30 py-20">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">Giá Việt Nam, giá trị Việt Nam</h2>
-          <p className="mt-3 text-slate-400">
+          <h2 className="text-3xl font-bold text-[rgb(var(--inverse-ink))] sm:text-4xl">Giá Việt Nam, giá trị Việt Nam</h2>
+          <p className="mt-3 text-[rgb(var(--muted-2))]">
             VND. Không charge per-doc như Procore. Không charge per-API-call như Autodesk.
           </p>
         </div>
@@ -58,23 +58,23 @@ export function Pricing() {
           {tiers.map((t) => (
             <div
               key={t.name}
-              className={`relative rounded-lg border bg-slate-900/60 p-6 ${
-                t.badge ? "border-blue-500" : "border-slate-800"
+              className={`relative rounded-lg border bg-[rgb(var(--inverse-bg))]/60 p-6 ${
+                t.badge ? "border-blue-500" : "border-[rgb(var(--inverse-bg))]"
               }`}
             >
               {t.badge && (
-                <div className="absolute -top-3 right-4 rounded-full bg-blue-600 px-3 py-0.5 text-xs font-medium text-white">
+                <div className="absolute -top-3 right-4 rounded-full bg-blue-600 px-3 py-0.5 text-xs font-medium text-[rgb(var(--inverse-ink))]">
                   {t.badge}
                 </div>
               )}
-              <div className="text-lg font-semibold text-white">{t.name}</div>
-              <div className="text-xs text-slate-400">{t.target}</div>
+              <div className="text-lg font-semibold text-[rgb(var(--inverse-ink))]">{t.name}</div>
+              <div className="text-xs text-[rgb(var(--muted-2))]">{t.target}</div>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-white">{t.price}</span>
-                <span className="text-sm text-slate-400">VND/tháng</span>
+                <span className="text-3xl font-bold text-[rgb(var(--inverse-ink))]">{t.price}</span>
+                <span className="text-sm text-[rgb(var(--muted-2))]">VND/tháng</span>
               </div>
-              <div className="text-xs text-slate-500">{t.seats}</div>
-              <ul className="mt-4 space-y-2 text-sm text-slate-300">
+              <div className="text-xs text-[rgb(var(--muted))]">{t.seats}</div>
+              <ul className="mt-4 space-y-2 text-sm text-[rgb(var(--inverse-ink))]">
                 {t.features.map((f) => (
                   <li key={f} className="flex gap-2">
                     <span className="text-blue-400">✓</span>

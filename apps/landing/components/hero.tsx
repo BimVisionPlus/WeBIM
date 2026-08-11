@@ -10,7 +10,7 @@ export function Hero() {
           27 mô-đun LIVE tại app.aecplatform.vn
         </div>
 
-        <h1 className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-6xl">
+        <h1 className="mt-6 text-4xl font-bold tracking-tight text-[rgb(var(--inverse-ink))] sm:text-6xl">
           Hệ điều hành{" "}
           <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
             xây dựng Việt Nam
@@ -19,10 +19,10 @@ export function Hero() {
           27 mô-đun, 1 tài khoản.
         </h1>
 
-        <p className="mx-auto mt-6 max-w-3xl text-lg text-slate-300">
+        <p className="mx-auto mt-6 max-w-3xl text-lg text-[rgb(var(--inverse-ink))]">
           AEC Platform = hai suite chạy trên cùng một account:{" "}
-          <strong className="text-white">Atlas AEC</strong> (suite ngang, kiểu Atlassian — 13 mô-đun) +{" "}
-          <strong className="text-white">aec-platform</strong> (PM dọc cho nhà thầu VN — 14 mô-đun).
+          <strong className="text-[rgb(var(--inverse-ink))]">Atlas AEC</strong> (suite ngang, kiểu Atlassian — 13 mô-đun) +{" "}
+          <strong className="text-[rgb(var(--inverse-ink))]">aec-platform</strong> (PM dọc cho nhà thầu VN — 14 mô-đun).
           Mỗi mô-đun độc lập, đăng nhập chung, dữ liệu liền mạch. Gắn chặt NĐ 06/2021 (nghiệm thu),
           VBHN 06/VBHN-BXD (chi phí ĐTXD — hợp nhất NĐ 10/2021), HĐĐT NĐ 123/2020.
         </p>
@@ -30,13 +30,13 @@ export function Hero() {
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <a
             href="https://app.aecplatform.vn"
-            className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-[rgb(var(--inverse-ink))] hover:bg-blue-700"
           >
             Mở app.aecplatform.vn →
           </a>
           <WaitlistForm />
         </div>
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-[rgb(var(--muted))]">
           27 mô-đun đều LIVE — Atlas + aec-platform. Account thử nghiệm có sẵn (xem trang Pricing).
         </p>
 
@@ -47,10 +47,10 @@ export function Hero() {
             { num: "35+", label: "Prisma models", note: "VN-grounded schema" },
             { num: "0đ", label: "/tháng infra", note: "free-tier stack" },
           ].map((s) => (
-            <div key={s.label} className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-5">
-              <div className="text-3xl font-bold text-white">{s.num}</div>
-              <div className="mt-1 text-xs font-medium text-slate-400">{s.label}</div>
-              <div className="text-[11px] text-slate-500">{s.note}</div>
+            <div key={s.label} className="rounded-lg border border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))]/40 px-4 py-5">
+              <div className="text-3xl font-bold text-[rgb(var(--inverse-ink))]">{s.num}</div>
+              <div className="mt-1 text-xs font-medium text-[rgb(var(--muted-2))]">{s.label}</div>
+              <div className="text-[11px] text-[rgb(var(--muted))]">{s.note}</div>
             </div>
           ))}
         </div>

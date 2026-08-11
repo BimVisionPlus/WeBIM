@@ -11,11 +11,11 @@ const items = [
 
 export function VnStack() {
   return (
-    <section className="bg-slate-950 py-20">
+    <section className="bg-[rgb(var(--inverse-bg))] py-20">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">Hệ pháp lý Việt Nam — đã ngấm vào code</h2>
-          <p className="mt-3 text-slate-400">
+          <h2 className="text-3xl font-bold text-[rgb(var(--inverse-ink))] sm:text-4xl">Hệ pháp lý Việt Nam — đã ngấm vào code</h2>
+          <p className="mt-3 text-[rgb(var(--muted-2))]">
             Không phải template Excel. Là state machine + validator + audit log.
           </p>
         </div>
@@ -23,11 +23,11 @@ export function VnStack() {
           {items.map((i) => (
             <div
               key={i.law}
-              className="rounded-lg border border-slate-800 bg-slate-900/40 p-4"
+              className="rounded-lg border border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))]/40 p-4"
             >
               <div className="font-mono text-xs text-blue-400">{i.law}</div>
-              <div className="mt-1 text-sm font-medium text-white">{i.what}</div>
-              <div className="mt-1 text-xs text-slate-400">Maps → {i.maps}</div>
+              <div className="mt-1 text-sm font-medium text-[rgb(var(--inverse-ink))]">{i.what}</div>
+              <div className="mt-1 text-xs text-[rgb(var(--muted-2))]">Maps → {i.maps}</div>
             </div>
           ))}
         </div>

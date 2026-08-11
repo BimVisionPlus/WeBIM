@@ -49,17 +49,17 @@ const modules = [
 
 export function Roadmap() {
   return (
-    <section className="border-t border-slate-800 bg-slate-950 py-24">
+    <section className="border-t border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))] py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))] px-3 py-1 text-xs font-medium text-[rgb(var(--muted-2))]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--muted))]" />
             Roadmap 18 tháng
           </div>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-tight text-[rgb(var(--inverse-ink))] sm:text-4xl">
             5 module · ngôn ngữ chung · đăng nhập 1 lần
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-base text-slate-400">
+          <p className="mx-auto mt-3 max-w-2xl text-base text-[rgb(var(--muted-2))]">
             Mỗi module là 1 SaaS độc lập, có thể dùng riêng. Nhưng dữ liệu chia sẻ: 1 dự án Atlas AEC tự
             xuất BoQ sang Atlas Cost, tự pull subcontractor score từ Atlas Vendor, tự check QCVN qua
             Atlas Compliance. Đăng nhập 1 tài khoản, dùng cả 5.
@@ -70,19 +70,19 @@ export function Roadmap() {
           {modules.map((m) => (
             <li
               key={m.n}
-              className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition hover:border-slate-700"
+              className="group relative overflow-hidden rounded-xl border border-[rgb(var(--inverse-bg))] bg-[rgb(var(--inverse-bg))]/50 p-6 transition hover:border-[rgb(var(--inverse-bg))]"
             >
               <div className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${m.color}`} />
               <div className="grid gap-4 sm:grid-cols-[80px_1fr_140px] sm:items-center">
-                <div className="font-mono text-3xl font-bold text-slate-700">{m.n}</div>
+                <div className="font-mono text-3xl font-bold text-[rgb(var(--ink-2))]">{m.n}</div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-xl font-semibold text-white">{m.name}</h3>
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
+                    <h3 className="text-xl font-semibold text-[rgb(var(--inverse-ink))]">{m.name}</h3>
+                    <span className="rounded-full bg-[rgb(var(--inverse-bg))] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[rgb(var(--muted-2))]">
                       {m.tag}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{m.desc}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[rgb(var(--muted-2))]">{m.desc}</p>
                 </div>
                 <div className="text-right">
                   {m.status === "live" ? (
@@ -98,7 +98,7 @@ export function Roadmap() {
                       {m.eta}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-500">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-[rgb(var(--inverse-bg))] px-3 py-1.5 text-sm font-medium text-[rgb(var(--muted))]">
                       {m.eta}
                     </span>
                   )}
@@ -108,7 +108,7 @@ export function Roadmap() {
           ))}
         </ol>
 
-        <p className="mt-10 text-center text-sm text-slate-500">
+        <p className="mt-10 text-center text-sm text-[rgb(var(--muted))]">
           Roadmap có thể dịch chuyển. Cập nhật trên trang này khi launch từng module.
         </p>
       </div>
