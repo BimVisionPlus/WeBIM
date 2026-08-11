@@ -152,6 +152,42 @@ export async function listAtlasProjects(
   return body.projects ?? [];
 }
 
+/**
+ * Is there an Atlas at this address at all?
+ *
+ * A cross-origin iframe cannot tell us it failed to load — a wrong host, a
+ * name that does not resolve, a server that is down and one that refuses the
+ * embed all look identical from out here: an opaque rectangle, or worse, the
+ * browser's own error page rendered inside our layout. So ask the network
+ * directly before framing anything.
+ *
+ * `no-cors` because we only care whether the request reaches a server; an
+ * opaque response is a yes. DNS and connection failures reject, which is the
+ * signal worth acting on.
+ */
+export async function probeAtlas(
+  baseUrl: string,
+  fetchImpl: typeof fetch = fetch,
+  timeoutMs = 6000,
+): Promise<boolean> {
+  const url = baseUrl.replace(/\/+$/, "");
+  if (!url) return false;
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), timeoutMs);
+  try {
+    await fetchImpl(`${url}/api/health`, {
+      mode: "no-cors",
+      signal: abort.signal,
+      cache: "no-store",
+    });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export interface PublishOptions {
   config: AtlasConfig;
   /** IFC-SPF text, straight out of the store's exportIfc(). */

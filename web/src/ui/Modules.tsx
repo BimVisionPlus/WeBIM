@@ -18,6 +18,7 @@ import {
   ATLAS_DISCIPLINES,
   listAtlasProjects,
   loadAtlasConfig,
+  probeAtlas,
   publishToAtlas,
   saveAtlasConfig,
   type AtlasConfig,
@@ -894,6 +895,8 @@ export function AtlasModule() {
   useStoreVersion();
   const [config, setConfig] = useState<AtlasConfig>(() => loadAtlasConfig());
   const [pane, setPane] = useState<"app" | "publish">("app");
+  const [reach, setReach] = useState<"checking" | "up" | "down">("checking");
+  const [probeAt, setProbeAt] = useState(0);
   const [projects, setProjects] = useState<AtlasProject[] | null>(null);
   const [modelName, setModelName] = useState(store.project.name);
   const [busy, setBusy] = useState(false);
@@ -959,6 +962,19 @@ export function AtlasModule() {
 
   const atlasUrl = config.baseUrl.replace(/\/+$/, "");
 
+  // Probe before framing: a dead host would otherwise render the browser's
+  // own error page inside the app, with nothing to act on.
+  useEffect(() => {
+    let cancelled = false;
+    setReach("checking");
+    void probeAtlas(atlasUrl).then((up) => {
+      if (!cancelled) setReach(up ? "up" : "down");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [atlasUrl, probeAt]);
+
   if (pane === "app") {
     return (
       <div className="atlas-host">
@@ -968,21 +984,39 @@ export function AtlasModule() {
           </button>
           <button onClick={() => setPane("publish")}>Đẩy model</button>
           <span className="spacer" />
-          <span className="module-hint" style={{ margin: 0 }}>
-            {atlasUrl || "Chưa cấu hình địa chỉ Atlas"}
-          </span>
+          <input
+            value={config.baseUrl}
+            placeholder="https://atlas.webim.vn"
+            style={{ minWidth: 240 }}
+            onChange={(event) => update({ baseUrl: event.target.value })}
+          />
+          <button onClick={() => setProbeAt((n) => n + 1)}>Kiểm tra lại</button>
           {atlasUrl && (
             <a href={atlasUrl} target="_blank" rel="noreferrer">
               Mở tab mới ↗
             </a>
           )}
         </div>
-        {atlasUrl ? (
+
+        {!atlasUrl && (
+          <p className="module-hint">Nhập địa chỉ Atlas ở ô trên rồi bấm Kiểm tra lại.</p>
+        )}
+
+        {atlasUrl && reach === "checking" && (
+          <p className="module-hint">Đang kiểm tra {atlasUrl}…</p>
+        )}
+
+        {atlasUrl && reach === "down" && (
+          <div className="climate-finding warning">
+            ⚠ Không tới được <strong>{atlasUrl}</strong>. Thường là một trong ba:
+            tên miền chưa trỏ DNS · Atlas chưa chạy · sai địa chỉ. Sửa ở ô trên,
+            hoặc chạy Atlas rồi bấm <strong>Kiểm tra lại</strong>. Khi phát triển
+            trên máy, địa chỉ thường là <code>http://localhost:3170</code>.
+          </div>
+        )}
+
+        {atlasUrl && reach === "up" && (
           <iframe className="atlas-frame" title="Atlas AEC" src={atlasUrl} />
-        ) : (
-          <p className="module-hint">
-            Nhập địa chỉ Atlas ở tab <strong>Đẩy model</strong> rồi quay lại.
-          </p>
         )}
       </div>
     );

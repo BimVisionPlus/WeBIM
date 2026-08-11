@@ -5,6 +5,7 @@ import {
   ifcFileName,
   listAtlasProjects,
   loadAtlasConfig,
+  probeAtlas,
   publishToAtlas,
   saveAtlasConfig,
   type AtlasConfig,
@@ -180,5 +181,36 @@ describe("config persistence", () => {
   it("falls back to defaults on corrupt storage", () => {
     localStorage.setItem("webim.atlas", "{not json");
     expect(loadAtlasConfig()).toEqual(DEFAULT_ATLAS_CONFIG);
+  });
+});
+
+describe("probeAtlas", () => {
+  it("asks the network before the tab frames anything", async () => {
+    const { calls, fetchImpl } = recorder([{}]);
+    await expect(probeAtlas("https://atlas.test/", fetchImpl)).resolves.toBe(true);
+    expect(calls[0].url).toBe("https://atlas.test/api/health");
+    // Opaque is a fine answer — reachability is the only question asked.
+    expect(calls[0].init?.mode).toBe("no-cors");
+  });
+
+  it("treats a DNS or connection failure as down, not as an exception", async () => {
+    const fetchImpl = (async () => {
+      throw new TypeError("Failed to fetch");
+    }) as unknown as typeof fetch;
+    await expect(probeAtlas("https://atlas.webim.vn", fetchImpl)).resolves.toBe(false);
+  });
+
+  it("is down rather than hanging when the host swallows the request", async () => {
+    const fetchImpl = ((_url: string, init: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+      })) as unknown as typeof fetch;
+    await expect(probeAtlas("https://atlas.test", fetchImpl, 10)).resolves.toBe(false);
+  });
+
+  it("does not probe an empty address", async () => {
+    const { calls, fetchImpl } = recorder([{}]);
+    await expect(probeAtlas("", fetchImpl)).resolves.toBe(false);
+    expect(calls).toHaveLength(0);
   });
 });
