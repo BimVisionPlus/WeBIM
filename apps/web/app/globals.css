@@ -53,3 +53,23 @@ body {
   color: rgb(var(--foreground));
   -webkit-font-smoothing: antialiased;
 }
+
+@layer base {
+  /* Form controls carried no background class at all, so they fell through to
+     the user agent's white. Invisible while the app was light-only; glaring the
+     moment it followed a dark OS theme. Fixed here rather than on each input,
+     because the next one someone adds would have the same hole.
+
+     Checkbox and radio are excluded: the browser draws those, and overriding
+     their background removes the tick. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--ink));
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--muted-2));
+  }
+}
