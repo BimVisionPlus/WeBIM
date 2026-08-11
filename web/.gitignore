@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Relay runtime state (test artifacts + uploaded files, local credentials)
+relay/data/
+relay/users.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
