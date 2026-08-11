@@ -19,3 +19,29 @@
 		file_server
 	}
 }
+
+# Atlas AEC on the same box — see atlas-override.yml. `atlas-web` is the
+# alias the Atlas compose project publishes on the shared webim_edge
+# network; this vhost 502s until that project is up, which is the honest
+# failure for "Atlas isn't running yet".
+#
+# Point atlas.webim.vn's A record at this server too, or Caddy will keep
+# retrying ACME for a name that does not resolve.
+{$ATLAS_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	# Uploads are IFC/RVT models, not form posts.
+	request_body {
+		max_size 2GB
+	}
+
+	reverse_proxy atlas-web:3000 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

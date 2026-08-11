@@ -55,9 +55,48 @@ Module **Atlas** mặc định trỏ tới `https://atlas.webim.vn`; đổi bằ
 `WEBIM_ALLOWED_ORIGINS=https://webim.vn` thì trình duyệt mới gọi được
 `/api/webim/*` (mặc định chỉ cho vite dev 5173/5174).
 
+## Chạy Atlas cùng máy
+
+Một Caddy giữ chứng chỉ cho cả hai tên; Atlas chạy như một compose project
+riêng, cắm vào mạng `webim_edge` dưới alias `atlas-web`.
+
+```bash
+sudo bash deploy/bootstrap.sh webim.vn --with-atlas
+```
+
+`deploy/atlas-override.yml` không sửa gì trong `atlas/` (đó là git subtree —
+sửa vào sẽ đụng độ mỗi lần `git subtree pull`). Nó chỉ:
+
+- tắt Caddy riêng của Atlas (hai Caddy không cùng chiếm 80/443),
+- thêm Postgres + Redis chạy tại chỗ thay cho Neon/Upstash,
+- gác `landing` + `scraper` sau profile `full` cho nhẹ máy,
+- mở Postgres ở `127.0.0.1:55432` để chạy migration và phát hành API key
+  từ repo trên host (image Next standalone không có prisma CLI).
+
+Sau khi lên, chạy migration + phát hành key — script in sẵn lệnh kèm mật
+khẩu đã sinh.
+
+### Cấu hình máy
+
+| Chạy gì | Tối thiểu | Ghi chú |
+|---------|-----------|---------|
+| WeBIM Web + relay | 2 vCPU · 4 GB · 40 GB | dư sức |
+| + Atlas | 4 vCPU · **16 GB** · **160 GB** | build Next đỉnh ~4 GB |
+| + AI tự host | thêm GPU | để `AI_BASE_URL` rỗng ⇒ route trả 501 gọn gàng |
+
+Trên Hetzner: `CX32` (4 vCPU/8 GB/80 GB) đủ cho WeBIM một mình; chạy kèm
+Atlas thì lấy `CPX41`/`CX42` (16 GB, 160–240 GB) — 8 GB không swap sẽ bị OOM
+đúng giữa lúc build Next, báo về chỉ là `exit code 137`. Script tự cấp 4 GB
+swap khi thấy RAM < 12 GB, nhưng đĩa 80 GB vẫn chật cho image Atlas +
+Postgres + MinIO. (Giá tham khảo, tự kiểm lại lúc mua.)
+
+Hetzner đặt ở EU: hồ sơ công trình sẽ nằm ngoài Việt Nam. Đủ cho pilot/demo;
+trước khi có khách CĐT thật thì cân nhắc chuyển sang VPS trong nước.
+
 ## Kiến trúc
 ```
 Internet ──443──▶ Caddy (TLS tự động)
-                   ├─ /api/* ──▶ relay:8787 (files + auth + AI + ws sync)
+   webim.vn        ├─ /api/* ──▶ relay:8787 (files + auth + AI + ws sync)
                    └─ /      ──▶ static SPA (dist)
+   atlas.webim.vn  └────────────▶ atlas-web:3000 (Next) ─▶ postgres · redis · minio
 ```

@@ -1,0 +1,95 @@
+# Run Atlas on the SAME box as WeBIM, behind WeBIM's Caddy.
+#
+#   docker compose -p atlas \
+#     -f ../atlas/docker-compose.prod.yml \
+#     -f atlas-override.yml \
+#     --env-file ../atlas/.env.production up -d --build
+#
+# (bootstrap.sh --with-atlas does this for you.)
+#
+# Three things change versus atlas/docker-compose.prod.yml, none of them by
+# editing that file — it is a git subtree of aec-platform/atlas and edits
+# here would collide on every `git subtree pull`:
+#
+#   1. Atlas's own Caddy is parked behind a profile. Two Caddies cannot both
+#      bind :80/:443, and WeBIM's is the one holding the certificates.
+#   2. `web` joins the shared edge network as `atlas-web`, which is the name
+#      deploy/Caddyfile proxies atlas.webim.vn to.
+#   3. Postgres and Redis run here. Upstream assumes managed services
+#      (Neon/Upstash); on one box that is a bill and a round-trip for
+#      nothing, and it keeps the hồ sơ on the same disk as everything else.
+
+services:
+  caddy:
+    # Never starts unless you explicitly ask for the "standalone" profile.
+    profiles: ["standalone"]
+
+  # Marketing site and the tender scraper are not what this box is for.
+  # Enable with --profile full when there is RAM to spare.
+  landing:
+    profiles: ["full"]
+  scraper:
+    profiles: ["full"]
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-atlas}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD chưa đặt}"
+      POSTGRES_DB: "${POSTGRES_DB:-atlas_aec}"
+    volumes:
+      - atlas_pgdata:/var/lib/postgresql/data
+    # Loopback only — admin tasks (migrate, issue an API key) run from the
+    # repo checkout on the host, not from inside the Next standalone image,
+    # which carries no prisma CLI or workspace.
+    ports:
+      - "127.0.0.1:55432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-atlas} -d ${POSTGRES_DB:-atlas_aec}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD chưa đặt}"]
+    volumes:
+      - atlas_redis:/data
+    expose:
+      - "6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  web:
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      default:
+      webim_edge:
+        aliases:
+          - atlas-web
+
+  worker:
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  atlas_pgdata:
+  atlas_redis:
+
+networks:
+  # Created by bootstrap.sh; shared with the WeBIM compose project so one
+  # Caddy can reach containers in both.
+  webim_edge:
+    external: true

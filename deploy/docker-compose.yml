@@ -10,6 +10,10 @@ services:
       - "443:443"
     environment:
       - WEBIM_DOMAIN=${WEBIM_DOMAIN}
+      - ATLAS_DOMAIN=${ATLAS_DOMAIN:-atlas.webim.vn}
+    networks:
+      - default
+      - webim_edge
     volumes:
       - caddy_data:/data
       - caddy_config:/config
@@ -45,3 +49,9 @@ volumes:
   caddy_config:
   relay_users:
   relay_data:
+
+networks:
+  # Shared with the Atlas compose project so this Caddy can proxy to it.
+  # Created by bootstrap.sh: docker network create webim_edge
+  webim_edge:
+    external: true
