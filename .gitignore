@@ -11,3 +11,8 @@ blender-probe.exe
 .venv-mac/
 relay/data/
 relay/users.json
+
+# Production secrets. bootstrap.sh generates WEBIM_SECRET into deploy/.env
+# and users.json holds password hashes — neither belongs in the repo.
+deploy/.env
+deploy/users.json

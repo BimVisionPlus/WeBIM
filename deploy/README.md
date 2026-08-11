@@ -28,6 +28,20 @@ Domain chính thức: **webim.vn** (Atlas nằm ở `atlas.webim.vn`, xem
    (Không có users.json = open mode, chỉ dùng cho thử nghiệm.)
 
 ## Chạy
+
+Một lệnh trên máy chủ mới (Ubuntu/Debian) — tự cài Docker, sinh
+`WEBIM_SECRET`, build và chờ chứng chỉ:
+
+```bash
+sudo bash deploy/bootstrap.sh webim.vn
+```
+
+Script dừng ngay nếu DNS chưa trỏ về máy này: Let's Encrypt xác thực qua
+HTTP nên Caddy sẽ quay vòng xin chứng chỉ mà không báo gì rõ ràng.
+Chạy lại bao nhiêu lần cũng được — đó cũng là đường redeploy.
+
+Hoặc làm tay:
+
 ```bash
 cd deploy
 docker compose --env-file .env up -d --build
