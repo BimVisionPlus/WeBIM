@@ -146,8 +146,13 @@ set_env ATLAS_DOMAIN "$ATLAS_DOMAIN"
 ram_mb="$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 99999)"
 swap_mb="$(awk '/SwapTotal/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 0)"
 if [[ "$WITH_ATLAS" == "1" && "$ram_mb" -lt 12000 && "$swap_mb" -lt 2000 ]]; then
-  say "Cấp 4 GB swap (RAM ${ram_mb} MB — build Next dễ bị OOM)"
-  fallocate -l 4G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=4096
+  # Swap has to cover the gap to roughly 12 GB, not be a fixed gesture: on a
+  # 4 GB box a 4 GB file still leaves the Next build short of its ~4 GB peak
+  # once Postgres, MinIO and the daemon are resident.
+  swap_gb=8
+  [[ "$ram_mb" -ge 6000 ]] && swap_gb=4
+  say "Cấp ${swap_gb} GB swap (RAM ${ram_mb} MB — build Next dễ bị OOM)"
+  fallocate -l "${swap_gb}G" /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=$((swap_gb * 1024))
   chmod 600 /swapfile
   mkswap /swapfile >/dev/null
   swapon /swapfile
