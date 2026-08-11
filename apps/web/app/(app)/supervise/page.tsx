@@ -55,10 +55,10 @@ export default async function SuperviseLogPage() {
       subtitle="NĐ 06/2021 Điều 10. Bản ghi giám sát ca/ngày, ký số chuỗi TVGS→NT→CĐT. Voice-to-text qua whisper.cpp. Output VIIIb.6."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hoàn tất ký số</div><div className="mt-1 text-2xl font-bold text-emerald-700">{finalized}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Chờ NT ký</div><div className="mt-1 text-2xl font-bold text-amber-700">{pendingNT}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Chờ CĐT ký</div><div className="mt-1 text-2xl font-bold text-violet-700">{pendingCDT}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Có voice transcript</div><div className="mt-1 text-2xl font-bold text-blue-700">{withTranscript}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hoàn tất ký số</div><div className="mt-1 text-2xl font-bold text-emerald-700">{finalized}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Chờ NT ký</div><div className="mt-1 text-2xl font-bold text-amber-700">{pendingNT}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Chờ CĐT ký</div><div className="mt-1 text-2xl font-bold text-violet-700">{pendingCDT}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Có voice transcript</div><div className="mt-1 text-2xl font-bold text-blue-700">{withTranscript}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
@@ -67,12 +67,12 @@ export default async function SuperviseLogPage() {
         <CardHeader><CardTitle>Nhật ký TVGS ({entries.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {entries.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có nhật ký TVGS. KS giám sát ghi nhật ký mỗi ca + ký số → NT đồng ý → CĐT duyệt.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Ngày</th>
                   <th className="p-2 text-left">Ca</th>
@@ -84,18 +84,18 @@ export default async function SuperviseLogPage() {
                   <th className="p-2 text-left">Ký số</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {entries.map((e) => {
                   const meta = stateLabel[e.state] ?? { vn: e.state, variant: "neutral" as const };
                   return (
-                    <tr key={e.id} className="hover:bg-slate-50 align-top" data-testid={`row-${e.id}`}>
+                    <tr key={e.id} className="hover:bg-[rgb(var(--raised))] align-top" data-testid={`row-${e.id}`}>
                       <td className="p-2 text-xs">{formatDateVn(e.logDate)}</td>
                       <td className="p-2 text-xs">{shiftLabel[e.shift]}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{e.project.key}</td>
-                      <td className="p-2 text-xs">{e.supervisorUser?.name ?? "—"}<div className="text-[10px] text-slate-500">{e.supervisorOrg?.name ?? ""}</div></td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{e.project.key}</td>
+                      <td className="p-2 text-xs">{e.supervisorUser?.name ?? "—"}<div className="text-[10px] text-[rgb(var(--muted))]">{e.supervisorOrg?.name ?? ""}</div></td>
                       <td className="p-2 text-xs">
                         <div className="font-medium line-clamp-1">{e.workItems}</div>
-                        {e.qualityNotes && <div className="text-[10px] text-slate-500 line-clamp-1">CL: {e.qualityNotes}</div>}
+                        {e.qualityNotes && <div className="text-[10px] text-[rgb(var(--muted))] line-clamp-1">CL: {e.qualityNotes}</div>}
                         {e.safetyNotes && <div className="text-[10px] text-amber-700 line-clamp-1">AT: {e.safetyNotes}</div>}
                         {e.voiceTranscript && <div className="text-[10px] text-blue-700">🎤 voice</div>}
                       </td>
@@ -114,7 +114,7 @@ export default async function SuperviseLogPage() {
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Liên kết module</CardTitle></CardHeader>
-          <CardBody className="text-sm text-slate-700">
+          <CardBody className="text-sm text-[rgb(var(--ink-2))]">
             <ul className="space-y-1.5">
               <li>• <b>DailyLog</b> — entry NT auto-fill workItems</li>
               <li>• <b>SiteEye</b> — photoUrls + PPE detection events</li>
@@ -126,7 +126,7 @@ export default async function SuperviseLogPage() {
         </Card>
         <Card>
           <CardHeader><CardTitle>OSS voice-to-text pipeline</CardTitle></CardHeader>
-          <CardBody className="text-sm text-slate-700">
+          <CardBody className="text-sm text-[rgb(var(--ink-2))]">
             <ol className="space-y-1.5">
               <li>1. Ghi âm điện thoại field engineer (~30-60s)</li>
               <li>2. Upload MP3 → <code>whisper.cpp</code> (model <code>vi-medium</code>)</li>

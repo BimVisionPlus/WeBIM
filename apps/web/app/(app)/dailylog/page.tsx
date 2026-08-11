@@ -47,10 +47,10 @@ export default async function DailyLogOrgPage() {
       subtitle="NĐ 06/2021 Điều 10 — nhật ký bắt buộc hàng ngày. Mobile-first, offline-capable, voice-to-text Whisper.cpp."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng nhật ký</div><div className="mt-1 text-2xl font-bold">{logs.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hôm nay</div><div className="mt-1 text-2xl font-bold text-blue-700">{todayCount}/{totalProjects}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã GS ký</div><div className="mt-1 text-2xl font-bold text-emerald-700">{signed}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Dự án theo dõi</div><div className="mt-1 text-2xl font-bold">{totalProjects}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng nhật ký</div><div className="mt-1 text-2xl font-bold">{logs.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hôm nay</div><div className="mt-1 text-2xl font-bold text-blue-700">{todayCount}/{totalProjects}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã GS ký</div><div className="mt-1 text-2xl font-bold text-emerald-700">{signed}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Dự án theo dõi</div><div className="mt-1 text-2xl font-bold">{totalProjects}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={projects} /></div>
@@ -59,26 +59,26 @@ export default async function DailyLogOrgPage() {
         <CardHeader><CardTitle>Nhật ký gần nhất ({logs.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {logs.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có nhật ký công trình. App mobile (Capacitor) gửi qua{" "}
               ghi nhật ký thi công hằng ngày từ điện thoại tại công trường.
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-[rgb(var(--line))]">
               {logs.slice(0, 40).map((l) => (
                 <li key={l.id} className="p-3 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-slate-600">{l.project.key}</span>
-                    <span className="text-xs text-slate-500">{formatDateVn(l.date)}</span>
+                    <span className="font-mono text-xs text-[rgb(var(--muted))]">{l.project.key}</span>
+                    <span className="text-xs text-[rgb(var(--muted))]">{formatDateVn(l.date)}</span>
                     <Badge variant={l.shift === "NIGHT" ? "violet" : "neutral"}>{l.shift === "NIGHT" ? "Ca đêm" : "Ca ngày"}</Badge>
-                    {l.weather && <span className="text-xs text-slate-500">· {l.weather}</span>}
+                    {l.weather && <span className="text-xs text-[rgb(var(--muted))]">· {l.weather}</span>}
                     {l.signedAt && <Badge variant="success">Đã GS ký</Badge>}
                   </div>
-                  <div className="mt-1 text-slate-900">{l.workDone.slice(0, 200)}{l.workDone.length > 200 ? "…" : ""}</div>
+                  <div className="mt-1 text-[rgb(var(--ink))]">{l.workDone.slice(0, 200)}{l.workDone.length > 200 ? "…" : ""}</div>
                   {l.safetyNotes && (
                     <div className="mt-1 rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-800">⚠ {l.safetyNotes.slice(0, 150)}</div>
                   )}
-                  <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500"><span>{l.author.name}</span><RowActions id={l.id} signed={!!l.signedAt} /></div>
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-[rgb(var(--muted))]"><span>{l.author.name}</span><RowActions id={l.id} signed={!!l.signedAt} /></div>
                 </li>
               ))}
             </ul>

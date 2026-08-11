@@ -24,15 +24,15 @@ export default async function SpecDetail({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <div className="text-xs text-slate-500">
-        <Link href={`/projects/${params.projectId}/specs`} className="hover:text-slate-900">
+      <div className="text-xs text-[rgb(var(--muted))]">
+        <Link href={`/projects/${params.projectId}/specs`} className="hover:text-[rgb(var(--ink))]">
           ← Specs
         </Link>
       </div>
       <header className="flex items-baseline justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{page.title}</h1>
-          <div className="mt-1 text-xs text-slate-500">
+          <h1 className="text-2xl font-bold text-[rgb(var(--ink))]">{page.title}</h1>
+          <div className="mt-1 text-xs text-[rgb(var(--muted))]">
             /{page.slug} · cập nhật {formatDateTimeVn(page.updatedAt)}
           </div>
         </div>
@@ -45,7 +45,7 @@ export default async function SpecDetail({
       <Card>
         <CardHeader><CardTitle>Nội dung</CardTitle></CardHeader>
         <CardBody>
-          <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800">{page.body}</pre>
+          <pre className="whitespace-pre-wrap font-sans text-sm text-[rgb(var(--ink-2))]">{page.body}</pre>
         </CardBody>
       </Card>
     </div>

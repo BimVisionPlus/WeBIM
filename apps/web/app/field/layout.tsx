@@ -22,7 +22,7 @@ export const viewport = {
 
 export default function FieldLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-[rgb(var(--inverse-bg))] text-[rgb(var(--inverse-ink))]">
       {children}
     </div>
   );

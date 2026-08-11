@@ -80,8 +80,8 @@ export function AiNcrPanel({
     <div className="rounded-lg border border-violet-200 bg-violet-50/40 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">AI</span>
-          <span className="text-sm font-semibold text-slate-800">Gợi ý đánh giá NCR từ ảnh hiện trường</span>
+          <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--inverse-ink))]">AI</span>
+          <span className="text-sm font-semibold text-[rgb(var(--ink-2))]">Gợi ý đánh giá NCR từ ảnh hiện trường</span>
         </div>
         <div>
           <input
@@ -105,7 +105,7 @@ export function AiNcrPanel({
       {err && <div className="mt-2 rounded bg-rose-50 px-2 py-1 text-xs text-rose-700">{err}</div>}
 
       {!result && !preview && !err && (
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-[rgb(var(--muted))]">
           Chụp/chọn ảnh sai khác hiện trường — mô hình thị giác OSS (Qwen2.5-VL) sẽ đề xuất
           mức độ, mô tả lỗi, và biện pháp khắc phục (CAR) sơ bộ. TVGS quyết định cuối cùng.
         </p>
@@ -113,15 +113,15 @@ export function AiNcrPanel({
 
       {preview && (
         <div className="mt-3 flex gap-3">
-          <img src={preview} alt="evidence" className="h-32 w-32 rounded border border-slate-200 object-cover" />
-          {busy && <span className="self-center text-xs text-slate-500">VLM đang phân tích ảnh…</span>}
+          <img src={preview} alt="evidence" className="h-32 w-32 rounded border border-[rgb(var(--line))] object-cover" />
+          {busy && <span className="self-center text-xs text-[rgb(var(--muted))]">VLM đang phân tích ảnh…</span>}
         </div>
       )}
 
       {result && (
         <div className="mt-3 space-y-2 border-t border-violet-200 pt-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-slate-500">Đề xuất mức độ:</span>
+            <span className="text-xs text-[rgb(var(--muted))]">Đề xuất mức độ:</span>
             <Badge variant={severityVariant(result.severity)}>{result.severity}</Badge>
             {result.severity !== currentSeverity && (
               <Badge variant="warning">khác mức hiện tại: {currentSeverity}</Badge>
@@ -139,7 +139,7 @@ export function AiNcrPanel({
         </div>
       )}
 
-      <div className="mt-3 border-t border-violet-200 pt-2 text-[10px] text-slate-500">
+      <div className="mt-3 border-t border-violet-200 pt-2 text-[10px] text-[rgb(var(--muted))]">
         Engineer-in-loop: TVGS xác nhận mức độ chính thức trong workflow. Ảnh được phân tích cục bộ — không gửi ra ngoài.
       </div>
     </div>
@@ -149,8 +149,8 @@ export function AiNcrPanel({
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid grid-cols-4 gap-2">
-      <div className="col-span-1 text-xs text-slate-500">{label}</div>
-      <div className="col-span-3 whitespace-pre-wrap text-sm text-slate-700">{value}</div>
+      <div className="col-span-1 text-xs text-[rgb(var(--muted))]">{label}</div>
+      <div className="col-span-3 whitespace-pre-wrap text-sm text-[rgb(var(--ink-2))]">{value}</div>
     </div>
   );
 }

@@ -77,21 +77,21 @@ export default async function IssueDetail({
       <div className="space-y-4 lg:col-span-2">
         <div className="flex items-center gap-3">
           <span
-            className="rounded px-2 py-0.5 font-mono text-xs font-medium text-white"
+            className="rounded px-2 py-0.5 font-mono text-xs font-medium text-[rgb(var(--inverse-ink))]"
             style={{ background: issueTypeMeta[issue.type]?.color }}
           >
             {issueTypeMeta[issue.type]?.prefix}
           </span>
-          <span className="font-mono text-xs text-slate-500">{issue.key}</span>
+          <span className="font-mono text-xs text-[rgb(var(--muted))]">{issue.key}</span>
           <Badge variant={stateBadgeVariant(issue.state)}>{issue.state}</Badge>
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">{issue.title}</h1>
+        <h1 className="text-2xl font-bold text-[rgb(var(--ink))]">{issue.title}</h1>
 
         {issue.description && (
           <Card>
             <CardHeader><CardTitle>Mô tả</CardTitle></CardHeader>
             <CardBody>
-              <p className="whitespace-pre-wrap text-sm text-slate-700">{issue.description}</p>
+              <p className="whitespace-pre-wrap text-sm text-[rgb(var(--ink-2))]">{issue.description}</p>
             </CardBody>
           </Card>
         )}
@@ -111,9 +111,9 @@ export default async function IssueDetail({
                 answered={!!issue.rfi.answer}
               />
               <div className="space-y-2">
-                <div className="text-xs font-medium text-slate-700">Câu trả lời</div>
+                <div className="text-xs font-medium text-[rgb(var(--ink-2))]">Câu trả lời</div>
                 {issue.rfi.answer && (
-                  <div className="rounded bg-slate-50 px-3 py-2 text-sm whitespace-pre-wrap text-slate-800">
+                  <div className="rounded bg-[rgb(var(--raised))] px-3 py-2 text-sm whitespace-pre-wrap text-[rgb(var(--ink-2))]">
                     {issue.rfi.answer}
                   </div>
                 )}
@@ -181,17 +181,17 @@ export default async function IssueDetail({
           <CardHeader><CardTitle>Bình luận ({issue.comments.length})</CardTitle></CardHeader>
           <CardBody className="space-y-3">
             {issue.comments.map((c) => (
-              <div key={c.id} className="rounded-md bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">
+              <div key={c.id} className="rounded-md bg-[rgb(var(--raised))] p-3">
+                <div className="text-xs text-[rgb(var(--muted))]">
                   {c.author.name} · {formatDateTimeVn(c.createdAt)}
                 </div>
                 <div className="mt-1 text-sm whitespace-pre-wrap">{c.body}</div>
               </div>
             ))}
             {issue.comments.length === 0 && (
-              <div className="text-sm text-slate-400">Chưa có bình luận.</div>
+              <div className="text-sm text-[rgb(var(--muted-2))]">Chưa có bình luận.</div>
             )}
-            <div className="border-t border-slate-100 pt-3">
+            <div className="border-t border-[rgb(var(--line))] pt-3">
               <CommentForm issueKey={issue.key} />
             </div>
           </CardBody>
@@ -213,7 +213,7 @@ export default async function IssueDetail({
               }))}
             />
             {wf && (
-              <div className="mt-3 border-t border-slate-100 pt-2 text-[10px] text-slate-500">
+              <div className="mt-3 border-t border-[rgb(var(--line))] pt-2 text-[10px] text-[rgb(var(--muted))]">
                 Workflow: {wf.name}
                 {wf.transitions.find((t) => t.ref)?.ref && (
                   <> · {wf.transitions.find((t) => t.ref)?.ref}</>
@@ -251,11 +251,11 @@ export default async function IssueDetail({
         <Card>
           <CardHeader><CardTitle>Lịch sử trạng thái</CardTitle></CardHeader>
           <CardBody className="space-y-2 text-xs">
-            {issue.transitions.length === 0 && <div className="text-slate-400">Chưa có chuyển trạng thái.</div>}
+            {issue.transitions.length === 0 && <div className="text-[rgb(var(--muted-2))]">Chưa có chuyển trạng thái.</div>}
             {issue.transitions.map((t) => (
               <div key={t.id} className="flex items-center justify-between">
                 <span>{t.fromState} → <strong>{t.toState}</strong></span>
-                <span className="text-slate-500">{formatDateTimeVn(t.createdAt)}</span>
+                <span className="text-[rgb(var(--muted))]">{formatDateTimeVn(t.createdAt)}</span>
               </div>
             ))}
           </CardBody>
@@ -268,8 +268,8 @@ export default async function IssueDetail({
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="grid grid-cols-3 gap-2">
-      <div className="col-span-1 text-xs text-slate-500">{label}</div>
-      <div className="col-span-2 text-sm text-slate-700">{value ?? "—"}</div>
+      <div className="col-span-1 text-xs text-[rgb(var(--muted))]">{label}</div>
+      <div className="col-span-2 text-sm text-[rgb(var(--ink-2))]">{value ?? "—"}</div>
     </div>
   );
 }

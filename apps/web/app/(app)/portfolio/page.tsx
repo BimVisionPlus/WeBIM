@@ -139,20 +139,20 @@ export default async function PortfolioPage() {
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tổng dự án</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tổng dự án</div>
             <div className="mt-1 text-2xl font-bold">{projects.length}</div>
-            <div className="text-[11px] text-slate-500">{inProgress} đang thi công</div>
+            <div className="text-[11px] text-[rgb(var(--muted))]">{inProgress} đang thi công</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tổng giá trị HĐ</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tổng giá trị HĐ</div>
             <div className="mt-1 text-2xl font-bold">{formatVndShort(totalContract)}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Lãi dự phóng</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Lãi dự phóng</div>
             <div className={`mt-1 text-2xl font-bold ${totalProfit >= 0n ? "text-emerald-700" : "text-rose-700"}`}>
               {formatVndShort(totalProfit)}
             </div>
@@ -160,7 +160,7 @@ export default async function PortfolioPage() {
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Dự án có rủi ro cao</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Dự án có rủi ro cao</div>
             <div className="mt-1 text-2xl font-bold text-rose-700">{highRiskCount}</div>
           </CardBody>
         </Card>
@@ -172,10 +172,10 @@ export default async function PortfolioPage() {
         </CardHeader>
         <CardBody className="p-0">
           {rows.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Chưa có dự án nào.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có dự án nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-3 text-left">Dự án</th>
                   <th className="p-3 text-left">Trạng thái</th>
@@ -188,13 +188,13 @@ export default async function PortfolioPage() {
                   <th className="p-3 text-right">Lãi dự phóng</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {rows.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50">
+                  <tr key={r.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-3">
                       <Link href={`/projects/${r.id}`} className="text-blue-700 hover:underline">
-                        <div className="font-mono text-xs text-slate-500">{r.key}</div>
-                        <div className="font-medium text-slate-900">{r.name}</div>
+                        <div className="font-mono text-xs text-[rgb(var(--muted))]">{r.key}</div>
+                        <div className="font-medium text-[rgb(var(--ink))]">{r.name}</div>
                       </Link>
                     </td>
                     <td className="p-3"><Badge variant="neutral">{r.status}</Badge></td>

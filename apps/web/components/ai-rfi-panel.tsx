@@ -101,8 +101,8 @@ export function AiRfiPanel({
     <div className="rounded-lg border border-violet-200 bg-violet-50/40 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">AI</span>
-          <span className="text-sm font-semibold text-slate-800">Gợi ý từ mô hình OSS</span>
+          <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--inverse-ink))]">AI</span>
+          <span className="text-sm font-semibold text-[rgb(var(--ink-2))]">Gợi ý từ mô hình OSS</span>
         </div>
         <Button size="sm" variant="ghost" onClick={regen} disabled={busy}>
           {busy ? "Đang chạy…" : nothing ? "Chạy gợi ý" : "Chạy lại"}
@@ -112,7 +112,7 @@ export function AiRfiPanel({
       {err && <div className="mt-2 rounded bg-rose-50 px-2 py-1 text-xs text-rose-700">{err}</div>}
 
       {nothing && !err && (
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-[rgb(var(--muted))]">
           Chưa có gợi ý. Nhấn "Chạy gợi ý" để mô hình phân loại RFI và soạn nháp câu trả lời.
         </p>
       )}
@@ -124,7 +124,7 @@ export function AiRfiPanel({
           ) : (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-slate-500">Phân loại:</span>
+                <span className="text-xs text-[rgb(var(--muted))]">Phân loại:</span>
                 <Badge variant="default">{classify.category}</Badge>
                 <Badge variant={priorityVariant(classify.priority)}>{classify.priority}</Badge>
                 {classify.scheduleRiskDays != null && (
@@ -134,7 +134,7 @@ export function AiRfiPanel({
                   <Badge variant="warning">~{vnd(classify.costRiskVnd)}</Badge>
                 )}
               </div>
-              <p className="text-xs text-slate-600">{classify.reason}</p>
+              <p className="text-xs text-[rgb(var(--muted))]">{classify.reason}</p>
             </>
           )}
         </div>
@@ -147,7 +147,7 @@ export function AiRfiPanel({
           ) : (
             <>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-[rgb(var(--muted))]">
                   <span>Nháp trả lời</span>
                   <Badge variant="default">độ tin {draft.confidence}</Badge>
                 </div>
@@ -157,11 +157,11 @@ export function AiRfiPanel({
                   </Button>
                 )}
               </div>
-              <p className="whitespace-pre-wrap rounded bg-white/70 px-3 py-2 text-sm text-slate-800">
+              <p className="whitespace-pre-wrap rounded bg-[rgb(var(--surface))]/70 px-3 py-2 text-sm text-[rgb(var(--ink-2))]">
                 {draft.draftAnswer}
               </p>
               {draft.references?.length > 0 && (
-                <div className="text-xs text-slate-600">
+                <div className="text-xs text-[rgb(var(--muted))]">
                   Tham chiếu: {draft.references.join(" · ")}
                 </div>
               )}
@@ -175,7 +175,7 @@ export function AiRfiPanel({
         </div>
       )}
 
-      <div className="mt-3 border-t border-violet-200 pt-2 text-[10px] text-slate-500">
+      <div className="mt-3 border-t border-violet-200 pt-2 text-[10px] text-[rgb(var(--muted))]">
         Engineer-in-loop: TVTK/CĐT quyết định cuối cùng. Mô hình: {modelLabel(classify, draft)}.
       </div>
     </div>
@@ -184,7 +184,7 @@ export function AiRfiPanel({
 
 function Failure({ label, reason }: { label: string; reason: string }) {
   return (
-    <div className="text-xs text-slate-500">
+    <div className="text-xs text-[rgb(var(--muted))]">
       {label}: <span className="text-rose-600">không khả dụng ({reason})</span> —
       kiểm tra Cài đặt → AI để xem trạng thái Ollama.
     </div>

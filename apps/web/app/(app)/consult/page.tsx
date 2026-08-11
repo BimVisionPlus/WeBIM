@@ -46,20 +46,20 @@ export default async function ConsultantOpsPage() {
       subtitle="Time tracking + charge-out rate + multi-project billing theo % hoàn thành. Dành cho TVTK/TVGS/TVQLDA."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng HĐ tư vấn</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalContract))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã xuất HĐĐT</div><div className="mt-1 text-2xl font-bold text-violet-700">{formatVnd(BigInt(totalInvoiced))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã thu tiền</div><div className="mt-1 text-2xl font-bold text-emerald-700">{formatVnd(BigInt(totalPaid))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Giờ công 30 ngày</div><div className="mt-1 text-2xl font-bold">{totalHoursMonth.toFixed(1)}h</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng HĐ tư vấn</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalContract))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã xuất HĐĐT</div><div className="mt-1 text-2xl font-bold text-violet-700">{formatVnd(BigInt(totalInvoiced))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã thu tiền</div><div className="mt-1 text-2xl font-bold text-emerald-700">{formatVnd(BigInt(totalPaid))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Giờ công 30 ngày</div><div className="mt-1 text-2xl font-bold">{totalHoursMonth.toFixed(1)}h</div></CardBody></Card>
       </div>
 
       <Card className="mt-6">
         <CardHeader><CardTitle>Hợp đồng tư vấn ({contracts.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {contracts.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có hợp đồng tư vấn. Bấm “Chấm công tư vấn” để thêm timesheet đầu tiên.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có hợp đồng tư vấn. Bấm “Chấm công tư vấn” để thêm timesheet đầu tiên.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Số HĐ</th>
                   <th className="p-2 text-left">Loại</th>
@@ -70,12 +70,12 @@ export default async function ConsultantOpsPage() {
                   <th className="p-2 text-right">Đã thu</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {contracts.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
+                  <tr key={c.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-mono text-xs">{c.contractNo}</td>
                     <td className="p-2 text-xs">{typeLabel[c.contractType]}</td>
-                    <td className="p-2 text-xs"><div className="font-medium">{c.clientOrg?.name ?? "—"}</div><div className="text-[10px] text-slate-500">{c.project?.key ?? ""}</div></td>
+                    <td className="p-2 text-xs"><div className="font-medium">{c.clientOrg?.name ?? "—"}</div><div className="text-[10px] text-[rgb(var(--muted))]">{c.project?.key ?? ""}</div></td>
                     <td className="p-2 text-right text-xs font-medium">{formatVnd(c.totalValueVnd)}</td>
                     <td className="p-2 text-right text-xs">{c.percentComplete.toString()}%</td>
                     <td className="p-2 text-right text-xs">{formatVnd(c.invoicedVnd)}</td>
@@ -94,10 +94,10 @@ export default async function ConsultantOpsPage() {
         <CardHeader><CardTitle>Timesheet gần đây ({timesheets.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {timesheets.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có timesheet.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có timesheet.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Ngày</th>
                   <th className="p-2 text-left">Người</th>
@@ -109,9 +109,9 @@ export default async function ConsultantOpsPage() {
                   <th className="p-2 text-right">Tiền</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {timesheets.map((t) => (
-                  <tr key={t.id} className={`hover:bg-slate-50 ${!t.billable ? "text-slate-500" : ""}`}>
+                  <tr key={t.id} className={`hover:bg-[rgb(var(--raised))] ${!t.billable ? "text-[rgb(var(--muted))]" : ""}`}>
                     <td className="p-2 text-xs">{formatDateVn(t.workDate)}</td>
                     <td className="p-2 text-xs">{t.workerName}</td>
                     <td className="p-2 text-xs">{t.role}</td>

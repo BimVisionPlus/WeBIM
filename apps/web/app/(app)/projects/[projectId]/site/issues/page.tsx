@@ -41,7 +41,7 @@ export default async function IssuesPage({
         <Link
           href={`/projects/${params.projectId}/site/issues`}
           className={`rounded-full px-3 py-1 text-xs ${
-            !searchParams.type ? "bg-slate-900 text-white" : "bg-white ring-1 ring-slate-200 hover:bg-slate-100"
+            !searchParams.type ? "bg-[rgb(var(--inverse-bg))] text-[rgb(var(--inverse-ink))]" : "bg-[rgb(var(--surface))] ring-1 ring-[rgb(var(--line-2))] hover:bg-[rgb(var(--raised))]"
           }`}
         >
           Tất cả
@@ -51,7 +51,7 @@ export default async function IssuesPage({
             key={t}
             href={`/projects/${params.projectId}/site/issues?type=${t}`}
             className={`rounded-full px-3 py-1 text-xs ${
-              searchParams.type === t ? "bg-slate-900 text-white" : "bg-white ring-1 ring-slate-200 hover:bg-slate-100"
+              searchParams.type === t ? "bg-[rgb(var(--inverse-bg))] text-[rgb(var(--inverse-ink))]" : "bg-[rgb(var(--surface))] ring-1 ring-[rgb(var(--line-2))] hover:bg-[rgb(var(--raised))]"
             }`}
           >
             {issueTypeMeta[t]?.label}
@@ -62,7 +62,7 @@ export default async function IssuesPage({
       <Card>
         <CardBody className="p-0">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-left text-xs uppercase tracking-wide text-[rgb(var(--muted))]">
               <tr>
                 <th className="px-4 py-2.5">Khoá</th>
                 <th className="px-4 py-2.5">Loại</th>
@@ -72,10 +72,10 @@ export default async function IssuesPage({
                 <th className="px-4 py-2.5">Cập nhật</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[rgb(var(--line))]">
               {issues.map((i) => (
-                <tr key={i.id} className="transition hover:bg-slate-50">
-                  <td className="px-4 py-2 font-mono text-xs text-slate-500">
+                <tr key={i.id} className="transition hover:bg-[rgb(var(--raised))]">
+                  <td className="px-4 py-2 font-mono text-xs text-[rgb(var(--muted))]">
                     <Link
                       href={`/projects/${params.projectId}/site/issues/${encodeURIComponent(i.key)}`}
                       className="hover:underline"
@@ -85,23 +85,23 @@ export default async function IssuesPage({
                   </td>
                   <td className="px-4 py-2">
                     <span
-                      className="rounded px-1.5 py-0.5 text-[10px] font-medium text-white"
+                      className="rounded px-1.5 py-0.5 text-[10px] font-medium text-[rgb(var(--inverse-ink))]"
                       style={{ background: issueTypeMeta[i.type]?.color }}
                     >
                       {issueTypeMeta[i.type]?.prefix}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-slate-900">{i.title}</td>
+                  <td className="px-4 py-2 text-[rgb(var(--ink))]">{i.title}</td>
                   <td className="px-4 py-2">
                     <Badge variant={stateBadgeVariant(i.state)}>{i.state}</Badge>
                   </td>
-                  <td className="px-4 py-2 text-slate-600">{i.assignee?.name ?? "—"}</td>
-                  <td className="px-4 py-2 text-xs text-slate-500">{relativeDateVn(i.updatedAt)}</td>
+                  <td className="px-4 py-2 text-[rgb(var(--muted))]">{i.assignee?.name ?? "—"}</td>
+                  <td className="px-4 py-2 text-xs text-[rgb(var(--muted))]">{relativeDateVn(i.updatedAt)}</td>
                 </tr>
               ))}
               {issues.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm text-slate-500">
+                  <td colSpan={6} className="py-10 text-center text-sm text-[rgb(var(--muted))]">
                     Chưa có issue nào.
                   </td>
                 </tr>

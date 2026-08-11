@@ -52,7 +52,7 @@ export default async function ProjectOverview({ params }: { params: { projectId:
           return (
             <Card key={t}>
               <CardBody className="py-3">
-                <div className="text-xs text-slate-500">{meta?.label ?? t}</div>
+                <div className="text-xs text-[rgb(var(--muted))]">{meta?.label ?? t}</div>
                 <div className="mt-1 text-2xl font-bold">{typeCounts.get(t) ?? 0}</div>
               </CardBody>
             </Card>
@@ -65,24 +65,24 @@ export default async function ProjectOverview({ params }: { params: { projectId:
           <CardHeader>
             <CardTitle>Cập nhật gần đây</CardTitle>
           </CardHeader>
-          <CardBody className="divide-y divide-slate-100 p-0">
+          <CardBody className="divide-y divide-[rgb(var(--line))] p-0">
             {recentIssues.map((i) => (
               <Link
                 key={i.id}
                 href={`/projects/${projectId}/site/issues/${i.key}`}
-                className="flex items-center justify-between gap-4 p-3 transition hover:bg-slate-50"
+                className="flex items-center justify-between gap-4 p-3 transition hover:bg-[rgb(var(--raised))]"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span
-                    className="rounded px-1.5 py-0.5 font-mono text-[10px] text-white"
+                    className="rounded px-1.5 py-0.5 font-mono text-[10px] text-[rgb(var(--inverse-ink))]"
                     style={{ background: issueTypeMeta[i.type]?.color }}
                   >
                     {issueTypeMeta[i.type]?.prefix}
                   </span>
-                  <span className="font-mono text-xs text-slate-500">{i.key}</span>
-                  <span className="truncate text-sm text-slate-900">{i.title}</span>
+                  <span className="font-mono text-xs text-[rgb(var(--muted))]">{i.key}</span>
+                  <span className="truncate text-sm text-[rgb(var(--ink))]">{i.title}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-slate-500">
+                <div className="flex items-center gap-3 text-xs text-[rgb(var(--muted))]">
                   <Badge variant={stateBadgeVariant(i.state)}>{i.state}</Badge>
                   <span>{i.assignee?.name ?? "—"}</span>
                   <span>{relativeDateVn(i.updatedAt)}</span>
@@ -98,7 +98,7 @@ export default async function ProjectOverview({ params }: { params: { projectId:
             <CardBody className="space-y-2 text-sm">
               {stakeholders.map((s) => (
                 <div key={s.id} className="flex justify-between">
-                  <span className="text-slate-700">{s.org.name}</span>
+                  <span className="text-[rgb(var(--ink-2))]">{s.org.name}</span>
                   <Badge variant="neutral">{orgTypeLabel[s.role] ?? s.role}</Badge>
                 </div>
               ))}
@@ -110,8 +110,8 @@ export default async function ProjectOverview({ params }: { params: { projectId:
             <CardBody className="space-y-2 text-sm">
               {dailyLogs.map((l) => (
                 <div key={l.id} className="flex justify-between text-xs">
-                  <span className="text-slate-700">{relativeDateVn(l.date)}</span>
-                  <span className="text-slate-500">{l.weather}</span>
+                  <span className="text-[rgb(var(--ink-2))]">{relativeDateVn(l.date)}</span>
+                  <span className="text-[rgb(var(--muted))]">{l.weather}</span>
                 </div>
               ))}
             </CardBody>
@@ -122,14 +122,14 @@ export default async function ProjectOverview({ params }: { params: { projectId:
             <CardBody className="space-y-3 text-sm">
               {acceptances.map((a) => (
                 <div key={a.id} className="flex justify-between text-xs">
-                  <span className="text-slate-700">{a.code}</span>
+                  <span className="text-[rgb(var(--ink-2))]">{a.code}</span>
                   <Badge variant={stateBadgeVariant(a.state)}>{a.state}</Badge>
                 </div>
               ))}
-              <div className="border-t border-slate-100 pt-3">
+              <div className="border-t border-[rgb(var(--line))] pt-3">
                 {payments.map((p) => (
                   <div key={p.id} className="flex justify-between text-xs">
-                    <span className="text-slate-700">Kỳ {p.period}</span>
+                    <span className="text-[rgb(var(--ink-2))]">Kỳ {p.period}</span>
                     <span className="font-medium">{formatVndShort(p.workDoneVnd)}</span>
                   </div>
                 ))}

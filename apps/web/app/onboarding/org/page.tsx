@@ -130,7 +130,7 @@ export default function CreateOrgPage() {
                 <div className="mt-2">
                   <a
                     href={`/api/auth/signout?callbackUrl=${encodeURIComponent("/signup")}`}
-                    className="inline-block rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                    className="inline-block rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-[rgb(var(--inverse-ink))] hover:bg-rose-700"
                   >
                     Đăng xuất + Đăng ký lại →
                   </a>
@@ -158,16 +158,16 @@ function Field(props: {
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{props.label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{props.label}</span>
       <input
         type={props.type ?? "text"}
         required={props.required}
         placeholder={props.placeholder}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
       />
-      {props.hint && <span className="mt-1 block text-[11px] text-slate-500">{props.hint}</span>}
+      {props.hint && <span className="mt-1 block text-[11px] text-[rgb(var(--muted))]">{props.hint}</span>}
     </label>
   );
 }
@@ -175,9 +175,9 @@ function Field(props: {
 function Select(props: { label: string; value: string; onChange: (v: string) => void; options: [string, string][] }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{props.label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{props.label}</span>
       <select
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
       >

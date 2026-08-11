@@ -17,21 +17,21 @@ export default async function WinWorkLayout({ children }: { children: React.Reac
   if (memberships.length === 0) redirect("/onboarding/org");
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-[rgb(var(--raised))]">
+      <header className="border-b border-[rgb(var(--line))] bg-[rgb(var(--surface))]">
         <div className="mx-auto max-w-7xl px-6 py-3">
-          <div className="flex items-center gap-3 text-sm text-slate-500">
-            <a href="https://aecplatform.vn" className="hover:text-slate-900">AEC Platform</a>
+          <div className="flex items-center gap-3 text-sm text-[rgb(var(--muted))]">
+            <a href="https://aecplatform.vn" className="hover:text-[rgb(var(--ink))]">AEC Platform</a>
             <span>/</span>
-            <Link href="/" className="hover:text-slate-900">Atlas</Link>
+            <Link href="/" className="hover:text-[rgb(var(--ink))]">Atlas</Link>
             <span>/</span>
-            <span className="font-semibold text-slate-900">WinWork — Bidding Intelligence</span>
+            <span className="font-semibold text-[rgb(var(--ink))]">WinWork — Bidding Intelligence</span>
             <span className="ml-auto flex items-center gap-3 text-xs">
-              <Link href="/settings/team" className="hover:text-slate-900">Đội</Link>
-              <Link href="/settings/ai" className="hover:text-slate-900">AI</Link>
+              <Link href="/settings/team" className="hover:text-[rgb(var(--ink))]">Đội</Link>
+              <Link href="/settings/ai" className="hover:text-[rgb(var(--ink))]">AI</Link>
             </span>
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-xs text-[rgb(var(--muted))]">
             Cơ hội đấu thầu · Hồ sơ dự thầu · Bảo lãnh · Tuân thủ Luật ĐT 22/2023
           </div>
         </div>

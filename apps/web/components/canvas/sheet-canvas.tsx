@@ -104,51 +104,51 @@ export function SheetCanvas({ sheet, initialMarkups, createEndpoint, presenceEnd
   }
 
   return (
-    <div className="flex min-h-[680px] overflow-hidden rounded-xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl">
-      <aside className="flex w-16 shrink-0 flex-col items-center gap-2 border-r border-slate-700 bg-slate-900 py-4">
-        {tools.map((item) => <button key={item.id} disabled={!canComment && item.id !== "SELECT"} onClick={() => setTool(item.id)} title={item.label} className={`h-10 w-10 rounded-lg text-lg transition ${tool === item.id ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 disabled:opacity-30"}`}>{item.icon}</button>)}
+    <div className="flex min-h-[680px] overflow-hidden rounded-xl border border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))] text-[rgb(var(--inverse-ink))] shadow-2xl">
+      <aside className="flex w-16 shrink-0 flex-col items-center gap-2 border-r border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))] py-4">
+        {tools.map((item) => <button key={item.id} disabled={!canComment && item.id !== "SELECT"} onClick={() => setTool(item.id)} title={item.label} className={`h-10 w-10 rounded-lg text-lg transition ${tool === item.id ? "bg-blue-600 text-[rgb(var(--inverse-ink))]" : "text-[rgb(var(--inverse-ink))] hover:bg-[rgb(var(--inverse-bg))] disabled:opacity-30"}`}>{item.icon}</button>)}
       </aside>
 
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-4 border-b border-slate-700 bg-slate-900 px-5 py-3">
-          <div><div className="text-xs text-slate-400">{sheet.drawingSetName} · {sheet.revision}</div><h1 className="font-semibold">{sheet.sheetNumber} — {sheet.title}</h1></div>
+        <header className="flex items-center gap-4 border-b border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))] px-5 py-3">
+          <div><div className="text-xs text-[rgb(var(--muted-2))]">{sheet.drawingSetName} · {sheet.revision}</div><h1 className="font-semibold">{sheet.sheetNumber} — {sheet.title}</h1></div>
           <div className="ml-auto flex items-center -space-x-2" aria-label={`${presence.length} người đang xem`}>
-            {presence.slice(0, 5).map((person) => <span key={person.sessionKey} title={person.displayName} className="grid h-8 w-8 place-items-center rounded-full border-2 border-slate-900 text-xs font-semibold text-white" style={{ backgroundColor: person.color }}>{person.displayName.slice(0, 1).toLocaleUpperCase()}</span>)}
-            {presence.length > 5 && <span className="grid h-8 w-8 place-items-center rounded-full border-2 border-slate-900 bg-slate-700 text-[10px]">+{presence.length - 5}</span>}
+            {presence.slice(0, 5).map((person) => <span key={person.sessionKey} title={person.displayName} className="grid h-8 w-8 place-items-center rounded-full border-2 border-[rgb(var(--inverse-ink))] text-xs font-semibold text-[rgb(var(--inverse-ink))]" style={{ backgroundColor: person.color }}>{person.displayName.slice(0, 1).toLocaleUpperCase()}</span>)}
+            {presence.length > 5 && <span className="grid h-8 w-8 place-items-center rounded-full border-2 border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))] text-[10px]">+{presence.length - 5}</span>}
           </div>
           <div className="rounded-full bg-amber-400/10 px-3 py-1 text-xs text-amber-300">{openCount} đang mở</div>
-          <div className="text-xs text-slate-400">Tỉ lệ {sheet.scale ?? "—"}</div>
-          {sheet.compareRasterUrl && <button onClick={() => setCompare((value) => !value)} className={`rounded px-3 py-1.5 text-xs font-medium ${compare ? "bg-violet-600 text-white" : "bg-slate-800 text-slate-300"}`}>So sánh {sheet.compareRevision}</button>}
-          {compare && <label className="flex items-center gap-2 text-xs text-slate-400"><span>Hiện tại</span><input type="range" min="0" max="100" value={compareOpacity} onChange={(event) => setCompareOpacity(Number(event.target.value))} className="w-20 accent-violet-500" /></label>}
+          <div className="text-xs text-[rgb(var(--muted-2))]">Tỉ lệ {sheet.scale ?? "—"}</div>
+          {sheet.compareRasterUrl && <button onClick={() => setCompare((value) => !value)} className={`rounded px-3 py-1.5 text-xs font-medium ${compare ? "bg-violet-600 text-[rgb(var(--inverse-ink))]" : "bg-[rgb(var(--inverse-bg))] text-[rgb(var(--inverse-ink))]"}`}>So sánh {sheet.compareRevision}</button>}
+          {compare && <label className="flex items-center gap-2 text-xs text-[rgb(var(--muted-2))]"><span>Hiện tại</span><input type="range" min="0" max="100" value={compareOpacity} onChange={(event) => setCompareOpacity(Number(event.target.value))} className="w-20 accent-violet-500" /></label>}
         </header>
-        {guest && canComment && <div className="border-b border-slate-700 bg-slate-900/80 px-5 py-2"><input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Tên của bạn để bình luận" className="w-64 rounded border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm outline-none focus:border-blue-500" /></div>}
+        {guest && canComment && <div className="border-b border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))]/80 px-5 py-2"><input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Tên của bạn để bình luận" className="w-64 rounded border border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))] px-3 py-1.5 text-sm outline-none focus:border-blue-500" /></div>}
         <div className="flex flex-1 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_center,_#334155_0,_#0f172a_75%)] p-8">
-          <div ref={stage} onPointerDown={onPointerDown} onPointerUp={onPointerUp} className="relative aspect-[1.414/1] w-full max-w-5xl select-none overflow-hidden bg-white shadow-2xl touch-none">
+          <div ref={stage} onPointerDown={onPointerDown} onPointerUp={onPointerUp} className="relative aspect-[1.414/1] w-full max-w-5xl select-none overflow-hidden bg-[rgb(var(--surface))] shadow-2xl touch-none">
             {compare && sheet.compareRasterUrl && <img src={sheet.compareRasterUrl} alt={`Revision ${sheet.compareRevision}`} draggable={false} className="absolute inset-0 h-full w-full object-contain grayscale" />}
             {imageUrl && !imageFailed ? <img src={imageUrl} alt={`${sheet.sheetNumber} ${sheet.title}`} draggable={false} onError={() => setImageFailed(true)} className="absolute inset-0 h-full w-full object-contain" style={{ opacity: compare ? compareOpacity / 100 : 1, mixBlendMode: compare ? "multiply" : "normal" }} /> : <BlueprintPlaceholder sheet={sheet} />}
             <svg viewBox="0 0 1000 707" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
               <defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ef4444" /></marker></defs>
               {markups.map((m) => <MarkupShape key={m.id} markup={m} sheet={sheet} selected={m.id === selected} onSelect={() => { setSelected(m.id); setTool("SELECT"); }} />)}
             </svg>
-            {busy && <div className="absolute inset-0 grid place-items-center bg-slate-950/15"><span className="rounded bg-slate-950/80 px-3 py-2 text-xs">Đang lưu…</span></div>}
+            {busy && <div className="absolute inset-0 grid place-items-center bg-[rgb(var(--inverse-bg))]/15"><span className="rounded bg-[rgb(var(--inverse-bg))]/80 px-3 py-2 text-xs">Đang lưu…</span></div>}
           </div>
         </div>
       </section>
 
-      <aside className="w-80 shrink-0 border-l border-slate-700 bg-slate-900">
-        <div className="border-b border-slate-700 px-4 py-4"><h2 className="font-semibold">Markup & thảo luận</h2><p className="mt-1 text-xs text-slate-400">Tọa độ được giữ theo bản vẽ, không phụ thuộc zoom.</p></div>
+      <aside className="w-80 shrink-0 border-l border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))]">
+        <div className="border-b border-[rgb(var(--inverse-ink))] px-4 py-4"><h2 className="font-semibold">Markup & thảo luận</h2><p className="mt-1 text-xs text-[rgb(var(--muted-2))]">Tọa độ được giữ theo bản vẽ, không phụ thuộc zoom.</p></div>
         <div className="max-h-[590px] overflow-y-auto p-3">
-          {markups.map((m, i) => <button key={m.id} onClick={() => setSelected(m.id)} className={`mb-2 w-full rounded-lg border p-3 text-left ${selected === m.id ? "border-blue-500 bg-blue-500/10" : "border-slate-700 bg-slate-800/60"}`}><div className="flex items-center gap-2 text-sm"><span style={{ color: m.color }}>●</span><strong>#{i + 1} {m.kind}</strong><span className={`ml-auto text-[10px] ${m.status === "OPEN" ? "text-amber-300" : "text-emerald-300"}`}>{m.status}</span></div><div className="mt-1 text-xs text-slate-400">{m.authorName} · {m.comments.length} bình luận</div></button>)}
-          {!markups.length && <p className="p-5 text-center text-sm text-slate-400">Chưa có đánh dấu. Chọn công cụ bên trái để bắt đầu.</p>}
+          {markups.map((m, i) => <button key={m.id} onClick={() => setSelected(m.id)} className={`mb-2 w-full rounded-lg border p-3 text-left ${selected === m.id ? "border-blue-500 bg-blue-500/10" : "border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))]/60"}`}><div className="flex items-center gap-2 text-sm"><span style={{ color: m.color }}>●</span><strong>#{i + 1} {m.kind}</strong><span className={`ml-auto text-[10px] ${m.status === "OPEN" ? "text-amber-300" : "text-emerald-300"}`}>{m.status}</span></div><div className="mt-1 text-xs text-[rgb(var(--muted-2))]">{m.authorName} · {m.comments.length} bình luận</div></button>)}
+          {!markups.length && <p className="p-5 text-center text-sm text-[rgb(var(--muted-2))]">Chưa có đánh dấu. Chọn công cụ bên trái để bắt đầu.</p>}
         </div>
-        {selectedMarkup && <div className="border-t border-slate-700 p-4"><div className="space-y-2">{selectedMarkup.comments.map((c) => <div key={c.id} className="rounded bg-slate-800 p-2 text-sm"><strong className="text-xs text-blue-300">{c.authorName}</strong><p className="mt-1 whitespace-pre-wrap text-slate-200">{c.body}</p></div>)}</div>{canComment && <><textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Thêm bình luận…" className="mt-3 h-20 w-full resize-none rounded border border-slate-600 bg-slate-800 p-2 text-sm outline-none focus:border-blue-500" /><div className="mt-2 flex gap-2"><button onClick={addComment} disabled={busy || !comment.trim()} className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium disabled:opacity-40">Gửi</button>{!guest && <button onClick={toggleResolved} className="rounded border border-slate-600 px-3 py-1.5 text-xs">{selectedMarkup.status === "OPEN" ? "Đánh dấu đã xử lý" : "Mở lại"}</button>}</div></>}{error && <p className="mt-2 text-xs text-red-400">{error}</p>}</div>}
+        {selectedMarkup && <div className="border-t border-[rgb(var(--inverse-ink))] p-4"><div className="space-y-2">{selectedMarkup.comments.map((c) => <div key={c.id} className="rounded bg-[rgb(var(--inverse-bg))] p-2 text-sm"><strong className="text-xs text-blue-300">{c.authorName}</strong><p className="mt-1 whitespace-pre-wrap text-[rgb(var(--inverse-ink))]">{c.body}</p></div>)}</div>{canComment && <><textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Thêm bình luận…" className="mt-3 h-20 w-full resize-none rounded border border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))] p-2 text-sm outline-none focus:border-blue-500" /><div className="mt-2 flex gap-2"><button onClick={addComment} disabled={busy || !comment.trim()} className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium disabled:opacity-40">Gửi</button>{!guest && <button onClick={toggleResolved} className="rounded border border-[rgb(var(--inverse-ink))] px-3 py-1.5 text-xs">{selectedMarkup.status === "OPEN" ? "Đánh dấu đã xử lý" : "Mở lại"}</button>}</div></>}{error && <p className="mt-2 text-xs text-red-400">{error}</p>}</div>}
       </aside>
     </div>
   );
 }
 
 function BlueprintPlaceholder({ sheet }: { sheet: CanvasSheet }) {
-  return <div className="absolute inset-0 bg-[#f8fafc] text-slate-500"><div className="absolute inset-8 border-2 border-slate-400" /><div className="absolute left-[8%] top-[14%] h-[56%] w-[70%] border-2 border-slate-500"><div className="absolute left-1/3 top-0 h-full border-l border-slate-400"/><div className="absolute left-2/3 top-0 h-full border-l border-slate-400"/><div className="absolute left-0 top-1/2 w-full border-t border-slate-400"/></div><div className="absolute bottom-9 right-9 w-64 border-2 border-slate-500 bg-white p-3"><div className="text-xs uppercase">Atlas AEC · Browser canvas</div><div className="mt-3 font-mono text-xl font-bold text-slate-800">{sheet.sheetNumber}</div><div className="text-sm">{sheet.title}</div><div className="mt-2 text-xs">Revision {sheet.revision} · {sheet.scale ?? "NTS"}</div></div></div>;
+  return <div className="absolute inset-0 bg-[#f8fafc] text-[rgb(var(--muted))]"><div className="absolute inset-8 border-2 border-[rgb(var(--line-2))]" /><div className="absolute left-[8%] top-[14%] h-[56%] w-[70%] border-2 border-[rgb(var(--line-2))]"><div className="absolute left-1/3 top-0 h-full border-l border-[rgb(var(--line-2))]"/><div className="absolute left-2/3 top-0 h-full border-l border-[rgb(var(--line-2))]"/><div className="absolute left-0 top-1/2 w-full border-t border-[rgb(var(--line-2))]"/></div><div className="absolute bottom-9 right-9 w-64 border-2 border-[rgb(var(--line-2))] bg-[rgb(var(--surface))] p-3"><div className="text-xs uppercase">Atlas AEC · Browser canvas</div><div className="mt-3 font-mono text-xl font-bold text-[rgb(var(--ink-2))]">{sheet.sheetNumber}</div><div className="text-sm">{sheet.title}</div><div className="mt-2 text-xs">Revision {sheet.revision} · {sheet.scale ?? "NTS"}</div></div></div>;
 }
 
 function MarkupShape({ markup: m, sheet, selected, onSelect }: { markup: CanvasMarkup; sheet: CanvasSheet; selected: boolean; onSelect: () => void }) {

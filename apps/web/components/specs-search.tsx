@@ -43,7 +43,7 @@ export function SpecsSearch({ projectId }: { projectId: string }) {
     <div className="space-y-3">
       <form onSubmit={submit} className="flex gap-2">
         <input
-          className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="flex-1 rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
           placeholder='VD: "biện pháp thi công cốt thép tầng cao", "QCVN PCCC hành lang"…'
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -56,27 +56,27 @@ export function SpecsSearch({ projectId }: { projectId: string }) {
       {err && <div className="rounded bg-rose-50 px-3 py-2 text-xs text-rose-700">{err}</div>}
 
       {hits && hits.length === 0 && !err && (
-        <p className="text-xs text-slate-500">Không có kết quả phù hợp.</p>
+        <p className="text-xs text-[rgb(var(--muted))]">Không có kết quả phù hợp.</p>
       )}
 
       {hits && hits.length > 0 && (
         <div className="space-y-2">
-          <div className="text-[10px] text-slate-500">
+          <div className="text-[10px] text-[rgb(var(--muted))]">
             {hits.length} kết quả trong {meta?.corpusSize ?? "?"} trang · {meta?.latencyMs ?? 0}ms · {meta?.model}
           </div>
           {hits.map((h) => (
             <Link
               key={h.id}
               href={`./specs/${h.id}`}
-              className="block rounded border border-slate-200 px-3 py-2 hover:bg-slate-50"
+              className="block rounded border border-[rgb(var(--line))] px-3 py-2 hover:bg-[rgb(var(--raised))]"
             >
               <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-slate-800">{h.title}</div>
+                <div className="text-sm font-medium text-[rgb(var(--ink-2))]">{h.title}</div>
                 <Badge variant={h.score > 0.7 ? "success" : h.score > 0.5 ? "info" : "neutral"}>
                   {(h.score * 100).toFixed(0)}%
                 </Badge>
               </div>
-              <p className="mt-1 line-clamp-2 text-xs text-slate-600">{h.snippet}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-[rgb(var(--muted))]">{h.snippet}</p>
             </Link>
           ))}
         </div>

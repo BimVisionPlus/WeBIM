@@ -40,7 +40,7 @@ export function WeatherRefreshButton({ projectId, address }: { projectId: string
         onClick={go}
         disabled={busy}
         title={address || undefined}
-        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        className="rounded-md border border-[rgb(var(--line-2))] bg-[rgb(var(--surface))] px-3 py-1.5 text-sm font-medium text-[rgb(var(--ink-2))] hover:bg-[rgb(var(--raised))] disabled:opacity-50"
       >
         {busy ? "Đang lấy…" : "↻ Cập nhật"}
       </button>

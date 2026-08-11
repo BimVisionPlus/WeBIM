@@ -56,10 +56,10 @@ export default async function HseTrainPage() {
       subtitle="NĐ 44/2016 + TT 31/2018. 6 nhóm đối tượng, LMS test online, thẻ ATLĐ QR. Alert chứng chỉ hết hạn trong 30 ngày."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang hiệu lực</div><div className="mt-1 text-2xl font-bold text-emerald-700">{active}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hết hạn ≤30d</div><div className="mt-1 text-2xl font-bold text-amber-700">{expiring30}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã hết hạn</div><div className="mt-1 text-2xl font-bold text-rose-700">{expired}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Khoá đào tạo</div><div className="mt-1 text-2xl font-bold">{courses.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang hiệu lực</div><div className="mt-1 text-2xl font-bold text-emerald-700">{active}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hết hạn ≤30d</div><div className="mt-1 text-2xl font-bold text-amber-700">{expiring30}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã hết hạn</div><div className="mt-1 text-2xl font-bold text-rose-700">{expired}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Khoá đào tạo</div><div className="mt-1 text-2xl font-bold">{courses.length}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm courses={courses.map((c) => ({ id: c.id, code: c.code, group: c.group }))} /></div>
@@ -68,10 +68,10 @@ export default async function HseTrainPage() {
         <CardHeader><CardTitle>Khoá huấn luyện ({courses.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {courses.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có khoá huấn luyện. Bấm “Cấp chứng chỉ ATLĐ” để bắt đầu.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có khoá huấn luyện. Bấm “Cấp chứng chỉ ATLĐ” để bắt đầu.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Nhóm</th>
@@ -81,9 +81,9 @@ export default async function HseTrainPage() {
                   <th className="p-2 text-right">Đã cấp</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {courses.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
+                  <tr key={c.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-mono text-xs">{c.code}</td>
                     <td className="p-2 text-xs">{groupLabel[c.group]}</td>
                     <td className="p-2 text-xs"><div className="font-medium">{c.title}</div>{c.isOnline && <span className="text-[10px] text-blue-700">📱 LMS online</span>}</td>
@@ -102,10 +102,10 @@ export default async function HseTrainPage() {
         <CardHeader><CardTitle>Chứng chỉ gần đây ({certs.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {certs.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có chứng chỉ nào.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có chứng chỉ nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Số CC</th>
                   <th className="p-2 text-left">Họ tên</th>
@@ -117,18 +117,18 @@ export default async function HseTrainPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {certs.map((c) => {
                   const meta = stateLabel[c.state] ?? { vn: c.state, variant: "neutral" as const };
                   const dLeft = daysBetween(now, c.expiresAt);
                   const exp = c.state === "ACTIVE" && dLeft <= 30 && dLeft > 0;
                   return (
-                    <tr key={c.id} className={`hover:bg-slate-50 ${exp ? "bg-amber-50" : ""}`} data-testid={`cert-${c.certNumber}`}>
+                    <tr key={c.id} className={`hover:bg-[rgb(var(--raised))] ${exp ? "bg-amber-50" : ""}`} data-testid={`cert-${c.certNumber}`}>
                       <td className="p-2 font-mono text-xs">{c.certNumber}</td>
-                      <td className="p-2 text-xs"><div className="font-medium">{c.workerName}</div>{c.workerIdNo && <div className="text-[10px] text-slate-500">{c.workerIdNo}</div>}</td>
+                      <td className="p-2 text-xs"><div className="font-medium">{c.workerName}</div>{c.workerIdNo && <div className="text-[10px] text-[rgb(var(--muted))]">{c.workerIdNo}</div>}</td>
                       <td className="p-2 text-xs">{c.course.code} ({c.course.group})</td>
                       <td className="p-2 text-xs">{c.org?.name ?? "—"}</td>
-                      <td className="p-2 text-xs">{formatDateVn(c.issuedAt)} → {formatDateVn(c.expiresAt)}<div className={`text-[10px] ${dLeft < 0 ? "text-rose-700" : exp ? "text-amber-700" : "text-slate-500"}`}>{dLeft < 0 ? `Quá ${-dLeft}d` : `Còn ${dLeft}d`}</div></td>
+                      <td className="p-2 text-xs">{formatDateVn(c.issuedAt)} → {formatDateVn(c.expiresAt)}<div className={`text-[10px] ${dLeft < 0 ? "text-rose-700" : exp ? "text-amber-700" : "text-[rgb(var(--muted))]"}`}>{dLeft < 0 ? `Quá ${-dLeft}d` : `Còn ${dLeft}d`}</div></td>
                       <td className="p-2 text-right text-xs">{c.testScore ?? "—"}{c.testScore ? "%" : ""}</td>
                       <td className="p-2" data-testid={`state-${c.certNumber}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2"><CertActions id={c.id} state={c.state} /></td>
@@ -141,7 +141,7 @@ export default async function HseTrainPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-2 text-[11px] text-slate-500">
+      <div className="mt-2 text-[11px] text-[rgb(var(--muted))]">
         Phân bố theo nhóm: {Array.from(byGroup.entries()).map(([k, v]) => `${k}: ${v}`).join(" · ")}.
         OSS LMS dùng <code>Moodle</code> hoặc <code>Open edX</code> backend; QR thẻ <code>node-qrcode</code>.
       </div>

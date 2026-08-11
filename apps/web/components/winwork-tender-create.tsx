@@ -44,21 +44,21 @@ export function TenderCreateButton() {
         type="button"
         onClick={() => setOpen(true)}
         data-testid="open-create-form"
-        className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700"
       >
         + Thêm cơ hội
       </button>
       {open && (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 p-4"
+          className="fixed inset-0 z-50 grid place-items-center bg-[rgb(var(--inverse-bg))]/40 p-4"
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-lg rounded-lg bg-white p-5 shadow-xl"
+            className="w-full max-w-lg rounded-lg bg-[rgb(var(--surface))] p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold">Thêm cơ hội đấu thầu</h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[rgb(var(--muted))]">
               Nhập thủ công khi scraper chưa kéo về.
             </p>
             <form className="mt-4 space-y-3" onSubmit={onSubmit}>
@@ -84,14 +84,14 @@ export function TenderCreateButton() {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+                  className="rounded-md border border-[rgb(var(--line-2))] px-3 py-1.5 text-sm hover:bg-[rgb(var(--raised))]"
                 >
                   Huỷ
                 </button>
                 <button
                   type="submit"
                   disabled={busy}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700 disabled:opacity-50"
                 >
                   {busy ? "Đang lưu…" : "Lưu"}
                 </button>
@@ -119,14 +119,14 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{label}</span>
       <input
         name={name}
         type={type}
         required={required}
         placeholder={placeholder}
         // datetime-local needs ISO; we forward as-is and the API tolerates both forms
-        className="mt-1 w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
       />
     </label>
   );

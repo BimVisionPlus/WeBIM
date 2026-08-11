@@ -33,7 +33,7 @@ export function RowActions({ id, state }: { id: string; state: string }) {
   const [err, setErr] = useState<string | null>(null);
 
   const actions = NEXT_ACTIONS[state] ?? [];
-  if (actions.length === 0) return <span className="text-[10px] text-slate-400">—</span>;
+  if (actions.length === 0) return <span className="text-[10px] text-[rgb(var(--muted-2))]">—</span>;
 
   async function go(action: string) {
     setBusy(action);
@@ -71,8 +71,8 @@ export function RowActions({ id, state }: { id: string; state: string }) {
           disabled={busy === a.action}
           className={`rounded px-2 py-0.5 text-[10px] font-medium ${
             a.tone === "danger" ? "bg-rose-100 text-rose-800 hover:bg-rose-200" :
-            a.tone === "primary" ? "bg-blue-600 text-white hover:bg-blue-700" :
-            "bg-slate-100 text-slate-800 hover:bg-slate-200"
+            a.tone === "primary" ? "bg-blue-600 text-[rgb(var(--inverse-ink))] hover:bg-blue-700" :
+            "bg-[rgb(var(--raised))] text-[rgb(var(--ink-2))] hover:bg-[rgb(var(--line))]"
           } disabled:opacity-50`}
           data-testid={`action-${a.action}`}
         >

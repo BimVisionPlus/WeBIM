@@ -44,7 +44,7 @@ export default async function DrawBridgePage({ params }: { params: { projectId: 
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">DrawBridge — BIM Intelligence</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           Quản lý cấu kiện BIM, clash detection cross-discipline, link cấu kiện ↔ task.
         </p>
       </div>
@@ -52,25 +52,25 @@ export default async function DrawBridgePage({ params }: { params: { projectId: 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Mô hình BIM</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Mô hình BIM</div>
             <div className="mt-1 text-2xl font-bold">{models.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Cấu kiện</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Cấu kiện</div>
             <div className="mt-1 text-2xl font-bold">{elementTotal}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Clash mở</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Clash mở</div>
             <div className="mt-1 text-2xl font-bold text-rose-700">{openClashes.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Link cấu kiện ↔ Issue</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Link cấu kiện ↔ Issue</div>
             <div className="mt-1 text-2xl font-bold">{links.length}</div>
           </CardBody>
         </Card>
@@ -85,14 +85,14 @@ export default async function DrawBridgePage({ params }: { params: { projectId: 
         </CardHeader>
         <CardBody className="p-0">
           {clashes.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">
               {elementTotal === 0
                 ? "Chưa có cấu kiện. Import IFC/RVT trong tab Models trước, hoặc đẩy elements qua API."
                 : "Chưa chạy detection. Bấm \"↻ Chạy clash\"."}
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Cấu kiện A</th>
                   <th className="p-2 text-left">Cấu kiện B</th>
@@ -101,16 +101,16 @@ export default async function DrawBridgePage({ params }: { params: { projectId: 
                   <th className="p-2 text-left">Phát hiện</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {clashes.map((c) => (
                   <tr key={c.id}>
                     <td className="p-2">
                       <div className="text-sm">{c.elementA.name}</div>
-                      <div className="text-[11px] text-slate-500">{c.elementA.discipline} · {c.elementA.category}</div>
+                      <div className="text-[11px] text-[rgb(var(--muted))]">{c.elementA.discipline} · {c.elementA.category}</div>
                     </td>
                     <td className="p-2">
                       <div className="text-sm">{c.elementB.name}</div>
-                      <div className="text-[11px] text-slate-500">{c.elementB.discipline} · {c.elementB.category}</div>
+                      <div className="text-[11px] text-[rgb(var(--muted))]">{c.elementB.discipline} · {c.elementB.category}</div>
                     </td>
                     <td className="p-2 text-center">
                       <Badge variant={c.severity > 60 ? "danger" : c.severity > 30 ? "warning" : "neutral"}>
@@ -132,7 +132,7 @@ export default async function DrawBridgePage({ params }: { params: { projectId: 
                         {c.status}
                       </Badge>
                     </td>
-                    <td className="p-2 text-xs text-slate-500">{relativeDateVn(c.detectedAt)}</td>
+                    <td className="p-2 text-xs text-[rgb(var(--muted))]">{relativeDateVn(c.detectedAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -147,24 +147,24 @@ export default async function DrawBridgePage({ params }: { params: { projectId: 
         </CardHeader>
         <CardBody className="p-0">
           {links.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có link. Mở 1 RFI/NCR và đính cột/dầm/sàn để truy ngược nguyên nhân.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Issue</th>
                   <th className="p-2 text-left">Cấu kiện</th>
                   <th className="p-2 text-left">Ghi chú</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {links.map((l) => (
                   <tr key={l.id}>
                     <td className="p-2 font-mono text-xs">{l.issue.key} <Badge variant="neutral">{l.issue.type}</Badge></td>
-                    <td className="p-2">{l.element.name} <span className="text-[11px] text-slate-500">({l.element.category})</span></td>
-                    <td className="p-2 text-xs text-slate-500">{l.note ?? "—"}</td>
+                    <td className="p-2">{l.element.name} <span className="text-[11px] text-[rgb(var(--muted))]">({l.element.category})</span></td>
+                    <td className="p-2 text-xs text-[rgb(var(--muted))]">{l.note ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

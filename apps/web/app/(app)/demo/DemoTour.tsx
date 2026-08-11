@@ -105,34 +105,34 @@ export function DemoTour() {
     <>
       <button
         onClick={() => { setIdx(0); setOpen(true); }}
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-xl hover:scale-105 transition"
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-3 text-sm font-semibold text-[rgb(var(--inverse-ink))] shadow-xl hover:scale-105 transition"
         data-testid="open-tour"
       >
         🎬 Bắt đầu tour 7 chặng
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4 py-8 backdrop-blur-sm" onClick={close}>
-          <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="tour-modal">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--inverse-bg))]/70 px-4 py-8 backdrop-blur-sm" onClick={close}>
+          <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-[rgb(var(--surface))] shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="tour-modal">
             {/* Progress bar */}
-            <div className="h-1.5 w-full bg-slate-100">
+            <div className="h-1.5 w-full bg-[rgb(var(--raised))]">
               <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-700 transition-all" style={{ width: `${((idx + 1) / STOPS.length) * 100}%` }} />
             </div>
 
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-xs font-mono uppercase tracking-wider text-slate-400">
+                  <div className="text-xs font-mono uppercase tracking-wider text-[rgb(var(--muted-2))]">
                     Chặng {idx + 1} / {STOPS.length}
                   </div>
                   <div className="mt-1 flex items-center gap-3">
                     <div className="text-4xl">{cur.emoji}</div>
-                    <h3 className="text-xl font-bold text-slate-900">{cur.title}</h3>
+                    <h3 className="text-xl font-bold text-[rgb(var(--ink))]">{cur.title}</h3>
                   </div>
                 </div>
-                <button onClick={close} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Đóng">✕</button>
+                <button onClick={close} className="rounded-full p-1.5 text-[rgb(var(--muted-2))] hover:bg-[rgb(var(--raised))] hover:text-[rgb(var(--ink-2))]" aria-label="Đóng">✕</button>
               </div>
 
-              <p className="mt-4 text-sm leading-relaxed text-slate-700">{cur.vn}</p>
+              <p className="mt-4 text-sm leading-relaxed text-[rgb(var(--ink-2))]">{cur.vn}</p>
 
               {cur.proof && (
                 <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-900">
@@ -143,7 +143,7 @@ export function DemoTour() {
               <div className="mt-5 flex items-center gap-2">
                 <Link
                   href={cur.url}
-                  className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-[rgb(var(--inverse-ink))] hover:bg-blue-700"
                   onClick={close}
                   data-testid="tour-cta"
                 >
@@ -153,14 +153,14 @@ export function DemoTour() {
                   <button
                     onClick={prev}
                     disabled={idx === 0}
-                    className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                    className="rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm text-[rgb(var(--ink-2))] hover:bg-[rgb(var(--raised))] disabled:opacity-40"
                   >
                     ← Quay
                   </button>
                   <button
                     onClick={next}
                     disabled={idx === STOPS.length - 1}
-                    className="rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-40"
+                    className="rounded-md bg-[rgb(var(--inverse-bg))] px-3 py-2 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-[rgb(var(--inverse-bg))] disabled:opacity-40"
                     data-testid="tour-next"
                   >
                     Chặng kế →
@@ -174,7 +174,7 @@ export function DemoTour() {
                   <button
                     key={s.key}
                     onClick={() => setIdx(i)}
-                    className={`h-1.5 rounded-full transition-all ${i === idx ? "w-8 bg-blue-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"}`}
+                    className={`h-1.5 rounded-full transition-all ${i === idx ? "w-8 bg-blue-600" : "w-1.5 bg-[rgb(var(--line-2))] hover:bg-[rgb(var(--muted-2))]"}`}
                     aria-label={`Chặng ${i + 1}`}
                   />
                 ))}

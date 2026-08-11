@@ -49,7 +49,7 @@ export default async function ClaimDetailPage({
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-2 text-xs text-[rgb(var(--muted))]">
             <Link href={`/projects/${params.projectId}/site/claims`} className="hover:text-blue-600">
               ← Khiếu nại
             </Link>
@@ -91,8 +91,8 @@ export default async function ClaimDetailPage({
           />
           {claim.description && (
             <div className="sm:col-span-2 lg:col-span-4">
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Mô tả</div>
-              <p className="mt-1 whitespace-pre-wrap text-slate-700">{claim.description}</p>
+              <div className="text-xs font-medium uppercase tracking-wide text-[rgb(var(--muted))]">Mô tả</div>
+              <p className="mt-1 whitespace-pre-wrap text-[rgb(var(--ink-2))]">{claim.description}</p>
             </div>
           )}
           {claim.resolutionNote && (
@@ -114,24 +114,24 @@ export default async function ClaimDetailPage({
             </div>
           </CardHeader>
           <CardBody>
-            <ol className="relative space-y-4 border-l border-slate-200 pl-4">
+            <ol className="relative space-y-4 border-l border-[rgb(var(--line))] pl-4">
               {claim.events.map((e) => (
                 <li key={e.id} className="relative">
-                  <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white" />
-                  <div className="text-xs text-slate-500">
+                  <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-[rgb(var(--inverse-ink))]" />
+                  <div className="text-xs text-[rgb(var(--muted))]">
                     {formatDateVn(e.occurredAt)} · {EVENT_KIND_LABEL[e.kind] ?? e.kind}
                   </div>
-                  <div className="text-sm font-medium text-slate-800">{e.title}</div>
-                  {e.detail && <p className="mt-0.5 whitespace-pre-wrap text-xs text-slate-600">{e.detail}</p>}
+                  <div className="text-sm font-medium text-[rgb(var(--ink-2))]">{e.title}</div>
+                  {e.detail && <p className="mt-0.5 whitespace-pre-wrap text-xs text-[rgb(var(--muted))]">{e.detail}</p>}
                   {e.sourceTable && (
-                    <div className="mt-0.5 text-[11px] text-slate-400">
+                    <div className="mt-0.5 text-[11px] text-[rgb(var(--muted-2))]">
                       Nguồn: {e.sourceTable} #{e.sourceId?.slice(0, 8)}
                     </div>
                   )}
                 </li>
               ))}
               {claim.events.length === 0 && (
-                <li className="text-sm text-slate-500">
+                <li className="text-sm text-[rgb(var(--muted))]">
                   Chưa có sự kiện. Ghi lại diễn biến theo trình tự thời gian — đây là xương sống của lập luận nhân quả.
                 </li>
               )}
@@ -149,18 +149,18 @@ export default async function ClaimDetailPage({
           </CardHeader>
           <CardBody className="space-y-2">
             {claim.evidence.map((ev, i) => (
-              <div key={ev.id} className="rounded-md border border-slate-100 bg-slate-50/50 px-3 py-2">
+              <div key={ev.id} className="rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--raised))]/50 px-3 py-2">
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="font-mono text-slate-400">[CC-{i + 1}]</span>
+                  <span className="font-mono text-[rgb(var(--muted-2))]">[CC-{i + 1}]</span>
                   <Badge variant="info">{EVIDENCE_KIND_LABEL[ev.kind] ?? ev.kind}</Badge>
-                  {ev.capturedAt && <span className="text-slate-500">{formatDateVn(ev.capturedAt)}</span>}
+                  {ev.capturedAt && <span className="text-[rgb(var(--muted))]">{formatDateVn(ev.capturedAt)}</span>}
                 </div>
-                <div className="mt-1 text-sm text-slate-800">{ev.title}</div>
-                {ev.note && <p className="mt-0.5 text-xs text-slate-600">{ev.note}</p>}
+                <div className="mt-1 text-sm text-[rgb(var(--ink-2))]">{ev.title}</div>
+                {ev.note && <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">{ev.note}</p>}
               </div>
             ))}
             {claim.evidence.length === 0 && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[rgb(var(--muted))]">
                 Chưa có chứng cứ. Dùng <strong>Quét chứng cứ</strong> để tìm nhật ký thi công, sổ TVGS,
                 RFI, lệnh thay đổi trong khoảng thời gian sự kiện.
               </p>
@@ -188,7 +188,7 @@ export default async function ClaimDetailPage({
       {/* Statement */}
       <StatementPanel claimId={claim.id} statementMd={claim.statementMd} hasBases={claim.legalBases.length > 0} />
 
-      <div className="text-xs text-slate-400">
+      <div className="text-xs text-[rgb(var(--muted-2))]">
         Người lập: {claim.createdBy.name}
         {claim.assignee && ` · Phụ trách: ${claim.assignee.name}`} · Tạo {formatDateVn(claim.createdAt)}
         {claim.submittedAt && ` · Gửi ${formatDateVn(claim.submittedAt)}`}
@@ -200,9 +200,9 @@ export default async function ClaimDetailPage({
 function Meta({ label, value, danger }: { label: string; value: string | null | undefined; danger?: boolean }) {
   return (
     <div>
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`mt-1 text-sm ${danger ? "font-semibold text-rose-600" : "text-slate-700"}`}>
-        {value ?? <span className="text-slate-400">—</span>}
+      <div className="text-xs font-medium uppercase tracking-wide text-[rgb(var(--muted))]">{label}</div>
+      <div className={`mt-1 text-sm ${danger ? "font-semibold text-rose-600" : "text-[rgb(var(--ink-2))]"}`}>
+        {value ?? <span className="text-[rgb(var(--muted-2))]">—</span>}
         {danger && " ⚠"}
       </div>
     </div>

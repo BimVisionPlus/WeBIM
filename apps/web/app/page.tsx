@@ -196,35 +196,35 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-[rgb(var(--raised))]">
+      <header className="border-b border-[rgb(var(--line))] bg-[rgb(var(--surface))]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <a href="https://aecplatform.vn" className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-blue-600 to-cyan-500 font-bold text-white hover:opacity-90" title="AEC Platform — về trang chủ">
+            <a href="https://aecplatform.vn" className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-blue-600 to-cyan-500 font-bold text-[rgb(var(--inverse-ink))] hover:opacity-90" title="AEC Platform — về trang chủ">
               V
             </a>
             <div className="flex flex-col leading-tight">
-              <a href="https://aecplatform.vn" className="text-[10px] uppercase tracking-wider text-slate-500 hover:text-slate-900">
+              <a href="https://aecplatform.vn" className="text-[10px] uppercase tracking-wider text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]">
                 AEC Platform
               </a>
-              <span className="text-base font-semibold text-slate-900">Atlas</span>
+              <span className="text-base font-semibold text-[rgb(var(--ink))]">Atlas</span>
             </div>
             <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">v1 · LIVE</span>
           </div>
-          <nav className="flex items-center gap-4 text-sm text-slate-600">
+          <nav className="flex items-center gap-4 text-sm text-[rgb(var(--muted))]">
             <OrgSwitcher orgs={orgs} activeSlug={activeOrg.slug} />
-            <Link href="/demo" className="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700">★ Demo</Link>
-            <Link href="/" className="hover:text-slate-900">Dự án</Link>
-            <Link href="/units" className="hover:text-slate-900">Đơn vị</Link>
-            <Link href="/winwork" className="hover:text-slate-900">WinWork</Link>
-            <Link href="/catalog" className="hover:text-slate-900">Catalog</Link>
-            <Link href="/portfolio" className="hover:text-slate-900">Portfolio</Link>
-            <Link href="/trust" className="hover:text-slate-900">Trust</Link>
-            <Link href="/pricing" className="hover:text-slate-900">Giá</Link>
-            <Link href="/audit" className="hover:text-slate-900" title="Sổ kiểm toán — mọi thao tác">Audit</Link>
-            <Link href="/archive" className="hover:text-slate-900" title="Lưu trữ — khôi phục bản ghi đã xoá">Archive</Link>
-            <Link href="/settings/team" className="hover:text-slate-900">Tổ chức</Link>
-            <Link href="/api/auth/signout" className="hover:text-slate-900">Đăng xuất ({session.name})</Link>
+            <Link href="/demo" className="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-[rgb(var(--inverse-ink))] hover:bg-blue-700">★ Demo</Link>
+            <Link href="/" className="hover:text-[rgb(var(--ink))]">Dự án</Link>
+            <Link href="/units" className="hover:text-[rgb(var(--ink))]">Đơn vị</Link>
+            <Link href="/winwork" className="hover:text-[rgb(var(--ink))]">WinWork</Link>
+            <Link href="/catalog" className="hover:text-[rgb(var(--ink))]">Catalog</Link>
+            <Link href="/portfolio" className="hover:text-[rgb(var(--ink))]">Portfolio</Link>
+            <Link href="/trust" className="hover:text-[rgb(var(--ink))]">Trust</Link>
+            <Link href="/pricing" className="hover:text-[rgb(var(--ink))]">Giá</Link>
+            <Link href="/audit" className="hover:text-[rgb(var(--ink))]" title="Sổ kiểm toán — mọi thao tác">Audit</Link>
+            <Link href="/archive" className="hover:text-[rgb(var(--ink))]" title="Lưu trữ — khôi phục bản ghi đã xoá">Archive</Link>
+            <Link href="/settings/team" className="hover:text-[rgb(var(--ink))]">Tổ chức</Link>
+            <Link href="/api/auth/signout" className="hover:text-[rgb(var(--ink))]">Đăng xuất ({session.name})</Link>
           </nav>
         </div>
       </header>
@@ -232,7 +232,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
       <main className="mx-auto max-w-7xl px-6 py-8">
         <RiskBanner orgIds={orgIds} accessFilter={accessFilter} />
 
-        <nav className="flex flex-wrap gap-1 border-b border-slate-200" data-testid="dept-tabs">
+        <nav className="flex flex-wrap gap-1 border-b border-[rgb(var(--line))]" data-testid="dept-tabs">
           {TABS.map((t) => {
             const isActive = t.key === activeTabKey;
             let badgeNum: number | null = null;
@@ -249,10 +249,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                 key={t.key}
                 href={href}
                 data-testid={`tab-${t.key}`}
-                className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-slate-600 hover:text-slate-900"}`}
+                className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"}`}
               >
                 {t.label}
-                {badgeNum != null && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{badgeNum}</span>}
+                {badgeNum != null && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-[rgb(var(--raised))] text-[rgb(var(--muted))]"}`}>{badgeNum}</span>}
               </Link>
             );
           })}
@@ -267,19 +267,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
               <form className="flex items-center gap-2" method="get" data-testid="project-filters">
                 <input type="hidden" name="tab" value={activeTabKey} />
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-                  <input name="q" defaultValue={q} placeholder="Tìm dự án..." className="rounded border border-slate-300 py-1.5 pl-7 pr-3 text-sm" />
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[rgb(var(--muted-2))]">🔍</span>
+                  <input name="q" defaultValue={q} placeholder="Tìm dự án..." className="rounded border border-[rgb(var(--line-2))] py-1.5 pl-7 pr-3 text-sm" />
                 </div>
-                <select name="status" defaultValue={statusFilter} className="rounded border border-slate-300 px-2 py-1.5 text-sm">
+                <select name="status" defaultValue={statusFilter} className="rounded border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm">
                   <option value="">Tất cả trạng thái</option>
                   <option value="Đúng tiến độ">Đúng tiến độ</option>
                   <option value="Cảnh báo">Cảnh báo</option>
                   <option value="Chậm">Chậm</option>
                 </select>
-                <button type="submit" className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white">Lọc</button>
+                <button type="submit" className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-[rgb(var(--inverse-ink))]">Lọc</button>
                 <Link
                   href={`/onboarding/project?orgId=${orgIds[0]}`}
-                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-emerald-700"
                 >
                   + Dự án mới
                 </Link>
@@ -288,11 +288,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
           </CardHeader>
           <CardBody className="p-0">
             {visible.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
                 {activeTab.dept ? `Phòng "${activeTab.label}" chưa có dự án nào.` : "Chưa có dự án nào phù hợp bộ lọc."}
               </div>
             ) : activeTab.viewMode === "by-unit" ? (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-[rgb(var(--line))]">
                 {(() => {
                   const groups = new Map<string, { unit: { id: string | null; code: string; name: string; province: string | null }; projects: typeof visible }>();
                   for (const p of visible) {
@@ -309,42 +309,42 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                   const sorted = Array.from(groups.values()).sort((a, b) => (a.unit.id ? 0 : 1) - (b.unit.id ? 0 : 1) || a.unit.code.localeCompare(b.unit.code));
                   return sorted.map((g) => (
                     <details key={g.unit.id ?? "_none"} open className="group">
-                      <summary className="flex cursor-pointer items-center gap-3 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">
-                        <span className="font-mono text-slate-500">{g.unit.code}</span>
-                        <span className="text-slate-900">{g.unit.name}</span>
-                        {g.unit.province && <span className="text-slate-500">· {g.unit.province}</span>}
+                      <summary className="flex cursor-pointer items-center gap-3 bg-[rgb(var(--raised))] px-4 py-2 text-xs font-medium text-[rgb(var(--ink-2))] hover:bg-[rgb(var(--raised))]">
+                        <span className="font-mono text-[rgb(var(--muted))]">{g.unit.code}</span>
+                        <span className="text-[rgb(var(--ink))]">{g.unit.name}</span>
+                        {g.unit.province && <span className="text-[rgb(var(--muted))]">· {g.unit.province}</span>}
                         <span className="ml-auto rounded-full bg-blue-100 px-2 py-0.5 text-blue-700">{g.projects.length} dự án</span>
                       </summary>
                       <table className="w-full text-sm">
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-[rgb(var(--line))]">
                           {g.projects.map((p) => {
                             const extras = Math.max(0, p.stakeholders.length - 1);
                             const firstName = p.stakeholders[0]?.org.name ?? "—";
                             return (
-                              <tr key={p.id} className="hover:bg-slate-50" data-testid={`row-project-${p.id}`}>
+                              <tr key={p.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-project-${p.id}`}>
                                 <td className="p-3">
-                                  <Link href={`/projects/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700">{p.name}</Link>
-                                  <div className="mt-0.5 flex items-center gap-2 text-[11px] font-mono text-slate-500">
+                                  <Link href={`/projects/${p.id}`} className="font-medium text-[rgb(var(--ink))] hover:text-blue-700">{p.name}</Link>
+                                  <div className="mt-0.5 flex items-center gap-2 text-[11px] font-mono text-[rgb(var(--muted))]">
                                     <span>{p.key}</span>
                                     <DepartmentSelect projectId={p.id} value={p.department} />
                                   </div>
                                 </td>
-                                <td className="p-3 text-xs text-slate-700">
+                                <td className="p-3 text-xs text-[rgb(var(--ink-2))]">
                                   {firstName}
-                                  {extras > 0 && <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">+{extras}</span>}
+                                  {extras > 0 && <span className="ml-1 rounded-full bg-[rgb(var(--raised))] px-1.5 py-0.5 text-[10px] text-[rgb(var(--muted))]">+{extras}</span>}
                                 </td>
                                 <td className="p-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="h-2 w-32 overflow-hidden rounded-full bg-slate-200">
+                                    <div className="h-2 w-32 overflow-hidden rounded-full bg-[rgb(var(--line))]">
                                       <div className={`h-full ${healthBar[p.health]}`} style={{ width: `${p.progress}%` }} />
                                     </div>
-                                    <span className="text-xs font-medium text-slate-700">{p.progress}%</span>
+                                    <span className="text-xs font-medium text-[rgb(var(--ink-2))]">{p.progress}%</span>
                                   </div>
                                 </td>
                                 <td className="p-3">
                                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${healthBadge[p.health]}`}>{p.health}</span>
                                 </td>
-                                <td className="p-3 text-xs text-slate-700">{p.endDate ? formatDateVn(p.endDate) : "—"}</td>
+                                <td className="p-3 text-xs text-[rgb(var(--ink-2))]">{p.endDate ? formatDateVn(p.endDate) : "—"}</td>
                               </tr>
                             );
                           })}
@@ -356,7 +356,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
               </div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                   <tr>
                     <th className="p-3 text-left">Dự án</th>
                     <th className="p-3 text-left">Đơn vị</th>
@@ -367,15 +367,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                     <th className="p-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[rgb(var(--line))]">
                   {visible.map((p) => {
                     const extras = Math.max(0, p.stakeholders.length - 1);
                     const firstName = p.stakeholders[0]?.org.name ?? "—";
                     return (
-                      <tr key={p.id} className="hover:bg-slate-50" data-testid={`row-project-${p.id}`}>
+                      <tr key={p.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-project-${p.id}`}>
                         <td className="p-3">
-                          <Link href={`/projects/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700">{p.name}</Link>
-                          <div className="mt-0.5 flex items-center gap-2 text-[11px] font-mono text-slate-500">
+                          <Link href={`/projects/${p.id}`} className="font-medium text-[rgb(var(--ink))] hover:text-blue-700">{p.name}</Link>
+                          <div className="mt-0.5 flex items-center gap-2 text-[11px] font-mono text-[rgb(var(--muted))]">
                             <span>{p.key}</span>
                             <DepartmentSelect projectId={p.id} value={p.department} />
                           </div>
@@ -386,18 +386,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                               <span className="font-mono">{p.businessUnit.code}</span>
                               <span className="text-blue-900">{p.businessUnit.name}</span>
                             </span>
-                          ) : <span className="text-slate-400">—</span>}
+                          ) : <span className="text-[rgb(var(--muted-2))]">—</span>}
                         </td>
-                        <td className="p-3 text-xs text-slate-700">
+                        <td className="p-3 text-xs text-[rgb(var(--ink-2))]">
                           {firstName}
-                          {extras > 0 && <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">+{extras}</span>}
+                          {extras > 0 && <span className="ml-1 rounded-full bg-[rgb(var(--raised))] px-1.5 py-0.5 text-[10px] text-[rgb(var(--muted))]">+{extras}</span>}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
-                            <div className="h-2 w-32 overflow-hidden rounded-full bg-slate-200">
+                            <div className="h-2 w-32 overflow-hidden rounded-full bg-[rgb(var(--line))]">
                               <div className={`h-full ${healthBar[p.health]}`} style={{ width: `${p.progress}%` }} />
                             </div>
-                            <span className="text-xs font-medium text-slate-700">{p.progress}%</span>
+                            <span className="text-xs font-medium text-[rgb(var(--ink-2))]">{p.progress}%</span>
                           </div>
                         </td>
                         <td className="p-3">
@@ -405,7 +405,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
                             {p.health}
                           </span>
                         </td>
-                        <td className="p-3 text-xs text-slate-700">{p.endDate ? formatDateVn(p.endDate) : "—"}</td>
+                        <td className="p-3 text-xs text-[rgb(var(--ink-2))]">{p.endDate ? formatDateVn(p.endDate) : "—"}</td>
                         <td className="p-3 text-right">
                           <span className="inline-flex items-center gap-2">
                             <AuditHistoryLink entityId={p.id} entityType="Project" />
@@ -425,12 +425,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Phân bố trạng thái</CardTitle>
-              <span className="text-[11px] text-slate-500">theo tất cả dự án truy cập được</span>
+              <span className="text-[11px] text-[rgb(var(--muted))]">theo tất cả dự án truy cập được</span>
             </div>
           </CardHeader>
           <CardBody>
             {distTotal === 0 ? (
-              <div className="p-4 text-center text-sm text-slate-500">Chưa có dữ liệu.</div>
+              <div className="p-4 text-center text-sm text-[rgb(var(--muted))]">Chưa có dữ liệu.</div>
             ) : (
               <div className="flex flex-wrap items-center gap-8">
                 <Donut total={distTotal} parts={[
@@ -486,24 +486,24 @@ function Donut({ total, parts }: { total: number; parts: { label: string; value:
 
 function DeptCard({ title, count, href, items }: { title: string; count: number; href: string; items: { key: string; primary: string; secondary?: string | null }[] }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-        <div className="text-sm font-semibold text-slate-900">{title}</div>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">{count}</span>
+    <div className="rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--surface))] shadow-sm">
+      <div className="flex items-center justify-between border-b border-[rgb(var(--line))] px-3 py-2">
+        <div className="text-sm font-semibold text-[rgb(var(--ink))]">{title}</div>
+        <span className="rounded-full bg-[rgb(var(--raised))] px-2 py-0.5 text-[10px] font-medium text-[rgb(var(--muted))]">{count}</span>
       </div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-[rgb(var(--line))]">
         {items.length === 0 ? (
-          <div className="px-3 py-4 text-center text-xs text-slate-400">Chưa có dữ liệu.</div>
+          <div className="px-3 py-4 text-center text-xs text-[rgb(var(--muted-2))]">Chưa có dữ liệu.</div>
         ) : (
           items.map((it) => (
             <div key={it.key} className="px-3 py-2 text-xs">
-              <div className="font-medium text-slate-900 line-clamp-1">{it.primary}</div>
-              {it.secondary && <div className="text-[11px] text-slate-500 line-clamp-1">{it.secondary}</div>}
+              <div className="font-medium text-[rgb(var(--ink))] line-clamp-1">{it.primary}</div>
+              {it.secondary && <div className="text-[11px] text-[rgb(var(--muted))] line-clamp-1">{it.secondary}</div>}
             </div>
           ))
         )}
       </div>
-      <a href={href} className="block border-t border-slate-100 px-3 py-2 text-right text-[11px] font-medium text-blue-600 hover:text-blue-700">Xem chi tiết →</a>
+      <a href={href} className="block border-t border-[rgb(var(--line))] px-3 py-2 text-right text-[11px] font-medium text-blue-600 hover:text-blue-700">Xem chi tiết →</a>
     </div>
   );
 }

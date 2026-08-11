@@ -66,7 +66,7 @@ export function ProjectNav({ projectId, department }: { projectId: string; depar
   const tabs = tabsFor(department);
 
   return (
-    <nav className="border-b border-slate-200 bg-white">
+    <nav className="border-b border-[rgb(var(--line))] bg-[rgb(var(--surface))]">
       <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-6">
         {tabs.map((t) => {
           const href = base + t.href;
@@ -82,7 +82,7 @@ export function ProjectNav({ projectId, department }: { projectId: string; depar
                 "border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition",
                 active
                   ? "border-blue-600 text-blue-700"
-                  : "border-transparent text-slate-600 hover:text-slate-900",
+                  : "border-transparent text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]",
               )}
             >
               {t.label}

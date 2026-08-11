@@ -91,7 +91,7 @@ const ICONS: Record<Verdict, { icon: string; cls: string }> = {
   yes: { icon: "✓", cls: "text-emerald-600 font-bold" },
   no: { icon: "✕", cls: "text-rose-600" },
   partial: { icon: "◐", cls: "text-amber-600 font-medium" },
-  "n/a": { icon: "—", cls: "text-slate-400" },
+  "n/a": { icon: "—", cls: "text-[rgb(var(--muted-2))]" },
 };
 
 const TOTAL_SCORES = (() => {
@@ -114,14 +114,14 @@ export default function ComparePage() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { name: "Atlas", score: TOTAL_SCORES.atlas, total: TOTAL_SCORES.total, color: "from-blue-600 to-indigo-700" },
-          { name: "Procore", score: TOTAL_SCORES.procore, total: TOTAL_SCORES.total, color: "from-slate-500 to-slate-700" },
-          { name: "Autodesk Construction Cloud", score: TOTAL_SCORES.acc, total: TOTAL_SCORES.total, color: "from-slate-500 to-slate-700" },
+          { name: "Procore", score: TOTAL_SCORES.procore, total: TOTAL_SCORES.total, color: "from-[rgb(var(--inverse-bg))] to-[rgb(var(--inverse-bg))]" },
+          { name: "Autodesk Construction Cloud", score: TOTAL_SCORES.acc, total: TOTAL_SCORES.total, color: "from-[rgb(var(--inverse-bg))] to-[rgb(var(--inverse-bg))]" },
         ].map((t) => (
           <Card key={t.name} className={t.name === "Atlas" ? "border-blue-500" : ""}>
             <CardBody>
               <div className={`bg-gradient-to-r ${t.color} bg-clip-text text-sm font-bold uppercase tracking-wider text-transparent`}>{t.name}</div>
-              <div className="mt-1 text-3xl font-bold text-slate-900">{t.score}<span className="text-base font-normal text-slate-400">/{t.total}</span></div>
-              <div className="mt-0.5 text-xs text-slate-500">{((t.score / t.total) * 100).toFixed(0)}% feature coverage cho thị trường VN AEC</div>
+              <div className="mt-1 text-3xl font-bold text-[rgb(var(--ink))]">{t.score}<span className="text-base font-normal text-[rgb(var(--muted-2))]">/{t.total}</span></div>
+              <div className="mt-0.5 text-xs text-[rgb(var(--muted))]">{((t.score / t.total) * 100).toFixed(0)}% feature coverage cho thị trường VN AEC</div>
             </CardBody>
           </Card>
         ))}
@@ -137,7 +137,7 @@ export default function ComparePage() {
           <CardHeader><CardTitle>{cat.cat}</CardTitle></CardHeader>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Feature</th>
                   <th className="p-2 text-center w-20">Atlas</th>
@@ -146,14 +146,14 @@ export default function ComparePage() {
                   <th className="p-2 text-left">Ghi chú</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {cat.rows.map((r) => (
-                  <tr key={r.name} className="hover:bg-slate-50">
+                  <tr key={r.name} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 text-xs">{r.name}</td>
                     <td className="p-2 text-center"><span className={ICONS[r.atlas].cls}>{ICONS[r.atlas].icon}</span></td>
                     <td className="p-2 text-center"><span className={ICONS[r.procore].cls}>{ICONS[r.procore].icon}</span></td>
                     <td className="p-2 text-center"><span className={ICONS[r.acc].cls}>{ICONS[r.acc].icon}</span></td>
-                    <td className="p-2 text-[11px] text-slate-500">{r.note ?? ""}</td>
+                    <td className="p-2 text-[11px] text-[rgb(var(--muted))]">{r.note ?? ""}</td>
                   </tr>
                 ))}
               </tbody>
@@ -165,7 +165,7 @@ export default function ComparePage() {
       <Card className="mt-6 border-blue-200 bg-blue-50/40">
         <CardBody>
           <CardTitle>Khi nào CHỌN Procore / ACC thay vì Atlas?</CardTitle>
-          <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
+          <ul className="mt-3 space-y-1.5 text-sm text-[rgb(var(--ink-2))]">
             <li>✓ Bạn là công ty xây dựng đa quốc gia (US/EU client), không cần VN regulation.</li>
             <li>✓ Đã có SAP / Oracle ERP và cần integration sâu (Procore + ACC chính tuyến).</li>
             <li>✓ Đang dùng Revit / Civil 3D mạnh và cần BIM cross-discipline với 100+ federated models (ACC dẫn đầu segment).</li>
@@ -177,7 +177,7 @@ export default function ComparePage() {
       <Card className="mt-3 border-emerald-200 bg-emerald-50/40">
         <CardBody>
           <CardTitle>Khi nào CHỌN Atlas?</CardTitle>
-          <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
+          <ul className="mt-3 space-y-1.5 text-sm text-[rgb(var(--ink-2))]">
             <li>✓ Hoạt động chính tại VN, hồ sơ ra Sở XD / PC07 / TCT / BHXH.</li>
             <li>✓ Cần workflow gắn chặt NĐ 06/2021 + VBHN 06/VBHN-BXD + NĐ 15/2021 — không "code checker" chung chung.</li>
             <li>✓ Đội thi công nói tiếng Việt — UI + voice-to-form + AI tóm tắt tiếng Việt.</li>
@@ -188,7 +188,7 @@ export default function ComparePage() {
         </CardBody>
       </Card>
 
-      <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+      <div className="mt-6 rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--raised))] p-3 text-xs text-[rgb(var(--muted))]">
         Báo cáo so sánh tổng hợp từ: Procore docs public (procore.com), Autodesk Construction Cloud docs (construction.autodesk.com), Gartner Q4/2025 magic-quadrant cho Project Management ngành xây dựng, fieldlens.io benchmark.
       </div>
     </AecModuleShell>

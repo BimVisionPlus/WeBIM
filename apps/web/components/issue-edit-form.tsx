@@ -88,8 +88,8 @@ export function IssueEditForm({ issue, members }: { issue: IssueEditable; member
 
   if (!editing) {
     return (
-      <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-        <span className="text-xs text-slate-500">Sửa tiêu đề, mô tả, ưu tiên, phụ trách, vị trí, hạn xử lý</span>
+      <div className="flex items-center justify-between border-t border-[rgb(var(--line))] pt-2">
+        <span className="text-xs text-[rgb(var(--muted))]">Sửa tiêu đề, mô tả, ưu tiên, phụ trách, vị trí, hạn xử lý</span>
         <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
           Sửa
         </Button>
@@ -98,10 +98,10 @@ export function IssueEditForm({ issue, members }: { issue: IssueEditable; member
   }
 
   return (
-    <div className="space-y-3 border-t border-slate-100 pt-3">
+    <div className="space-y-3 border-t border-[rgb(var(--line))] pt-3">
       <Field label="Tiêu đề">
         <input
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -109,14 +109,14 @@ export function IssueEditForm({ issue, members }: { issue: IssueEditable; member
       <Field label="Mô tả">
         <textarea
           rows={4}
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </Field>
       <Field label="Ưu tiên">
         <select
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={priority}
           onChange={(e) => setPriority(e.target.value as IssueEditable["priority"])}
         >
@@ -129,7 +129,7 @@ export function IssueEditForm({ issue, members }: { issue: IssueEditable; member
       </Field>
       <Field label="Phụ trách">
         <select
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={assigneeId}
           onChange={(e) => setAssigneeId(e.target.value)}
         >
@@ -143,7 +143,7 @@ export function IssueEditForm({ issue, members }: { issue: IssueEditable; member
       </Field>
       <Field label="Vị trí">
         <input
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={locationZone}
           onChange={(e) => setLocationZone(e.target.value)}
           placeholder="VD: Tầng 5 - Trục A-C"
@@ -152,7 +152,7 @@ export function IssueEditForm({ issue, members }: { issue: IssueEditable; member
       <Field label="Hạn xử lý">
         <input
           type="date"
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
         />
@@ -182,7 +182,7 @@ export function IssueEditForm({ issue, members }: { issue: IssueEditable; member
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-1">
-      <span className="text-xs font-medium text-slate-600">{label}</span>
+      <span className="text-xs font-medium text-[rgb(var(--muted))]">{label}</span>
       {children}
     </label>
   );

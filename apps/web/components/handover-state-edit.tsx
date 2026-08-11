@@ -147,40 +147,40 @@ export function HandoverStateEdit({ ticket }: { ticket: HandoverTicketLite }) {
             </Button>
           )}
           {moves.length === 0 && (
-            <span className="text-[11px] text-slate-500">Trạng thái kết thúc</span>
+            <span className="text-[11px] text-[rgb(var(--muted))]">Trạng thái kết thúc</span>
           )}
         </div>
       )}
 
       {editing && (
-        <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+        <div className="space-y-2 rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--raised))] p-3">
           <label className="block space-y-1">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
               Tiêu đề
             </span>
             <input
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </label>
           <label className="block space-y-1">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
               Mô tả
             </span>
             <textarea
               rows={3}
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </label>
           <label className="block space-y-1">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
               Mức độ
             </span>
             <select
-              className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
               value={severity}
               onChange={(e) => setSeverity(e.target.value as Severity)}
             >

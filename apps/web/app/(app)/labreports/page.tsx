@@ -52,10 +52,10 @@ export default async function LabReportsPage() {
       subtitle="Phòng LAS-XD được Bộ XD cấp phép. Mẫu BT/thép/đất/cọc. Auto-compare actual vs TCVN; FAIL → auto-tạo NCR."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng mẫu</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang thí nghiệm</div><div className="mt-1 text-2xl font-bold text-blue-700">{pending}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tỷ lệ Đạt</div><div className={`mt-1 text-2xl font-bold ${passRate >= 95 ? "text-emerald-700" : "text-amber-700"}`}>{passRate}%</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Không đạt → NCR</div><div className="mt-1 text-2xl font-bold text-rose-700">{fail}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng mẫu</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang thí nghiệm</div><div className="mt-1 text-2xl font-bold text-blue-700">{pending}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tỷ lệ Đạt</div><div className={`mt-1 text-2xl font-bold ${passRate >= 95 ? "text-emerald-700" : "text-amber-700"}`}>{passRate}%</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Không đạt → NCR</div><div className="mt-1 text-2xl font-bold text-rose-700">{fail}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
@@ -64,10 +64,10 @@ export default async function LabReportsPage() {
         <CardHeader><CardTitle>Kết quả thí nghiệm ({total})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {total === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có báo cáo thí nghiệm. Bấm “Lấy mẫu thí nghiệm” để thêm.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có báo cáo thí nghiệm. Bấm “Lấy mẫu thí nghiệm” để thêm.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã mẫu</th>
                   <th className="p-2 text-left">Loại</th>
@@ -80,23 +80,23 @@ export default async function LabReportsPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {reports.map((r) => {
                   const meta = resLabel[r.result] ?? { vn: r.result, variant: "neutral" as const };
                   const params = r.parameters as Record<string, number> | null;
                   const spec = r.specRequired as Record<string, string> | null;
                   return (
-                    <tr key={r.id} className={`hover:bg-slate-50 align-top ${r.result === "FAIL" ? "bg-rose-50" : ""}`} data-testid={`sample-${r.sampleCode}`}>
+                    <tr key={r.id} className={`hover:bg-[rgb(var(--raised))] align-top ${r.result === "FAIL" ? "bg-rose-50" : ""}`} data-testid={`sample-${r.sampleCode}`}>
                       <td className="p-2 font-mono text-xs">{r.sampleCode}</td>
-                      <td className="p-2 text-xs">{typeLabel[r.sampleType]}<div className="text-[10px] text-slate-500">{r.testMethod}</div></td>
-                      <td className="p-2 text-xs">{formatDateVn(r.sampledAt)}<div className="text-[10px] text-slate-500">{r.sampledBy}</div></td>
-                      <td className="p-2 text-xs">{r.labCode}<div className="text-[10px] text-slate-500">{r.labOrgName}</div></td>
-                      <td className="p-2 text-[10px] text-slate-500">{r.tcvnRef}</td>
+                      <td className="p-2 text-xs">{typeLabel[r.sampleType]}<div className="text-[10px] text-[rgb(var(--muted))]">{r.testMethod}</div></td>
+                      <td className="p-2 text-xs">{formatDateVn(r.sampledAt)}<div className="text-[10px] text-[rgb(var(--muted))]">{r.sampledBy}</div></td>
+                      <td className="p-2 text-xs">{r.labCode}<div className="text-[10px] text-[rgb(var(--muted))]">{r.labOrgName}</div></td>
+                      <td className="p-2 text-[10px] text-[rgb(var(--muted))]">{r.tcvnRef}</td>
                       <td className="p-2 text-[11px]">
                         {params && Object.entries(params).map(([k, v]) => (
                           <div key={k}>
-                            <span className="text-slate-500">{k}:</span> <span className="font-medium">{v}</span>
-                            {spec?.[k] && <span className="text-slate-500"> (spec {spec[k]})</span>}
+                            <span className="text-[rgb(var(--muted))]">{k}:</span> <span className="font-medium">{v}</span>
+                            {spec?.[k] && <span className="text-[rgb(var(--muted))]"> (spec {spec[k]})</span>}
                           </div>
                         ))}
                       </td>
@@ -112,7 +112,7 @@ export default async function LabReportsPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-3 text-[11px] text-slate-500">
+      <div className="mt-3 text-[11px] text-[rgb(var(--muted))]">
         Pipeline: PDF báo cáo LAS upload → Qwen2.5-VL OCR extract parameters →
         match TCVN spec từ DinhMucDB → so sánh actual vs required → FAIL auto-tạo NCR + email TVGS+CĐT.
       </div>

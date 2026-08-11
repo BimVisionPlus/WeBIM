@@ -50,18 +50,18 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
       subtitle="NĐ 15/2021. Hạng I/II/III năng lực hoạt động XD + chứng chỉ năng lực hành nghề. Cross-project vetting + blacklist + rating đa chiều."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng DN</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hạng I</div><div className="mt-1 text-2xl font-bold text-violet-700">{hangI}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Blacklist</div><div className="mt-1 text-2xl font-bold text-rose-700">{blacklisted}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hiển thị</div><div className="mt-1 text-2xl font-bold">{profiles.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng DN</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hạng I</div><div className="mt-1 text-2xl font-bold text-violet-700">{hangI}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Blacklist</div><div className="mt-1 text-2xl font-bold text-rose-700">{blacklisted}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hiển thị</div><div className="mt-1 text-2xl font-bold">{profiles.length}</div></CardBody></Card>
       </div>
 
       <Card className="mt-6">
         <CardBody>
           <form className="flex flex-wrap items-end gap-3" method="get">
-            <div className="grow min-w-[260px]"><label className="text-xs text-slate-600">Tìm theo tên / MST</label><input name="q" defaultValue={q} className="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-sm" /></div>
-            <div><label className="text-xs text-slate-600">Hạng</label>
-              <select name="class" defaultValue={cls} className="mt-1 rounded border border-slate-300 px-3 py-1.5 text-sm">
+            <div className="grow min-w-[260px]"><label className="text-xs text-[rgb(var(--muted))]">Tìm theo tên / MST</label><input name="q" defaultValue={q} className="mt-1 w-full rounded border border-[rgb(var(--line-2))] px-3 py-1.5 text-sm" /></div>
+            <div><label className="text-xs text-[rgb(var(--muted))]">Hạng</label>
+              <select name="class" defaultValue={cls} className="mt-1 rounded border border-[rgb(var(--line-2))] px-3 py-1.5 text-sm">
                 <option value="">Tất cả</option>
                 <option value="HANG_I">Hạng I</option>
                 <option value="HANG_II">Hạng II</option>
@@ -69,7 +69,7 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
                 <option value="CHUA_PHAN_HANG">Chưa phân hạng</option>
               </select>
             </div>
-            <button className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700">Tra cứu</button>
+            <button className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700">Tra cứu</button>
           </form>
         </CardBody>
       </Card>
@@ -80,10 +80,10 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
         <CardHeader><CardTitle>Sổ năng lực ({profiles.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {profiles.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có hồ sơ doanh nghiệp. Bấm “Đăng ký năng lực” để thêm.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có hồ sơ doanh nghiệp. Bấm “Đăng ký năng lực” để thêm.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Tên DN / MST</th>
                   <th className="p-2 text-left">Hạng / Số CCNL</th>
@@ -96,18 +96,18 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {profiles.map((p) => {
                   const meta = classLabel[p.capabilityClass] ?? { vn: p.capabilityClass, variant: "neutral" as const };
                   return (
-                    <tr key={p.id} className={`hover:bg-slate-50 ${p.blacklisted ? "bg-rose-50" : ""}`} data-testid={`profile-${p.id}`}>
-                      <td className="p-2 text-xs"><div className="font-medium">{p.legalName}</div><div className="text-[10px] text-slate-500">MST: {p.mst ?? "—"} · {p.org.name}</div></td>
-                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge>{p.capabilityNo && <div className="text-[10px] font-mono text-slate-500 mt-0.5">{p.capabilityNo}</div>}{p.capabilityExpiry && <div className="text-[10px] text-slate-500">đến {formatDateVn(p.capabilityExpiry)}</div>}</td>
-                      <td className="p-2 text-[11px] text-slate-700">{p.capabilityScope.slice(0, 2).join(" · ")}{p.capabilityScope.length > 2 && ` +${p.capabilityScope.length - 2}`}</td>
+                    <tr key={p.id} className={`hover:bg-[rgb(var(--raised))] ${p.blacklisted ? "bg-rose-50" : ""}`} data-testid={`profile-${p.id}`}>
+                      <td className="p-2 text-xs"><div className="font-medium">{p.legalName}</div><div className="text-[10px] text-[rgb(var(--muted))]">MST: {p.mst ?? "—"} · {p.org.name}</div></td>
+                      <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge>{p.capabilityNo && <div className="text-[10px] font-mono text-[rgb(var(--muted))] mt-0.5">{p.capabilityNo}</div>}{p.capabilityExpiry && <div className="text-[10px] text-[rgb(var(--muted))]">đến {formatDateVn(p.capabilityExpiry)}</div>}</td>
+                      <td className="p-2 text-[11px] text-[rgb(var(--ink-2))]">{p.capabilityScope.slice(0, 2).join(" · ")}{p.capabilityScope.length > 2 && ` +${p.capabilityScope.length - 2}`}</td>
                       <td className="p-2 text-right text-xs">{p.charteredEng}</td>
                       <td className="p-2 text-right text-xs">{p.pastProjects}</td>
                       <td className="p-2 text-right text-xs">{p.pastValueVnd ? formatVnd(p.pastValueVnd) : "—"}</td>
-                      <td className="p-2 text-right text-xs">{p.rating ? <span className="font-bold">{p.rating.toString()}<span className="text-[10px] text-slate-500">/5</span></span> : "—"}</td>
+                      <td className="p-2 text-right text-xs">{p.rating ? <span className="font-bold">{p.rating.toString()}<span className="text-[10px] text-[rgb(var(--muted))]">/5</span></span> : "—"}</td>
                       <td className="p-2" data-testid={`status-${p.id}`}>{p.blacklisted ? <Badge variant="danger">Blacklist</Badge> : <Badge variant="success">OK</Badge>}{p.blacklisted && p.blacklistReason && <div className="text-[10px] text-rose-700 mt-1 line-clamp-2">{p.blacklistReason}</div>}</td>
                       <td className="p-2"><RowActions id={p.id} blacklisted={p.blacklisted} /></td>
                     </tr>
@@ -119,7 +119,7 @@ export default async function ContractorRegistryPage({ searchParams }: { searchP
         </CardBody>
       </Card>
 
-      <div className="mt-4 text-[11px] text-slate-500">
+      <div className="mt-4 text-[11px] text-[rgb(var(--muted))]">
         Phân hạng theo NĐ 15/2021 Điều 67-68: Hạng I cần ≥5 KS chính + ≥3 DA cấp I, Hạng II ≥3 KS + DA cấp II.
         Rating tự động từ performance lịch sử (schedule/quality/safety/cost).
       </div>

@@ -48,17 +48,17 @@ export default async function SpecsPage({
           </CardHeader>
           <CardBody className="space-y-2">
             {pages.length === 0 && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[rgb(var(--muted))]">
                 Chưa có spec nào. Tạo trang đầu tiên ở cột bên phải — mỗi lần save, AI tự re-embed.
               </p>
             )}
             {pages.map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded border border-slate-100 px-3 py-2 hover:bg-slate-50">
-                <Link href={`/projects/${params.projectId}/specs/${p.slug}`} className="flex-1 text-sm text-slate-800 hover:text-blue-700">
+              <div key={p.id} className="flex items-center justify-between rounded border border-[rgb(var(--line))] px-3 py-2 hover:bg-[rgb(var(--raised))]">
+                <Link href={`/projects/${params.projectId}/specs/${p.slug}`} className="flex-1 text-sm text-[rgb(var(--ink-2))] hover:text-blue-700">
                   <span className="font-medium">{p.title}</span>
-                  <span className="ml-2 text-xs text-slate-500">/{p.slug}</span>
+                  <span className="ml-2 text-xs text-[rgb(var(--muted))]">/{p.slug}</span>
                 </Link>
-                <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                <div className="flex items-center gap-2 text-[10px] text-[rgb(var(--muted))]">
                   <span>cập nhật {formatDateTimeVn(p.updatedAt)}</span>
                   {p.embeddedAt ? (
                     <Badge variant="success">đã embed ({p.embedModel ?? "?"})</Badge>

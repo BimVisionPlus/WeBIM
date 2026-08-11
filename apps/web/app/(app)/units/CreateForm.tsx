@@ -46,7 +46,7 @@ export function CreateForm({
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700">
         + Thêm đơn vị
       </button>
     );
@@ -59,33 +59,33 @@ export function CreateForm({
       <CardHeader><CardTitle>Thêm đơn vị mới</CardTitle></CardHeader>
       <CardBody>
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-3" data-testid="create-unit-form">
-          <label className="text-xs"><span className="block text-slate-600">Tổ chức</span>
-            <select value={orgId} onChange={(e) => setOrgId(e.target.value)} required className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-xs">
+          <label className="text-xs"><span className="block text-[rgb(var(--muted))]">Tổ chức</span>
+            <select value={orgId} onChange={(e) => setOrgId(e.target.value)} required className="mt-1 w-full rounded border border-[rgb(var(--line-2))] px-2 py-1.5 text-xs">
               {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
           </label>
-          <label className="text-xs"><span className="block text-slate-600">Mã đơn vị</span>
-            <input value={code} onChange={(e) => setCode(e.target.value)} required placeholder="BCH-HN" pattern="[A-Za-z0-9\-_.]+" className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-xs" />
+          <label className="text-xs"><span className="block text-[rgb(var(--muted))]">Mã đơn vị</span>
+            <input value={code} onChange={(e) => setCode(e.target.value)} required placeholder="BCH-HN" pattern="[A-Za-z0-9\-_.]+" className="mt-1 w-full rounded border border-[rgb(var(--line-2))] px-2 py-1.5 text-xs" />
           </label>
-          <label className="text-xs"><span className="block text-slate-600">Địa bàn</span>
-            <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="Hà Nội" className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-xs" />
+          <label className="text-xs"><span className="block text-[rgb(var(--muted))]">Địa bàn</span>
+            <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="Hà Nội" className="mt-1 w-full rounded border border-[rgb(var(--line-2))] px-2 py-1.5 text-xs" />
           </label>
-          <label className="text-xs md:col-span-3"><span className="block text-slate-600">Tên đầy đủ</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ban điều hành Hà Nội" className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-xs" />
+          <label className="text-xs md:col-span-3"><span className="block text-[rgb(var(--muted))]">Tên đầy đủ</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ban điều hành Hà Nội" className="mt-1 w-full rounded border border-[rgb(var(--line-2))] px-2 py-1.5 text-xs" />
           </label>
-          <label className="text-xs md:col-span-2"><span className="block text-slate-600">Mô tả</span>
-            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Phụ trách các dự án khu vực phía Bắc" className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-xs" />
+          <label className="text-xs md:col-span-2"><span className="block text-[rgb(var(--muted))]">Mô tả</span>
+            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Phụ trách các dự án khu vực phía Bắc" className="mt-1 w-full rounded border border-[rgb(var(--line-2))] px-2 py-1.5 text-xs" />
           </label>
-          <label className="text-xs"><span className="block text-slate-600">Cấp trên (tuỳ chọn)</span>
-            <select value={parentId} onChange={(e) => setParentId(e.target.value)} className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-xs">
+          <label className="text-xs"><span className="block text-[rgb(var(--muted))]">Cấp trên (tuỳ chọn)</span>
+            <select value={parentId} onChange={(e) => setParentId(e.target.value)} className="mt-1 w-full rounded border border-[rgb(var(--line-2))] px-2 py-1.5 text-xs">
               <option value="">— Cấp trên cùng —</option>
               {eligibleParents.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
             </select>
           </label>
           {err && <div className="md:col-span-3 rounded border border-rose-300 bg-rose-50 p-2 text-xs text-rose-800" data-testid="create-unit-error">{err}</div>}
           <div className="md:col-span-3 flex justify-end gap-2">
-            <button type="button" onClick={() => setOpen(false)} className="rounded border border-slate-300 px-3 py-1 text-xs">Huỷ</button>
-            <button type="submit" disabled={busy} className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white disabled:opacity-50" data-testid="create-unit-save">{busy ? "…" : "Lưu"}</button>
+            <button type="button" onClick={() => setOpen(false)} className="rounded border border-[rgb(var(--line-2))] px-3 py-1 text-xs">Huỷ</button>
+            <button type="submit" disabled={busy} className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-[rgb(var(--inverse-ink))] disabled:opacity-50" data-testid="create-unit-save">{busy ? "…" : "Lưu"}</button>
           </div>
         </form>
       </CardBody>

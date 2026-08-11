@@ -71,10 +71,10 @@ export default async function SiteEyeOrgPage() {
       subtitle="Giám sát công trường AI — PPE detection (Qwen2.5-VL), incident log Luật ATVSLĐ 84/2015."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Camera đang hoạt động</div><div className="mt-1 text-2xl font-bold">{cameras.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Cảnh báo CV chưa ack</div><div className="mt-1 text-2xl font-bold text-amber-700">{visionEvents.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Sự cố mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openIncidents.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tai nạn nghiêm trọng (mọi thời điểm)</div><div className="mt-1 text-2xl font-bold text-rose-900">{fatalCount}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Camera đang hoạt động</div><div className="mt-1 text-2xl font-bold">{cameras.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Cảnh báo CV chưa ack</div><div className="mt-1 text-2xl font-bold text-amber-700">{visionEvents.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Sự cố mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openIncidents.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tai nạn nghiêm trọng (mọi thời điểm)</div><div className="mt-1 text-2xl font-bold text-rose-900">{fatalCount}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={projects} /></div>
@@ -84,19 +84,19 @@ export default async function SiteEyeOrgPage() {
           <CardHeader><CardTitle>Sự cố ATVSLĐ — Luật 84/2015 ({incidents.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {incidents.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa ghi nhận sự cố ATVSLĐ nào. Khi có tai nạn/sự cố trên công trường, ghi nhận tại đây để lập biên bản theo Luật ATVSLĐ 84/2015.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa ghi nhận sự cố ATVSLĐ nào. Khi có tai nạn/sự cố trên công trường, ghi nhận tại đây để lập biên bản theo Luật ATVSLĐ 84/2015.</div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[rgb(var(--line))]">
                 {incidents.slice(0, 20).map((i) => (
                   <li key={i.id} className="p-3 text-sm">
                     <div className="flex items-center gap-2">
                       <Badge variant={sevVariant[i.severity]}>{i.severity}</Badge>
                       <Badge variant="neutral">{categoryLabel[i.category] ?? i.category}</Badge>
-                      <span className="font-mono text-xs text-slate-500">{projectById.get(i.projectId)?.key ?? ""}</span>
+                      <span className="font-mono text-xs text-[rgb(var(--muted))]">{projectById.get(i.projectId)?.key ?? ""}</span>
                       {i.closedAt && <Badge variant="success">Đã đóng</Badge>}
                     </div>
-                    <div className="mt-1 text-slate-900">{i.description.slice(0, 140)}{i.description.length > 140 ? "…" : ""}</div>
-                    <div className="mt-1"><RowActions id={i.id} severity={i.severity} closedAt={i.closedAt} /></div><div className="text-[11px] text-slate-500">
+                    <div className="mt-1 text-[rgb(var(--ink))]">{i.description.slice(0, 140)}{i.description.length > 140 ? "…" : ""}</div>
+                    <div className="mt-1"><RowActions id={i.id} severity={i.severity} closedAt={i.closedAt} /></div><div className="text-[11px] text-[rgb(var(--muted))]">
                       {formatDateVn(i.occurredAt)} · {i.location ?? "—"}
                       {i.injured > 0 && <> · {i.injured} người bị thương</>}
                     </div>
@@ -111,18 +111,18 @@ export default async function SiteEyeOrgPage() {
           <CardHeader><CardTitle>Cảnh báo computer vision ({visionEvents.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {visionEvents.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Không có cảnh báo chưa xử lý.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Không có cảnh báo chưa xử lý.</div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[rgb(var(--line))]">
                 {visionEvents.slice(0, 20).map((v) => (
                   <li key={v.id} className="flex items-center justify-between p-3 text-sm">
                     <div>
                       <div className="flex items-center gap-2">
                         <Badge variant="warning">{visionLabel[v.kind] ?? v.kind}</Badge>
-                        <span className="font-mono text-xs text-slate-500">{projectById.get(v.projectId)?.key ?? ""}</span>
+                        <span className="font-mono text-xs text-[rgb(var(--muted))]">{projectById.get(v.projectId)?.key ?? ""}</span>
                       </div>
-                      <div className="mt-0.5 text-slate-900">{v.label}</div>
-                      <div className="text-[11px] text-slate-500">{formatDateVn(v.ts)} · confidence {(v.confidence * 100).toFixed(0)}%</div>
+                      <div className="mt-0.5 text-[rgb(var(--ink))]">{v.label}</div>
+                      <div className="text-[11px] text-[rgb(var(--muted))]">{formatDateVn(v.ts)} · confidence {(v.confidence * 100).toFixed(0)}%</div>
                     </div>
                   </li>
                 ))}

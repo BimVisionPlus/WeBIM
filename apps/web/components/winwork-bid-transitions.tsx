@@ -41,7 +41,7 @@ export function BidTransitionButtons({
 
   if (transitions.length === 0) {
     return (
-      <div className="rounded-md bg-slate-100 px-3 py-2 text-xs text-slate-600">
+      <div className="rounded-md bg-[rgb(var(--raised))] px-3 py-2 text-xs text-[rgb(var(--muted))]">
         Trạng thái <span className="font-mono">{currentState}</span> là cuối — không có chuyển tiếp.
       </div>
     );
@@ -55,10 +55,10 @@ export function BidTransitionButtons({
           onClick={() => go(t.to)}
           disabled={busy !== null}
           title={t.ref ?? undefined}
-          className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-md bg-[rgb(var(--surface))] px-3 py-1.5 text-sm font-medium text-[rgb(var(--ink-2))] ring-1 ring-[rgb(var(--line-2))] transition hover:bg-[rgb(var(--raised))] disabled:opacity-50"
         >
           {busy === t.to ? "…" : t.action}
-          <span className="ml-1 text-[10px] text-slate-400">→ {t.to}</span>
+          <span className="ml-1 text-[10px] text-[rgb(var(--muted-2))]">→ {t.to}</span>
         </button>
       ))}
       {err && <span className="text-xs text-rose-700">{err}</span>}

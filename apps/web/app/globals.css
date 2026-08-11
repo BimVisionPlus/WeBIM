@@ -2,25 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Shared with the workbench and the marketing site, so the three surfaces read
-   as one product. The workbench follows the reader's OS theme; Atlas was
-   light-only, which is why the two looked like different companies on a
-   machine set to dark rather than because of any deliberate choice.
+/* One palette for the whole platform, matching the workbench and the marketing
+   site, and following the reader's OS theme the way they do. Atlas was
+   light-only, which is why it looked like a different company on a machine set
+   to dark — not a design decision, an omission.
 
-   129 files hard-code Tailwind's light palette (bg-white, bg-slate-50,
-   text-slate-900 and friends). Rewriting all of them would touch far more
-   surface than can be checked page by page, most of it behind Atlas's own
-   login. Mapping those utilities onto the shared tokens does the same job in
-   one file, and reverses cleanly if a page turns out to want real white. */
+   Every neutral in the app is expressed through these, rather than through
+   Tailwind's slate scale directly, so the theme is one edit and not 3,105.
+
+   `inverse` is the pair that must NOT follow the others: buttons and overlays
+   deliberately invert against the page. Mapping those onto the surface tokens
+   would have made every primary button vanish into its own background in one
+   theme or the other. */
 :root {
   --paper: 251 250 247;
   --surface: 255 255 255;
+  --raised: 248 250 252;
   --ink: 20 22 26;
+  --ink-2: 45 50 58;
   --muted: 90 96 105;
+  --muted-2: 130 137 147;
   --line: 229 227 220;
-  --accent: 29 78 137;
+  --line-2: 214 212 205;
+  --inverse-bg: 30 41 59;
+  --inverse-ink: 248 250 252;
 
-  /* Kept: existing rules read these two. */
   --background: var(--paper);
   --foreground: var(--ink);
 }
@@ -29,24 +35,17 @@
   :root {
     --paper: 14 17 22;
     --surface: 22 26 33;
+    --raised: 28 33 41;
     --ink: 232 234 237;
+    --ink-2: 208 212 218;
     --muted: 152 161 173;
+    --muted-2: 124 133 145;
     --line: 38 44 53;
-    --accent: 127 174 224;
+    --line-2: 52 60 71;
+    --inverse-bg: 226 232 240;
+    --inverse-ink: 15 23 42;
   }
 }
-
-@layer utilities {
-  .bg-white, .bg-slate-50, .bg-gray-50, .bg-slate-100, .bg-gray-100 {
-    background-color: rgb(var(--surface));
-  }
-  .text-slate-900, .text-gray-900, .text-black { color: rgb(var(--ink)); }
-  .text-slate-600, .text-slate-500, .text-gray-600, .text-gray-500 {
-    color: rgb(var(--muted));
-  }
-  .border-slate-200, .border-gray-200, .border-slate-300, .border-gray-300 {
-    border-color: rgb(var(--line));
-  }
 }
 
 html, body { height: 100%; }

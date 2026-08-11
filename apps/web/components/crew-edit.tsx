@@ -82,12 +82,12 @@ export function CrewCreateButton({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="mb-2 text-sm font-semibold text-slate-900">Thêm tổ đội mới</div>
+    <div className="rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-3 shadow-sm">
+      <div className="mb-2 text-sm font-semibold text-[rgb(var(--ink))]">Thêm tổ đội mới</div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Field label="Tên tổ">
           <input
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Tổ thợ sắt #1"
@@ -95,7 +95,7 @@ export function CrewCreateButton({ projectId }: { projectId: string }) {
         </Field>
         <Field label="Nghề">
           <select
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={trade}
             onChange={(e) => setTrade(e.target.value)}
           >
@@ -106,7 +106,7 @@ export function CrewCreateButton({ projectId }: { projectId: string }) {
         </Field>
         <Field label="Tổ trưởng">
           <input
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={foreman}
             onChange={(e) => setForeman(e.target.value)}
             placeholder="Nguyễn Văn A"
@@ -116,7 +116,7 @@ export function CrewCreateButton({ projectId }: { projectId: string }) {
           <input
             type="number"
             min={0}
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={headcount}
             onChange={(e) => setHeadcount(Number(e.target.value))}
           />
@@ -197,18 +197,18 @@ export function CrewRowEdit({ crew }: { crew: CrewLite }) {
   }
 
   return (
-    <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+    <div className="mt-2 rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--raised))] p-3">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Field label="Tên tổ">
           <input
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </Field>
         <Field label="Nghề">
           <select
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={trade}
             onChange={(e) => setTrade(e.target.value)}
           >
@@ -219,7 +219,7 @@ export function CrewRowEdit({ crew }: { crew: CrewLite }) {
         </Field>
         <Field label="Tổ trưởng">
           <input
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={foreman}
             onChange={(e) => setForeman(e.target.value)}
           />
@@ -228,7 +228,7 @@ export function CrewRowEdit({ crew }: { crew: CrewLite }) {
           <input
             type="number"
             min={0}
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={headcount}
             onChange={(e) => setHeadcount(Number(e.target.value))}
           />
@@ -255,7 +255,7 @@ export function CrewRowEdit({ crew }: { crew: CrewLite }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-1">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">{label}</span>
       {children}
     </label>
   );

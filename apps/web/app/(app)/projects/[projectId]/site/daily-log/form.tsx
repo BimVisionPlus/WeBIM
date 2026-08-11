@@ -114,18 +114,18 @@ export function DailyLogForm({ projectId }: { projectId: string }) {
     <>
       <Button size="sm" onClick={() => setOpen(true)}>+ Nhật ký hôm nay</Button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
-            <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--inverse-bg))]/40 p-4">
+          <div className="w-full max-w-lg rounded-lg bg-[rgb(var(--surface))] shadow-xl">
+            <header className="flex items-center justify-between border-b border-[rgb(var(--line))] px-4 py-3">
               <h2 className="text-sm font-semibold">Ghi nhật ký công trình</h2>
-              <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-700">✕</button>
+              <button onClick={() => setOpen(false)} className="text-[rgb(var(--muted-2))] hover:text-[rgb(var(--ink-2))]">✕</button>
             </header>
             <form onSubmit={submit} className="space-y-3 px-4 py-4">
 
               {/* Voice → AI autofill */}
               <div className="flex items-center gap-2 rounded-md border border-violet-200 bg-violet-50/50 px-3 py-2">
-                <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">AI</span>
-                <span className="text-xs text-slate-700">Nói nhanh — AI điền form giúp bạn (whisper + LLM, OSS).</span>
+                <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--inverse-ink))]">AI</span>
+                <span className="text-xs text-[rgb(var(--ink-2))]">Nói nhanh — AI điền form giúp bạn (whisper + LLM, OSS).</span>
                 <div className="ml-auto">
                   {recording ? (
                     <Button type="button" size="sm" variant="danger" onClick={stopRecording}>
@@ -143,18 +143,18 @@ export function DailyLogForm({ projectId }: { projectId: string }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className="block text-xs font-medium text-slate-700">Ngày</span>
+                  <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Ngày</span>
                   <input
                     type="date"
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                     value={form.date}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-xs font-medium text-slate-700">Ca</span>
+                  <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Ca</span>
                   <select
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                     value={form.shift}
                     onChange={(e) => setForm({ ...form, shift: e.target.value })}
                   >
@@ -164,30 +164,30 @@ export function DailyLogForm({ projectId }: { projectId: string }) {
                 </label>
               </div>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Thời tiết</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Thời tiết</span>
                 <input
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   placeholder="Nắng 32°C"
                   value={form.weather}
                   onChange={(e) => setForm({ ...form, weather: e.target.value })}
                 />
               </label>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Công việc đã làm</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Công việc đã làm</span>
                 <textarea
                   required
                   rows={3}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   value={form.workDone}
                   onChange={(e) => setForm({ ...form, workDone: e.target.value })}
                 />
               </label>
               {workforce.length > 0 && (
-                <div className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-700">
-                  <div className="font-medium text-slate-600">Nhân lực (AI gợi ý):</div>
+                <div className="rounded-md bg-[rgb(var(--raised))] px-3 py-2 text-xs text-[rgb(var(--ink-2))]">
+                  <div className="font-medium text-[rgb(var(--muted))]">Nhân lực (AI gợi ý):</div>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {workforce.map((w, i) => (
-                      <span key={i} className="rounded-full bg-white px-2 py-0.5 ring-1 ring-slate-200">
+                      <span key={i} className="rounded-full bg-[rgb(var(--surface))] px-2 py-0.5 ring-1 ring-[rgb(var(--line-2))]">
                         {w.trade}: <strong>{w.count}</strong>
                       </span>
                     ))}
@@ -195,19 +195,19 @@ export function DailyLogForm({ projectId }: { projectId: string }) {
                 </div>
               )}
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Kế hoạch ngày mai</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Kế hoạch ngày mai</span>
                 <textarea
                   rows={2}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   value={form.workTomorrow}
                   onChange={(e) => setForm({ ...form, workTomorrow: e.target.value })}
                 />
               </label>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Ghi chú ATLĐ</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Ghi chú ATLĐ</span>
                 <textarea
                   rows={2}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   value={form.safetyNotes}
                   onChange={(e) => setForm({ ...form, safetyNotes: e.target.value })}
                 />

@@ -39,21 +39,21 @@ export default function VerifyEmailPage({
   }, [searchParams]);
 
   return (
-    <div className="mx-auto mt-20 max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+    <div className="mx-auto mt-20 max-w-md rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-8 shadow-sm">
       <h1 className="text-xl font-semibold">Xác minh email</h1>
       <p
         className={
           "mt-3 text-sm " +
-          (state === "ok" ? "text-emerald-700" : state === "fail" ? "text-rose-700" : "text-slate-600")
+          (state === "ok" ? "text-emerald-700" : state === "fail" ? "text-rose-700" : "text-[rgb(var(--muted))]")
         }
       >
         {msg}
       </p>
       <div className="mt-6 flex gap-3 text-sm">
-        <Link href="/signin" className="rounded-md bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700">
+        <Link href="/signin" className="rounded-md bg-blue-600 px-3 py-2 font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700">
           Đăng nhập
         </Link>
-        <Link href="/" className="rounded-md border border-slate-300 px-3 py-2 hover:bg-slate-50">
+        <Link href="/" className="rounded-md border border-[rgb(var(--line-2))] px-3 py-2 hover:bg-[rgb(var(--raised))]">
           Về trang chủ
         </Link>
       </div>

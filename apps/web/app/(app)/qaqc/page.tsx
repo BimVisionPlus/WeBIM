@@ -69,20 +69,20 @@ export default async function QaqcPage() {
       subtitle="TT 26/2016 + TCVN per kết cấu. ITP library + BBNT công việc A1/A2/A3 auto-sinh. Fail → tự tạo NCR trong Site."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">ITP templates</div><div className="mt-1 text-2xl font-bold">{templates.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng check</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tỷ lệ Đạt</div><div className={`mt-1 text-2xl font-bold ${passRate >= 95 ? "text-emerald-700" : "text-amber-700"}`}>{passRate}%</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Không đạt → NCR</div><div className="mt-1 text-2xl font-bold text-rose-700">{fail}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">ITP templates</div><div className="mt-1 text-2xl font-bold">{templates.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng check</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tỷ lệ Đạt</div><div className={`mt-1 text-2xl font-bold ${passRate >= 95 ? "text-emerald-700" : "text-amber-700"}`}>{passRate}%</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Không đạt → NCR</div><div className="mt-1 text-2xl font-bold text-rose-700">{fail}</div></CardBody></Card>
       </div>
 
       <Card className="mt-6">
         <CardHeader><CardTitle>Thư viện ITP ({templates.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {templates.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có ITP nào. Bấm “Lên lịch check ITP” để bắt đầu.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có ITP nào. Bấm “Lên lịch check ITP” để bắt đầu.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã ITP</th>
                   <th className="p-2 text-left">Loại</th>
@@ -92,13 +92,13 @@ export default async function QaqcPage() {
                   <th className="p-2 text-right">Đã thực thi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {templates.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50">
+                  <tr key={t.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-mono text-xs">{t.code}</td>
                     <td className="p-2 text-xs">{categoryLabel[t.category]}</td>
-                    <td className="p-2 text-xs"><div className="font-medium">{t.title}</div>{t.description && <div className="text-[10px] text-slate-500 line-clamp-1">{t.description}</div>}</td>
-                    <td className="p-2 text-[10px] text-slate-500">{t.tcvnRefs.slice(0, 3).join(" · ")}</td>
+                    <td className="p-2 text-xs"><div className="font-medium">{t.title}</div>{t.description && <div className="text-[10px] text-[rgb(var(--muted))] line-clamp-1">{t.description}</div>}</td>
+                    <td className="p-2 text-[10px] text-[rgb(var(--muted))]">{t.tcvnRefs.slice(0, 3).join(" · ")}</td>
                     <td className="p-2 text-right text-xs">{t._count.items}</td>
                     <td className="p-2 text-right text-xs">{t._count.qaqcChecks}</td>
                   </tr>
@@ -115,10 +115,10 @@ export default async function QaqcPage() {
         <CardHeader><CardTitle>Check gần đây ({checks.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {checks.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có check nào.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có check nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Ngày</th>
                   <th className="p-2 text-left">Dự án</th>
@@ -128,15 +128,15 @@ export default async function QaqcPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {checks.map((c) => {
                   const meta = resultLabel[c.result] ?? { vn: c.result, variant: "neutral" as const };
                   return (
-                    <tr key={c.id} className="hover:bg-slate-50" data-testid={`row-check-${c.id}`}>
+                    <tr key={c.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-check-${c.id}`}>
                       <td className="p-2 text-xs">{c.conductedAt ? formatDateVn(c.conductedAt) : "—"}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{c.project.key}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{c.project.key}</td>
                       <td className="p-2 text-xs">{c.location}</td>
-                      <td className="p-2 text-xs"><span className="font-mono">{c.template?.code ?? "—"}</span><div className="text-[10px] text-slate-500">{c.template?.title}</div></td>
+                      <td className="p-2 text-xs"><span className="font-mono">{c.template?.code ?? "—"}</span><div className="text-[10px] text-[rgb(var(--muted))]">{c.template?.title}</div></td>
                       <td className="p-2" data-testid={`result-${c.id}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2"><ResultActions id={c.id} result={c.result} /></td>
                     </tr>

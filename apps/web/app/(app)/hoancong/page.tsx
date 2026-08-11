@@ -50,16 +50,16 @@ export default async function HoanCongPage() {
       subtitle="NĐ 06/2021 Phụ lục VIIIb — 13 nhóm tài liệu. Auto-assembly + đánh số chuỗi + ký số + đóng cuốn PDF/A → gửi Sở XD."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng dự án</div><div className="mt-1 text-2xl font-bold">{dossiers.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã đóng cuốn</div><div className="mt-1 text-2xl font-bold text-violet-700">{dossiers.filter((d) => ["COMPILED", "SUBMITTED_QLNN", "ACCEPTED"].includes(d.state)).length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">QLNN chấp thuận</div><div className="mt-1 text-2xl font-bold text-emerald-700">{dossiers.filter((d) => d.state === "ACCEPTED").length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang xử lý</div><div className="mt-1 text-2xl font-bold text-amber-700">{dossiers.filter((d) => !["COMPILED", "SUBMITTED_QLNN", "ACCEPTED"].includes(d.state)).length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng dự án</div><div className="mt-1 text-2xl font-bold">{dossiers.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã đóng cuốn</div><div className="mt-1 text-2xl font-bold text-violet-700">{dossiers.filter((d) => ["COMPILED", "SUBMITTED_QLNN", "ACCEPTED"].includes(d.state)).length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">QLNN chấp thuận</div><div className="mt-1 text-2xl font-bold text-emerald-700">{dossiers.filter((d) => d.state === "ACCEPTED").length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang xử lý</div><div className="mt-1 text-2xl font-bold text-amber-700">{dossiers.filter((d) => !["COMPILED", "SUBMITTED_QLNN", "ACCEPTED"].includes(d.state)).length}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
 
       {dossiers.length === 0 ? (
-        <Card className="mt-4"><CardBody><div className="p-8 text-center text-sm text-slate-500">
+        <Card className="mt-4"><CardBody><div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
           Chưa có hồ sơ hoàn công nào. Khi DA gần hoàn thành, tạo HoanCongDossier để khởi tạo 13 nhóm theo VIIIb.
         </div></CardBody></Card>
       ) : (
@@ -74,7 +74,7 @@ export default async function HoanCongPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <CardTitle>{d.code} — {d.project.name}</CardTitle>
-                    <div className="text-xs text-slate-500">{d.title}</div>
+                    <div className="text-xs text-[rgb(var(--muted))]">{d.title}</div>
                   </div>
                   <div data-testid={`state-${d.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></div>
                 </div>
@@ -82,18 +82,18 @@ export default async function HoanCongPage() {
               </CardHeader>
               <CardBody>
                 <div className="mb-4">
-                  <div className="flex justify-between text-xs text-slate-600">
+                  <div className="flex justify-between text-xs text-[rgb(var(--muted))]">
                     <span>Tiến độ tài liệu đã ký</span>
                     <span className="font-medium">{signedItems}/{totalItems} ({progress}%)</span>
                   </div>
-                  <div className="mt-1 h-2 w-full rounded-full bg-slate-200">
+                  <div className="mt-1 h-2 w-full rounded-full bg-[rgb(var(--line))]">
                     <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
                   </div>
                   {d.pdfaUrl && <div className="mt-2 text-[11px] text-emerald-700">📄 Đã đóng cuốn PDF/A {formatDateVn(d.pdfaCompiledAt)} · {d.pdfaSha256?.slice(0, 12)}…</div>}
                 </div>
-                <div className="overflow-hidden rounded border border-slate-200">
+                <div className="overflow-hidden rounded border border-[rgb(var(--line))]">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                    <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                       <tr>
                         <th className="p-2 text-left">#</th>
                         <th className="p-2 text-left">Nhóm</th>
@@ -102,17 +102,17 @@ export default async function HoanCongPage() {
                         <th className="p-2 text-left">Tiến độ</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-[rgb(var(--line))]">
                       {d.sections.map((sec) => {
                         const pct = sec.itemCount > 0 ? Math.round((sec.signedCount / sec.itemCount) * 100) : 0;
                         return (
-                          <tr key={sec.id} className="hover:bg-slate-50">
+                          <tr key={sec.id} className="hover:bg-[rgb(var(--raised))]">
                             <td className="p-2 font-mono text-xs">{sec.code}</td>
                             <td className="p-2"><div className="font-medium text-xs">{sec.title}</div></td>
                             <td className="p-2 text-right text-xs">{sec.itemCount}</td>
                             <td className="p-2 text-right text-xs">{sec.signedCount}</td>
                             <td className="p-2">
-                              <div className="h-1.5 w-32 rounded-full bg-slate-200">
+                              <div className="h-1.5 w-32 rounded-full bg-[rgb(var(--line))]">
                                 <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
                               </div>
                             </td>
@@ -131,7 +131,7 @@ export default async function HoanCongPage() {
       <Card className="mt-6">
         <CardHeader><CardTitle>OSS pipeline đóng cuốn</CardTitle></CardHeader>
         <CardBody>
-          <ol className="space-y-1.5 text-sm text-slate-700">
+          <ol className="space-y-1.5 text-sm text-[rgb(var(--ink-2))]">
             <li>1. <code>HoanCong</code> worker quét tất cả tài liệu trong 13 nhóm</li>
             <li>2. Validate ký số (cert chain VNPT-CA/Viettel-CA) bằng <code>libxmlsec1</code></li>
             <li>3. Concat PDFs theo thứ tự VIIIb + chèn bìa + mục lục bằng <code>PyMuPDF / pdfcpu</code></li>

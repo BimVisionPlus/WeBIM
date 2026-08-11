@@ -17,7 +17,7 @@ export default async function ModelDetail({
       <div className="flex items-baseline justify-between">
         <div>
           <h2 className="text-lg font-semibold">{model.name}</h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[rgb(var(--muted))]">
             {model.format} · {disciplineLabel[model.discipline ?? ""] ?? "—"} · Revision {model.revision}
           </p>
         </div>
@@ -31,16 +31,16 @@ export default async function ModelDetail({
           {model.apsUrn && model.apsTranslationStatus === "SUCCESS" ? (
             <ForgeViewer urn={model.apsUrn} />
           ) : (
-            <div className="grid h-[560px] place-items-center bg-slate-900 text-slate-300">
+            <div className="grid h-[560px] place-items-center bg-[rgb(var(--inverse-bg))] text-[rgb(var(--inverse-ink))]">
               <div className="text-center">
                 <div className="mb-2 text-sm">Mô hình đang được chuyển đổi…</div>
-                <div className="mx-auto h-2 w-64 rounded bg-slate-700">
+                <div className="mx-auto h-2 w-64 rounded bg-[rgb(var(--inverse-bg))]">
                   <div
                     className="h-2 rounded bg-blue-500 transition-all"
                     style={{ width: `${model.apsTranslationProgress}%` }}
                   />
                 </div>
-                <div className="mt-2 text-xs text-slate-400">{model.apsTranslationProgress}%</div>
+                <div className="mt-2 text-xs text-[rgb(var(--muted-2))]">{model.apsTranslationProgress}%</div>
               </div>
             </div>
           )}
@@ -62,8 +62,8 @@ export default async function ModelDetail({
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid grid-cols-3 gap-2">
-      <div className="col-span-1 text-xs text-slate-500">{label}</div>
-      <div className="col-span-2 break-all font-mono text-xs text-slate-700">{value}</div>
+      <div className="col-span-1 text-xs text-[rgb(var(--muted))]">{label}</div>
+      <div className="col-span-2 break-all font-mono text-xs text-[rgb(var(--ink-2))]">{value}</div>
     </div>
   );
 }

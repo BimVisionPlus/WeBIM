@@ -74,10 +74,10 @@ export default async function DrawBridgeOrgPage() {
       subtitle="Q&A bản vẽ. Versioning R0/R1/IFC. BIM element registry + clash detection cross-discipline (AABB)."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Bộ bản vẽ</div><div className="mt-1 text-2xl font-bold">{drawingSets.length}</div><div className="text-[10px] text-slate-500">{currentSets} đang dùng (IFC)</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Mô hình BIM</div><div className="mt-1 text-2xl font-bold">{models.length}</div><div className="text-[10px] text-slate-500">{apsReady} sẵn sàng xem 3D</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Phần tử BIM</div><div className="mt-1 text-2xl font-bold">{elementCount.toLocaleString("vi-VN")}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Clash đang mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openClashes}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Bộ bản vẽ</div><div className="mt-1 text-2xl font-bold">{drawingSets.length}</div><div className="text-[10px] text-[rgb(var(--muted))]">{currentSets} đang dùng (IFC)</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Mô hình BIM</div><div className="mt-1 text-2xl font-bold">{models.length}</div><div className="text-[10px] text-[rgb(var(--muted))]">{apsReady} sẵn sàng xem 3D</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Phần tử BIM</div><div className="mt-1 text-2xl font-bold">{elementCount.toLocaleString("vi-VN")}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Clash đang mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openClashes}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><ClashScan projects={projects} /></div>
@@ -87,19 +87,19 @@ export default async function DrawBridgeOrgPage() {
           <CardHeader><CardTitle>Bộ bản vẽ ({drawingSets.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {drawingSets.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa tải lên bản vẽ.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa tải lên bản vẽ.</div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[rgb(var(--line))]">
                 {drawingSets.map((d) => (
                   <li key={d.id} className="p-3 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-slate-500">{projectById.get(d.projectId)?.key ?? ""}</span>
+                      <span className="font-mono text-xs text-[rgb(var(--muted))]">{projectById.get(d.projectId)?.key ?? ""}</span>
                       <Badge variant="neutral">{disciplineLabel[d.discipline] ?? d.discipline}</Badge>
                       <Badge variant={d.revision === "IFC" ? "success" : "info"}>{d.revision}</Badge>
                       {d.isCurrent && <Badge variant="violet">Đang dùng</Badge>}
                     </div>
-                    <div className="mt-1 font-medium text-slate-900">{d.name}</div>
-                    <div className="text-[11px] text-slate-500">{d._count.sheets} sheet · phát hành {d.issuedDate ? formatDateVn(d.issuedDate) : "—"}</div>
+                    <div className="mt-1 font-medium text-[rgb(var(--ink))]">{d.name}</div>
+                    <div className="text-[11px] text-[rgb(var(--muted))]">{d._count.sheets} sheet · phát hành {d.issuedDate ? formatDateVn(d.issuedDate) : "—"}</div>
                   </li>
                 ))}
               </ul>
@@ -111,22 +111,22 @@ export default async function DrawBridgeOrgPage() {
           <CardHeader><CardTitle>Clash gần nhất ({clashes.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {clashes.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
                 Chưa phát hiện xung đột (clash) nào. Tải mô hình BIM lên mục Models rồi bấm
                 “Kiểm tra xung đột” để hệ thống tự dò va chạm giữa các bộ môn (kết cấu · MEP · kiến trúc).
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[rgb(var(--line))]">
                 {clashes.slice(0, 20).map((c) => (
                   <li key={c.id} className="p-3 text-sm">
                     <div className="flex items-center gap-2">
                       <Badge variant={clashStatusVariant[c.status]}>{c.status}</Badge>
                       <Badge variant={c.category === "HARD" ? "danger" : "warning"}>{c.category}</Badge>
-                      <span className="font-mono text-xs text-slate-500">{projectById.get(c.projectId)?.key ?? ""}</span>
-                      <span className="text-xs text-slate-500">severity {c.severity}</span>
+                      <span className="font-mono text-xs text-[rgb(var(--muted))]">{projectById.get(c.projectId)?.key ?? ""}</span>
+                      <span className="text-xs text-[rgb(var(--muted))]">severity {c.severity}</span>
                     </div>
-                    <div className="mt-1 text-slate-900 line-clamp-1">{c.description ?? "—"}</div>
-                    <div className="text-[11px] text-slate-500">{formatDateVn(c.detectedAt)}</div>
+                    <div className="mt-1 text-[rgb(var(--ink))] line-clamp-1">{c.description ?? "—"}</div>
+                    <div className="text-[11px] text-[rgb(var(--muted))]">{formatDateVn(c.detectedAt)}</div>
                   </li>
                 ))}
               </ul>

@@ -75,10 +75,10 @@ export default async function PermitFlowOrgPage() {
       subtitle="Xin Giấy phép xây dựng theo NĐ 15/2021 Phụ lục I — tự sinh checklist + đơn từ profile dự án."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hồ sơ đang xử lý</div><div className="mt-1 text-2xl font-bold text-amber-700">{inFlight}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã cấp GPXD</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Dự án có GPXD lưu</div><div className="mt-1 text-2xl font-bold">{hasGpxd}/{projects.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Cơ quan cấp</div><div className="mt-1 text-sm font-semibold leading-tight">Sở XD tỉnh/TP<br/>Bộ XD (cấp 1)</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hồ sơ đang xử lý</div><div className="mt-1 text-2xl font-bold text-amber-700">{inFlight}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã cấp GPXD</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Dự án có GPXD lưu</div><div className="mt-1 text-2xl font-bold">{hasGpxd}/{projects.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Cơ quan cấp</div><div className="mt-1 text-sm font-semibold leading-tight">Sở XD tỉnh/TP<br/>Bộ XD (cấp 1)</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={projects} /></div>
@@ -87,12 +87,12 @@ export default async function PermitFlowOrgPage() {
         <CardHeader><CardTitle>Hồ sơ xin phép ({applications.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {applications.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có hồ sơ xin phép nào trong các dự án bạn truy cập. Bấm “Tạo hồ sơ xin GPXD” ở trên để bắt đầu (NĐ 15/2021).
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã hồ sơ</th>
                   <th className="p-2 text-left">Dự án</th>
@@ -103,20 +103,20 @@ export default async function PermitFlowOrgPage() {
                   <th className="p-2 text-left">Ngày quyết định</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {applications.map((a) => {
                   const meta = stateMeta[a.state] ?? { vn: a.state, variant: "neutral" as const };
                   const attached = a.checklist.length;
                   const pct = a._count.checklist === 0 ? 0 : Math.round((attached / a._count.checklist) * 100);
                   return (
-                    <tr key={a.id} className="hover:bg-slate-50">
+                    <tr key={a.id} className="hover:bg-[rgb(var(--raised))]">
                       <td className="p-2 font-mono text-xs">{a.applicationCode ?? "—"}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{projectById.get(a.projectId)?.key ?? ""}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{projectById.get(a.projectId)?.key ?? ""}</td>
                       <td className="p-2"><Badge variant="neutral">{permitTypeLabel[a.permitType] ?? a.permitType}</Badge></td>
                       <td className="p-2 text-xs">{a.applicant}</td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2 text-right text-xs">{attached}/{a._count.checklist} ({pct}%)</td>
-                      <td className="p-2 text-xs text-slate-500">{a.decisionAt ? formatDateVn(a.decisionAt) : "—"}</td><td className="p-2"><RowActions id={a.id} state={a.state} /></td>
+                      <td className="p-2 text-xs text-[rgb(var(--muted))]">{a.decisionAt ? formatDateVn(a.decisionAt) : "—"}</td><td className="p-2"><RowActions id={a.id} state={a.state} /></td>
                     </tr>
                   );
                 })}
@@ -129,15 +129,15 @@ export default async function PermitFlowOrgPage() {
       <Card className="mt-6">
         <CardHeader><CardTitle>Checklist mẫu — NĐ 15/2021 Phụ lục I</CardTitle></CardHeader>
         <CardBody>
-          <p className="mb-3 text-xs text-slate-500">
+          <p className="mb-3 text-xs text-[rgb(var(--muted))]">
             Đây là danh mục hồ sơ bắt buộc khi xin GPXD công trình dân dụng cấp III/IV. PermitFlow sẽ tự sinh checklist riêng cho từng hồ sơ, kiểm tra evidence đính kèm trước khi nộp lên Sở XD.
           </p>
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-[rgb(var(--line))]">
             {samplePhuLuc1.map((item) => (
               <li key={item.code} className="flex items-center justify-between py-2 text-sm">
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-[11px] text-slate-500">{item.code}</span>
-                  <span className="text-slate-900">{item.title}</span>
+                  <span className="font-mono text-[11px] text-[rgb(var(--muted))]">{item.code}</span>
+                  <span className="text-[rgb(var(--ink))]">{item.title}</span>
                 </div>
                 <Badge variant="neutral">Bắt buộc</Badge>
               </li>

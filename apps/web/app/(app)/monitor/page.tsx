@@ -62,10 +62,10 @@ export default async function MonitorWatchPage() {
       subtitle="Quan trắc lún/nghiêng/áp lực nước/biến dạng/khe nứt/rung. Total station + inclinometer + piezometer. Vượt ngưỡng → auto-NCR + email."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Điểm quan trắc</div><div className="mt-1 text-2xl font-bold">{totalPoints}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">🔴 Nguy hiểm</div><div className="mt-1 text-2xl font-bold text-rose-700">{inAlert}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">🟡 Cảnh báo</div><div className="mt-1 text-2xl font-bold text-amber-700">{inWarn}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Loại quan trắc</div><div className="mt-1 text-2xl font-bold">{byType.size}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Điểm quan trắc</div><div className="mt-1 text-2xl font-bold">{totalPoints}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">🔴 Nguy hiểm</div><div className="mt-1 text-2xl font-bold text-rose-700">{inAlert}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">🟡 Cảnh báo</div><div className="mt-1 text-2xl font-bold text-amber-700">{inWarn}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Loại quan trắc</div><div className="mt-1 text-2xl font-bold">{byType.size}</div></CardBody></Card>
       </div>
 
       {recentAlerts.length > 0 && (
@@ -73,16 +73,16 @@ export default async function MonitorWatchPage() {
           <CardHeader><CardTitle>🚨 Cảnh báo gần đây ({recentAlerts.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left">Thời điểm</th><th className="p-2 text-left">Điểm</th><th className="p-2 text-left">Loại</th><th className="p-2 text-right">Giá trị</th><th className="p-2 text-left">Mức</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {recentAlerts.map((m) => {
                   const lm = levelLabel[m.alertLevel] ?? { vn: m.alertLevel, variant: "neutral" as const };
                   return (
-                    <tr key={m.id} className={`hover:bg-slate-50 ${m.alertLevel === "ALERT" ? "bg-rose-50" : "bg-amber-50"}`}>
+                    <tr key={m.id} className={`hover:bg-[rgb(var(--raised))] ${m.alertLevel === "ALERT" ? "bg-rose-50" : "bg-amber-50"}`}>
                       <td className="p-2 text-xs">{formatDateVn(m.measuredAt)} {m.measuredAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</td>
-                      <td className="p-2 font-mono text-xs">{m.point.pointCode}<div className="text-[10px] text-slate-500">{m.point.project.key}</div></td>
+                      <td className="p-2 font-mono text-xs">{m.point.pointCode}<div className="text-[10px] text-[rgb(var(--muted))]">{m.point.project.key}</div></td>
                       <td className="p-2 text-xs">{typeLabel[m.point.monitorType]}</td>
                       <td className="p-2 text-right text-xs font-medium">{Number(m.value).toFixed(2)} {m.point.unit}</td>
                       <td className="p-2"><Badge variant={lm.variant}>{lm.vn}</Badge></td>
@@ -101,10 +101,10 @@ export default async function MonitorWatchPage() {
         <CardHeader><CardTitle>Điểm quan trắc ({totalPoints})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {totalPoints === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có điểm quan trắc. Bấm “Thêm điểm quan trắc” để bắt đầu.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có điểm quan trắc. Bấm “Thêm điểm quan trắc” để bắt đầu.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã điểm</th>
                   <th className="p-2 text-left">Loại</th>
@@ -116,19 +116,19 @@ export default async function MonitorWatchPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {points.map((p) => {
                   const last = p.measurements[0];
                   const level = last?.alertLevel ?? "NORMAL";
                   const lm = levelLabel[level] ?? { vn: level, variant: "neutral" as const };
                   return (
-                    <tr key={p.id} className={`hover:bg-slate-50 ${level === "ALERT" ? "bg-rose-50" : level === "WARN" ? "bg-amber-50" : ""}`} data-testid={`point-${p.pointCode}`}>
+                    <tr key={p.id} className={`hover:bg-[rgb(var(--raised))] ${level === "ALERT" ? "bg-rose-50" : level === "WARN" ? "bg-amber-50" : ""}`} data-testid={`point-${p.pointCode}`}>
                       <td className="p-2 font-mono text-xs">{p.pointCode}</td>
                       <td className="p-2 text-xs">{typeLabel[p.monitorType]}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{p.project.key}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{p.project.key}</td>
                       <td className="p-2 text-xs">{p.description ?? "—"}</td>
-                      <td className="p-2 text-right text-xs font-medium">{last ? `${Number(last.value).toFixed(2)} ${p.unit}` : "—"}{last && <div className="text-[10px] text-slate-500">{formatDateVn(last.measuredAt)}</div>}</td>
-                      <td className="p-2 text-right text-xs text-slate-500">{p.thresholdWarn ? `W ${Number(p.thresholdWarn).toFixed(1)} / A ${Number(p.thresholdAlert).toFixed(1)} ${p.unit}` : "—"}</td>
+                      <td className="p-2 text-right text-xs font-medium">{last ? `${Number(last.value).toFixed(2)} ${p.unit}` : "—"}{last && <div className="text-[10px] text-[rgb(var(--muted))]">{formatDateVn(last.measuredAt)}</div>}</td>
+                      <td className="p-2 text-right text-xs text-[rgb(var(--muted))]">{p.thresholdWarn ? `W ${Number(p.thresholdWarn).toFixed(1)} / A ${Number(p.thresholdAlert).toFixed(1)} ${p.unit}` : "—"}</td>
                       <td className="p-2" data-testid={`level-${p.pointCode}`}><Badge variant={lm.variant}>{lm.vn}</Badge></td>
                       <td className="p-2"><MeasureAction id={p.id} /></td>
                     </tr>
@@ -140,7 +140,7 @@ export default async function MonitorWatchPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-3 text-[11px] text-slate-500">
+      <div className="mt-3 text-[11px] text-[rgb(var(--muted))]">
         Pipeline: thiết bị Leica/Trimble/Topcon ghi data CSV/binary → worker parse + chuyển vào MonitorMeasurement.
         Vượt ngưỡng W → email TVGS; vượt A → auto-NCR + push CĐT + tạm dừng thi công vùng liên quan.
       </div>

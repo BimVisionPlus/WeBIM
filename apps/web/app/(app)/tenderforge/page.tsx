@@ -52,10 +52,10 @@ export default async function TenderForgePage() {
       subtitle="Luật ĐT 22/2023 + NĐ 24/2024 + NĐ 23/2024. Auto-assembly HSMT/HSDT từ template + DinhMucDB pricing + sync muasamcong.mpi.gov.vn."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng gói thầu</div><div className="mt-1 text-2xl font-bold">{packages.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã nộp</div><div className="mt-1 text-2xl font-bold text-violet-700">{submitted}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Win rate</div><div className={`mt-1 text-2xl font-bold ${winRate >= 25 ? "text-emerald-700" : "text-amber-700"}`}>{winRate}%</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng giá trị trúng</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalEstimated))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng gói thầu</div><div className="mt-1 text-2xl font-bold">{packages.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã nộp</div><div className="mt-1 text-2xl font-bold text-violet-700">{submitted}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Win rate</div><div className={`mt-1 text-2xl font-bold ${winRate >= 25 ? "text-emerald-700" : "text-amber-700"}`}>{winRate}%</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng giá trị trúng</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalEstimated))}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm orgs={myOrgs} /></div>
@@ -64,12 +64,12 @@ export default async function TenderForgePage() {
         <CardHeader><CardTitle>Gói thầu ({packages.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {packages.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có gói thầu nào. Khởi tạo gói HSMT (CĐT) hoặc HSDT (NT) — chọn template ngành để auto-fill các chương.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Tổ chức</th>
@@ -82,15 +82,15 @@ export default async function TenderForgePage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {packages.map((p) => {
                   const meta = stateLabel[p.state] ?? { vn: p.state, variant: "neutral" as const };
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50" data-testid={`row-${p.code}`}>
+                    <tr key={p.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-${p.code}`}>
                       <td className="p-2 font-mono text-xs">{p.code}</td>
                       <td className="p-2 text-xs">{p.org.name}</td>
                       <td className="p-2 text-xs">{perspectiveLabel[p.perspective]}</td>
-                      <td className="p-2 text-xs"><div className="font-medium">{p.title}</div><div className="text-[10px] text-slate-500">{p.packageType} · {p.selectionMethod}</div></td>
+                      <td className="p-2 text-xs"><div className="font-medium">{p.title}</div><div className="text-[10px] text-[rgb(var(--muted))]">{p.packageType} · {p.selectionMethod}</div></td>
                       <td className="p-2 text-right text-xs">{p.estimatedValueVnd ? formatVnd(p.estimatedValueVnd) : "—"}</td>
                       <td className="p-2 text-right text-xs">{p._count.sections}</td>
                       <td className="p-2 text-xs">{p.submittedAt ? formatDateVn(p.submittedAt) : "—"}</td>
@@ -108,7 +108,7 @@ export default async function TenderForgePage() {
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Auto-assembly HSDT</CardTitle></CardHeader>
-          <CardBody className="text-sm text-slate-700">
+          <CardBody className="text-sm text-[rgb(var(--ink-2))]">
             <ol className="space-y-1.5">
               <li>1. Pull HSMT từ <code>muasamcong</code> (BidRadar) hoặc upload PDF</li>
               <li>2. Qwen2.5 OCR + extract yêu cầu (năng lực, tài chính, kinh nghiệm)</li>
@@ -121,7 +121,7 @@ export default async function TenderForgePage() {
         </Card>
         <Card>
           <CardHeader><CardTitle>Compliance engine (Luật 22/2023)</CardTitle></CardHeader>
-          <CardBody className="text-sm text-slate-700">
+          <CardBody className="text-sm text-[rgb(var(--ink-2))]">
             <ul className="space-y-1.5">
               <li>• <b>Đ.6</b> tư cách hợp lệ NT (mã số thuế, ngành nghề)</li>
               <li>• <b>Đ.9</b> đảm bảo cạnh tranh (≠ TVTK/TVGS gói này)</li>

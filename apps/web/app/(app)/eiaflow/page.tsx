@@ -67,10 +67,10 @@ export default async function EiaFlowPage() {
       subtitle="NĐ 08/2022 + TT 02/2022. Hồ sơ ĐTM/ĐKĐT/GPMT, tham vấn cộng đồng, quan trắc bụi/ồn/nước định kỳ. Cảnh báo vượt QCVN."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hồ sơ ĐTM</div><div className="mt-1 text-2xl font-bold">{apps.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã phê duyệt</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Quan trắc gần đây</div><div className="mt-1 text-2xl font-bold">{measurements.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Vượt ngưỡng QCVN</div><div className="mt-1 text-2xl font-bold text-rose-700">{exceeded}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hồ sơ ĐTM</div><div className="mt-1 text-2xl font-bold">{apps.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã phê duyệt</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Quan trắc gần đây</div><div className="mt-1 text-2xl font-bold">{measurements.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Vượt ngưỡng QCVN</div><div className="mt-1 text-2xl font-bold text-rose-700">{exceeded}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
@@ -79,10 +79,10 @@ export default async function EiaFlowPage() {
         <CardHeader><CardTitle>Hồ sơ ĐTM / GPMT ({apps.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {apps.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có hồ sơ ĐTM nào.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có hồ sơ ĐTM nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Loại</th>
@@ -95,18 +95,18 @@ export default async function EiaFlowPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {apps.map((a) => {
                   const meta = stateLabel[a.state] ?? { vn: a.state, variant: "neutral" as const };
                   return (
-                    <tr key={a.id} className="hover:bg-slate-50" data-testid={`row-${a.code}`}>
+                    <tr key={a.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-${a.code}`}>
                       <td className="p-2 font-mono text-xs">{a.code}</td>
                       <td className="p-2 text-xs">{typeLabel[a.type]}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{a.project.key}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{a.project.key}</td>
                       <td className="p-2 text-xs">{a.authority}</td>
                       <td className="p-2 text-xs">{a.consultantOrg?.name ?? "—"}</td>
                       <td className="p-2 text-xs">{a.consultStartAt ? `${formatDateVn(a.consultStartAt)} → ${formatDateVn(a.consultEndAt)}` : "—"}</td>
-                      <td className="p-2 text-xs">{a.decisionRef}<div className="text-[10px] text-slate-500">{a.decisionDate ? formatDateVn(a.decisionDate) : ""}</div></td>
+                      <td className="p-2 text-xs">{a.decisionRef}<div className="text-[10px] text-[rgb(var(--muted))]">{a.decisionDate ? formatDateVn(a.decisionDate) : ""}</div></td>
                       <td className="p-2" data-testid={`state-${a.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2"><RowActions id={a.id} state={a.state} /></td>
                     </tr>
@@ -122,15 +122,15 @@ export default async function EiaFlowPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Quan trắc môi trường gần đây ({measurements.length})</CardTitle>
-            <div className="text-xs text-slate-500">{Array.from(byType.entries()).map(([k, v]) => `${measureLabel[k]}: ${v}`).join(" · ")}</div>
+            <div className="text-xs text-[rgb(var(--muted))]">{Array.from(byType.entries()).map(([k, v]) => `${measureLabel[k]}: ${v}`).join(" · ")}</div>
           </div>
         </CardHeader>
         <CardBody className="p-0">
           {measurements.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có kết quả quan trắc.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có kết quả quan trắc.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Ngày</th>
                   <th className="p-2 text-left">Mã mẫu</th>
@@ -142,17 +142,17 @@ export default async function EiaFlowPage() {
                   <th className="p-2 text-left">QCVN</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {measurements.map((m) => (
-                  <tr key={m.id} className={`hover:bg-slate-50 ${m.exceeded ? "bg-rose-50" : ""}`}>
+                  <tr key={m.id} className={`hover:bg-[rgb(var(--raised))] ${m.exceeded ? "bg-rose-50" : ""}`}>
                     <td className="p-2 text-xs">{formatDateVn(m.sampleDate)}</td>
                     <td className="p-2 font-mono text-xs">{m.sampleCode}</td>
                     <td className="p-2 text-xs">{measureLabel[m.measureType]}</td>
                     <td className="p-2 text-xs">{m.location}</td>
                     <td className="p-2 text-xs">{m.parameter}</td>
                     <td className={`p-2 text-right text-xs ${m.exceeded ? "font-bold text-rose-700" : ""}`}>{Number(m.value).toLocaleString("vi-VN")} {m.unit}</td>
-                    <td className="p-2 text-right text-xs text-slate-500">{m.qcvnLimit ? `${Number(m.qcvnLimit).toLocaleString("vi-VN")} ${m.unit}` : "—"}</td>
-                    <td className="p-2 text-[10px] text-slate-500">{m.qcvnRef}</td>
+                    <td className="p-2 text-right text-xs text-[rgb(var(--muted))]">{m.qcvnLimit ? `${Number(m.qcvnLimit).toLocaleString("vi-VN")} ${m.unit}` : "—"}</td>
+                    <td className="p-2 text-[10px] text-[rgb(var(--muted))]">{m.qcvnRef}</td>
                   </tr>
                 ))}
               </tbody>

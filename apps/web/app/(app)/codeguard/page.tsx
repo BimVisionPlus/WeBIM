@@ -76,10 +76,10 @@ export default async function CodeGuardOrgPage() {
       subtitle="Đối chiếu QCVN/TCVN. Hồ sơ chất lượng NĐ 15/2021 Phụ lục I. Machine-checkable code rules."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tiêu chuẩn / Quy chuẩn còn hiệu lực</div><div className="mt-1 text-2xl font-bold">{regulations.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Rules tự động</div><div className="mt-1 text-2xl font-bold">{rules.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hồ sơ thiếu (mọi DA)</div><div className="mt-1 text-2xl font-bold text-rose-700">{missingDossier}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Vi phạm BLOCKING</div><div className="mt-1 text-2xl font-bold text-rose-700">{blockingFindings}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tiêu chuẩn / Quy chuẩn còn hiệu lực</div><div className="mt-1 text-2xl font-bold">{regulations.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Rules tự động</div><div className="mt-1 text-2xl font-bold">{rules.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hồ sơ thiếu (mọi DA)</div><div className="mt-1 text-2xl font-bold text-rose-700">{missingDossier}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Vi phạm BLOCKING</div><div className="mt-1 text-2xl font-bold text-rose-700">{blockingFindings}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><SeedDossier projects={projects} /></div>
@@ -89,20 +89,20 @@ export default async function CodeGuardOrgPage() {
           <CardHeader><CardTitle>Hồ sơ chất lượng — NĐ 15/2021 ({dossierItems.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {dossierItems.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa khởi tạo hồ sơ chất lượng cho dự án nào. Chọn dự án và bấm “Khởi tạo hồ sơ” ở trên.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa khởi tạo hồ sơ chất lượng cho dự án nào. Chọn dự án và bấm “Khởi tạo hồ sơ” ở trên.</div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[rgb(var(--line))]">
                 {dossierItems.slice(0, 40).map((d) => {
                   const meta = statusLabel[d.status] ?? { vn: d.status, variant: "neutral" as const };
                   return (
                     <li key={d.id} className="p-3 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-slate-500">{projectById.get(d.projectId)?.key ?? ""}</span>
+                        <span className="font-mono text-xs text-[rgb(var(--muted))]">{projectById.get(d.projectId)?.key ?? ""}</span>
                         <Badge variant="neutral">{dossierLabel[d.category] ?? d.category}</Badge>
-                        <span className="font-mono text-xs text-slate-700">{d.itemCode}</span>
+                        <span className="font-mono text-xs text-[rgb(var(--ink-2))]">{d.itemCode}</span>
                       </div>
                       <div className="mt-1 flex items-center justify-between">
-                        <div className="font-medium text-slate-900">{d.itemTitle}</div>
+                        <div className="font-medium text-[rgb(var(--ink))]">{d.itemTitle}</div>
                         <Badge variant={meta.variant}>{meta.vn}</Badge>
                       </div>
                     </li>
@@ -117,18 +117,18 @@ export default async function CodeGuardOrgPage() {
           <CardHeader><CardTitle>Vi phạm rule gần nhất ({findings.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {findings.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa có vi phạm nào được phát hiện.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có vi phạm nào được phát hiện.</div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[rgb(var(--line))]">
                 {findings.slice(0, 20).map((f) => (
                   <li key={f.id} className="p-3 text-sm">
                     <div className="flex items-center gap-2">
                       <Badge variant={sevVariant[f.rule.severity]}>{f.rule.severity}</Badge>
-                      <span className="font-mono text-xs text-slate-500">{projectById.get(f.projectId)?.key ?? ""}</span>
-                      <span className="font-mono text-xs text-slate-700">{f.rule.code}</span>
+                      <span className="font-mono text-xs text-[rgb(var(--muted))]">{projectById.get(f.projectId)?.key ?? ""}</span>
+                      <span className="font-mono text-xs text-[rgb(var(--ink-2))]">{f.rule.code}</span>
                     </div>
-                    <div className="mt-1 text-slate-900">{f.rule.title}</div>
-                    <div className="text-[11px] text-slate-500">
+                    <div className="mt-1 text-[rgb(var(--ink))]">{f.rule.title}</div>
+                    <div className="text-[11px] text-[rgb(var(--muted))]">
                       {f.entityType}#{f.entityId.slice(0, 8)} · {formatDateVn(f.createdAt)} · {f.status}
                     </div>
                   </li>
@@ -143,16 +143,16 @@ export default async function CodeGuardOrgPage() {
         <CardHeader><CardTitle>Thư viện TCVN/QCVN ({regulations.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
               <tr><th className="p-2 text-left">Mã</th><th className="p-2 text-left">Tên</th><th className="p-2 text-left">Hiệu lực</th><th className="p-2 text-left">Cơ quan</th></tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[rgb(var(--line))]">
               {regulations.slice(0, 30).map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50">
+                <tr key={r.id} className="hover:bg-[rgb(var(--raised))]">
                   <td className="p-2 font-mono text-xs"><Badge variant="violet">{r.kind}</Badge> {r.code}</td>
-                  <td className="p-2 text-slate-900">{r.title}</td>
-                  <td className="p-2 text-xs text-slate-500">{r.effectiveAt ? formatDateVn(r.effectiveAt) : "—"}</td>
-                  <td className="p-2 text-xs text-slate-500">{r.issuedBy ?? "—"}</td>
+                  <td className="p-2 text-[rgb(var(--ink))]">{r.title}</td>
+                  <td className="p-2 text-xs text-[rgb(var(--muted))]">{r.effectiveAt ? formatDateVn(r.effectiveAt) : "—"}</td>
+                  <td className="p-2 text-xs text-[rgb(var(--muted))]">{r.issuedBy ?? "—"}</td>
                 </tr>
               ))}
             </tbody>

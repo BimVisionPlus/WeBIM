@@ -16,7 +16,7 @@ export default async function DailyLogPage({ params }: { params: { projectId: st
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Nhật ký công trình</h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[rgb(var(--muted))]">
             NĐ 06/2021 Điều 10 — Nhật ký thi công xây dựng phải lập hàng ngày, có chữ ký các bên.
           </p>
         </div>
@@ -31,7 +31,7 @@ export default async function DailyLogPage({ params }: { params: { projectId: st
                 <CardTitle>
                   {formatDateVn(l.date)} · Ca {l.shift === "DAY" ? "ngày" : "đêm"}
                 </CardTitle>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-[rgb(var(--muted))]">
                   <span>{l.weather}</span>
                   <DailyLogControls
                     log={{
@@ -51,7 +51,7 @@ export default async function DailyLogPage({ params }: { params: { projectId: st
             </CardHeader>
             <CardBody className="space-y-3 text-sm">
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Nhân lực</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-[rgb(var(--muted))]">Nhân lực</div>
                 <div className="mt-1 flex flex-wrap gap-2">
                   {Array.isArray(l.workforce) &&
                     (l.workforce as any[]).map((w, idx) => (
@@ -62,17 +62,17 @@ export default async function DailyLogPage({ params }: { params: { projectId: st
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <div className="text-xs font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
                   Công việc đã làm
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-slate-700">{l.workDone}</p>
+                <p className="mt-1 whitespace-pre-wrap text-[rgb(var(--ink-2))]">{l.workDone}</p>
               </div>
               {l.workTomorrow && (
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <div className="text-xs font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
                     Kế hoạch ngày mai
                   </div>
-                  <p className="mt-1 whitespace-pre-wrap text-slate-700">{l.workTomorrow}</p>
+                  <p className="mt-1 whitespace-pre-wrap text-[rgb(var(--ink-2))]">{l.workTomorrow}</p>
                 </div>
               )}
               {l.safetyNotes && (
@@ -81,7 +81,7 @@ export default async function DailyLogPage({ params }: { params: { projectId: st
                   <p className="mt-0.5">{l.safetyNotes}</p>
                 </div>
               )}
-              <div className="border-t border-slate-100 pt-2 text-xs text-slate-500">
+              <div className="border-t border-[rgb(var(--line))] pt-2 text-xs text-[rgb(var(--muted))]">
                 Người lập: {l.author.name}
               </div>
             </CardBody>
@@ -89,7 +89,7 @@ export default async function DailyLogPage({ params }: { params: { projectId: st
         ))}
         {logs.length === 0 && (
           <Card>
-            <CardBody className="py-10 text-center text-sm text-slate-500">
+            <CardBody className="py-10 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có nhật ký nào.
             </CardBody>
           </Card>

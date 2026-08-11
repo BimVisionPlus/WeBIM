@@ -16,8 +16,8 @@ export default async function AiSettingsPage() {
     <div className="mx-auto max-w-3xl space-y-6 py-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">AI — trạng thái mô hình OSS</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-xl font-semibold text-[rgb(var(--ink))]">AI — trạng thái mô hình OSS</h1>
+          <p className="mt-1 text-sm text-[rgb(var(--muted))]">
             Atlas chỉ dùng mô hình mã nguồn mở, tự host trên hạ tầng của bạn. Không gửi
             dữ liệu công trình ra bên ngoài.
           </p>
@@ -50,7 +50,7 @@ export default async function AiSettingsPage() {
             <div className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">
               <strong>Thiếu mô hình:</strong> {h.ollama.missing.join(", ")}
               <div className="mt-1">
-                Pull bằng: <code className="rounded bg-white px-1 py-0.5">pnpm ai:pull</code>{" "}
+                Pull bằng: <code className="rounded bg-[rgb(var(--surface))] px-1 py-0.5">pnpm ai:pull</code>{" "}
                 (hoặc <code>ollama pull {h.ollama.missing[0]}</code> trên host).
               </div>
             </div>
@@ -113,7 +113,7 @@ export default async function AiSettingsPage() {
         </CardBody>
       </Card>
 
-      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+      <div className="rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--raised))] px-4 py-3 text-xs text-[rgb(var(--muted))]">
         Cần thay đổi mô hình? Đặt <code>OLLAMA_LLM_MODEL</code>, <code>OLLAMA_VLM_MODEL</code>,{" "}
         <code>OLLAMA_EMBED_MODEL</code>, <code>WHISPER_MODEL</code> trong <code>.env</code> rồi
         chạy <code>pnpm ai:pull</code>. Toàn bộ stack là OSS, có thể air-gap.
@@ -125,8 +125,8 @@ export default async function AiSettingsPage() {
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="grid grid-cols-3 gap-2">
-      <div className="col-span-1 text-xs text-slate-500">{label}</div>
-      <div className={`col-span-2 text-sm text-slate-700 ${mono ? "font-mono text-xs" : ""}`}>{value}</div>
+      <div className="col-span-1 text-xs text-[rgb(var(--muted))]">{label}</div>
+      <div className={`col-span-2 text-sm text-[rgb(var(--ink-2))] ${mono ? "font-mono text-xs" : ""}`}>{value}</div>
     </div>
   );
 }
@@ -138,8 +138,8 @@ function Feature({ title, detail, up, soon }: { title: string; detail: string; u
         {soon ? "sắp có" : up ? "sẵn sàng" : "chờ AI"}
       </Badge>
       <div>
-        <div className="text-sm font-medium text-slate-800">{title}</div>
-        <div className="text-xs text-slate-500">{detail}</div>
+        <div className="text-sm font-medium text-[rgb(var(--ink-2))]">{title}</div>
+        <div className="text-xs text-[rgb(var(--muted))]">{detail}</div>
       </div>
     </li>
   );

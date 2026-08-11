@@ -69,73 +69,73 @@ function CreateProjectInner() {
       <CardBody>
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Mã dự án (PROJECT-KEY)</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Mã dự án (PROJECT-KEY)</span>
             <input
               required
               maxLength={20}
               placeholder="VHGP-S9"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm uppercase"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm uppercase"
               value={form.key}
               onChange={(e) => setForm({ ...form, key: e.target.value.toUpperCase() })}
             />
-            <span className="mt-1 block text-[11px] text-slate-500">Dùng làm tiền tố cho issue: {form.key || "VHGP-S9"}-RFI-001</span>
+            <span className="mt-1 block text-[11px] text-[rgb(var(--muted))]">Dùng làm tiền tố cho issue: {form.key || "VHGP-S9"}-RFI-001</span>
           </label>
           <label className="block md:col-span-1">
-            <span className="block text-xs font-medium text-slate-700">Tên dự án</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Tên dự án</span>
             <input
               required
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Vinhomes Grand Park — Lô S9"
             />
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Tỉnh/Thành</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Tỉnh/Thành</span>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.province}
               onChange={(e) => setForm({ ...form, province: e.target.value })}
             />
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Quận/Huyện</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Quận/Huyện</span>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.district}
               onChange={(e) => setForm({ ...form, district: e.target.value })}
             />
           </label>
           <label className="block md:col-span-2">
-            <span className="block text-xs font-medium text-slate-700">Địa chỉ công trình</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Địa chỉ công trình</span>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
             />
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Giá trị hợp đồng (VND)</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Giá trị hợp đồng (VND)</span>
             <input
               type="number"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.contractValueVnd}
               onChange={(e) => setForm({ ...form, contractValueVnd: e.target.value })}
               placeholder="1850000000000"
             />
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Số GPXD</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Số GPXD</span>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.permitNumber}
               onChange={(e) => setForm({ ...form, permitNumber: e.target.value })}
             />
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Phòng phụ trách</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Phòng phụ trách</span>
             <select
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.department}
               onChange={(e) => setForm({ ...form, department: e.target.value })}
             >
@@ -148,19 +148,19 @@ function CreateProjectInner() {
             </select>
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Ngày khởi công</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Ngày khởi công</span>
             <input
               type="date"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.startDate}
               onChange={(e) => setForm({ ...form, startDate: e.target.value })}
             />
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Ngày hoàn thành dự kiến</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Ngày hoàn thành dự kiến</span>
             <input
               type="date"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               value={form.endDate}
               onChange={(e) => setForm({ ...form, endDate: e.target.value })}
             />

@@ -48,7 +48,7 @@ export default async function CatalogPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Catalog — Cấu kiện · vật tư · nhà cung cấp</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           Thư viện cấu kiện chuẩn hóa cho công ty. Link với Submittal (vật liệu thi công) + BoQ (giá đơn vị).
         </p>
       </div>
@@ -56,25 +56,25 @@ export default async function CatalogPage() {
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Cấu kiện</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Cấu kiện</div>
             <div className="mt-1 text-2xl font-bold">{items.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Nhà cung cấp</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Nhà cung cấp</div>
             <div className="mt-1 text-2xl font-bold">{suppliers.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Danh mục</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Danh mục</div>
             <div className="mt-1 text-2xl font-bold">{Object.keys(byCategory).length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Quan hệ giá (item × supplier)</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Quan hệ giá (item × supplier)</div>
             <div className="mt-1 text-2xl font-bold">{items.reduce((s, i) => s + i._count.suppliers, 0)}</div>
           </CardBody>
         </Card>
@@ -87,28 +87,28 @@ export default async function CatalogPage() {
           <CardHeader><CardTitle>Cấu kiện ({items.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {items.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
                 Chưa có cấu kiện. Bấm “Thêm cấu kiện” ở trên để bổ sung vào thư viện.
               </div>
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-[rgb(var(--line))]">
                 {Object.entries(byCategory).map(([cat, list]) => (
                   <div key={cat} className="px-4 py-3">
                     <div className="mb-2">
                       <Badge variant="violet">{categoryLabel[cat] ?? cat}</Badge>
-                      <span className="ml-2 text-xs text-slate-500">{list!.length} cấu kiện</span>
+                      <span className="ml-2 text-xs text-[rgb(var(--muted))]">{list!.length} cấu kiện</span>
                     </div>
                     <div className="space-y-1">
                       {list!.map((i) => (
-                        <div key={i.id} className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-slate-50">
+                        <div key={i.id} className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-[rgb(var(--raised))]">
                           <div className="flex items-center gap-3">
-                            <span className="font-mono text-[11px] text-slate-500">{i.code}</span>
-                            <span className="text-slate-900">{i.name}</span>
-                            <span className="text-[11px] text-slate-500">/ {i.unit}</span>
+                            <span className="font-mono text-[11px] text-[rgb(var(--muted))]">{i.code}</span>
+                            <span className="text-[rgb(var(--ink))]">{i.name}</span>
+                            <span className="text-[11px] text-[rgb(var(--muted))]">/ {i.unit}</span>
                           </div>
                           <div className="flex items-center gap-3 text-xs">
                             {i.baselineUnitPriceVnd && (
-                              <span className="font-medium text-slate-700">{formatVnd(i.baselineUnitPriceVnd)}</span>
+                              <span className="font-medium text-[rgb(var(--ink-2))]">{formatVnd(i.baselineUnitPriceVnd)}</span>
                             )}
                             <Badge variant="neutral">{i._count.suppliers} NCC</Badge>
                             <DeleteAction url={`/api/catalog/items/${i.id}`} label="cấu kiện" testId={`delete-item-${i.id}`} soft={i._count.suppliers > 0} />
@@ -127,14 +127,14 @@ export default async function CatalogPage() {
           <CardHeader><CardTitle>Nhà cung cấp</CardTitle></CardHeader>
           <CardBody className="p-0">
             {suppliers.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">Chưa có nhà cung cấp.</div>
+              <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có nhà cung cấp.</div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-[rgb(var(--line))]">
                 {suppliers.map((s) => (
                   <div key={s.id} className="flex items-start justify-between p-3 text-sm">
                     <div>
-                      <div className="font-medium text-slate-900">{s.name}</div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="font-medium text-[rgb(var(--ink))]">{s.name}</div>
+                      <div className="text-[11px] text-[rgb(var(--muted))]">
                         MST: {s.mst ?? "—"} · {s._count.items} cấu kiện
                         {s.rating !== null && <> · ⭐ {s.rating?.toFixed(1)}</>}
                       </div>

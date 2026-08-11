@@ -60,20 +60,20 @@ export default async function MethodStatementsPage() {
       subtitle="Library BPTC theo hạng mục (cọc/đất/BT khối/MEP/hoàn thiện). Approval workflow NT→TVGS→CĐT, ký số chuỗi. Output VIIIb.4."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Template library</div><div className="mt-1 text-2xl font-bold">{templates.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">BPTC dự án</div><div className="mt-1 text-2xl font-bold">{statements.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã duyệt / đang TC</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Chờ duyệt</div><div className="mt-1 text-2xl font-bold text-amber-700">{pending}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Template library</div><div className="mt-1 text-2xl font-bold">{templates.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">BPTC dự án</div><div className="mt-1 text-2xl font-bold">{statements.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã duyệt / đang TC</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Chờ duyệt</div><div className="mt-1 text-2xl font-bold text-amber-700">{pending}</div></CardBody></Card>
       </div>
 
       <Card className="mt-6">
         <CardHeader><CardTitle>BPTC library ({templates.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {templates.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có biện pháp thi công mẫu. Bấm “Tạo BPTC” để thêm mới.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có biện pháp thi công mẫu. Bấm “Tạo BPTC” để thêm mới.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Loại</th>
@@ -81,13 +81,13 @@ export default async function MethodStatementsPage() {
                   <th className="p-2 text-left">TCVN tham chiếu</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {templates.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50">
+                  <tr key={t.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-mono text-xs">{t.code}</td>
                     <td className="p-2 text-xs">{catLabel[t.category]}</td>
-                    <td className="p-2 text-xs"><div className="font-medium">{t.title}</div><div className="text-[10px] text-slate-500 line-clamp-1">{t.scope}</div></td>
-                    <td className="p-2 text-[10px] text-slate-500">{t.tcvnRefs.slice(0, 3).join(" · ")}</td>
+                    <td className="p-2 text-xs"><div className="font-medium">{t.title}</div><div className="text-[10px] text-[rgb(var(--muted))] line-clamp-1">{t.scope}</div></td>
+                    <td className="p-2 text-[10px] text-[rgb(var(--muted))]">{t.tcvnRefs.slice(0, 3).join(" · ")}</td>
                   </tr>
                 ))}
               </tbody>
@@ -102,10 +102,10 @@ export default async function MethodStatementsPage() {
         <CardHeader><CardTitle>BPTC dự án ({statements.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {statements.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có BPTC nào. Tạo từ template.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có BPTC nào. Tạo từ template.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Dự án</th>
@@ -115,15 +115,15 @@ export default async function MethodStatementsPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {statements.map((s) => {
                   const meta = stateLabel[s.state] ?? { vn: s.state, variant: "neutral" as const };
                   return (
-                    <tr key={s.id} className="hover:bg-slate-50" data-testid={`bptc-${s.code}`}>
+                    <tr key={s.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`bptc-${s.code}`}>
                       <td className="p-2 font-mono text-xs">{s.code}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{s.project?.key ?? "—"}</td>
-                      <td className="p-2 text-xs"><div className="font-medium">{s.title}</div><div className="text-[10px] text-slate-500">{catLabel[s.category]}</div></td>
-                      <td className="p-2 text-[10px] text-slate-500">{s.tvgsApprovedAt ? `TVGS ${formatDateVn(s.tvgsApprovedAt)}` : "—"}<div>{s.cdtApprovedAt ? `CĐT ${formatDateVn(s.cdtApprovedAt)}` : ""}</div></td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{s.project?.key ?? "—"}</td>
+                      <td className="p-2 text-xs"><div className="font-medium">{s.title}</div><div className="text-[10px] text-[rgb(var(--muted))]">{catLabel[s.category]}</div></td>
+                      <td className="p-2 text-[10px] text-[rgb(var(--muted))]">{s.tvgsApprovedAt ? `TVGS ${formatDateVn(s.tvgsApprovedAt)}` : "—"}<div>{s.cdtApprovedAt ? `CĐT ${formatDateVn(s.cdtApprovedAt)}` : ""}</div></td>
                       <td className="p-2" data-testid={`state-${s.code}`}><Badge variant={meta.variant}>{meta.vn}</Badge></td>
                       <td className="p-2"><RowActions id={s.id} state={s.state} /></td>
                     </tr>

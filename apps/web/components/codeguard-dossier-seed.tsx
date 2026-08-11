@@ -22,7 +22,7 @@ export function DossierSeedButton({ projectId }: { projectId: string }) {
       type="button"
       onClick={go}
       disabled={busy}
-      className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700 disabled:opacity-50"
     >
       {busy ? "Đang khởi tạo…" : "Khởi tạo theo NĐ 15/2021"}
     </button>

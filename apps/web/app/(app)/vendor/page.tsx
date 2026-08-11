@@ -92,13 +92,13 @@ export default async function VendorPage({ searchParams }: { searchParams: Promi
   return (
     <AecModuleShell group="Vendor" name="Atlas Vendor — Quản lý nhà cung cấp & thầu phụ" subtitle="Sổ supplier + subcontractor, hợp đồng khung, sổ công nợ, đánh giá hiệu suất, chỉ số giá Bộ XD.">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Nhà cung cấp vật tư</div><div className="mt-1 text-2xl font-bold text-blue-700">{supplierCount}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Nhà thầu phụ</div><div className="mt-1 text-2xl font-bold text-violet-700">{subCount}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hợp đồng đang hiệu lực</div><div className="mt-1 text-2xl font-bold text-emerald-700">{activeContractCount}</div><div className="text-[10px] text-slate-500">{formatVnd(totalContractValue)}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng công nợ phải trả</div><div className="mt-1 text-xl font-bold text-amber-700">{formatVnd(totalOutstanding)}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Nhà cung cấp vật tư</div><div className="mt-1 text-2xl font-bold text-blue-700">{supplierCount}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Nhà thầu phụ</div><div className="mt-1 text-2xl font-bold text-violet-700">{subCount}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hợp đồng đang hiệu lực</div><div className="mt-1 text-2xl font-bold text-emerald-700">{activeContractCount}</div><div className="text-[10px] text-[rgb(var(--muted))]">{formatVnd(totalContractValue)}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng công nợ phải trả</div><div className="mt-1 text-xl font-bold text-amber-700">{formatVnd(totalOutstanding)}</div></CardBody></Card>
       </div>
 
-      <nav className="mt-6 flex flex-wrap gap-1 border-b border-slate-200" data-testid="vendor-tabs">
+      <nav className="mt-6 flex flex-wrap gap-1 border-b border-[rgb(var(--line))]" data-testid="vendor-tabs">
         {[
           { key: "all", label: "Tổng quan" },
           { key: "suppliers", label: "Nhà cung cấp vật tư", count: suppliers.length },
@@ -108,8 +108,8 @@ export default async function VendorPage({ searchParams }: { searchParams: Promi
         ].map((t) => {
           const isActive = t.key === tab;
           return (
-            <Link key={t.key} href={`/vendor?tab=${t.key}`} data-testid={`tab-${t.key}`} className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-slate-600 hover:text-slate-900"}`}>
-              {t.label}{typeof t.count === "number" && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{t.count}</span>}
+            <Link key={t.key} href={`/vendor?tab=${t.key}`} data-testid={`tab-${t.key}`} className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"}`}>
+              {t.label}{typeof t.count === "number" && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-[rgb(var(--raised))] text-[rgb(var(--muted))]"}`}>{t.count}</span>}
             </Link>
           );
         })}
@@ -120,21 +120,21 @@ export default async function VendorPage({ searchParams }: { searchParams: Promi
           <CardHeader><CardTitle>Nhà cung cấp vật tư ({suppliers.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {suppliers.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa có nhà cung cấp. Bấm "Thêm hợp đồng" để bắt đầu.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có nhà cung cấp. Bấm "Thêm hợp đồng" để bắt đầu.</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                   <tr><th className="p-2 text-left">Tên</th><th className="p-2 text-left">MST</th><th className="p-2 text-left">Liên hệ</th><th className="p-2 text-right">Vật tư</th><th className="p-2 text-right">HĐ khung</th><th className="p-2 text-left">Rating</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[rgb(var(--line))]">
                   {suppliers.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50" data-testid={`row-supplier-${s.id}`}>
+                    <tr key={s.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-supplier-${s.id}`}>
                       <td className="p-2 font-medium">{s.name}</td>
                       <td className="p-2 font-mono text-xs">{s.mst ?? "—"}</td>
-                      <td className="p-2 text-xs">{s.phone ?? "—"} {s.email && <span className="text-slate-400">· {s.email}</span>}</td>
+                      <td className="p-2 text-xs">{s.phone ?? "—"} {s.email && <span className="text-[rgb(var(--muted-2))]">· {s.email}</span>}</td>
                       <td className="p-2 text-right text-xs">{s._count.items}</td>
                       <td className="p-2 text-right text-xs">{s._count.vendorContracts}</td>
-                      <td className="p-2 text-xs">{s.rating ? `${s.rating.toFixed(1)} ⭐` : <span className="text-slate-400">—</span>}</td>
+                      <td className="p-2 text-xs">{s.rating ? `${s.rating.toFixed(1)} ⭐` : <span className="text-[rgb(var(--muted-2))]">—</span>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -149,20 +149,20 @@ export default async function VendorPage({ searchParams }: { searchParams: Promi
           <CardHeader><CardTitle>Nhà thầu phụ ({subcontractors.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {subcontractors.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa có hồ sơ năng lực thầu phụ nào.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có hồ sơ năng lực thầu phụ nào.</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                   <tr><th className="p-2 text-left">Đơn vị</th><th className="p-2 text-left">Hạng</th><th className="p-2 text-left">Phạm vi</th><th className="p-2 text-right">DA đã làm</th><th className="p-2 text-right">Đánh giá</th><th className="p-2 text-left">Trạng thái</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[rgb(var(--line))]">
                   {subcontractors.map((c) => (
-                    <tr key={c.id} className={`hover:bg-slate-50 ${c.blacklisted ? "bg-rose-50/40" : ""}`} data-testid={`row-sub-${c.id}`}>
-                      <td className="p-2"><div className="font-medium">{c.legalName}</div><div className="text-[10px] text-slate-500 font-mono">{c.mst ?? "—"}</div></td>
+                    <tr key={c.id} className={`hover:bg-[rgb(var(--raised))] ${c.blacklisted ? "bg-rose-50/40" : ""}`} data-testid={`row-sub-${c.id}`}>
+                      <td className="p-2"><div className="font-medium">{c.legalName}</div><div className="text-[10px] text-[rgb(var(--muted))] font-mono">{c.mst ?? "—"}</div></td>
                       <td className="p-2"><Badge variant={c.capabilityClass === "HANG_I" ? "info" : c.capabilityClass === "HANG_II" ? "warning" : "neutral"}>{c.capabilityClass.replace("HANG_", "Hạng ")}</Badge></td>
                       <td className="p-2 text-xs line-clamp-1">{c.capabilityScope.join(", ") || "—"}</td>
                       <td className="p-2 text-right text-xs">{c.pastProjects}</td>
-                      <td className="p-2 text-right text-xs">{c.rating ? `${Number(c.rating).toFixed(1)} ⭐` : <span className="text-slate-400">—</span>}</td>
+                      <td className="p-2 text-right text-xs">{c.rating ? `${Number(c.rating).toFixed(1)} ⭐` : <span className="text-[rgb(var(--muted-2))]">—</span>}</td>
                       <td className="p-2">{c.blacklisted ? <Badge variant="danger">Blacklist</Badge> : <Badge variant="success">OK</Badge>}</td>
                     </tr>
                   ))}
@@ -180,20 +180,20 @@ export default async function VendorPage({ searchParams }: { searchParams: Promi
             <CardHeader><CardTitle>Hợp đồng khung ({contracts.length})</CardTitle></CardHeader>
             <CardBody className="p-0">
               {contracts.length === 0 ? (
-                <div className="p-8 text-center text-sm text-slate-500">Chưa có hợp đồng nhà cung cấp / thầu phụ.</div>
+                <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có hợp đồng nhà cung cấp / thầu phụ.</div>
               ) : (
                 <table className="w-full text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                  <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                     <tr><th className="p-2 text-left">Số HĐ</th><th className="p-2 text-left">Loại</th><th className="p-2 text-left">Bên bán</th><th className="p-2 text-left">Hiệu lực</th><th className="p-2 text-right">Giá trị</th><th className="p-2 text-left">Trạng thái</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[rgb(var(--line))]">
                     {contracts.map((c) => {
                       const s = stateMeta[c.state] ?? { vn: c.state, variant: "neutral" as const };
                       return (
-                        <tr key={c.id} className="hover:bg-slate-50" data-testid={`row-contract-${c.id}`}>
+                        <tr key={c.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-contract-${c.id}`}>
                           <td className="p-2 font-mono text-xs">{c.contractNo}</td>
                           <td className="p-2"><Badge variant="neutral">{typeMeta[c.type]}</Badge></td>
-                          <td className="p-2"><div className="font-medium">{c.vendorName}</div><div className="text-[10px] text-slate-500">{c.scope?.slice(0, 80) ?? ""}</div></td>
+                          <td className="p-2"><div className="font-medium">{c.vendorName}</div><div className="text-[10px] text-[rgb(var(--muted))]">{c.scope?.slice(0, 80) ?? ""}</div></td>
                           <td className="p-2 text-xs">{formatDateVn(c.startDate)} → {c.endDate ? formatDateVn(c.endDate) : "—"}</td>
                           <td className="p-2 text-right font-medium">{c.valueVnd ? formatVnd(c.valueVnd) : "—"}</td>
                           <td className="p-2"><Badge variant={s.variant}>{s.vn}</Badge></td>
@@ -215,23 +215,23 @@ export default async function VendorPage({ searchParams }: { searchParams: Promi
             <CardHeader><CardTitle>Sổ công nợ ({credit.length})</CardTitle></CardHeader>
             <CardBody className="p-0">
               {credit.length === 0 ? (
-                <div className="p-8 text-center text-sm text-slate-500">Chưa có giao dịch công nợ.</div>
+                <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có giao dịch công nợ.</div>
               ) : (
                 <table className="w-full text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                  <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                     <tr><th className="p-2 text-left">Ngày</th><th className="p-2 text-left">Số phiếu</th><th className="p-2 text-left">Đối tác</th><th className="p-2 text-left">Loại</th><th className="p-2 text-right">Số tiền</th><th className="p-2 text-left">Ghi chú</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[rgb(var(--line))]">
                     {credit.map((e) => {
                       const m = creditTypeMeta[e.type] ?? { vn: e.type, variant: "neutral" as const, sign: 0 };
                       return (
-                        <tr key={e.id} className="hover:bg-slate-50" data-testid={`row-credit-${e.id}`}>
+                        <tr key={e.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-credit-${e.id}`}>
                           <td className="p-2 text-xs">{formatDateVn(e.txnDate)}</td>
                           <td className="p-2 font-mono text-xs">{e.txnNo ?? "—"}</td>
                           <td className="p-2 font-medium">{e.vendorName}</td>
                           <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
-                          <td className={`p-2 text-right font-medium ${m.sign > 0 ? "text-amber-700" : m.sign < 0 ? "text-emerald-700" : "text-slate-700"}`}>{m.sign > 0 ? "+" : m.sign < 0 ? "−" : ""}{formatVnd(e.amountVnd)}</td>
-                          <td className="p-2 text-xs text-slate-600 line-clamp-1">{e.notes ?? "—"}</td>
+                          <td className={`p-2 text-right font-medium ${m.sign > 0 ? "text-amber-700" : m.sign < 0 ? "text-emerald-700" : "text-[rgb(var(--ink-2))]"}`}>{m.sign > 0 ? "+" : m.sign < 0 ? "−" : ""}{formatVnd(e.amountVnd)}</td>
+                          <td className="p-2 text-xs text-[rgb(var(--muted))] line-clamp-1">{e.notes ?? "—"}</td>
                         </tr>
                       );
                     })}

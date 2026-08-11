@@ -68,10 +68,10 @@ export default async function CrewsOrgPage() {
       subtitle="Phân công tổ đội theo ca/ngày, kế hoạch 1-2 tuần (look-ahead). Tổ bị chặn (đợi vật tư/bản vẽ/nghiệm thu) được đánh dấu để xử lý nhanh."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổ đội đang hoạt động</div><div className="mt-1 text-2xl font-bold text-emerald-700">{activeCrews}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng quân số</div><div className="mt-1 text-2xl font-bold">{totalHeadcount}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang thi công</div><div className="mt-1 text-2xl font-bold text-blue-700">{inProgress}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Bị chặn cần xử lý</div><div className="mt-1 text-2xl font-bold text-rose-700">{blocked}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổ đội đang hoạt động</div><div className="mt-1 text-2xl font-bold text-emerald-700">{activeCrews}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng quân số</div><div className="mt-1 text-2xl font-bold">{totalHeadcount}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang thi công</div><div className="mt-1 text-2xl font-bold text-blue-700">{inProgress}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Bị chặn cần xử lý</div><div className="mt-1 text-2xl font-bold text-rose-700">{blocked}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={projects} /></div>
@@ -80,12 +80,12 @@ export default async function CrewsOrgPage() {
         <CardHeader><CardTitle>Tổ đội ({crews.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {crews.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có tổ đội nào. Đăng ký tổ đội (tổ thép, tổ MEP, tổ hoàn thiện…) cho dự án để bắt đầu phân công look-ahead.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Tổ</th>
                   <th className="p-2 text-left">Nghề</th>
@@ -97,12 +97,12 @@ export default async function CrewsOrgPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {crews.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
+                  <tr key={c.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-medium text-xs">{c.name}</td>
                     <td className="p-2 text-xs">{c.trade}</td>
-                    <td className="p-2 text-xs font-mono text-slate-600">{keyOf(c.projectId)}</td>
+                    <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{keyOf(c.projectId)}</td>
                     <td className="p-2 text-xs">{c.foremanName ?? "—"}</td>
                     <td className="p-2 text-right text-xs">{c.headcount}</td>
                     <td className="p-2 text-right text-xs">{c._count.assignments}</td>
@@ -120,23 +120,23 @@ export default async function CrewsOrgPage() {
         <CardHeader><CardTitle>Bảng look-ahead ({assignments.length} phân công gần đây)</CardTitle></CardHeader>
         <CardBody>
           {assignments.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có phân công nào. Lập kế hoạch ca/ngày cho từng tổ tại đây.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có phân công nào. Lập kế hoạch ca/ngày cho từng tổ tại đây.</div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
               {cols.map((col) => {
                 const meta = stateLabel[col.state] ?? { vn: col.state, variant: "neutral" as const };
                 return (
-                  <div key={col.state} className="rounded-lg border border-slate-200 bg-slate-50/50">
-                    <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
+                  <div key={col.state} className="rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--raised))]/50">
+                    <div className="flex items-center justify-between border-b border-[rgb(var(--line))] px-3 py-2">
                       <Badge variant={meta.variant}>{meta.vn}</Badge>
-                      <span className="text-xs text-slate-500">{col.items.length}</span>
+                      <span className="text-xs text-[rgb(var(--muted))]">{col.items.length}</span>
                     </div>
                     <div className="space-y-2 p-2">
                       {col.items.slice(0, 12).map((a) => (
-                        <div key={a.id} className="rounded border border-slate-200 bg-white p-2 text-xs">
+                        <div key={a.id} className="rounded border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-2 text-xs">
                           <div className="font-medium line-clamp-2">{a.title}</div>
-                          <div className="mt-1 text-[10px] text-slate-500">{a.crew.name} · {a.crew.trade}</div>
-                          <div className="mt-0.5 flex items-center justify-between text-[10px] text-slate-400">
+                          <div className="mt-1 text-[10px] text-[rgb(var(--muted))]">{a.crew.name} · {a.crew.trade}</div>
+                          <div className="mt-0.5 flex items-center justify-between text-[10px] text-[rgb(var(--muted-2))]">
                             <span>{a.zone ?? ""}</span>
                             <span>{formatDateVn(a.workDate)} · {shiftLabel[a.shift] ?? a.shift}</span>
                           </div>
@@ -145,7 +145,7 @@ export default async function CrewsOrgPage() {
                           )}
                         </div>
                       ))}
-                      {col.items.length === 0 && <div className="px-1 py-2 text-[11px] text-slate-400">—</div>}
+                      {col.items.length === 0 && <div className="px-1 py-2 text-[11px] text-[rgb(var(--muted-2))]">—</div>}
                     </div>
                   </div>
                 );
@@ -155,7 +155,7 @@ export default async function CrewsOrgPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-3 text-[11px] text-slate-500">
+      <div className="mt-3 text-[11px] text-[rgb(var(--muted))]">
         Tổ bị chặn (BLOCKED) thường do đợi vật tư · bản vẽ phê duyệt · nghiệm thu công việc trước. Liên kết với Daily Log + NCR để truy nguyên.
       </div>
     </AecModuleShell>

@@ -25,10 +25,10 @@ export function RowActions({ id, state, pctComplete, initial }: { id: string; st
   }
   return (
     <span className="inline-flex items-center gap-1" data-testid={`row-actions-${id}`}>
-      <select value={v} onChange={(e) => { setV(e.target.value); patch({ state: e.target.value }); }} disabled={busy} className="rounded border border-slate-300 px-1 py-0.5 text-[10px]">
+      <select value={v} onChange={(e) => { setV(e.target.value); patch({ state: e.target.value }); }} disabled={busy} className="rounded border border-[rgb(var(--line-2))] px-1 py-0.5 text-[10px]">
         {states.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
       </select>
-      <input value={pct} onChange={(e) => setPct(e.target.value.replace(/\D/g, ""))} onBlur={() => { const n = Number(pct); if (!isNaN(n) && n !== Math.round(pctComplete)) patch({ pctComplete: n }); }} className="w-9 rounded border border-slate-300 px-1 py-0.5 text-[10px]" />
+      <input value={pct} onChange={(e) => setPct(e.target.value.replace(/\D/g, ""))} onBlur={() => { const n = Number(pct); if (!isNaN(n) && n !== Math.round(pctComplete)) patch({ pctComplete: n }); }} className="w-9 rounded border border-[rgb(var(--line-2))] px-1 py-0.5 text-[10px]" />
       <GenericEditDrawer
         url={`/api/schedule/tasks/${id}`}
         title="Sửa công việc"

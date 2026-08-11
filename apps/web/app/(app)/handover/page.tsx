@@ -68,10 +68,10 @@ export default async function HandoverOrgPage() {
       subtitle="Service desk bảo hành cho mọi dự án — NĐ 06/2021: 12T phần phụ · 24T phần chính · 60T hạ tầng."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng ticket</div><div className="mt-1 text-2xl font-bold">{tickets.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang mở</div><div className="mt-1 text-2xl font-bold text-blue-700">{open.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Quá SLA</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdue.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Dự án có ticket</div><div className="mt-1 text-2xl font-bold">{projectsWithTickets}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng ticket</div><div className="mt-1 text-2xl font-bold">{tickets.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang mở</div><div className="mt-1 text-2xl font-bold text-blue-700">{open.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Quá SLA</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdue.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Dự án có ticket</div><div className="mt-1 text-2xl font-bold">{projectsWithTickets}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={projects} /></div>
@@ -80,13 +80,13 @@ export default async function HandoverOrgPage() {
         <CardHeader><CardTitle>Tất cả ticket bảo hành ({tickets.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {tickets.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có yêu cầu bảo hành ở các dự án bạn truy cập. Sau bàn giao, cư dân/CĐT gửi yêu cầu
               bảo hành (12/24/60 tháng theo NĐ 06/2021) và sẽ hiển thị tại đây để xử lý theo SLA.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Dự án</th>
@@ -98,18 +98,18 @@ export default async function HandoverOrgPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {tickets.map((t) => {
                   const slaOver = t.slaDueAt && t.slaDueAt.getTime() < now && !["VERIFIED", "REJECTED", "CLOSED"].includes(t.state);
                   return (
-                    <tr key={t.id} className="hover:bg-slate-50">
+                    <tr key={t.id} className="hover:bg-[rgb(var(--raised))]">
                       <td className="p-2 font-mono text-xs">{t.ticketNumber}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{projectById.get(t.projectId)?.key ?? ""}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{projectById.get(t.projectId)?.key ?? ""}</td>
                       <td className="p-2 text-xs">{t.unitCode ?? "—"}</td>
                       <td className="p-2 text-center"><Badge variant={sevVariant[t.severity]}>{t.severity}</Badge></td>
-                      <td className="p-2"><div className="font-medium">{t.title}</div><div className="text-[11px] text-slate-500">{t.reporterName}</div></td>
+                      <td className="p-2"><div className="font-medium">{t.title}</div><div className="text-[11px] text-[rgb(var(--muted))]">{t.reporterName}</div></td>
                       <td className="p-2"><Badge variant={stateLabel[t.state]?.variant}>{stateLabel[t.state]?.vn}</Badge></td>
-                      <td className="p-2 text-xs">{t.slaDueAt ? <span className={slaOver ? "text-rose-700" : "text-slate-600"}>{relativeDateVn(t.slaDueAt)}</span> : "—"}</td>
+                      <td className="p-2 text-xs">{t.slaDueAt ? <span className={slaOver ? "text-rose-700" : "text-[rgb(var(--muted))]"}>{relativeDateVn(t.slaDueAt)}</span> : "—"}</td>
                       <td className="p-2"><RowActions id={t.id} state={t.state} /></td>
                     </tr>
                   );

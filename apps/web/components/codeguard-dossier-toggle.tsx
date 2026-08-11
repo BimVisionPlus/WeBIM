@@ -9,7 +9,7 @@ const order: Status[] = ["MISSING", "DRAFT", "SUBMITTED", "ACCEPTED", "REJECTED"
 
 const variantClass: Record<Status, string> = {
   MISSING: "bg-rose-50 text-rose-700 ring-rose-200",
-  DRAFT: "bg-slate-100 text-slate-700 ring-slate-200",
+  DRAFT: "bg-[rgb(var(--raised))] text-[rgb(var(--ink-2))] ring-[rgb(var(--line-2))]",
   SUBMITTED: "bg-blue-50 text-blue-700 ring-blue-200",
   ACCEPTED: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   REJECTED: "bg-amber-50 text-amber-700 ring-amber-200",

@@ -46,7 +46,7 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">Crews — Look-ahead 2 tuần</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[rgb(var(--muted))]">
             Phân công tổ đội theo ca/ngày. Kanban-style: kéo card sang trạng thái mới (UI sắp tới).
           </p>
         </div>
@@ -56,19 +56,19 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tổ đội</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tổ đội</div>
             <div className="mt-1 text-2xl font-bold">{crews.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Việc trong 2 tuần</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Việc trong 2 tuần</div>
             <div className="mt-1 text-2xl font-bold">{assignments.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Đang làm hôm nay</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Đang làm hôm nay</div>
             <div className="mt-1 text-2xl font-bold text-blue-700">
               {assignments.filter((a) => a.state === "IN_PROGRESS").length}
             </div>
@@ -76,7 +76,7 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Đang đợi (BLOCKED)</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Đang đợi (BLOCKED)</div>
             <div className="mt-1 text-2xl font-bold text-amber-700">
               {assignments.filter((a) => a.state === "BLOCKED").length}
             </div>
@@ -88,12 +88,12 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
         <CardHeader><CardTitle>Tổ đội ({crews.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {crews.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
-              Chưa có tổ đội. Đăng ký tổ qua <code className="rounded bg-slate-100 px-1">POST /api/crews</code>.
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
+              Chưa có tổ đội. Đăng ký tổ qua <code className="rounded bg-[rgb(var(--raised))] px-1">POST /api/crews</code>.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-3 text-left">Tổ</th>
                   <th className="p-3 text-left">Trade</th>
@@ -103,12 +103,12 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
                   <th className="p-3 text-right">Hành động</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {crews.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
+                  <tr key={c.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-3 align-top font-medium">{c.name}</td>
                     <td className="p-3 align-top"><Badge variant="neutral">{c.trade}</Badge></td>
-                    <td className="p-3 align-top text-slate-700">{c.foremanName ?? "—"}</td>
+                    <td className="p-3 align-top text-[rgb(var(--ink-2))]">{c.foremanName ?? "—"}</td>
                     <td className="p-3 align-top text-center">{c.headcount}</td>
                     <td className="p-3 align-top text-center">{assignments.filter((a) => a.crewId === c.id).length}</td>
                     <td className="p-3 align-top text-right">
@@ -135,24 +135,24 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
         <CardHeader><CardTitle>Look-ahead — {dates.length} ngày</CardTitle></CardHeader>
         <CardBody className="p-0">
           {dates.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
-              Chưa có công việc nào trong 2 tuần. Tạo qua <code className="rounded bg-slate-100 px-1">POST /api/crews/assignments</code>.
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
+              Chưa có công việc nào trong 2 tuần. Tạo qua <code className="rounded bg-[rgb(var(--raised))] px-1">POST /api/crews/assignments</code>.
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[rgb(var(--line))]">
               {dates.map((dateKey) => {
                 const dayAssignments = byDate.get(dateKey)!;
                 return (
                   <div key={dateKey} className="p-3">
                     <div className="mb-2 flex items-center gap-2">
                       <div className="font-mono text-sm font-semibold">{formatDateVn(new Date(dateKey))}</div>
-                      <span className="text-xs text-slate-500">{dayAssignments.length} công việc</span>
+                      <span className="text-xs text-[rgb(var(--muted))]">{dayAssignments.length} công việc</span>
                     </div>
                     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {dayAssignments.map((a) => (
                         <div
                           key={a.id}
-                          className="rounded-md border border-slate-200 bg-white p-3 text-xs hover:border-blue-300"
+                          className="rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-3 text-xs hover:border-blue-300"
                         >
                           <div className="flex items-center justify-between">
                             <Badge variant={stateLabel[a.state]?.variant ?? "neutral"}>
@@ -160,8 +160,8 @@ export default async function CrewsPage({ params }: { params: { projectId: strin
                             </Badge>
                             <Badge variant="neutral">{a.shift === "DAY" ? "Ca ngày" : "Ca đêm"}</Badge>
                           </div>
-                          <div className="mt-2 font-medium text-slate-900">{a.title}</div>
-                          <div className="mt-1 text-[11px] text-slate-500">
+                          <div className="mt-2 font-medium text-[rgb(var(--ink))]">{a.title}</div>
+                          <div className="mt-1 text-[11px] text-[rgb(var(--muted))]">
                             {a.crew.name} ({a.crew.trade}) {a.zone ? `· ${a.zone}` : ""}
                           </div>
                           {a.blockedReason && (

@@ -146,10 +146,10 @@ export default async function DemoLaunchpad() {
   const groups = Array.from(new Set(MODULES.map((m) => m.group)));
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[rgb(var(--raised))]">
       <DemoTour />
       {/* Hero */}
-      <div className="border-b border-slate-200 bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
+      <div className="border-b border-[rgb(var(--line))] bg-gradient-to-br from-blue-600 to-indigo-700 text-[rgb(var(--inverse-ink))]">
         <div className="mx-auto max-w-7xl px-6 py-8">
           <div className="text-xs uppercase tracking-wider text-blue-100">Demo launchpad · {flagshipProject?.ownerOrg.name ?? "Cofico"}</div>
           <h1 className="mt-1 text-3xl font-bold">Atlas</h1>
@@ -179,8 +179,8 @@ export default async function DemoLaunchpad() {
 
       {/* Try AI panel — client component for the interactive buttons */}
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <h2 className="text-lg font-bold text-slate-900">🤖 Thử AI live (1 click)</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="text-lg font-bold text-[rgb(var(--ink))]">🤖 Thử AI live (1 click)</h2>
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           Mỗi nút gọi 1 API thật, trả kết quả tiếng Việt trong vài giây. Dùng dữ liệu thật của dự án {flagshipProject?.key}.
         </p>
         <div className="mt-4">
@@ -194,7 +194,7 @@ export default async function DemoLaunchpad() {
           />
         </div>
 
-        <h2 className="mt-10 text-lg font-bold text-slate-900">📍 Đi thẳng vào dự án flagship</h2>
+        <h2 className="mt-10 text-lg font-bold text-[rgb(var(--ink))]">📍 Đi thẳng vào dự án flagship</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {[
             { label: "Tổng quan", href: `/projects/${flagshipProject?.id}` },
@@ -209,51 +209,51 @@ export default async function DemoLaunchpad() {
             { label: "Handover", href: `/projects/${flagshipProject?.id}/handover` },
             ...(co ? [{ label: `Lệnh đổi ${co.key} (${co.state})`, href: `/projects/${flagshipProject?.id}/site/issues/${co.key}` }] : []),
           ].map((b) => (
-            <Link key={b.label} href={b.href} className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-blue-500 hover:text-blue-700">
+            <Link key={b.label} href={b.href} className="inline-flex items-center rounded-md border border-[rgb(var(--line-2))] bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--ink-2))] hover:border-blue-500 hover:text-blue-700">
               {b.label} →
             </Link>
           ))}
         </div>
 
-        <h2 className="mt-10 text-lg font-bold text-slate-900">🗂️ Tất cả module ({MODULES.length})</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="mt-10 text-lg font-bold text-[rgb(var(--ink))]">🗂️ Tất cả module ({MODULES.length})</h2>
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           Mỗi card → click 1 lần để mở module. Phân nhóm theo phòng / domain.
         </p>
         {groups.map((g) => (
           <div key={g} className="mt-5">
-            <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">{g}</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">{g}</div>
             <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
               {MODULES.filter((m) => m.group === g).map((m) => (
-                <Link key={m.href} href={m.href} className="group flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 hover:border-blue-500 hover:shadow-sm">
+                <Link key={m.href} href={m.href} className="group flex items-start gap-3 rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-3 hover:border-blue-500 hover:shadow-sm">
                   <div className="text-2xl">{m.icon}</div>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-700">{m.name}</div>
-                    <div className="mt-0.5 text-[11px] text-slate-500">{m.tagline}</div>
+                    <div className="text-sm font-semibold text-[rgb(var(--ink))] group-hover:text-blue-700">{m.name}</div>
+                    <div className="mt-0.5 text-[11px] text-[rgb(var(--muted))]">{m.tagline}</div>
                   </div>
-                  <div className="text-slate-400 group-hover:text-blue-700">→</div>
+                  <div className="text-[rgb(var(--muted-2))] group-hover:text-blue-700">→</div>
                 </Link>
               ))}
             </div>
           </div>
         ))}
 
-        <h2 className="mt-10 text-lg font-bold text-slate-900">🧠 Tất cả tính năng AI ({AI_FEATURES.length})</h2>
+        <h2 className="mt-10 text-lg font-bold text-[rgb(var(--ink))]">🧠 Tất cả tính năng AI ({AI_FEATURES.length})</h2>
         <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-4">
           {AI_FEATURES.map((a) => (
-            <div key={a.name} className="rounded-lg border border-slate-200 bg-white p-3">
+            <div key={a.name} className="rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-3">
               <div className="flex items-start gap-2">
                 <div className="text-xl">{a.icon}</div>
                 <div className="flex-1">
                   <div className="text-sm font-semibold">{a.name}</div>
                   <div className="text-[11px] uppercase tracking-wider text-emerald-700">{a.verb}</div>
-                  <div className="mt-1 text-[11px] text-slate-500">{a.what}</div>
+                  <div className="mt-1 text-[11px] text-[rgb(var(--muted))]">{a.what}</div>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-10 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+        <div className="mt-10 rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--raised))] p-4 text-xs text-[rgb(var(--muted))]">
           <strong>Hạ tầng:</strong> Hetzner VPS · Neon Postgres (Singapore) · MinIO/S3 · Groq (Llama 3.3 70B + Llama 4 Scout + Whisper) · Cloudflare Workers AI (bge-m3) · Resend (email aecplatform.vn). Hỗ trợ on-prem Ollama 1 lệnh docker-compose.
         </div>
       </div>
@@ -263,9 +263,9 @@ export default async function DemoLaunchpad() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-white/10 px-3 py-2 backdrop-blur-sm">
+    <div className="rounded-md bg-[rgb(var(--surface))]/10 px-3 py-2 backdrop-blur-sm">
       <div className="text-[10px] uppercase tracking-wider text-blue-100">{label}</div>
-      <div className="mt-0.5 text-lg font-bold text-white">{value}</div>
+      <div className="mt-0.5 text-lg font-bold text-[rgb(var(--inverse-ink))]">{value}</div>
     </div>
   );
 }

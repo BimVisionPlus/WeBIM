@@ -48,7 +48,7 @@ export async function RiskBanner({ orgIds, accessFilter }: { orgIds: string[]; a
           className={`group flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${it.tone === "rose" ? "bg-rose-100 text-rose-800 ring-rose-200 hover:bg-rose-200" : "bg-amber-100 text-amber-800 ring-amber-200 hover:bg-amber-200"}`}
           data-testid={`risk-${it.label.slice(0,12).replace(/\s/g,'-')}`}
         >
-          <span className="rounded-full bg-white/70 px-1.5">{it.count}</span>
+          <span className="rounded-full bg-[rgb(var(--surface))]/70 px-1.5">{it.count}</span>
           <span>{it.label}</span>
         </a>
       ))}

@@ -35,7 +35,7 @@ export function CommentForm({ issueKey }: { issueKey: string }) {
       <textarea
         rows={3}
         placeholder="Viết bình luận…"
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={body}
         onChange={(e) => setBody(e.target.value)}
       />

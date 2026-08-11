@@ -64,19 +64,19 @@ export function InviteForm({ orgId }: { orgId: string }) {
   return (
     <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
       <label className="flex-1 min-w-[200px]">
-        <span className="block text-xs font-medium text-slate-700">Email</span>
+        <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Email</span>
         <input
           type="email"
           required
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
       </label>
       <label>
-        <span className="block text-xs font-medium text-slate-700">Vai trò</span>
+        <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Vai trò</span>
         <select
-          className="mt-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
           value={role}
           onChange={(e) => setRole(e.target.value)}
         >
@@ -104,12 +104,12 @@ export function InviteForm({ orgId }: { orgId: string }) {
               readOnly
               value={msg.link}
               onFocus={(e) => e.currentTarget.select()}
-              className="flex-1 rounded border border-amber-300 bg-white px-2 py-1 font-mono text-[11px]"
+              className="flex-1 rounded border border-amber-300 bg-[rgb(var(--surface))] px-2 py-1 font-mono text-[11px]"
             />
             <button
               type="button"
               onClick={() => copyLink(msg.link)}
-              className="rounded bg-amber-700 px-2 py-1 text-[11px] font-medium text-white hover:bg-amber-800"
+              className="rounded bg-amber-700 px-2 py-1 text-[11px] font-medium text-[rgb(var(--inverse-ink))] hover:bg-amber-800"
             >
               {copied ? "Đã sao chép ✓" : "Sao chép"}
             </button>

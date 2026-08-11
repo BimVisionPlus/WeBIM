@@ -133,7 +133,7 @@ export default function DataProtectionPage() {
       </p>
 
       <hr />
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[rgb(var(--muted))]">
         Tuân thủ: NĐ 13/2023/NĐ-CP · Luật ATTT 2018 · Luật ANM 2018 · NĐ 53/2022 · Bộ Công an A05.
       </p>
     </>

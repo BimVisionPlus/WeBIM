@@ -24,11 +24,11 @@ export function RowActions({ id, status, pctComplete, initial }: { id: string; s
   }
   return (
     <span className="inline-flex items-center gap-2" data-testid={`row-actions-${id}`}>
-      <select value={s} onChange={(e) => { setS(e.target.value); patch({ status: e.target.value }); }} disabled={busy} className="rounded border border-slate-300 px-1 py-0.5 text-[10px]">
+      <select value={s} onChange={(e) => { setS(e.target.value); patch({ status: e.target.value }); }} disabled={busy} className="rounded border border-[rgb(var(--line-2))] px-1 py-0.5 text-[10px]">
         {statuses.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}
       </select>
-      <input value={pct} onChange={(e) => setPct(e.target.value.replace(/\D/g, ""))} onBlur={() => { const n = Number(pct); if (!isNaN(n) && n !== Math.round(pctComplete)) patch({ pctComplete: n }); }} className="w-10 rounded border border-slate-300 px-1 py-0.5 text-[10px]" title="% hoàn thành" />
-      <span className="text-[10px] text-slate-500">%</span>
+      <input value={pct} onChange={(e) => setPct(e.target.value.replace(/\D/g, ""))} onBlur={() => { const n = Number(pct); if (!isNaN(n) && n !== Math.round(pctComplete)) patch({ pctComplete: n }); }} className="w-10 rounded border border-[rgb(var(--line-2))] px-1 py-0.5 text-[10px]" title="% hoàn thành" />
+      <span className="text-[10px] text-[rgb(var(--muted))]">%</span>
       <GenericEditDrawer
         url={`/api/contractorassigns/${id}`}
         title="Sửa bảng giao khoán"

@@ -12,5 +12,5 @@ export default async function CanvasPage({ params }: { params: { projectId: stri
   const { prisma } = await import("@atlas/db");
   const belongs = await prisma.sheet.count({ where: { id: params.sheetId, drawingSet: { projectId: params.projectId } } });
   if (!belongs) notFound();
-  return <div className="space-y-3"><div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold text-slate-900">Canvas bản vẽ</h2><p className="text-sm text-slate-500">Review, markup và issue ngay trong trình duyệt.</p></div><ShareButton sheetId={params.sheetId} /></div><SheetCanvas sheet={data.sheet} initialMarkups={data.markups} createEndpoint={`/api/canvas/sheets/${params.sheetId}/markups`} presenceEndpoint={`/api/canvas/sheets/${params.sheetId}/presence`} canComment /></div>;
+  return <div className="space-y-3"><div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold text-[rgb(var(--ink))]">Canvas bản vẽ</h2><p className="text-sm text-[rgb(var(--muted))]">Review, markup và issue ngay trong trình duyệt.</p></div><ShareButton sheetId={params.sheetId} /></div><SheetCanvas sheet={data.sheet} initialMarkups={data.markups} createEndpoint={`/api/canvas/sheets/${params.sheetId}/markups`} presenceEndpoint={`/api/canvas/sheets/${params.sheetId}/presence`} canComment /></div>;
 }

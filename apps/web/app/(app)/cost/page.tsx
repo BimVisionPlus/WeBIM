@@ -63,13 +63,13 @@ export default async function CostPage({ searchParams }: { searchParams: Promise
   return (
     <AecModuleShell group="Cost" name="Atlas Cost — Định mức · EVM · ML cảnh báo overrun" subtitle="Tra cứu định mức TT 10/2019, lập dự toán tự động, dự báo cost overrun 2-4 tuần trước theo CPI/SPI + ML.">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Mã định mức</div><div className="mt-1 text-2xl font-bold text-blue-700">{normCount}</div><div className="text-[10px] text-slate-500">TT 10/2019 + bổ sung</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đơn giá đã cập nhật</div><div className="mt-1 text-2xl font-bold text-violet-700">{priceCount}</div><div className="text-[10px] text-slate-500">theo tỉnh × kỳ</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng BAC theo dõi</div><div className="mt-1 text-xl font-bold text-emerald-700">{formatVnd(BigInt(totalBac))}</div><div className="text-[10px] text-slate-500">{projects.length} dự án</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Cảnh báo overrun đang mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openSignals}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Mã định mức</div><div className="mt-1 text-2xl font-bold text-blue-700">{normCount}</div><div className="text-[10px] text-[rgb(var(--muted))]">TT 10/2019 + bổ sung</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đơn giá đã cập nhật</div><div className="mt-1 text-2xl font-bold text-violet-700">{priceCount}</div><div className="text-[10px] text-[rgb(var(--muted))]">theo tỉnh × kỳ</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng BAC theo dõi</div><div className="mt-1 text-xl font-bold text-emerald-700">{formatVnd(BigInt(totalBac))}</div><div className="text-[10px] text-[rgb(var(--muted))]">{projects.length} dự án</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Cảnh báo overrun đang mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{openSignals}</div></CardBody></Card>
       </div>
 
-      <nav className="mt-6 flex flex-wrap gap-1 border-b border-slate-200">
+      <nav className="mt-6 flex flex-wrap gap-1 border-b border-[rgb(var(--line))]">
         {[
           { key: "all", label: "Tổng quan" },
           { key: "norm", label: "Tra cứu định mức" },
@@ -78,8 +78,8 @@ export default async function CostPage({ searchParams }: { searchParams: Promise
         ].map((t) => {
           const isActive = t.key === tab;
           return (
-            <Link key={t.key} href={`/cost?tab=${t.key}`} className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-slate-600 hover:text-slate-900"}`}>
-              {t.label}{typeof t.count === "number" && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{t.count}</span>}
+            <Link key={t.key} href={`/cost?tab=${t.key}`} className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"}`}>
+              {t.label}{typeof t.count === "number" && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-[rgb(var(--raised))] text-[rgb(var(--muted))]"}`}>{t.count}</span>}
             </Link>
           );
         })}
@@ -106,19 +106,19 @@ export default async function CostPage({ searchParams }: { searchParams: Promise
             <CardHeader><CardTitle>Lịch sử cảnh báo overrun ({signals.length})</CardTitle></CardHeader>
             <CardBody className="p-0">
               {signals.length === 0 ? (
-                <div className="p-8 text-center text-sm text-slate-500">Chưa có cảnh báo overrun nào. Chạy "Forecast" để bắt đầu.</div>
+                <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có cảnh báo overrun nào. Chạy "Forecast" để bắt đầu.</div>
               ) : (
                 <table className="w-full text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                  <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                     <tr><th className="p-2 text-left">Ngày</th><th className="p-2 text-left">Dự án</th><th className="p-2 text-left">Mức độ</th><th className="p-2 text-left">Hạng mục</th><th className="p-2 text-right">Baseline (BAC)</th><th className="p-2 text-right">Forecast (EAC)</th><th className="p-2 text-right">Δ%</th><th className="p-2 text-left">Trạng thái</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[rgb(var(--line))]">
                     {signals.map((s) => {
                       const m = sevMeta[s.severity] ?? { vn: s.severity, variant: "neutral" as const };
                       return (
-                        <tr key={s.id} className="hover:bg-slate-50">
+                        <tr key={s.id} className="hover:bg-[rgb(var(--raised))]">
                           <td className="p-2 text-xs">{formatDateVn(s.createdAt)}</td>
-                          <td className="p-2"><div className="font-mono text-xs">{s.project.key}</div><div className="text-[11px] text-slate-500">{s.project.name}</div></td>
+                          <td className="p-2"><div className="font-mono text-xs">{s.project.key}</div><div className="text-[11px] text-[rgb(var(--muted))]">{s.project.name}</div></td>
                           <td className="p-2"><Badge variant={m.variant}>{m.vn}</Badge></td>
                           <td className="p-2 text-xs">{s.category ?? "—"}</td>
                           <td className="p-2 text-right text-xs">{formatVnd(s.baselineVnd)}</td>

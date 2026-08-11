@@ -58,10 +58,10 @@ export default async function StakeholdersPage() {
       subtitle="Quan hệ cơ quan QLNN: Sở XD, QHKT, BXD, KBNN, PC07, UBND. Văn bản đi-đến + lịch hẹn + hồ sơ pháp lý theo agency."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Cơ quan</div><div className="mt-1 text-2xl font-bold">{agencies.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Văn bản đang xử lý</div><div className="mt-1 text-2xl font-bold text-amber-700">{pendingDocs}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Quá hạn trả lời</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdueDocs}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Lịch hẹn sắp tới</div><div className="mt-1 text-2xl font-bold text-violet-700">{upcomingAppts}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Cơ quan</div><div className="mt-1 text-2xl font-bold">{agencies.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Văn bản đang xử lý</div><div className="mt-1 text-2xl font-bold text-amber-700">{pendingDocs}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Quá hạn trả lời</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdueDocs}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Lịch hẹn sắp tới</div><div className="mt-1 text-2xl font-bold text-violet-700">{upcomingAppts}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateDocForm agencies={agencyOpts} projects={allProjects} /></div>
@@ -70,10 +70,10 @@ export default async function StakeholdersPage() {
         <CardHeader><CardTitle>Cơ quan QLNN ({agencies.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {agencies.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có cơ quan QLNN nào. Bấm “Ghi nhận văn bản” để thêm liên hệ Sở XD / KBNN / PC07…</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có cơ quan QLNN nào. Bấm “Ghi nhận văn bản” để thêm liên hệ Sở XD / KBNN / PC07…</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Tên</th>
@@ -83,9 +83,9 @@ export default async function StakeholdersPage() {
                   <th className="p-2 text-right">Lịch hẹn</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {agencies.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50">
+                  <tr key={a.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-mono text-xs">{a.code}</td>
                     <td className="p-2 text-xs">{a.name}</td>
                     <td className="p-2 text-xs">{typeLabel[a.agencyType]}</td>
@@ -104,20 +104,20 @@ export default async function StakeholdersPage() {
         <Card>
           <CardHeader><CardTitle>Văn bản đi-đến ({docs.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
-            {docs.length === 0 ? <div className="p-6 text-center text-sm text-slate-500">Chưa có văn bản.</div> : (
+            {docs.length === 0 ? <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có văn bản.</div> : (
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                   <tr><th className="p-2 text-left">Số</th><th className="p-2 text-left">Hướng</th><th className="p-2 text-left">Chủ đề</th><th className="p-2 text-left">Hạn</th><th className="p-2 text-left">Thao tác</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[rgb(var(--line))]">
                   {docs.map((d) => {
                     const dm = dirLabel[d.direction] ?? { vn: d.direction, variant: "neutral" as const };
                     const overdue = d.dueAt && d.dueAt < new Date() && !d.respondedAt;
                     return (
-                      <tr key={d.id} className={`hover:bg-slate-50 ${overdue ? "bg-rose-50" : ""}`} data-testid={`doc-${d.docNo}`}>
-                        <td className="p-2 font-mono text-xs">{d.docNo}<div className="text-[10px] text-slate-500">{formatDateVn(d.docDate)}</div></td>
+                      <tr key={d.id} className={`hover:bg-[rgb(var(--raised))] ${overdue ? "bg-rose-50" : ""}`} data-testid={`doc-${d.docNo}`}>
+                        <td className="p-2 font-mono text-xs">{d.docNo}<div className="text-[10px] text-[rgb(var(--muted))]">{formatDateVn(d.docDate)}</div></td>
                         <td className="p-2"><Badge variant={dm.variant}>{dm.vn}</Badge></td>
-                        <td className="p-2 text-xs"><div className="font-medium line-clamp-1">{d.subject}</div><div className="text-[10px] text-slate-500">{d.agency.name}</div></td>
+                        <td className="p-2 text-xs"><div className="font-medium line-clamp-1">{d.subject}</div><div className="text-[10px] text-[rgb(var(--muted))]">{d.agency.name}</div></td>
                         <td className="p-2 text-xs">{d.dueAt ? <span className={overdue ? "text-rose-700" : ""}>{formatDateVn(d.dueAt)}</span> : "—"}</td>
                         <td className="p-2"><RespondAction id={d.id} hasResponded={!!d.respondedAt} /></td>
                       </tr>
@@ -132,15 +132,15 @@ export default async function StakeholdersPage() {
         <Card>
           <CardHeader><CardTitle>Lịch hẹn ({appts.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
-            {appts.length === 0 ? <div className="p-6 text-center text-sm text-slate-500">Không có lịch hẹn 7 ngày qua/tới.</div> : (
+            {appts.length === 0 ? <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Không có lịch hẹn 7 ngày qua/tới.</div> : (
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                   <tr><th className="p-2 text-left">Thời gian</th><th className="p-2 text-left">Cơ quan</th><th className="p-2 text-left">Mục đích</th><th className="p-2 text-left">TT</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[rgb(var(--line))]">
                   {appts.map((a) => (
-                    <tr key={a.id} className="hover:bg-slate-50">
-                      <td className="p-2 text-xs">{formatDateVn(a.scheduledAt)}<div className="text-[10px] text-slate-500">{a.scheduledAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ({a.duration}p)</div></td>
+                    <tr key={a.id} className="hover:bg-[rgb(var(--raised))]">
+                      <td className="p-2 text-xs">{formatDateVn(a.scheduledAt)}<div className="text-[10px] text-[rgb(var(--muted))]">{a.scheduledAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ({a.duration}p)</div></td>
                       <td className="p-2 text-xs">{a.agency.name}</td>
                       <td className="p-2 text-xs"><div className="line-clamp-1">{a.purpose}</div></td>
                       <td className="p-2 text-xs">{a.status === "DONE" ? <Badge variant="success">Xong</Badge> : a.status === "CANCELLED" ? <Badge variant="neutral">Huỷ</Badge> : <Badge variant="info">Đặt lịch</Badge>}</td>

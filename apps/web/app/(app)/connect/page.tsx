@@ -75,7 +75,7 @@ const STATUS_META: Record<string, { vn: string; cls: string }> = {
   live: { vn: "Production", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" },
   beta: { vn: "Beta", cls: "bg-blue-100 text-blue-800 border-blue-300" },
   wip: { vn: "Đang xây", cls: "bg-amber-100 text-amber-800 border-amber-300" },
-  planned: { vn: "Sắp có", cls: "bg-slate-100 text-slate-700 border-slate-300" },
+  planned: { vn: "Sắp có", cls: "bg-[rgb(var(--raised))] text-[rgb(var(--ink-2))] border-[rgb(var(--line-2))]" },
 };
 
 export default function ConnectPage() {
@@ -85,17 +85,17 @@ export default function ConnectPage() {
   return (
     <AecModuleShell group="Connect" name="Atlas Connect — Integrations marketplace" subtitle={`${total} tích hợp với ERP VN (Bravo/FAST/Mego/MISA), banking (BIDV/Vietinbank/ZaloPay/MoMo), e-Gov (TCT/BHXH/DVCQG), BIM (ACC/Forge/Trimble), comm (Zalo OA/Stringee/Resend). ${live} đã live.`}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng integration</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Production-ready</div><div className="mt-1 text-2xl font-bold text-emerald-700">{live}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Beta</div><div className="mt-1 text-2xl font-bold text-blue-700">{INTEGRATIONS.reduce((s, g) => s + g.items.filter((i) => i.status === "beta").length, 0)}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang xây / sắp có</div><div className="mt-1 text-2xl font-bold text-amber-700">{INTEGRATIONS.reduce((s, g) => s + g.items.filter((i) => i.status === "wip" || i.status === "planned").length, 0)}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng integration</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Production-ready</div><div className="mt-1 text-2xl font-bold text-emerald-700">{live}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Beta</div><div className="mt-1 text-2xl font-bold text-blue-700">{INTEGRATIONS.reduce((s, g) => s + g.items.filter((i) => i.status === "beta").length, 0)}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang xây / sắp có</div><div className="mt-1 text-2xl font-bold text-amber-700">{INTEGRATIONS.reduce((s, g) => s + g.items.filter((i) => i.status === "wip" || i.status === "planned").length, 0)}</div></CardBody></Card>
       </div>
 
       {INTEGRATIONS.map((g) => (
         <Card key={g.group} className="mt-4">
-          <CardHeader><CardTitle>{g.group} <span className="text-sm font-normal text-slate-400">({g.items.length})</span></CardTitle></CardHeader>
+          <CardHeader><CardTitle>{g.group} <span className="text-sm font-normal text-[rgb(var(--muted-2))]">({g.items.length})</span></CardTitle></CardHeader>
           <CardBody className="p-0">
-            <div className="grid grid-cols-1 divide-y divide-slate-100 md:grid-cols-2 md:divide-y-0 md:divide-x">
+            <div className="grid grid-cols-1 divide-y divide-[rgb(var(--line))] md:grid-cols-2 md:divide-y-0 md:divide-x">
               {g.items.map((i) => {
                 const m = STATUS_META[i.status] ?? STATUS_META.planned!;
                 return (
@@ -103,12 +103,12 @@ export default function ConnectPage() {
                     <div className="text-3xl">{i.icon}</div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-semibold text-slate-900">{i.name}</div>
+                        <div className="text-sm font-semibold text-[rgb(var(--ink))]">{i.name}</div>
                         <span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-medium ${m.cls}`}>{m.vn}</span>
                         {i.oauth && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">OAuth</span>}
                       </div>
-                      <div className="mt-0.5 text-[11px] text-slate-500">{i.vendor}</div>
-                      <div className="mt-1 text-xs text-slate-700">{i.what}</div>
+                      <div className="mt-0.5 text-[11px] text-[rgb(var(--muted))]">{i.vendor}</div>
+                      <div className="mt-1 text-xs text-[rgb(var(--ink-2))]">{i.what}</div>
                     </div>
                   </div>
                 );
@@ -120,7 +120,7 @@ export default function ConnectPage() {
 
       <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50/40 p-4">
         <CardTitle>Yêu cầu integration mới?</CardTitle>
-        <p className="mt-2 text-sm text-slate-700">
+        <p className="mt-2 text-sm text-[rgb(var(--ink-2))]">
           Liên hệ <a href="mailto:partners@aecplatform.vn" className="text-blue-600 underline">partners@aecplatform.vn</a> để propose integration mới. SDK + webhook docs có sẵn cho partner build extension. Enterprise tier có custom connector 50h/năm bundled.
         </p>
       </div>

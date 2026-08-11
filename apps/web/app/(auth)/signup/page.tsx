@@ -44,15 +44,15 @@ export default function SignupPage() {
           <Field label="Họ và tên" value={name} setValue={setName} type="text" autoComplete="name" />
           <Field label="Email" value={email} setValue={setEmail} type="email" autoComplete="email" />
           <Field label="Mật khẩu" value={password} setValue={setPassword} type="password" autoComplete="new-password" />
-          <p className="text-xs text-slate-500">Tối thiểu 8 ký tự, gồm chữ và số.</p>
+          <p className="text-xs text-[rgb(var(--muted))]">Tối thiểu 8 ký tự, gồm chữ và số.</p>
           {err && <div className="rounded bg-rose-50 px-3 py-2 text-xs text-rose-700">{err}</div>}
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? "Đang tạo…" : "Tạo tài khoản"}
           </Button>
-          <div className="text-xs text-slate-500 text-center">
+          <div className="text-xs text-[rgb(var(--muted))] text-center">
             Đã có tài khoản? <Link href="/signin" className="text-blue-600">Đăng nhập</Link>
           </div>
-          <p className="pt-2 text-center text-[11px] text-slate-400">
+          <p className="pt-2 text-center text-[11px] text-[rgb(var(--muted-2))]">
             Bằng việc tạo tài khoản, bạn đồng ý với{" "}
             <Link href="/terms" className="underline">Điều khoản</Link> và{" "}
             <Link href="/privacy" className="underline">Chính sách bảo mật</Link>.
@@ -66,9 +66,9 @@ export default function SignupPage() {
 function Field(props: { label: string; value: string; setValue: (s: string) => void; type: string; autoComplete?: string }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{props.label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{props.label}</span>
       <input
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         type={props.type}
         autoComplete={props.autoComplete}
         required

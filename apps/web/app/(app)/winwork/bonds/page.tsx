@@ -41,7 +41,7 @@ export default async function BondsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Bảo lãnh</h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-[rgb(var(--muted))]">
             BLDT · BL thực hiện · BL tạm ứng · BL bảo hành (Luật ĐT 22/2023 Điều 14, 75)
           </p>
         </div>
@@ -51,19 +51,19 @@ export default async function BondsPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tổng bảo lãnh</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tổng bảo lãnh</div>
             <div className="mt-1 text-2xl font-bold">{bonds.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Hết hạn ≤ 30 ngày</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Hết hạn ≤ 30 ngày</div>
             <div className="mt-1 text-2xl font-bold text-amber-700">{expiring30.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Đã hết hạn (chưa xử lý)</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Đã hết hạn (chưa xử lý)</div>
             <div className="mt-1 text-2xl font-bold text-rose-700">{expired.length}</div>
           </CardBody>
         </Card>
@@ -75,10 +75,10 @@ export default async function BondsPage() {
         </CardHeader>
         <CardBody className="p-0">
           {bonds.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Chưa có bảo lãnh nào.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có bảo lãnh nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-3 text-left">Loại</th>
                   <th className="p-3 text-left">HSDT</th>
@@ -89,11 +89,11 @@ export default async function BondsPage() {
                   <th className="p-3 text-left">Trạng thái</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {bonds.map((b) => {
                   const overdue = b.status === "ACTIVE" && b.expiresAt.getTime() < now;
                   return (
-                    <tr key={b.id} className="hover:bg-slate-50">
+                    <tr key={b.id} className="hover:bg-[rgb(var(--raised))]">
                       <td className="p-3">
                         <Badge variant="neutral">{b.type}</Badge>
                       </td>
@@ -101,14 +101,14 @@ export default async function BondsPage() {
                         <Link href={`/winwork/bids/${b.bid.id}`} className="font-mono text-xs text-blue-700 hover:underline">
                           {b.bid.key}
                         </Link>
-                        <div className="text-[11px] text-slate-500 truncate max-w-[260px]">{b.bid.title}</div>
+                        <div className="text-[11px] text-[rgb(var(--muted))] truncate max-w-[260px]">{b.bid.title}</div>
                       </td>
                       <td className="p-3">{b.issuerBank}</td>
                       <td className="p-3 font-mono text-xs">{b.bondNumber}</td>
                       <td className="p-3 text-right font-medium">{formatVnd(b.amountVnd)}</td>
                       <td className="p-3 text-xs">
                         {formatDateVn(b.issuedAt)} → {formatDateVn(b.expiresAt)}
-                        <div className={overdue ? "text-rose-700" : "text-slate-500"}>
+                        <div className={overdue ? "text-rose-700" : "text-[rgb(var(--muted))]"}>
                           {relativeDateVn(b.expiresAt)}
                         </div>
                       </td>

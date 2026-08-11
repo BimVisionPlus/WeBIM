@@ -14,7 +14,7 @@ export function RowActions({ id, state }: { id: string; state: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const actions = ACTIONS[state] ?? [];
-  if (actions.length === 0) return <span className="text-[10px] text-slate-400">—</span>;
+  if (actions.length === 0) return <span className="text-[10px] text-[rgb(var(--muted-2))]">—</span>;
 
   async function go(action: string) {
     setBusy(action); setErr(null);
@@ -30,7 +30,7 @@ export function RowActions({ id, state }: { id: string; state: string }) {
     <div className="flex flex-wrap gap-1" data-testid={`actions-${id}`}>
       {actions.map((a) => (
         <button key={a.action} onClick={() => go(a.action)} disabled={busy === a.action}
-          className={`rounded px-2 py-0.5 text-[10px] font-medium ${a.tone === "danger" ? "bg-rose-100 text-rose-800" : "bg-blue-600 text-white"} disabled:opacity-50`}
+          className={`rounded px-2 py-0.5 text-[10px] font-medium ${a.tone === "danger" ? "bg-rose-100 text-rose-800" : "bg-blue-600 text-[rgb(var(--inverse-ink))]"} disabled:opacity-50`}
           data-testid={`action-${a.action}`}>{busy === a.action ? "…" : a.label}</button>
       ))}
       {err && <span className="text-[10px] text-rose-700">{err}</span>}

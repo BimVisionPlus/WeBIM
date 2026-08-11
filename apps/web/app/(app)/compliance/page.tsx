@@ -77,13 +77,13 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
   return (
     <AecModuleShell group="Compliance" name="Atlas Compliance — TCVN/QCVN · Audit prep · Hồ sơ hoàn công" subtitle="Engine tuân thủ TCVN 5574/2737, QCVN 06 PCCC, QCVN 04 chung cư; chuẩn bị thẩm tra PC07 + Sở XD; tự sinh hồ sơ hoàn công bằng AI.">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tiêu chuẩn áp dụng</div><div className="mt-1 text-2xl font-bold text-blue-700">{standards.length}</div><div className="text-[10px] text-slate-500">TCVN + QCVN</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Audit prep đang mở</div><div className="mt-1 text-2xl font-bold text-amber-700">{openPrepCount}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Audit đã đạt</div><div className="mt-1 text-2xl font-bold text-emerald-700">{passedPrepCount}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng điều khoản</div><div className="mt-1 text-2xl font-bold text-violet-700">{standards.reduce((s, x) => s + x._count.rules, 0)}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tiêu chuẩn áp dụng</div><div className="mt-1 text-2xl font-bold text-blue-700">{standards.length}</div><div className="text-[10px] text-[rgb(var(--muted))]">TCVN + QCVN</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Audit prep đang mở</div><div className="mt-1 text-2xl font-bold text-amber-700">{openPrepCount}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Audit đã đạt</div><div className="mt-1 text-2xl font-bold text-emerald-700">{passedPrepCount}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng điều khoản</div><div className="mt-1 text-2xl font-bold text-violet-700">{standards.reduce((s, x) => s + x._count.rules, 0)}</div></CardBody></Card>
       </div>
 
-      <nav className="mt-6 flex flex-wrap gap-1 border-b border-slate-200">
+      <nav className="mt-6 flex flex-wrap gap-1 border-b border-[rgb(var(--line))]">
         {[
           { key: "all", label: "Tổng quan" },
           { key: "standards", label: "Tiêu chuẩn TCVN/QCVN", count: standards.length },
@@ -92,8 +92,8 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
         ].map((t) => {
           const isActive = t.key === tab;
           return (
-            <Link key={t.key} href={`/compliance?tab=${t.key}`} className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-slate-600 hover:text-slate-900"}`}>
-              {t.label}{typeof t.count === "number" && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{t.count}</span>}
+            <Link key={t.key} href={`/compliance?tab=${t.key}`} className={`relative -mb-px px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-blue-600 text-blue-700" : "text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]"}`}>
+              {t.label}{typeof t.count === "number" && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-blue-100 text-blue-700" : "bg-[rgb(var(--raised))] text-[rgb(var(--muted))]"}`}>{t.count}</span>}
             </Link>
           );
         })}
@@ -104,18 +104,18 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
           <CardHeader><CardTitle>Tiêu chuẩn TCVN/QCVN áp dụng</CardTitle></CardHeader>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left">Mã</th><th className="p-2 text-left">Loại</th><th className="p-2 text-left">Tiêu đề</th><th className="p-2 text-left">Cơ quan ban hành</th><th className="p-2 text-right">Điều khoản</th><th className="p-2 text-left">Tags</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {standards.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50">
+                  <tr key={s.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-mono text-xs font-medium">{s.code}</td>
                     <td className="p-2"><Badge variant={s.kind === "QCVN" ? "danger" : "info"}>{s.kind}</Badge></td>
                     <td className="p-2 text-xs">{s.title}</td>
-                    <td className="p-2 text-xs text-slate-600">{s.issuedBy ?? "—"}</td>
+                    <td className="p-2 text-xs text-[rgb(var(--muted))]">{s.issuedBy ?? "—"}</td>
                     <td className="p-2 text-right text-xs">{s._count.rules}</td>
-                    <td className="p-2"><div className="flex flex-wrap gap-1">{s.tags.slice(0, 3).map((t) => <span key={t} className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-700">{t}</span>)}</div></td>
+                    <td className="p-2"><div className="flex flex-wrap gap-1">{s.tags.slice(0, 3).map((t) => <span key={t} className="rounded bg-[rgb(var(--raised))] px-1.5 py-0.5 text-[10px] text-[rgb(var(--ink-2))]">{t}</span>)}</div></td>
                   </tr>
                 ))}
               </tbody>
@@ -129,29 +129,29 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
           <CardHeader><CardTitle>Audit prep — chuẩn bị thẩm tra ({prepRows.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {prepRows.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">Chưa có audit prep nào. Bấm "Tạo prep mới" trong project.</div>
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có audit prep nào. Bấm "Tạo prep mới" trong project.</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                   <tr><th className="p-2 text-left">Lịch</th><th className="p-2 text-left">Dự án</th><th className="p-2 text-left">Loại</th><th className="p-2 text-left">Tiêu đề</th><th className="p-2 text-left">Đoàn kiểm</th><th className="p-2 text-right">Mức sẵn sàng</th><th className="p-2 text-left">Trạng thái</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[rgb(var(--line))]">
                   {prepRows.map((p) => {
                     const km = kindLabel[p.kind] ?? { vn: p.kind, variant: "neutral" as const };
                     const sm = stateMeta[p.state] ?? { vn: p.state, variant: "neutral" as const };
                     return (
-                      <tr key={p.id} className="hover:bg-slate-50" data-testid={`row-prep-${p.id}`}>
+                      <tr key={p.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-prep-${p.id}`}>
                         <td className="p-2 text-xs">{p.scheduledAt ? formatDateVn(p.scheduledAt) : "—"}</td>
-                        <td className="p-2"><div className="font-mono text-xs">{p.project.key}</div><div className="text-[10px] text-slate-500">{p.project.name}</div></td>
+                        <td className="p-2"><div className="font-mono text-xs">{p.project.key}</div><div className="text-[10px] text-[rgb(var(--muted))]">{p.project.name}</div></td>
                         <td className="p-2"><Badge variant={km.variant}>{km.vn}</Badge></td>
                         <td className="p-2 text-xs"><div className="font-medium">{p.title}</div></td>
-                        <td className="p-2 text-xs text-slate-600">{p.inspectorOrg ?? "—"}</td>
+                        <td className="p-2 text-xs text-[rgb(var(--muted))]">{p.inspectorOrg ?? "—"}</td>
                         <td className="p-2 text-right">
                           <div className="inline-flex items-center gap-2">
-                            <div className="h-1.5 w-20 rounded-full bg-slate-200 overflow-hidden"><div className={`h-full ${p.readyPct >= 80 ? "bg-emerald-500" : p.readyPct >= 50 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${p.readyPct}%` }} /></div>
+                            <div className="h-1.5 w-20 rounded-full bg-[rgb(var(--line))] overflow-hidden"><div className={`h-full ${p.readyPct >= 80 ? "bg-emerald-500" : p.readyPct >= 50 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${p.readyPct}%` }} /></div>
                             <span className="text-xs font-medium">{p.readyPct}%</span>
                           </div>
-                          <div className="text-[10px] text-slate-500">{p._count.items} items</div>
+                          <div className="text-[10px] text-[rgb(var(--muted))]">{p._count.items} items</div>
                         </td>
                         <td className="p-2"><Badge variant={sm.variant}>{sm.vn}</Badge></td>
                       </tr>

@@ -23,7 +23,7 @@ export default async function ClaimsPage({ params }: { params: { projectId: stri
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Hồ sơ khiếu nại / EOT</h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[rgb(var(--muted))]">
             NĐ 37/2015/NĐ-CP Điều 44–45 — khiếu nại và giải quyết tranh chấp hợp đồng xây dựng.
             Nhật ký thi công, sổ TVGS, RFI là xương sống chứng cứ.
           </p>
@@ -42,13 +42,13 @@ export default async function ClaimsPage({ params }: { params: { projectId: stri
               <Card className="transition hover:ring-2 hover:ring-blue-200">
                 <CardBody className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs text-slate-500">{c.key}</span>
-                    <span className="text-sm font-semibold text-slate-800">{c.title}</span>
+                    <span className="font-mono text-xs text-[rgb(var(--muted))]">{c.key}</span>
+                    <span className="text-sm font-semibold text-[rgb(var(--ink-2))]">{c.title}</span>
                     <span className="ml-auto flex items-center gap-2">
                       <Badge variant={stateBadgeVariant(c.state)}>{CLAIM_STATE_LABEL[c.state] ?? c.state}</Badge>
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-[rgb(var(--muted))]">
                     <Badge variant="violet">{CLAIM_TYPE_LABEL[c.type] ?? c.type}</Badge>
                     <Badge variant="neutral">{CLAIM_DIRECTION_LABEL[c.direction] ?? c.direction}</Badge>
                     {c.amountVnd != null && (
@@ -61,7 +61,7 @@ export default async function ClaimsPage({ params }: { params: { projectId: stri
                       </Badge>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-2 text-xs text-slate-500">
+                  <div className="flex flex-wrap gap-3 border-t border-[rgb(var(--line))] pt-2 text-xs text-[rgb(var(--muted))]">
                     <span>{c._count.events} sự kiện</span>
                     <span>{c._count.evidence} chứng cứ</span>
                     <span>{c._count.legalBases} căn cứ pháp lý</span>
@@ -75,7 +75,7 @@ export default async function ClaimsPage({ params }: { params: { projectId: stri
         })}
         {claims.length === 0 && (
           <Card>
-            <CardBody className="py-10 text-center text-sm text-slate-500">
+            <CardBody className="py-10 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có hồ sơ khiếu nại nào. Tạo hồ sơ khi phát sinh sự kiện cần bảo lưu quyền khiếu nại
               (chậm bàn giao mặt bằng, thay đổi thiết kế, chậm thanh toán…).
             </CardBody>

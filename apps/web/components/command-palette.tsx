@@ -76,16 +76,16 @@ export function CommandPalette() {
 
   if (!open) return (
     // floating hint button bottom-right for discoverability
-    <button onClick={() => setOpen(true)} className="fixed bottom-4 right-4 z-40 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow hover:bg-slate-50" title="Cmd/Ctrl+K — tìm xuyên module" data-testid="open-command-palette">
+    <button onClick={() => setOpen(true)} className="fixed bottom-4 right-4 z-40 rounded-full border border-[rgb(var(--line-2))] bg-[rgb(var(--surface))] px-3 py-2 text-xs font-medium text-[rgb(var(--muted))] shadow hover:bg-[rgb(var(--raised))]" title="Cmd/Ctrl+K — tìm xuyên module" data-testid="open-command-palette">
       🔍 ⌘K
     </button>
   );
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-start bg-slate-900/40 p-4 pt-[12vh]" onClick={() => setOpen(false)} data-testid="command-palette">
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-xl rounded-lg bg-white shadow-2xl ring-1 ring-slate-200">
-        <div className="flex items-center gap-2 border-b border-slate-200 px-4">
-          <span className="text-slate-400">🔍</span>
+    <div className="fixed inset-0 z-50 grid place-items-start bg-[rgb(var(--inverse-bg))]/40 p-4 pt-[12vh]" onClick={() => setOpen(false)} data-testid="command-palette">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-xl rounded-lg bg-[rgb(var(--surface))] shadow-2xl ring-1 ring-[rgb(var(--line-2))]">
+        <div className="flex items-center gap-2 border-b border-[rgb(var(--line))] px-4">
+          <span className="text-[rgb(var(--muted-2))]">🔍</span>
           <input
             ref={inputRef}
             value={q}
@@ -95,37 +95,37 @@ export function CommandPalette() {
             className="flex-1 border-0 bg-transparent py-3 text-sm focus:outline-none"
             data-testid="command-input"
           />
-          {busy && <span className="text-[10px] text-slate-400">Đang tìm…</span>}
+          {busy && <span className="text-[10px] text-[rgb(var(--muted-2))]">Đang tìm…</span>}
           {!busy && aiReranked && hits.length > 0 && <span className="text-[10px] font-medium text-violet-600" title="bge-m3 rerank">AI</span>}
         </div>
         <div className="max-h-[60vh] overflow-y-auto p-1">
           {q.trim().length < 2 ? (
-            <div className="px-3 py-6 text-center text-xs text-slate-400">
+            <div className="px-3 py-6 text-center text-xs text-[rgb(var(--muted-2))]">
               Gõ ít nhất 2 ký tự để tìm xuyên module.<br />
               <span className="mt-2 inline-block">⌘K mở · ↑↓ chọn · Enter mở · Esc đóng</span>
             </div>
           ) : hits.length === 0 ? (
-            <div className="px-3 py-6 text-center text-xs text-slate-400">{busy ? "…" : "Không tìm thấy."}</div>
+            <div className="px-3 py-6 text-center text-xs text-[rgb(var(--muted-2))]">{busy ? "…" : "Không tìm thấy."}</div>
           ) : (
             hits.map((h, i) => (
               <button
                 key={`${h.kind}-${h.id}`}
                 onClick={() => go(h)}
                 onMouseEnter={() => setSel(i)}
-                className={`flex w-full items-center gap-3 rounded px-3 py-2 text-left text-sm ${i === sel ? "bg-blue-50 text-blue-900" : "hover:bg-slate-50"}`}
+                className={`flex w-full items-center gap-3 rounded px-3 py-2 text-left text-sm ${i === sel ? "bg-blue-50 text-blue-900" : "hover:bg-[rgb(var(--raised))]"}`}
                 data-testid={`palette-hit-${i}`}
               >
                 <span className="text-base">{h.icon}</span>
                 <span className="flex-1 min-w-0">
                   <span className="block truncate font-medium">{h.title}</span>
-                  {h.subtitle && <span className="block truncate text-[11px] text-slate-500">{h.subtitle}</span>}
+                  {h.subtitle && <span className="block truncate text-[11px] text-[rgb(var(--muted))]">{h.subtitle}</span>}
                 </span>
-                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">{KIND_LABEL[h.kind] ?? h.kind}</span>
+                <span className="rounded bg-[rgb(var(--raised))] px-1.5 py-0.5 text-[10px] text-[rgb(var(--muted))]">{KIND_LABEL[h.kind] ?? h.kind}</span>
               </button>
             ))
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-slate-200 px-3 py-2 text-[10px] text-slate-500">
+        <div className="flex items-center justify-between border-t border-[rgb(var(--line))] px-3 py-2 text-[10px] text-[rgb(var(--muted))]">
           <span>↑↓ chọn · Enter mở · Esc đóng</span>
           <span>AI rerank bge-m3 khi ≥ 2 từ</span>
         </div>

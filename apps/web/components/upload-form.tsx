@@ -75,7 +75,7 @@ export function UploadForm({ projectId }: { projectId: string }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <Field label="Tên hiển thị">
         <input
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="VHGP-S9_Federated_v13.nwd"
@@ -84,7 +84,7 @@ export function UploadForm({ projectId }: { projectId: string }) {
       <div className="grid grid-cols-2 gap-3">
         <Field label="Bộ môn">
           <select
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
             value={discipline}
             onChange={(e) => setDiscipline(e.target.value)}
           >
@@ -99,7 +99,7 @@ export function UploadForm({ projectId }: { projectId: string }) {
         </Field>
         <Field label="Revision">
           <input
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
             value={revision}
             onChange={(e) => setRevision(e.target.value)}
           />
@@ -114,16 +114,16 @@ export function UploadForm({ projectId }: { projectId: string }) {
         />
       </Field>
       {file && (
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-[rgb(var(--muted))]">
           {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB
         </div>
       )}
       {busy && (
         <div>
-          <div className="h-2 w-full rounded bg-slate-100">
+          <div className="h-2 w-full rounded bg-[rgb(var(--raised))]">
             <div className="h-2 rounded bg-blue-500" style={{ width: `${progress}%` }} />
           </div>
-          <div className="mt-1 text-xs text-slate-500">{progress}%</div>
+          <div className="mt-1 text-xs text-[rgb(var(--muted))]">{progress}%</div>
         </div>
       )}
       {err && <div className="text-xs text-rose-600">{err}</div>}
@@ -137,7 +137,7 @@ export function UploadForm({ projectId }: { projectId: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   );

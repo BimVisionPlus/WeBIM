@@ -21,25 +21,25 @@ export default async function ProjectLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
+    <div className="min-h-screen bg-[rgb(var(--raised))]">
+      <header className="bg-[rgb(var(--surface))] border-b border-[rgb(var(--line))]">
         <div className="mx-auto max-w-7xl px-6 py-3">
-          <div className="flex items-center gap-3 text-sm text-slate-500">
-            <a href="https://aecplatform.vn" className="hover:text-slate-900" title="AEC Platform">AEC Platform</a>
+          <div className="flex items-center gap-3 text-sm text-[rgb(var(--muted))]">
+            <a href="https://aecplatform.vn" className="hover:text-[rgb(var(--ink))]" title="AEC Platform">AEC Platform</a>
             <span>/</span>
-            <Link href="/" className="hover:text-slate-900">Atlas</Link>
+            <Link href="/" className="hover:text-[rgb(var(--ink))]">Atlas</Link>
             <span>/</span>
-            <Link href="/" className="hover:text-slate-900">Dự án</Link>
+            <Link href="/" className="hover:text-[rgb(var(--ink))]">Dự án</Link>
             <span>/</span>
-            <span className="font-mono text-slate-700">{project.key}</span>
+            <span className="font-mono text-[rgb(var(--ink-2))]">{project.key}</span>
             <span className="ml-auto flex items-center gap-3 text-xs">
-              <Link href="/settings/team" className="hover:text-slate-900">Đội</Link>
-              <Link href="/settings/ai" className="hover:text-slate-900">AI</Link>
+              <Link href="/settings/team" className="hover:text-[rgb(var(--ink))]">Đội</Link>
+              <Link href="/settings/ai" className="hover:text-[rgb(var(--ink))]">AI</Link>
             </span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
-            <h1 className="text-xl font-semibold text-slate-900">{project.name}</h1>
-            <div className="flex gap-4 text-xs text-slate-500">
+            <h1 className="text-xl font-semibold text-[rgb(var(--ink))]">{project.name}</h1>
+            <div className="flex gap-4 text-xs text-[rgb(var(--muted))]">
               <span>CĐT: {project.ownerOrg.name}</span>
               <span>Giá trị HĐ: {formatVndShort(project.contractValueVnd)}</span>
               <span>Bảo hành: {project.warrantyMonths} tháng</span>

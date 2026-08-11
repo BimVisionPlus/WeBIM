@@ -32,11 +32,11 @@ const DEPT_LABEL: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, { vn: string; color: string }> = {
-  PLANNING: { vn: "Chuẩn bị", color: "bg-slate-100 text-slate-700" },
+  PLANNING: { vn: "Chuẩn bị", color: "bg-[rgb(var(--raised))] text-[rgb(var(--ink-2))]" },
   IN_PROGRESS: { vn: "Đang thi công", color: "bg-amber-100 text-amber-700" },
   HANDOVER: { vn: "Bàn giao", color: "bg-blue-100 text-blue-700" },
   WARRANTY: { vn: "Bảo hành", color: "bg-emerald-100 text-emerald-700" },
-  CLOSED: { vn: "Đóng hồ sơ", color: "bg-slate-100 text-slate-500" },
+  CLOSED: { vn: "Đóng hồ sơ", color: "bg-[rgb(var(--raised))] text-[rgb(var(--muted))]" },
 };
 
 export default async function InsightsPage() {
@@ -107,26 +107,26 @@ export default async function InsightsPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Win rate</div>
-            <div className="mt-1 text-3xl font-bold text-emerald-700">{winRate}<span className="text-base font-normal text-slate-400">%</span></div>
-            <div className="text-[10px] text-slate-500">{bidsByState.reduce((s: number, b: any) => s + b._count._all, 0)} bid all-time</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Win rate</div>
+            <div className="mt-1 text-3xl font-bold text-emerald-700">{winRate}<span className="text-base font-normal text-[rgb(var(--muted-2))]">%</span></div>
+            <div className="text-[10px] text-[rgb(var(--muted))]">{bidsByState.reduce((s: number, b: any) => s + b._count._all, 0)} bid all-time</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Đã trúng</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Đã trúng</div>
             <div className="mt-1 text-xl font-bold text-blue-700">{formatVnd(wonValue)}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Pipeline đang theo</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Pipeline đang theo</div>
             <div className="mt-1 text-xl font-bold text-violet-700">{formatVnd(pipelineValue)}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Overrun signal mở</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Overrun signal mở</div>
             <div className="mt-1 text-3xl font-bold text-rose-700">{overrunSignals.length}</div>
           </CardBody>
         </Card>
@@ -137,7 +137,7 @@ export default async function InsightsPage() {
         <CardHeader><CardTitle>Profitability heatmap — Phòng × Trạng thái dự án</CardTitle></CardHeader>
         <CardBody className="p-0">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
               <tr>
                 <th className="p-2 text-left">Phòng</th>
                 {Object.keys(STATUS_LABEL).map((s) => (
@@ -146,13 +146,13 @@ export default async function InsightsPage() {
                 <th className="p-2 text-right">Tổng</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[rgb(var(--line))]">
               {Object.keys(DEPT_LABEL).map((d) => {
                 const inner = matrix.get(d);
                 let rowTotal = BigInt(0);
                 let rowCount = 0;
                 return (
-                  <tr key={d} className="hover:bg-slate-50">
+                  <tr key={d} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-2 font-medium">{DEPT_LABEL[d]}</td>
                     {Object.keys(STATUS_LABEL).map((s) => {
                       const cell = inner?.get(s);
@@ -162,15 +162,15 @@ export default async function InsightsPage() {
                           {cell ? (
                             <div className="text-xs">
                               <div className="font-semibold">{cell.count}</div>
-                              <div className="text-[10px] text-slate-500">{formatVnd(cell.value)}</div>
+                              <div className="text-[10px] text-[rgb(var(--muted))]">{formatVnd(cell.value)}</div>
                             </div>
-                          ) : <span className="text-slate-300">—</span>}
+                          ) : <span className="text-[rgb(var(--inverse-ink))]">—</span>}
                         </td>
                       );
                     })}
                     <td className="p-2 text-right">
                       <div className="text-sm font-bold">{rowCount}</div>
-                      <div className="text-[10px] text-slate-500">{formatVnd(rowTotal)}</div>
+                      <div className="text-[10px] text-[rgb(var(--muted))]">{formatVnd(rowTotal)}</div>
                     </td>
                   </tr>
                 );
@@ -187,16 +187,16 @@ export default async function InsightsPage() {
         </CardHeader>
         <CardBody className="p-0">
           {topContractors.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Chưa có đánh giá nào.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có đánh giá nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left">Đơn vị</th><th className="p-2 text-left">Hạng</th><th className="p-2 text-right">Rating</th><th className="p-2 text-right">DA đã làm</th><th className="p-2 text-right">Lần đánh giá</th><th className="p-2 text-left">Trạng thái</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {topContractors.map((c) => (
-                  <tr key={c.id} className={`hover:bg-slate-50 ${c.blacklisted ? "bg-rose-50/30" : ""}`}>
-                    <td className="p-2"><div className="font-medium">{c.legalName}</div><div className="text-[10px] text-slate-500 font-mono">{c.mst ?? "—"}</div></td>
+                  <tr key={c.id} className={`hover:bg-[rgb(var(--raised))] ${c.blacklisted ? "bg-rose-50/30" : ""}`}>
+                    <td className="p-2"><div className="font-medium">{c.legalName}</div><div className="text-[10px] text-[rgb(var(--muted))] font-mono">{c.mst ?? "—"}</div></td>
                     <td className="p-2"><Badge variant={c.capabilityClass === "HANG_I" ? "info" : c.capabilityClass === "HANG_II" ? "warning" : "neutral"}>{c.capabilityClass.replace("HANG_", "Hạng ")}</Badge></td>
                     <td className="p-2 text-right text-sm font-bold">{c.rating ? `${Number(c.rating).toFixed(2)} ⭐` : "—"}</td>
                     <td className="p-2 text-right text-xs">{c.pastProjects}</td>
@@ -217,16 +217,16 @@ export default async function InsightsPage() {
         </CardHeader>
         <CardBody className="p-0">
           {overrunSignals.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Không có signal nào đang mở. Click "Chạy AI forecast" trên <a href="/cost?tab=overrun" className="text-blue-600 underline">/cost</a> để tạo signal mới.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Không có signal nào đang mở. Click "Chạy AI forecast" trên <a href="/cost?tab=overrun" className="text-blue-600 underline">/cost</a> để tạo signal mới.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left">Dự án</th><th className="p-2 text-left">Hạng mục</th><th className="p-2 text-left">Severity</th><th className="p-2 text-right">Forecast EAC</th><th className="p-2 text-right">vs BAC</th><th className="p-2 text-right">Sớm trước</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {overrunSignals.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50">
-                    <td className="p-2"><div className="font-mono text-xs">{s.project.key}</div><div className="text-[10px] text-slate-500">{s.project.name}</div></td>
+                  <tr key={s.id} className="hover:bg-[rgb(var(--raised))]">
+                    <td className="p-2"><div className="font-mono text-xs">{s.project.key}</div><div className="text-[10px] text-[rgb(var(--muted))]">{s.project.name}</div></td>
                     <td className="p-2 text-xs">{s.category ?? "—"}</td>
                     <td className="p-2"><Badge variant={s.severity === "CRITICAL" ? "danger" : s.severity === "ALERT" ? "warning" : "info"}>{s.severity}</Badge></td>
                     <td className="p-2 text-right text-xs">{formatVnd(s.forecastedVnd)}</td>
@@ -240,7 +240,7 @@ export default async function InsightsPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-6 rounded-lg border border-violet-200 bg-violet-50/40 p-4 text-xs text-slate-700">
+      <div className="mt-6 rounded-lg border border-violet-200 bg-violet-50/40 p-4 text-xs text-[rgb(var(--ink-2))]">
         <div className="font-medium text-violet-900">Roadmap Phase 2 — Predictive ML</div>
         <ul className="mt-2 space-y-1">
           <li>· <strong>Win probability model</strong>: cho 1 cơ hội mới (giá trị, địa bàn, ngành), trả P(win) % dựa trên Bid history.</li>

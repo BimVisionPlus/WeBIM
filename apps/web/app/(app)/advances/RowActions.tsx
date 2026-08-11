@@ -24,7 +24,7 @@ export function RowActions({ id, status, initial }: { id: string; status: string
   }
   return (
     <span className="inline-flex items-center gap-2" data-testid={`row-actions-${id}`}>
-      <select value={v} onChange={onChange} disabled={busy} className="rounded border border-slate-300 px-1 py-0.5 text-[10px]">
+      <select value={v} onChange={onChange} disabled={busy} className="rounded border border-[rgb(var(--line-2))] px-1 py-0.5 text-[10px]">
         {statuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
       </select>
       <GenericEditDrawer

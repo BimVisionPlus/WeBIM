@@ -39,10 +39,10 @@ export default async function BhxhPage() {
   return (
     <AecModuleShell group="Hành chính" name="Theo dõi BHXH" subtitle="Sổ bảo hiểm xã hội cho người lao động theo Luật BHXH.">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng bản ghi</div><div className="mt-1 text-2xl font-bold">{records.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang đóng</div><div className="mt-1 text-2xl font-bold text-emerald-700">{dangDong}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Chờ đăng ký</div><div className="mt-1 text-2xl font-bold text-amber-700">{choDangKy}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Mức đóng/tháng</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalMonthly))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng bản ghi</div><div className="mt-1 text-2xl font-bold">{records.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang đóng</div><div className="mt-1 text-2xl font-bold text-emerald-700">{dangDong}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Chờ đăng ký</div><div className="mt-1 text-2xl font-bold text-amber-700">{choDangKy}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Mức đóng/tháng</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalMonthly))}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm orgs={orgs} /></div>
@@ -51,18 +51,18 @@ export default async function BhxhPage() {
         <CardHeader><CardTitle>Danh sách NLĐ tham gia BHXH ({records.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {records.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Chưa có bản ghi BHXH. Bấm "Thêm bản ghi BHXH" để bắt đầu.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có bản ghi BHXH. Bấm "Thêm bản ghi BHXH" để bắt đầu.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left">Họ tên</th><th className="p-2 text-left">CCCD</th><th className="p-2 text-left">Số sổ BHXH</th><th className="p-2 text-left">Trạng thái</th><th className="p-2 text-right">Mức đóng/tháng</th><th className="p-2 text-left">Bắt đầu</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {records.map((r) => {
                   const meta = statusLabel[r.status] ?? { vn: r.status, variant: "neutral" as const };
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50" data-testid={`row-bhxh-${r.id}`}>
-                      <td className="p-2"><div className="font-medium">{r.employeeName}</div><div className="text-[10px] text-slate-500">{r.org.name}</div></td>
+                    <tr key={r.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-bhxh-${r.id}`}>
+                      <td className="p-2"><div className="font-medium">{r.employeeName}</div><div className="text-[10px] text-[rgb(var(--muted))]">{r.org.name}</div></td>
                       <td className="p-2 text-xs">{r.employeeIdNo ?? "—"}</td>
                       <td className="p-2 font-mono text-xs">{r.bhxhNumber ?? "—"}</td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>

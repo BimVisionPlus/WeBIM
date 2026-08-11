@@ -42,16 +42,16 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm">
-            <Link href="/winwork/bids" className="text-slate-500 hover:text-slate-900">← Hồ sơ dự thầu</Link>
-            <span className="text-slate-400">·</span>
-            <span className="font-mono text-slate-500">{bid.key}</span>
+            <Link href="/winwork/bids" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--ink))]">← Hồ sơ dự thầu</Link>
+            <span className="text-[rgb(var(--muted-2))]">·</span>
+            <span className="font-mono text-[rgb(var(--muted))]">{bid.key}</span>
             <Badge variant={stateBadgeVariant(bid.state)}>{bid.state}</Badge>
             {bid.outcome && bid.outcome !== "PENDING" && (
               <Badge variant={bid.outcome === "AWARDED" ? "success" : "danger"}>{bid.outcome}</Badge>
             )}
           </div>
           <h1 className="mt-1 text-2xl font-bold">{bid.title}</h1>
-          <div className="mt-1 text-sm text-slate-500">
+          <div className="mt-1 text-sm text-[rgb(var(--muted))]">
             {bid.org.name} · Phụ trách: {bid.owner.name}
           </div>
         </div>
@@ -81,7 +81,7 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
                   <Row label="Đóng thầu" value={bid.opportunity.closingAt ? formatDateVn(bid.opportunity.closingAt) : "—"} />
                 </>
               ) : (
-                <div className="text-slate-500">Chưa gắn cơ hội đấu thầu cụ thể.</div>
+                <div className="text-[rgb(var(--muted))]">Chưa gắn cơ hội đấu thầu cụ thể.</div>
               )}
             </CardBody>
           </Card>
@@ -119,12 +119,12 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
             </CardHeader>
             <CardBody className="p-0">
               {checks.length === 0 ? (
-                <div className="p-6 text-sm text-slate-500">
+                <div className="p-6 text-sm text-[rgb(var(--muted))]">
                   Bấm "↻ Chạy kiểm tra" để chạy 9 quy tắc theo Luật ĐT 22/2023 + best-practice Atlas.
                 </div>
               ) : (
                 <table className="w-full text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                  <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                     <tr>
                       <th className="p-2 text-left">Quy tắc</th>
                       <th className="p-2 text-left">Căn cứ</th>
@@ -132,14 +132,14 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
                       <th className="p-2 text-center">Trạng thái</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[rgb(var(--line))]">
                     {checks.map((c) => (
                       <tr key={c.id}>
                         <td className="p-2">
                           <div className="font-medium">{c.ruleTitle}</div>
-                          {c.note && <div className="text-[11px] text-slate-500">{c.note}</div>}
+                          {c.note && <div className="text-[11px] text-[rgb(var(--muted))]">{c.note}</div>}
                         </td>
-                        <td className="p-2 text-xs text-slate-500">{c.ruleRef}</td>
+                        <td className="p-2 text-xs text-[rgb(var(--muted))]">{c.ruleRef}</td>
                         <td className="p-2 text-center">
                           <Badge
                             variant={
@@ -182,9 +182,9 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
             <CardHeader>
               <CardTitle className="text-base">Bảo lãnh ({bid.bonds.length})</CardTitle>
             </CardHeader>
-            <CardBody className="divide-y divide-slate-100 p-0">
+            <CardBody className="divide-y divide-[rgb(var(--line))] p-0">
               {bid.bonds.length === 0 && (
-                <div className="p-3 text-sm text-slate-500">Chưa có bảo lãnh nào.</div>
+                <div className="p-3 text-sm text-[rgb(var(--muted))]">Chưa có bảo lãnh nào.</div>
               )}
               {bid.bonds.map((b) => (
                 <div key={b.id} className="p-3 text-xs">
@@ -192,11 +192,11 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
                     <Badge variant="neutral">{b.type}</Badge>
                     <Badge variant={b.status === "ACTIVE" ? "success" : "neutral"}>{b.status}</Badge>
                   </div>
-                  <div className="mt-1 font-medium text-slate-900">{formatVndShort(b.amountVnd)}</div>
-                  <div className="mt-0.5 text-slate-500">
+                  <div className="mt-1 font-medium text-[rgb(var(--ink))]">{formatVndShort(b.amountVnd)}</div>
+                  <div className="mt-0.5 text-[rgb(var(--muted))]">
                     {b.issuerBank} · {b.bondNumber}
                   </div>
-                  <div className="mt-0.5 text-slate-500">
+                  <div className="mt-0.5 text-[rgb(var(--muted))]">
                     Hiệu lực: {formatDateVn(b.issuedAt)} → {formatDateVn(b.expiresAt)}
                   </div>
                 </div>
@@ -208,16 +208,16 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
             <CardHeader>
               <CardTitle className="text-base">Tài liệu ({bid.documents.length})</CardTitle>
             </CardHeader>
-            <CardBody className="divide-y divide-slate-100 p-0">
+            <CardBody className="divide-y divide-[rgb(var(--line))] p-0">
               {bid.documents.length === 0 && (
-                <div className="p-3 text-sm text-slate-500">
+                <div className="p-3 text-sm text-[rgb(var(--muted))]">
                   Chưa có tài liệu. Tải lên các tài liệu (BCTC, kinh nghiệm, biện pháp, tiến độ…) để engine tuân thủ kiểm được tính đầy đủ.
                 </div>
               )}
               {bid.documents.map((d) => (
                 <div key={d.id} className="p-3 text-xs">
-                  <div className="font-medium text-slate-900 truncate">{d.fileName}</div>
-                  <div className="text-slate-500">{d.contentType} · {Math.round(d.sizeBytes / 1024)} KB</div>
+                  <div className="font-medium text-[rgb(var(--ink))] truncate">{d.fileName}</div>
+                  <div className="text-[rgb(var(--muted))]">{d.contentType} · {Math.round(d.sizeBytes / 1024)} KB</div>
                 </div>
               ))}
             </CardBody>
@@ -231,8 +231,8 @@ export default async function BidDetailPage({ params }: { params: { bidId: strin
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-slate-900">{value}</span>
+      <span className="text-[rgb(var(--muted))]">{label}</span>
+      <span className="text-[rgb(var(--ink))]">{value}</span>
     </div>
   );
 }

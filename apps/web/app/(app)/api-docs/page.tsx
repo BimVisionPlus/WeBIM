@@ -99,7 +99,7 @@ const VERB_CLS: Record<Route["method"], string> = {
 };
 
 const AUTH_LABEL: Record<string, { vn: string; cls: string }> = {
-  public: { vn: "Không cần", cls: "bg-slate-100 text-slate-700" },
+  public: { vn: "Không cần", cls: "bg-[rgb(var(--raised))] text-[rgb(var(--ink-2))]" },
   session: { vn: "Cần đăng nhập", cls: "bg-blue-100 text-blue-800" },
   org: { vn: "Member của Org", cls: "bg-violet-100 text-violet-800" },
   project: { vn: "Có quyền Project", cls: "bg-amber-100 text-amber-800" },
@@ -114,10 +114,10 @@ export default function ApiDocsPage() {
       <Card className="border-blue-200 bg-blue-50/40">
         <CardBody>
           <CardTitle>Quick start</CardTitle>
-          <p className="mt-2 text-sm text-slate-700">
-            Tất cả endpoints cần Cookie session. Lấy session bằng cách POST <code className="rounded bg-white px-1.5 py-0.5">/api/auth/callback/credentials</code> với email/password. Sau đó truyền cookie vào mọi request tiếp theo.
+          <p className="mt-2 text-sm text-[rgb(var(--ink-2))]">
+            Tất cả endpoints cần Cookie session. Lấy session bằng cách POST <code className="rounded bg-[rgb(var(--surface))] px-1.5 py-0.5">/api/auth/callback/credentials</code> với email/password. Sau đó truyền cookie vào mọi request tiếp theo.
           </p>
-          <pre className="mt-3 overflow-x-auto rounded bg-slate-900 p-3 text-xs text-slate-100">
+          <pre className="mt-3 overflow-x-auto rounded bg-[rgb(var(--inverse-bg))] p-3 text-xs text-[rgb(var(--inverse-ink))]">
 {`# Login
 curl -c jar -X POST https://app.aecplatform.vn/api/auth/callback/credentials \\
   -d 'csrfToken=...' \\
@@ -132,23 +132,23 @@ curl -b jar https://app.aecplatform.vn/api/me`}
 
       {SECTIONS.map((sec) => (
         <Card key={sec.title} className="mt-4">
-          <CardHeader><CardTitle>{sec.title} <span className="text-sm font-normal text-slate-400">({sec.routes.length})</span></CardTitle></CardHeader>
+          <CardHeader><CardTitle>{sec.title} <span className="text-sm font-normal text-[rgb(var(--muted-2))]">({sec.routes.length})</span></CardTitle></CardHeader>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left w-16">Method</th><th className="p-2 text-left">Path</th><th className="p-2 text-left">Mô tả</th><th className="p-2 text-left">Body</th><th className="p-2 text-left w-32">Auth</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {sec.routes.map((r) => {
                   const auth = AUTH_LABEL[r.auth] ?? AUTH_LABEL.session!;
                   return (
-                    <tr key={`${r.method}-${r.path}`} className="hover:bg-slate-50 align-top">
+                    <tr key={`${r.method}-${r.path}`} className="hover:bg-[rgb(var(--raised))] align-top">
                       <td className="p-2">
                         <span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-bold ${VERB_CLS[r.method]}`}>{r.method}</span>
                       </td>
                       <td className="p-2 font-mono text-[11px]">{r.path}</td>
                       <td className="p-2 text-xs">{r.what}</td>
-                      <td className="p-2 text-[10px] font-mono text-slate-600 max-w-md">{r.body ?? "—"}</td>
+                      <td className="p-2 text-[10px] font-mono text-[rgb(var(--muted))] max-w-md">{r.body ?? "—"}</td>
                       <td className="p-2"><span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium ${auth.cls}`}>{auth.vn}</span></td>
                     </tr>
                   );
@@ -167,8 +167,8 @@ curl -b jar https://app.aecplatform.vn/api/me`}
             <li>· AI endpoints (heavy): 20 req/min/user/IP</li>
             <li>· Auth endpoints: 5 req/min/IP (brute-force protection)</li>
           </ul>
-          <p className="mt-3 text-xs text-slate-500">
-            Quá rate limit → HTTP 429 với header <code className="rounded bg-slate-100 px-1.5 py-0.5">Retry-After</code>. Enterprise tier custom limit theo HĐ.
+          <p className="mt-3 text-xs text-[rgb(var(--muted))]">
+            Quá rate limit → HTTP 429 với header <code className="rounded bg-[rgb(var(--raised))] px-1.5 py-0.5">Retry-After</code>. Enterprise tier custom limit theo HĐ.
           </p>
         </CardBody>
       </Card>
@@ -176,7 +176,7 @@ curl -b jar https://app.aecplatform.vn/api/me`}
       <Card className="mt-3">
         <CardHeader><CardTitle>Error format</CardTitle></CardHeader>
         <CardBody>
-          <pre className="overflow-x-auto rounded bg-slate-900 p-3 text-xs text-slate-100">
+          <pre className="overflow-x-auto rounded bg-[rgb(var(--inverse-bg))] p-3 text-xs text-[rgb(var(--inverse-ink))]">
 {`{
   "error": "Bạn không thuộc tổ chức này"  // user-facing VN
 }
@@ -186,7 +186,7 @@ curl -b jar https://app.aecplatform.vn/api/me`}
         </CardBody>
       </Card>
 
-      <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+      <div className="mt-6 rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--raised))] p-3 text-xs text-[rgb(var(--muted))]">
         OpenAPI 3.0 spec auto-generated từ zod schemas — cho Enterprise tier xuất ra Postman collection / Swagger UI. Liên hệ <a href="mailto:sales@aecplatform.vn" className="text-blue-600 underline">sales@aecplatform.vn</a> để có file <code>openapi.json</code>.
       </div>
     </AecModuleShell>

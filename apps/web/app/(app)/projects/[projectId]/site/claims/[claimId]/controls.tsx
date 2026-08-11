@@ -87,28 +87,28 @@ export function AddEventForm({ claimId }: { claimId: string }) {
     <>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>+ Sự kiện</Button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-            <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--inverse-bg))]/40 p-4">
+          <div className="w-full max-w-md rounded-lg bg-[rgb(var(--surface))] shadow-xl">
+            <header className="flex items-center justify-between border-b border-[rgb(var(--line))] px-4 py-3">
               <h2 className="text-sm font-semibold">Thêm sự kiện vào diễn biến</h2>
-              <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-700">✕</button>
+              <button onClick={() => setOpen(false)} className="text-[rgb(var(--muted-2))] hover:text-[rgb(var(--ink-2))]">✕</button>
             </header>
             <form onSubmit={submit} className="space-y-3 px-4 py-4">
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className="block text-xs font-medium text-slate-700">Ngày xảy ra</span>
+                  <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Ngày xảy ra</span>
                   <input
                     type="date"
                     required
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                     value={form.occurredAt}
                     onChange={(e) => setForm({ ...form, occurredAt: e.target.value })}
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-xs font-medium text-slate-700">Loại</span>
+                  <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Loại</span>
                   <select
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                     value={form.kind}
                     onChange={(e) => setForm({ ...form, kind: e.target.value })}
                   >
@@ -119,20 +119,20 @@ export function AddEventForm({ claimId }: { claimId: string }) {
                 </label>
               </div>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Tiêu đề</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Tiêu đề</span>
                 <input
                   required
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   placeholder="VD: CĐT thông báo tạm dừng thi công Zone B"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                 />
               </label>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Chi tiết</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Chi tiết</span>
                 <textarea
                   rows={3}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   value={form.detail}
                   onChange={(e) => setForm({ ...form, detail: e.target.value })}
                 />
@@ -214,29 +214,29 @@ export function EvidenceScanner({ claimId }: { claimId: string }) {
     <>
       <Button size="sm" variant="outline" onClick={scan}>🔍 Quét chứng cứ</Button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg bg-white shadow-xl">
-            <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--inverse-bg))]/40 p-4">
+          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg bg-[rgb(var(--surface))] shadow-xl">
+            <header className="flex items-center justify-between border-b border-[rgb(var(--line))] px-4 py-3">
               <div>
                 <h2 className="text-sm font-semibold">Quét chứng cứ trên nền tảng</h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[rgb(var(--muted))]">
                   Nhật ký, sổ TVGS, RFI/CO/NCR, BBNT, thời tiết xấu trong cửa sổ thời gian của hồ sơ.
                 </p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-700">✕</button>
+              <button onClick={() => setOpen(false)} className="text-[rgb(var(--muted-2))] hover:text-[rgb(var(--ink-2))]">✕</button>
             </header>
             <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
-              {loading && <p className="py-6 text-center text-sm text-slate-500">Đang quét…</p>}
+              {loading && <p className="py-6 text-center text-sm text-[rgb(var(--muted))]">Đang quét…</p>}
               {err && <div className="rounded bg-rose-50 px-3 py-2 text-xs text-rose-700">{err}</div>}
               {candidates?.map((c) => (
-                <div key={`${c.refTable}:${c.refId}`} className="flex items-start gap-3 rounded-md border border-slate-100 px-3 py-2">
+                <div key={`${c.refTable}:${c.refId}`} className="flex items-start gap-3 rounded-md border border-[rgb(var(--line))] px-3 py-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <Badge variant="info">{EVIDENCE_KIND_LABEL[c.kind] ?? c.kind}</Badge>
-                      {c.capturedAt && <span className="text-slate-500">{c.capturedAt.slice(0, 10)}</span>}
+                      {c.capturedAt && <span className="text-[rgb(var(--muted))]">{c.capturedAt.slice(0, 10)}</span>}
                     </div>
-                    <div className="mt-0.5 truncate text-sm text-slate-800">{c.title}</div>
-                    {c.excerpt && <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{c.excerpt}</p>}
+                    <div className="mt-0.5 truncate text-sm text-[rgb(var(--ink-2))]">{c.title}</div>
+                    {c.excerpt && <p className="mt-0.5 line-clamp-2 text-xs text-[rgb(var(--muted))]">{c.excerpt}</p>}
                   </div>
                   {c.alreadyAttached ? (
                     <Badge variant="success">Đã gắn</Badge>
@@ -248,7 +248,7 @@ export function EvidenceScanner({ claimId }: { claimId: string }) {
                 </div>
               ))}
               {candidates && candidates.length === 0 && (
-                <p className="py-6 text-center text-sm text-slate-500">
+                <p className="py-6 text-center text-sm text-[rgb(var(--muted))]">
                   Không tìm thấy bản ghi nào trong cửa sổ thời gian. Kiểm tra lại "Sự kiện từ / đến" của hồ sơ.
                 </p>
               )}
@@ -372,10 +372,10 @@ export function LegalBasisPanel({
       </CardHeader>
       <CardBody className="space-y-3">
         {bases.map((b) => (
-          <div key={b.id} className="rounded-md border border-slate-100 bg-slate-50/50 px-3 py-2">
+          <div key={b.id} className="rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--raised))]/50 px-3 py-2">
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <Badge variant="success">{b.regulationCode}</Badge>
-              <span className="font-medium text-slate-700">{b.articleRef}</span>
+              <span className="font-medium text-[rgb(var(--ink-2))]">{b.articleRef}</span>
               {b.source === "AI" && (
                 <Badge variant="violet">
                   AI{b.aiConfidence != null ? ` ${(b.aiConfidence * 100).toFixed(0)}%` : ""} — đã duyệt
@@ -387,23 +387,23 @@ export function LegalBasisPanel({
                 </a>
               )}
             </div>
-            <div className="mt-0.5 text-xs text-slate-500">{b.regulationTitle}</div>
-            <p className="mt-1 text-sm text-slate-700">{b.argument}</p>
+            <div className="mt-0.5 text-xs text-[rgb(var(--muted))]">{b.regulationTitle}</div>
+            <p className="mt-1 text-sm text-[rgb(var(--ink-2))]">{b.argument}</p>
           </div>
         ))}
         {bases.length === 0 && (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-[rgb(var(--muted))]">
             Chưa có căn cứ pháp lý. Dùng AI gợi ý từ thư viện văn bản (NĐ 37/2015, Luật Xây dựng…) hoặc thêm thủ công.
           </p>
         )}
 
         {showManual && (
-          <form onSubmit={submitManual} className="space-y-2 rounded-md border border-slate-200 p-3">
+          <form onSubmit={submitManual} className="space-y-2 rounded-md border border-[rgb(var(--line))] p-3">
             <div className="grid gap-2 sm:grid-cols-2">
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Văn bản</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Văn bản</span>
                 <select
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   value={manual.regulationCode}
                   onChange={(e) => setManual({ ...manual, regulationCode: e.target.value })}
                 >
@@ -413,10 +413,10 @@ export function LegalBasisPanel({
                 </select>
               </label>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Điều / khoản</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Điều / khoản</span>
                 <input
                   required
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   placeholder="Điều 44 khoản 1"
                   value={manual.articleRef}
                   onChange={(e) => setManual({ ...manual, articleRef: e.target.value })}
@@ -424,11 +424,11 @@ export function LegalBasisPanel({
               </label>
             </div>
             <label className="block">
-              <span className="block text-xs font-medium text-slate-700">Lập luận áp dụng</span>
+              <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Lập luận áp dụng</span>
               <textarea
                 required
                 rows={2}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                 value={manual.argument}
                 onChange={(e) => setManual({ ...manual, argument: e.target.value })}
               />
@@ -443,16 +443,16 @@ export function LegalBasisPanel({
         {aiErr && <div className="rounded bg-rose-50 px-3 py-2 text-xs text-rose-700">{aiErr}</div>}
         {aiSuggestions && (
           <div className="space-y-2 rounded-md border border-violet-200 bg-violet-50/40 p-3">
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">AI</span>
+            <div className="flex items-center gap-2 text-xs text-[rgb(var(--muted))]">
+              <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--inverse-ink))]">AI</span>
               Gợi ý từ Qwen (OSS, chỉ trích từ thư viện văn bản) — duyệt từng căn cứ trước khi đưa vào hồ sơ.
             </div>
             {aiSuggestions.map((s, i) => (
-              <div key={i} className="rounded-md bg-white px-3 py-2 ring-1 ring-violet-100">
+              <div key={i} className="rounded-md bg-[rgb(var(--surface))] px-3 py-2 ring-1 ring-violet-100">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <Badge variant="violet">{s.regulationCode}</Badge>
                   <span className="font-medium">{s.articleRef}</span>
-                  <span className="text-slate-500">độ tin cậy {(s.confidence * 100).toFixed(0)}%</span>
+                  <span className="text-[rgb(var(--muted))]">độ tin cậy {(s.confidence * 100).toFixed(0)}%</span>
                   <Button
                     size="sm"
                     variant="outline"
@@ -463,11 +463,11 @@ export function LegalBasisPanel({
                     {accepting === s.regulationCode + s.articleRef ? "…" : "✓ Duyệt"}
                   </Button>
                 </div>
-                <p className="mt-1 text-sm text-slate-700">{s.argument}</p>
+                <p className="mt-1 text-sm text-[rgb(var(--ink-2))]">{s.argument}</p>
               </div>
             ))}
             {aiSuggestions.length === 0 && (
-              <p className="text-xs text-slate-500">Đã duyệt hết gợi ý.</p>
+              <p className="text-xs text-[rgb(var(--muted))]">Đã duyệt hết gợi ý.</p>
             )}
             {aiGaps && (
               <div className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
@@ -556,7 +556,7 @@ export function StatementPanel({
           </Button>
         </div>
         {!hasBases && (
-          <p className="mt-1 text-xs text-slate-500">Duyệt ít nhất một căn cứ pháp lý trước khi soạn văn bản.</p>
+          <p className="mt-1 text-xs text-[rgb(var(--muted))]">Duyệt ít nhất một căn cứ pháp lý trước khi soạn văn bản.</p>
         )}
       </CardHeader>
       <CardBody className="space-y-3">
@@ -565,7 +565,7 @@ export function StatementPanel({
         {draft && (
           <div className="space-y-2 rounded-md border border-violet-200 bg-violet-50/40 p-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">AI NHÁP</span>
+              <span className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--inverse-ink))]">AI NHÁP</span>
               <Badge variant={STRENGTH_LABEL[draft.strength]?.variant ?? "warning"}>
                 {STRENGTH_LABEL[draft.strength]?.label ?? draft.strength}
               </Badge>
@@ -581,20 +581,20 @@ export function StatementPanel({
                 </ul>
               </div>
             )}
-            {draft.caveats && <p className="text-xs text-slate-600">⚠ {draft.caveats}</p>}
-            <pre className="max-h-96 overflow-y-auto whitespace-pre-wrap rounded-md bg-white p-3 text-xs text-slate-800 ring-1 ring-violet-100">
+            {draft.caveats && <p className="text-xs text-[rgb(var(--muted))]">⚠ {draft.caveats}</p>}
+            <pre className="max-h-96 overflow-y-auto whitespace-pre-wrap rounded-md bg-[rgb(var(--surface))] p-3 text-xs text-[rgb(var(--ink-2))] ring-1 ring-violet-100">
               {draft.statementMd}
             </pre>
           </div>
         )}
 
         {statementMd ? (
-          <pre className="max-h-[32rem] overflow-y-auto whitespace-pre-wrap rounded-md bg-slate-50 p-4 text-sm text-slate-800 ring-1 ring-slate-200">
+          <pre className="max-h-[32rem] overflow-y-auto whitespace-pre-wrap rounded-md bg-[rgb(var(--raised))] p-4 text-sm text-[rgb(var(--ink-2))] ring-1 ring-[rgb(var(--line-2))]">
             {statementMd}
           </pre>
         ) : (
           !draft && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[rgb(var(--muted))]">
               Chưa có văn bản. AI sẽ soạn nháp theo cấu trúc 6 mục (thông tin chung → yêu cầu → diễn biến
               [dẫn chứng cứ CC-n] → căn cứ pháp lý → yêu cầu cụ thể → danh mục chứng cứ) từ dữ liệu hồ sơ.
             </p>

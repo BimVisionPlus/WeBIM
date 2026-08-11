@@ -59,13 +59,13 @@ export default async function BillingPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header>
         <h1 className="text-2xl font-bold">Gói dịch vụ &amp; Thanh toán</h1>
-        <p className="mt-1 text-sm text-slate-500">{org.name} ({org.slug})</p>
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">{org.name} ({org.slug})</p>
       </header>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Gói hiện tại</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Gói hiện tại</div>
             <div className="mt-1 text-2xl font-bold capitalize">{plan?.name ?? "Free"}</div>
             <Badge variant={sub?.status === "ACTIVE" ? "success" : "neutral"}>
               {sub?.status ?? "FREE"}
@@ -74,20 +74,20 @@ export default async function BillingPage() {
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tín dụng AI còn lại</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tín dụng AI còn lại</div>
             <div className="mt-1 text-2xl font-bold">
               {sub ? formatVnd(sub.aiCreditVnd) : "—"}
             </div>
-            <div className="text-[11px] text-slate-500">
+            <div className="text-[11px] text-[rgb(var(--muted))]">
               Giá hành động: {formatVnd(aiActionPriceVnd(planCode))}
             </div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Chi phí AI 30 ngày</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Chi phí AI 30 ngày</div>
             <div className="mt-1 text-2xl font-bold">{formatVndShort(totalCostVnd)}</div>
-            <div className="text-[11px] text-slate-500">{events.length} hành động</div>
+            <div className="text-[11px] text-[rgb(var(--muted))]">{events.length} hành động</div>
           </CardBody>
         </Card>
       </div>
@@ -106,7 +106,7 @@ export default async function BillingPage() {
                   className={`rounded-md border p-3 text-sm ${
                     on
                       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                      : "border-slate-200 bg-slate-50 text-slate-400"
+                      : "border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-[rgb(var(--muted-2))]"
                   }`}
                 >
                   <div className="font-medium">{FEATURE_LABEL[f] ?? f}</div>
@@ -123,13 +123,13 @@ export default async function BillingPage() {
           <CardTitle>Nâng cấp</CardTitle>
         </CardHeader>
         <CardBody className="space-y-3 text-sm">
-          <p className="text-slate-700">
+          <p className="text-[rgb(var(--ink-2))]">
             Atlas hiện hỗ trợ thanh toán <strong>chuyển khoản ngân hàng</strong> (gửi đề nghị,
             đội kế toán phát hành hóa đơn VAT theo TT 78/2021 và kích hoạt gói trong 1 ngày làm việc).
             Tích hợp VNPAY / MoMo / Stripe đang chờ kết nối nhà cung cấp.
           </p>
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-            <div className="font-medium text-slate-700">Chuyển khoản:</div>
+          <div className="rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--raised))] p-3 text-xs text-[rgb(var(--muted))]">
+            <div className="font-medium text-[rgb(var(--ink-2))]">Chuyển khoản:</div>
             <div className="mt-1">
               {process.env.BANK_NAME ?? "Vietcombank"} · {process.env.BANK_ACCOUNT ?? "0011 002 345 678"} · {process.env.BANK_HOLDER ?? "CTCP Atlas"}
             </div>
@@ -138,13 +138,13 @@ export default async function BillingPage() {
           <div className="flex gap-2">
             <Link
               href="/pricing"
-              className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700"
             >
               Xem bảng giá
             </Link>
             <Link
               href={`mailto:billing@atlas-aec.vn?subject=Nâng cấp ${org.slug}`}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+              className="rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm hover:bg-[rgb(var(--raised))]"
             >
               Gửi yêu cầu nâng cấp
             </Link>
@@ -156,7 +156,7 @@ export default async function BillingPage() {
         <CardHeader>
           <CardTitle>Hóa đơn &amp; thanh toán</CardTitle>
         </CardHeader>
-        <CardBody className="text-sm text-slate-600">
+        <CardBody className="text-sm text-[rgb(var(--muted))]">
           {sub ? (
             <>
               Phương thức: <strong>{sub.paymentMethod ?? "Chưa thiết lập"}</strong>

@@ -54,10 +54,10 @@ export default async function ScheduleOrgPage() {
       subtitle="Gantt + đường găng (CPM). AI rủi ro chậm tiến độ từ daily log + weather forecast."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng task</div><div className="mt-1 text-2xl font-bold">{tasks.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang thi công</div><div className="mt-1 text-2xl font-bold text-amber-700">{inProgress}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Quá hạn</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdue}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đường găng</div><div className="mt-1 text-2xl font-bold text-violet-700">{criticalPath}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng task</div><div className="mt-1 text-2xl font-bold">{tasks.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang thi công</div><div className="mt-1 text-2xl font-bold text-amber-700">{inProgress}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Quá hạn</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdue}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đường găng</div><div className="mt-1 text-2xl font-bold text-violet-700">{criticalPath}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={projects} /></div>
@@ -68,12 +68,12 @@ export default async function ScheduleOrgPage() {
         </CardHeader>
         <CardBody className="p-0">
           {tasks.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có công việc nào trong lịch thi công. Bấm “Thêm công việc (task)” ở trên để lập tiến độ.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">WBS</th>
                   <th className="p-2 text-left">Dự án</th>
@@ -84,23 +84,23 @@ export default async function ScheduleOrgPage() {
                   <th className="p-2 text-left">Trạng thái</th><th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {tasks.map((t) => {
                   const meta = stateLabel[t.state] ?? { vn: t.state, variant: "neutral" as const };
                   const slipping = t.state !== "DONE" && t.state !== "CANCELLED" && t.plannedEnd < now;
                   return (
-                    <tr key={t.id} className={`hover:bg-slate-50 ${slipping ? "bg-rose-50/40" : ""} ${t.isCritical ? "border-l-2 border-violet-400" : ""}`}>
+                    <tr key={t.id} className={`hover:bg-[rgb(var(--raised))] ${slipping ? "bg-rose-50/40" : ""} ${t.isCritical ? "border-l-2 border-violet-400" : ""}`}>
                       <td className="p-2 font-mono text-xs">{t.code}{t.isCritical && <Badge variant="violet" className="ml-1">CP</Badge>}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{projectById.get(t.projectId)?.key ?? ""}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{projectById.get(t.projectId)?.key ?? ""}</td>
                       <td className="p-2">
                         <div className="font-medium">{t.name}</div>
-                        <div className="text-[11px] text-slate-500">{t.discipline ?? ""} {t.zone ? `· ${t.zone}` : ""}</div>
+                        <div className="text-[11px] text-[rgb(var(--muted))]">{t.discipline ?? ""} {t.zone ? `· ${t.zone}` : ""}</div>
                       </td>
-                      <td className="p-2 text-xs text-slate-600">{formatDateVn(t.plannedStart)}</td>
-                      <td className={`p-2 text-xs ${slipping ? "text-rose-700 font-medium" : "text-slate-600"}`}>{formatDateVn(t.plannedEnd)}</td>
+                      <td className="p-2 text-xs text-[rgb(var(--muted))]">{formatDateVn(t.plannedStart)}</td>
+                      <td className={`p-2 text-xs ${slipping ? "text-rose-700 font-medium" : "text-[rgb(var(--muted))]"}`}>{formatDateVn(t.plannedEnd)}</td>
                       <td className="p-2 text-right">
                         <div className="inline-flex items-center gap-2">
-                          <div className="h-1.5 w-24 rounded-full bg-slate-200 overflow-hidden">
+                          <div className="h-1.5 w-24 rounded-full bg-[rgb(var(--line))] overflow-hidden">
                             <div className={`h-full ${slipping ? "bg-rose-500" : t.state === "DONE" ? "bg-emerald-500" : "bg-blue-500"}`} style={{ width: `${t.pctComplete}%` }} />
                           </div>
                           <span className="text-xs font-medium">{Math.round(t.pctComplete)}%</span>
@@ -116,7 +116,7 @@ export default async function ScheduleOrgPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-4 text-xs text-slate-500">
+      <div className="mt-4 text-xs text-[rgb(var(--muted))]">
         CP = Critical Path. Task trên đường găng quyết định tổng thời gian dự án — chậm 1 ngày = dự án chậm 1 ngày.
       </div>
     </AecModuleShell>

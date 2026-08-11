@@ -94,5 +94,5 @@ export function ForgeViewer({ urn }: { urn: string }) {
     };
   }, [urn]);
 
-  return <div ref={ref} className="h-[560px] w-full bg-slate-900" />;
+  return <div ref={ref} className="h-[560px] w-full bg-[rgb(var(--inverse-bg))]" />;
 }

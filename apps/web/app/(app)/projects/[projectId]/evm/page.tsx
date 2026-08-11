@@ -60,24 +60,24 @@ export default async function EvmPage({ params }: { params: Promise<{ projectId:
         </CardHeader>
         <CardBody>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div><div className="text-xs text-slate-500">Ngân sách HĐ</div><div className="mt-1 text-lg font-semibold">{fmt(budget)}</div></div>
-            <div><div className="text-xs text-slate-500">PV (Planned)</div><div className="mt-1 text-lg font-semibold">{fmt(PV)}</div><div className="text-[10px] text-slate-500">{Math.round(elapsedPct * 100)}% thời gian đã trôi</div></div>
-            <div><div className="text-xs text-slate-500">EV (Earned)</div><div className="mt-1 text-lg font-semibold text-blue-700">{fmt(EV)}</div><div className="text-[10px] text-slate-500">TB tasks {Math.round(avgComplete * 100)}%</div></div>
-            <div><div className="text-xs text-slate-500">AC (Actual)</div><div className="mt-1 text-lg font-semibold">{fmt(AC)}</div><div className="text-[10px] text-slate-500">{project.paymentApps.length} kỳ thanh toán</div></div>
+            <div><div className="text-xs text-[rgb(var(--muted))]">Ngân sách HĐ</div><div className="mt-1 text-lg font-semibold">{fmt(budget)}</div></div>
+            <div><div className="text-xs text-[rgb(var(--muted))]">PV (Planned)</div><div className="mt-1 text-lg font-semibold">{fmt(PV)}</div><div className="text-[10px] text-[rgb(var(--muted))]">{Math.round(elapsedPct * 100)}% thời gian đã trôi</div></div>
+            <div><div className="text-xs text-[rgb(var(--muted))]">EV (Earned)</div><div className="mt-1 text-lg font-semibold text-blue-700">{fmt(EV)}</div><div className="text-[10px] text-[rgb(var(--muted))]">TB tasks {Math.round(avgComplete * 100)}%</div></div>
+            <div><div className="text-xs text-[rgb(var(--muted))]">AC (Actual)</div><div className="mt-1 text-lg font-semibold">{fmt(AC)}</div><div className="text-[10px] text-[rgb(var(--muted))]">{project.paymentApps.length} kỳ thanh toán</div></div>
           </div>
 
           <div className="mt-6 space-y-3" data-testid="evm-bars">
             <div>
-              <div className="flex justify-between text-xs"><span className="text-slate-600">PV</span><span>{fmt(PV)}</span></div>
-              <div className="h-3 w-full overflow-hidden rounded bg-slate-100"><div className="h-full bg-slate-400" style={{ width: bar(PV) }} /></div>
+              <div className="flex justify-between text-xs"><span className="text-[rgb(var(--muted))]">PV</span><span>{fmt(PV)}</span></div>
+              <div className="h-3 w-full overflow-hidden rounded bg-[rgb(var(--raised))]"><div className="h-full bg-[rgb(var(--muted-2))]" style={{ width: bar(PV) }} /></div>
             </div>
             <div>
               <div className="flex justify-between text-xs"><span className="text-blue-700 font-medium">EV</span><span>{fmt(EV)}</span></div>
-              <div className="h-3 w-full overflow-hidden rounded bg-slate-100"><div className="h-full bg-blue-500" style={{ width: bar(EV) }} /></div>
+              <div className="h-3 w-full overflow-hidden rounded bg-[rgb(var(--raised))]"><div className="h-full bg-blue-500" style={{ width: bar(EV) }} /></div>
             </div>
             <div>
-              <div className="flex justify-between text-xs"><span className="text-slate-600">AC</span><span>{fmt(AC)}</span></div>
-              <div className="h-3 w-full overflow-hidden rounded bg-slate-100"><div className="h-full bg-amber-500" style={{ width: bar(AC) }} /></div>
+              <div className="flex justify-between text-xs"><span className="text-[rgb(var(--muted))]">AC</span><span>{fmt(AC)}</span></div>
+              <div className="h-3 w-full overflow-hidden rounded bg-[rgb(var(--raised))]"><div className="h-full bg-amber-500" style={{ width: bar(AC) }} /></div>
             </div>
           </div>
         </CardBody>
@@ -91,7 +91,7 @@ export default async function EvmPage({ params }: { params: Promise<{ projectId:
               <div className="flex justify-between"><span>SV — Schedule Variance (EV-PV)</span><span className={`font-semibold ${SV >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{SV >= 0 ? "+" : ""}{fmt(SV)}</span></div>
               <div className="flex justify-between"><span>CV — Cost Variance (EV-AC)</span><span className={`font-semibold ${CV >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{CV >= 0 ? "+" : ""}{fmt(CV)}</span></div>
             </div>
-            <div className="mt-4 text-[11px] text-slate-500">SV âm = chậm tiến độ. CV âm = vượt chi phí.</div>
+            <div className="mt-4 text-[11px] text-[rgb(var(--muted))]">SV âm = chậm tiến độ. CV âm = vượt chi phí.</div>
           </CardBody>
         </Card>
         <Card>
@@ -101,12 +101,12 @@ export default async function EvmPage({ params }: { params: Promise<{ projectId:
               <div className="flex justify-between"><span>SPI = EV/PV</span><span className={`font-semibold ${SPI >= 0.95 ? "text-emerald-700" : "text-rose-700"}`}>{SPI.toFixed(2)}</span></div>
               <div className="flex justify-between"><span>CPI = EV/AC</span><span className={`font-semibold ${CPI >= 0.95 ? "text-emerald-700" : "text-rose-700"}`}>{CPI.toFixed(2)}</span></div>
             </div>
-            <div className="mt-4 text-[11px] text-slate-500">≥1.00 đúng / vượt kế hoạch · &lt;0.95 cần can thiệp.</div>
+            <div className="mt-4 text-[11px] text-[rgb(var(--muted))]">≥1.00 đúng / vượt kế hoạch · &lt;0.95 cần can thiệp.</div>
           </CardBody>
         </Card>
       </div>
 
-      <div className="text-[11px] text-slate-500">
+      <div className="text-[11px] text-[rgb(var(--muted))]">
         Phương pháp: PV tính theo % thời gian đã trôi. EV = ngân sách × TB %HT scheduleTask. AC = lũy kế khối lượng đã thực hiện từ kỳ thanh toán mới nhất.
       </div>
     </div>

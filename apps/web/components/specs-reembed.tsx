@@ -32,7 +32,7 @@ export function SpecsReembedButton({ projectId }: { projectId: string }) {
       <Button size="sm" variant="outline" onClick={run} disabled={busy}>
         {busy ? "Đang embed…" : "Re-embed tất cả"}
       </Button>
-      {result && <span className="ml-2 text-[10px] text-slate-500">{result}</span>}
+      {result && <span className="ml-2 text-[10px] text-[rgb(var(--muted))]">{result}</span>}
     </>
   );
 }

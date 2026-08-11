@@ -47,10 +47,10 @@ export default async function DocChatPage() {
       subtitle="100% OSS. bge-m3 embeddings (1024-dim) + Qwen2.5-14B-Instruct local + pgvector. Citation về điều khoản gốc."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tài liệu corpus</div><div className="mt-1 text-2xl font-bold">{totalDocs}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã index</div><div className="mt-1 text-2xl font-bold text-emerald-700">{indexed}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng chunk</div><div className="mt-1 text-2xl font-bold">{totalChunks.toLocaleString("vi-VN")}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Câu hỏi 7 ngày</div><div className="mt-1 text-2xl font-bold text-violet-700">{recentQueries.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tài liệu corpus</div><div className="mt-1 text-2xl font-bold">{totalDocs}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã index</div><div className="mt-1 text-2xl font-bold text-emerald-700">{indexed}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng chunk</div><div className="mt-1 text-2xl font-bold">{totalChunks.toLocaleString("vi-VN")}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Câu hỏi 7 ngày</div><div className="mt-1 text-2xl font-bold text-violet-700">{recentQueries.length}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><IndexForm /></div>
@@ -59,10 +59,10 @@ export default async function DocChatPage() {
         <CardHeader><CardTitle>Hỏi tài liệu bằng tiếng Việt</CardTitle></CardHeader>
         <CardBody>
           <form action="/api/docchat" method="post" className="space-y-3">
-            <textarea name="question" rows={3} placeholder="Ví dụ: Theo NĐ 06/2021 Đ.21, thành phần BBNT công việc xây dựng gồm những ai?" className="w-full rounded border border-slate-300 px-3 py-2 text-sm" />
-            <div className="flex justify-between text-xs text-slate-500">
+            <textarea name="question" rows={3} placeholder="Ví dụ: Theo NĐ 06/2021 Đ.21, thành phần BBNT công việc xây dựng gồm những ai?" className="w-full rounded border border-[rgb(var(--line-2))] px-3 py-2 text-sm" />
+            <div className="flex justify-between text-xs text-[rgb(var(--muted))]">
               <span>Model: Qwen2.5-14B-Instruct (Ollama local) · Embedding: bge-m3</span>
-              <button type="submit" className="rounded bg-blue-600 px-4 py-1.5 font-medium text-white hover:bg-blue-700">Hỏi</button>
+              <button type="submit" className="rounded bg-blue-600 px-4 py-1.5 font-medium text-[rgb(var(--inverse-ink))] hover:bg-blue-700">Hỏi</button>
             </div>
           </form>
         </CardBody>
@@ -72,14 +72,14 @@ export default async function DocChatPage() {
         <Card>
           <CardHeader><CardTitle>Corpus phân bố ({totalDocs})</CardTitle></CardHeader>
           <CardBody className="p-0">
-            {totalDocs === 0 ? <div className="p-6 text-center text-sm text-slate-500">Chưa có corpus. Index từ SpecPages + hồ sơ thiết kế.</div> : (
+            {totalDocs === 0 ? <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có corpus. Index từ SpecPages + hồ sơ thiết kế.</div> : (
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                   <tr><th className="p-2 text-left">Tài liệu</th><th className="p-2 text-left">Nguồn</th><th className="p-2 text-right">Chunk</th><th className="p-2 text-left">Index</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[rgb(var(--line))]">
                   {corpus.slice(0, 15).map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50">
+                    <tr key={c.id} className="hover:bg-[rgb(var(--raised))]">
                       <td className="p-2 text-xs"><div className="font-medium line-clamp-1">{c.title}</div></td>
                       <td className="p-2 text-xs">{sourceLabel[c.sourceType]}</td>
                       <td className="p-2 text-right text-xs">{c.chunkCount}</td>
@@ -95,13 +95,13 @@ export default async function DocChatPage() {
         <Card>
           <CardHeader><CardTitle>Câu hỏi gần đây ({recentQueries.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
-            {recentQueries.length === 0 ? <div className="p-6 text-center text-sm text-slate-500">Chưa có ai hỏi gì.</div> : (
-              <div className="divide-y divide-slate-100">
+            {recentQueries.length === 0 ? <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có ai hỏi gì.</div> : (
+              <div className="divide-y divide-[rgb(var(--line))]">
                 {recentQueries.map((q) => (
                   <div key={q.id} className="p-3">
-                    <div className="text-xs font-medium text-slate-900 line-clamp-2">❓ {q.question}</div>
-                    {q.answer && <div className="mt-1 text-[11px] text-slate-600 line-clamp-2">💬 {q.answer}</div>}
-                    <div className="mt-1 text-[10px] text-slate-400">{q.modelUsed} · {q.latencyMs ?? "?"} ms · {(q.citations as unknown[] | null)?.length ?? 0} citations</div>
+                    <div className="text-xs font-medium text-[rgb(var(--ink))] line-clamp-2">❓ {q.question}</div>
+                    {q.answer && <div className="mt-1 text-[11px] text-[rgb(var(--muted))] line-clamp-2">💬 {q.answer}</div>}
+                    <div className="mt-1 text-[10px] text-[rgb(var(--muted-2))]">{q.modelUsed} · {q.latencyMs ?? "?"} ms · {(q.citations as unknown[] | null)?.length ?? 0} citations</div>
                   </div>
                 ))}
               </div>
@@ -110,7 +110,7 @@ export default async function DocChatPage() {
         </Card>
       </div>
 
-      <div className="mt-4 text-[11px] text-slate-500">
+      <div className="mt-4 text-[11px] text-[rgb(var(--muted))]">
         Pipeline: PDF/DOCX/email ingest → tika-server extract text → bge-m3 chunk 512 tokens overlap 64 →
         store embedding Bytes (sau migrate pgvector) → query: top-k=8 cosine + Qwen2.5-14B trả lời với citation.
         Toàn bộ chạy local, không gửi data ra ngoài.

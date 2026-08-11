@@ -136,25 +136,25 @@ export function DailyLogControls({ log }: { log: DailyLogRow }) {
 
   // ─── Edit mode ─────────────────────────────────────────────────────────
   return (
-    <div className="space-y-2 rounded-md border border-slate-200 bg-white p-3">
+    <div className="space-y-2 rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-3">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="block space-y-1">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
             Thời tiết
           </span>
           <input
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={weather}
             onChange={(e) => setWeather(e.target.value)}
             placeholder="VD: Nắng 32°C"
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
             Nhân lực (trade:count, ngăn cách bởi dấu phẩy)
           </span>
           <input
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
             value={workforceText}
             onChange={(e) => setWorkforceText(e.target.value)}
             placeholder="thợ sắt:12, thợ hồ:8"
@@ -162,34 +162,34 @@ export function DailyLogControls({ log }: { log: DailyLogRow }) {
         </label>
       </div>
       <label className="block space-y-1">
-        <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
           Công việc đã làm
         </span>
         <textarea
           rows={3}
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={workDone}
           onChange={(e) => setWorkDone(e.target.value)}
         />
       </label>
       <label className="block space-y-1">
-        <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
           Kế hoạch ngày mai
         </span>
         <textarea
           rows={2}
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={workTomorrow}
           onChange={(e) => setWorkTomorrow(e.target.value)}
         />
       </label>
       <label className="block space-y-1">
-        <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-[rgb(var(--muted))]">
           An toàn / Ghi chú
         </span>
         <textarea
           rows={2}
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-[rgb(var(--line-2))] px-2 py-1.5 text-sm"
           value={safetyNotes}
           onChange={(e) => setSafetyNotes(e.target.value)}
         />

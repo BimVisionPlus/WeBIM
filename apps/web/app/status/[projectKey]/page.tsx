@@ -52,12 +52,12 @@ export default async function SiteStatusPage({ params }: { params: { projectKey:
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-[rgb(var(--raised))]">
+      <header className="border-b border-[rgb(var(--line))] bg-[rgb(var(--surface))]">
         <div className="mx-auto max-w-4xl px-6 py-6">
-          <div className="text-xs uppercase tracking-wide text-slate-500">Tiến độ công trình</div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">{project.name}</h1>
-          <div className="mt-1 text-sm text-slate-600">
+          <div className="text-xs uppercase tracking-wide text-[rgb(var(--muted))]">Tiến độ công trình</div>
+          <h1 className="mt-1 text-2xl font-bold text-[rgb(var(--ink))]">{project.name}</h1>
+          <div className="mt-1 text-sm text-[rgb(var(--muted))]">
             {project.ownerOrg.name} · {project.province} · {project.permitNumber ?? "—"}
           </div>
           <div className="mt-4 flex items-center gap-3">
@@ -80,27 +80,27 @@ export default async function SiteStatusPage({ params }: { params: { projectKey:
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <Card>
             <CardBody className="py-3">
-              <div className="text-xs text-slate-500">Giá trị hợp đồng</div>
+              <div className="text-xs text-[rgb(var(--muted))]">Giá trị hợp đồng</div>
               <div className="mt-1 text-xl font-bold">{formatVndShort(project.contractValueVnd)}</div>
             </CardBody>
           </Card>
           <Card>
             <CardBody className="py-3">
-              <div className="text-xs text-slate-500">Khởi công</div>
+              <div className="text-xs text-[rgb(var(--muted))]">Khởi công</div>
               <div className="mt-1 text-lg font-semibold">{formatDateVn(project.startDate)}</div>
             </CardBody>
           </Card>
           <Card>
             <CardBody className="py-3">
-              <div className="text-xs text-slate-500">Hoàn thành dự kiến</div>
+              <div className="text-xs text-[rgb(var(--muted))]">Hoàn thành dự kiến</div>
               <div className="mt-1 text-lg font-semibold">{formatDateVn(project.endDate)}</div>
             </CardBody>
           </Card>
           <Card>
             <CardBody className="py-3">
-              <div className="text-xs text-slate-500">Nghiệm thu</div>
+              <div className="text-xs text-[rgb(var(--muted))]">Nghiệm thu</div>
               <div className="mt-1 text-xl font-bold">{project._count.acceptances}</div>
-              <div className="text-[11px] text-slate-500">BBNT đã tạo</div>
+              <div className="text-[11px] text-[rgb(var(--muted))]">BBNT đã tạo</div>
             </CardBody>
           </Card>
         </div>
@@ -109,9 +109,9 @@ export default async function SiteStatusPage({ params }: { params: { projectKey:
           <CardHeader><CardTitle>Bên tham gia</CardTitle></CardHeader>
           <CardBody className="grid grid-cols-2 gap-2 text-sm md:grid-cols-3">
             {project.stakeholders.map((s) => (
-              <div key={s.id} className="rounded-md border border-slate-200 bg-white p-3">
-                <div className="text-xs text-slate-500">{s.role}</div>
-                <div className="mt-1 font-medium text-slate-900">{s.org.name}</div>
+              <div key={s.id} className="rounded-md border border-[rgb(var(--line))] bg-[rgb(var(--surface))] p-3">
+                <div className="text-xs text-[rgb(var(--muted))]">{s.role}</div>
+                <div className="mt-1 font-medium text-[rgb(var(--ink))]">{s.org.name}</div>
               </div>
             ))}
           </CardBody>
@@ -119,17 +119,17 @@ export default async function SiteStatusPage({ params }: { params: { projectKey:
 
         <Card>
           <CardHeader><CardTitle>Hoạt động gần nhất</CardTitle></CardHeader>
-          <CardBody className="divide-y divide-slate-100 p-0">
+          <CardBody className="divide-y divide-[rgb(var(--line))] p-0">
             {project.acceptances.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">Chưa có biên bản nghiệm thu công bố.</div>
+              <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có biên bản nghiệm thu công bố.</div>
             ) : (
               project.acceptances.map((a) => (
                 <div key={a.id} className="flex items-center justify-between p-3 text-sm">
                   <div>
                     <div className="font-medium">{a.title}</div>
-                    <div className="text-xs text-slate-500">{a.code} · {a.type}</div>
+                    <div className="text-xs text-[rgb(var(--muted))]">{a.code} · {a.type}</div>
                   </div>
-                  <div className="text-right text-xs text-slate-500">
+                  <div className="text-right text-xs text-[rgb(var(--muted))]">
                     {a.conductedAt ? formatDateVn(a.conductedAt) : a.scheduledAt ? `Dự kiến ${formatDateVn(a.scheduledAt)}` : "—"}
                     <div><Badge variant="neutral">{a.state}</Badge></div>
                   </div>
@@ -139,7 +139,7 @@ export default async function SiteStatusPage({ params }: { params: { projectKey:
           </CardBody>
         </Card>
 
-        <p className="text-center text-xs text-slate-500">
+        <p className="text-center text-xs text-[rgb(var(--muted))]">
           Trang công khai — dữ liệu cập nhật trực tiếp từ Atlas. Không yêu cầu đăng nhập.
         </p>
       </main>

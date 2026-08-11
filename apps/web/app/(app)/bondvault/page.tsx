@@ -61,10 +61,10 @@ export default async function BondVaultPage() {
       subtitle="Bảo lãnh THHĐ + Tạm ứng + Bảo hành. Sync API BIDV/VCB/Techcom, auto-alert T-30 hết hạn, auto-release theo NĐ 06/2021."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang hiệu lực</div><div className="mt-1 text-2xl font-bold text-emerald-700">{totalActive}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Sắp hết hạn (≤30d)</div><div className="mt-1 text-2xl font-bold text-amber-700">{expiring30}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Quá hạn cần xử lý</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdue}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng giá trị hiệu lực</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalExposureActive))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang hiệu lực</div><div className="mt-1 text-2xl font-bold text-emerald-700">{totalActive}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Sắp hết hạn (≤30d)</div><div className="mt-1 text-2xl font-bold text-amber-700">{expiring30}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Quá hạn cần xử lý</div><div className="mt-1 text-2xl font-bold text-rose-700">{overdue}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng giá trị hiệu lực</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalExposureActive))}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={accessibleProjects} /></div>
@@ -73,12 +73,12 @@ export default async function BondVaultPage() {
         <CardHeader><CardTitle>Sổ bảo lãnh ({bonds.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {bonds.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có bảo lãnh nào. Thêm bảo lãnh THHĐ sau khi ký HĐ, BLBH sau bàn giao.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Số BL</th>
                   <th className="p-2 text-left">Ngân hàng</th>
@@ -91,23 +91,23 @@ export default async function BondVaultPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {bonds.map((b) => {
                   const tmeta = typeLabel[b.type] ?? { vn: b.type, variant: "neutral" as const };
                   const smeta = statusLabel[b.status] ?? { vn: b.status, variant: "neutral" as const };
                   const daysLeft = daysBetween(now, b.expiresAt);
                   const expSoon = b.status === "ACTIVE" && daysLeft <= 30 && daysLeft > 0;
                   return (
-                    <tr key={b.id} className="hover:bg-slate-50" data-testid={`row-${b.bondNumber}`}>
+                    <tr key={b.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-${b.bondNumber}`}>
                       <td className="p-2 font-mono text-xs">{b.bondNumber}</td>
                       <td className="p-2 text-xs">{b.issuerBank}</td>
                       <td className="p-2"><Badge variant={tmeta.variant}>{tmeta.vn}</Badge></td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{b.project.key}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{b.project.key}</td>
                       <td className="p-2 text-xs">{b.contractorOrg?.name ?? "—"}</td>
-                      <td className="p-2 text-right text-xs font-medium">{formatVnd(b.amountVnd)}{b.pctOfContract ? <div className="text-[10px] text-slate-500">{b.pctOfContract.toString()}% HĐ</div> : null}</td>
+                      <td className="p-2 text-right text-xs font-medium">{formatVnd(b.amountVnd)}{b.pctOfContract ? <div className="text-[10px] text-[rgb(var(--muted))]">{b.pctOfContract.toString()}% HĐ</div> : null}</td>
                       <td className="p-2 text-xs">
                         {formatDateVn(b.effectiveFrom)} → {formatDateVn(b.expiresAt)}
-                        {b.status === "ACTIVE" && <div className={`text-[10px] ${daysLeft < 0 ? "text-rose-700" : expSoon ? "text-amber-700" : "text-slate-500"}`}>{daysLeft < 0 ? `Quá ${-daysLeft}d` : `Còn ${daysLeft}d`}</div>}
+                        {b.status === "ACTIVE" && <div className={`text-[10px] ${daysLeft < 0 ? "text-rose-700" : expSoon ? "text-amber-700" : "text-[rgb(var(--muted))]"}`}>{daysLeft < 0 ? `Quá ${-daysLeft}d` : `Còn ${daysLeft}d`}</div>}
                       </td>
                       <td className="p-2" data-testid={`status-${b.bondNumber}`}><Badge variant={smeta.variant}>{smeta.vn}</Badge></td>
                       <td className="p-2"><RowActions id={b.id} status={b.status} /></td>
@@ -123,25 +123,25 @@ export default async function BondVaultPage() {
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Lịch giải phóng BLBH (NĐ 06/2021)</CardTitle></CardHeader>
-          <CardBody className="text-sm text-slate-700">
+          <CardBody className="text-sm text-[rgb(var(--ink-2))]">
             <ul className="space-y-1.5">
               <li>• <b>12 tháng</b> — Phần phụ (hoàn thiện, lan can, sơn…)</li>
               <li>• <b>24 tháng</b> — Phần chính (kết cấu, mái, MEP)</li>
               <li>• <b>60 tháng</b> — Hạ tầng kỹ thuật (cầu, đường, cấp thoát)</li>
             </ul>
-            <p className="mt-3 text-[11px] text-slate-500">Worker chạy daily sweep: bond ACTIVE có expiresAt &lt; today → tạo audit + email CĐT để release.</p>
+            <p className="mt-3 text-[11px] text-[rgb(var(--muted))]">Worker chạy daily sweep: bond ACTIVE có expiresAt &lt; today → tạo audit + email CĐT để release.</p>
           </CardBody>
         </Card>
         <Card>
           <CardHeader><CardTitle>Bank API integrations</CardTitle></CardHeader>
-          <CardBody className="text-sm text-slate-700">
+          <CardBody className="text-sm text-[rgb(var(--ink-2))]">
             <ul className="space-y-1.5">
               <li>• <b>BIDV</b> — Open Banking sandbox; verify bond by số BL</li>
               <li>• <b>Vietcombank</b> — Internet Banking Corporate API</li>
               <li>• <b>Techcombank</b> — Business Express Banking</li>
               <li>• <b>MB Bank</b> — MB Smart Connect API</li>
             </ul>
-            <p className="mt-3 text-[11px] text-slate-500">Cron 03:00 hằng đêm — pull status từng bank, cập nhật <code>bankApiStatus</code>.</p>
+            <p className="mt-3 text-[11px] text-[rgb(var(--muted))]">Cron 03:00 hằng đêm — pull status từng bank, cập nhật <code>bankApiStatus</code>.</p>
           </CardBody>
         </Card>
       </div>

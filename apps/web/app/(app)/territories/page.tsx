@@ -26,10 +26,10 @@ export default async function TerritoriesPage() {
   return (
     <AecModuleShell group="Phát triển thị trường" name="Địa bàn" subtitle="Phân vùng phát triển thị trường theo địa lý + người phụ trách.">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng địa bàn</div><div className="mt-1 text-2xl font-bold">{territories.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang hoạt động</div><div className="mt-1 text-2xl font-bold text-emerald-700">{territories.filter((t) => t.active).length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Có chủ địa bàn</div><div className="mt-1 text-2xl font-bold">{territories.filter((t) => t.ownerUserId).length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng leads</div><div className="mt-1 text-2xl font-bold text-blue-700">{territories.reduce((s, t) => s + t._count.leads, 0)}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng địa bàn</div><div className="mt-1 text-2xl font-bold">{territories.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang hoạt động</div><div className="mt-1 text-2xl font-bold text-emerald-700">{territories.filter((t) => t.active).length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Có chủ địa bàn</div><div className="mt-1 text-2xl font-bold">{territories.filter((t) => t.ownerUserId).length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng leads</div><div className="mt-1 text-2xl font-bold text-blue-700">{territories.reduce((s, t) => s + t._count.leads, 0)}</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm orgs={orgs} /></div>
@@ -38,19 +38,19 @@ export default async function TerritoriesPage() {
         <CardHeader><CardTitle>Danh sách địa bàn ({territories.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {territories.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Chưa có địa bàn nào. Bấm "Thêm địa bàn" để bắt đầu phân vùng.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có địa bàn nào. Bấm "Thêm địa bàn" để bắt đầu phân vùng.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left">Tên địa bàn</th><th className="p-2 text-left">Tỉnh</th><th className="p-2 text-left">Phạm vi</th><th className="p-2 text-left">Chủ địa bàn</th><th className="p-2 text-right">Leads</th><th className="p-2 text-left">Thao tác</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {territories.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50" data-testid={`row-territory-${t.id}`}>
-                    <td className="p-2"><div className="font-medium">{t.name}</div><div className="text-[10px] text-slate-500">{t.org.name}</div></td>
+                  <tr key={t.id} className="hover:bg-[rgb(var(--raised))]" data-testid={`row-territory-${t.id}`}>
+                    <td className="p-2"><div className="font-medium">{t.name}</div><div className="text-[10px] text-[rgb(var(--muted))]">{t.org.name}</div></td>
                     <td className="p-2 text-xs">{t.province ?? "—"}</td>
                     <td className="p-2 text-xs line-clamp-2 max-w-md">{t.scope ?? "—"}</td>
-                    <td className="p-2 text-xs">{t.owner?.name ?? <span className="text-slate-400">Chưa phân</span>}</td>
+                    <td className="p-2 text-xs">{t.owner?.name ?? <span className="text-[rgb(var(--muted-2))]">Chưa phân</span>}</td>
                     <td className="p-2 text-right text-xs">{t._count.leads}</td><td className="p-2"><RowActions id={t.id} initial={{ name: t.name, province: t.province, scope: t.scope, active: t.active }} /></td>
                   </tr>
                 ))}

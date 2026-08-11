@@ -12,7 +12,7 @@ export function AuditHistoryLink({ entityId, entityType, className }: { entityId
   return (
     <Link
       href={`/audit?${qs.toString()}`}
-      className={className ?? "text-[10px] text-slate-400 hover:text-blue-600"}
+      className={className ?? "text-[10px] text-[rgb(var(--muted-2))] hover:text-blue-600"}
       title="Lịch sử thao tác trên bản ghi này"
       data-testid={`audit-history-${entityId}`}
     >🕒</Link>

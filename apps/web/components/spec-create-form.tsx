@@ -43,22 +43,22 @@ export function SpecCreateForm({ projectId }: { projectId: string }) {
   return (
     <form onSubmit={submit} className="space-y-3">
       <label className="block">
-        <span className="block text-xs font-medium text-slate-700">Tiêu đề</span>
+        <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Tiêu đề</span>
         <input
           required
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
           placeholder="Biện pháp thi công cọc nhồi"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        {slug && <p className="mt-1 font-mono text-[10px] text-slate-500">/{slug}</p>}
+        {slug && <p className="mt-1 font-mono text-[10px] text-[rgb(var(--muted))]">/{slug}</p>}
       </label>
       <label className="block">
-        <span className="block text-xs font-medium text-slate-700">Nội dung (markdown)</span>
+        <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Nội dung (markdown)</span>
         <textarea
           required
           rows={8}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-xs"
+          className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 font-mono text-xs"
           placeholder={"## Phạm vi\n...\n\n## Quy trình\n1. ...\n\n## Tham chiếu\n- QCVN ...\n- TCVN ..."}
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -68,7 +68,7 @@ export function SpecCreateForm({ projectId }: { projectId: string }) {
       <Button type="submit" size="sm" className="w-full" disabled={busy || !title || !body}>
         {busy ? "Đang lưu…" : "Lưu & embed"}
       </Button>
-      <p className="text-[10px] text-slate-500">
+      <p className="text-[10px] text-[rgb(var(--muted))]">
         Sau khi lưu, AI tự sinh embedding (bge-m3) trong nền — có thể tìm kiếm ngay.
       </p>
     </form>

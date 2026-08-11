@@ -67,11 +67,11 @@ function Modal({ kind, projectId, stakeholders, onClose }: { kind: Kind; project
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--inverse-bg))]/40 p-4">
+      <div className="w-full max-w-lg rounded-lg bg-[rgb(var(--surface))] shadow-xl">
+        <header className="flex items-center justify-between border-b border-[rgb(var(--line))] px-4 py-3">
           <h2 className="text-sm font-semibold">Tạo {LABEL[kind]} mới</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700">✕</button>
+          <button onClick={onClose} className="text-[rgb(var(--muted-2))] hover:text-[rgb(var(--ink-2))]">✕</button>
         </header>
         <form onSubmit={submit} className="space-y-3 px-4 py-4">
           <Field label="Tiêu đề" required value={form.title ?? ""} onChange={(v) => set("title", v)} />
@@ -219,12 +219,12 @@ function Field(props: {
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{props.label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{props.label}</span>
       <input
         type={props.type ?? "text"}
         required={props.required}
         placeholder={props.placeholder}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
       />
@@ -235,11 +235,11 @@ function Field(props: {
 function Textarea(props: { label: string; value: string; onChange: (v: string) => void; required?: boolean }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{props.label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{props.label}</span>
       <textarea
         required={props.required}
         rows={3}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
       />
@@ -256,10 +256,10 @@ function Select(props: {
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{props.label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{props.label}</span>
       <select
         required={props.required}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
       >
@@ -280,10 +280,10 @@ function OrgSelect(props: {
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-700">{props.label}</span>
+      <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">{props.label}</span>
       <select
         required={props.required}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={props.value ?? ""}
         onChange={(e) => props.onChange(e.target.value)}
       >

@@ -28,16 +28,16 @@ export default function ForgotPage() {
       </CardHeader>
       <CardBody>
         {done ? (
-          <div className="space-y-3 text-sm text-slate-700">
+          <div className="space-y-3 text-sm text-[rgb(var(--ink-2))]">
             <p>Nếu email tồn tại, chúng tôi đã gửi liên kết đặt lại trong vài phút tới.</p>
             <Link href="/signin" className="text-blue-600 text-sm">← Quay lại đăng nhập</Link>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">
             <label className="block">
-              <span className="block text-xs font-medium text-slate-700">Email</span>
+              <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Email</span>
               <input
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                 type="email"
                 required
                 value={email}

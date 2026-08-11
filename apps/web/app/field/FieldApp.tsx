@@ -106,18 +106,18 @@ export function FieldApp({ projects, latestAttendance }: { projects: Project[]; 
       </header>
 
       {/* Project picker */}
-      <div className="border-b border-slate-700 bg-slate-800 px-4 py-2">
-        <label className="block text-[11px] uppercase tracking-wide text-slate-400">Dự án đang ở</label>
-        <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="mt-1 w-full rounded-md bg-slate-700 px-3 py-2 text-sm text-white" data-testid="field-project">
+      <div className="border-b border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))] px-4 py-2">
+        <label className="block text-[11px] uppercase tracking-wide text-[rgb(var(--muted-2))]">Dự án đang ở</label>
+        <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="mt-1 w-full rounded-md bg-[rgb(var(--inverse-bg))] px-3 py-2 text-sm text-[rgb(var(--inverse-ink))]" data-testid="field-project">
           {projects.map((p) => <option key={p.id} value={p.id}>{p.key} — {p.name}</option>)}
         </select>
       </div>
 
       {/* Latest attendance summary */}
       {latestAttendance && (
-        <div className="border-b border-slate-700 bg-slate-800/40 px-4 py-2 text-xs">
-          <span className="text-slate-400">Lần chấm gần nhất:</span> {latestAttendance.workerName} ({latestAttendance.workerCode})
-          <div className="text-slate-300">Vào {fmtTime(latestAttendance.checkInAt)} {latestAttendance.checkOutAt ? `· Ra ${fmtTime(latestAttendance.checkOutAt)}` : <span className="text-emerald-400">· Đang trong ca</span>}</div>
+        <div className="border-b border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))]/40 px-4 py-2 text-xs">
+          <span className="text-[rgb(var(--muted-2))]">Lần chấm gần nhất:</span> {latestAttendance.workerName} ({latestAttendance.workerCode})
+          <div className="text-[rgb(var(--inverse-ink))]">Vào {fmtTime(latestAttendance.checkInAt)} {latestAttendance.checkOutAt ? `· Ra ${fmtTime(latestAttendance.checkOutAt)}` : <span className="text-emerald-400">· Đang trong ca</span>}</div>
         </div>
       )}
 
@@ -151,15 +151,15 @@ export function FieldApp({ projects, latestAttendance }: { projects: Project[]; 
               <div className="mt-2 text-lg font-bold">Ghi nhật ký nhanh</div>
               <div className="text-[11px] opacity-80">Mẫu giản tiện</div>
             </button>
-            <button onClick={() => setErr("Tính năng đang phát triển — sẽ có ở bản kế tiếp.")} className="aspect-square rounded-2xl bg-slate-600 p-4 text-left shadow-lg active:scale-95">
+            <button onClick={() => setErr("Tính năng đang phát triển — sẽ có ở bản kế tiếp.")} className="aspect-square rounded-2xl bg-[rgb(var(--inverse-bg))] p-4 text-left shadow-lg active:scale-95">
               <div className="text-3xl">🦺</div>
               <div className="mt-2 text-lg font-bold">PPE selfie</div>
               <div className="text-[11px] opacity-80">YOLO kiểm tra mũ + áo</div>
             </button>
           </div>
 
-          <div className="mt-4 rounded-xl border border-slate-700 bg-slate-800/60 p-3 text-xs text-slate-300">
-            <div className="font-medium text-white">Atlas Field — Q3/2027</div>
+          <div className="mt-4 rounded-xl border border-[rgb(var(--inverse-ink))] bg-[rgb(var(--inverse-bg))]/60 p-3 text-xs text-[rgb(var(--inverse-ink))]">
+            <div className="font-medium text-[rgb(var(--inverse-ink))]">Atlas Field — Q3/2027</div>
             <p className="mt-1 opacity-80">PWA mobile-first: cài vào màn hình chính. Offline-first: làm việc khi mất sóng, tự sync khi có lại mạng. Voice-to-form bằng tiếng Việt qua Whisper + Llama-3.3.</p>
           </div>
         </main>
@@ -171,7 +171,7 @@ export function FieldApp({ projects, latestAttendance }: { projects: Project[]; 
         <main className="px-4 py-12 text-center">
           <div className="animate-pulse text-5xl">📡</div>
           <div className="mt-4 text-base">Đang lấy GPS…</div>
-          <div className="mt-1 text-xs text-slate-400">Vui lòng cho phép quyền vị trí</div>
+          <div className="mt-1 text-xs text-[rgb(var(--muted-2))]">Vui lòng cho phép quyền vị trí</div>
         </main>
       )}
 
@@ -198,7 +198,7 @@ export function FieldApp({ projects, latestAttendance }: { projects: Project[]; 
           ) : result.form ? (
             <VoiceResultCard r={result} />
           ) : (
-            <pre className="overflow-auto rounded bg-slate-800 p-3 text-xs">{JSON.stringify(result, null, 2)}</pre>
+            <pre className="overflow-auto rounded bg-[rgb(var(--inverse-bg))] p-3 text-xs">{JSON.stringify(result, null, 2)}</pre>
           )}
           <button onClick={() => { setResult(null); setMode("home"); }} className="mt-6 w-full rounded-xl bg-blue-600 py-3 text-base font-bold shadow-lg active:scale-95">Quay về</button>
         </main>
@@ -263,14 +263,14 @@ function VoicePanel({ onBack, online, enqueue, onResult }: { onBack: () => void;
 
   return (
     <main className="flex min-h-[60vh] flex-col items-center justify-center px-6 py-8">
-      <button onClick={onBack} className="self-start text-xs text-slate-400">← Quay về</button>
+      <button onClick={onBack} className="self-start text-xs text-[rgb(var(--muted-2))]">← Quay về</button>
       {err && <div className="mt-3 self-stretch rounded-md border border-amber-400 bg-amber-500/10 p-3 text-sm text-amber-200">{err}</div>}
       <div className="mt-6 text-center">
         <div className="text-7xl">{state === "recording" ? "🔴" : state === "transcribing" ? "⏳" : "🎙️"}</div>
         <div className="mt-4 text-xl font-bold">
           {state === "idle" ? "Bấm để ghi âm" : state === "recording" ? `Đang ghi ${seconds}s` : "AI đang phân tích…"}
         </div>
-        <div className="mt-2 text-xs text-slate-400">
+        <div className="mt-2 text-xs text-[rgb(var(--muted-2))]">
           {state === "idle" ? "Whisper + Llama 3.3 tự phân loại + điền form" : state === "recording" ? "Bấm Dừng khi xong" : "Khoảng 2-5 giây"}
         </div>
       </div>
@@ -279,8 +279,8 @@ function VoicePanel({ onBack, online, enqueue, onResult }: { onBack: () => void;
         {state === "recording" && <button onClick={stop} className="rounded-full bg-amber-600 px-8 py-4 text-lg font-bold shadow-lg active:scale-95">Dừng</button>}
       </div>
 
-      <div className="mt-10 max-w-xs text-center text-[11px] text-slate-500">
-        <div className="font-medium text-slate-300">Gợi ý nói:</div>
+      <div className="mt-10 max-w-xs text-center text-[11px] text-[rgb(var(--muted))]">
+        <div className="font-medium text-[rgb(var(--inverse-ink))]">Gợi ý nói:</div>
         <ul className="mt-1 space-y-0.5">
           <li>"Hôm nay đã đổ bê tông cột tầng 5 trục A đến F, tiến độ khoảng 60%."</li>
           <li>"Phát hiện vi phạm: hai công nhân không đội mũ ở khu vực cẩu tháp."</li>
@@ -306,7 +306,7 @@ function VoiceResultCard({ r }: { r: any }) {
     NCR: { vn: "NCR chất lượng", emoji: "🔧", cls: "bg-amber-500/20 border-amber-400" },
     PPE_REPORT: { vn: "Vi phạm PPE", emoji: "🦺", cls: "bg-orange-500/20 border-orange-400" },
     PROGRESS: { vn: "Cập nhật tiến độ", emoji: "📈", cls: "bg-emerald-500/20 border-emerald-400" },
-    UNKNOWN: { vn: "Chưa phân loại", emoji: "❓", cls: "bg-slate-500/20 border-slate-400" },
+    UNKNOWN: { vn: "Chưa phân loại", emoji: "❓", cls: "bg-[rgb(var(--muted))]/20 border-[rgb(var(--line-2))]" },
   };
   const m = intentLabel[r.form.intent] ?? intentLabel.UNKNOWN!;
   const fields: Array<[string, any]> = [];
@@ -325,15 +325,15 @@ function VoiceResultCard({ r }: { r: any }) {
           <div className="text-[11px] opacity-70">độ tin cậy {Math.round((r.form.confidence ?? 0) * 100)}% · {r.source}</div>
         </div>
       </div>
-      <div className="mt-3 rounded bg-slate-900/40 p-2 text-xs italic">"{r.transcript}"</div>
+      <div className="mt-3 rounded bg-[rgb(var(--inverse-bg))]/40 p-2 text-xs italic">"{r.transcript}"</div>
       {fields.length > 0 && (
         <ul className="mt-3 space-y-1 text-xs">
           {fields.map(([k, v]) => (
-            <li key={k}><span className="text-slate-400">{labelForField(k)}:</span> <span className="font-medium">{String(v)}</span></li>
+            <li key={k}><span className="text-[rgb(var(--muted-2))]">{labelForField(k)}:</span> <span className="font-medium">{String(v)}</span></li>
           ))}
         </ul>
       )}
-      {fields.length === 0 && <div className="mt-3 text-xs text-slate-300">AI chưa rút trích được field nào — hãy nói rõ hơn về vị trí, công việc, % hoàn thành.</div>}
+      {fields.length === 0 && <div className="mt-3 text-xs text-[rgb(var(--inverse-ink))]">AI chưa rút trích được field nào — hãy nói rõ hơn về vị trí, công việc, % hoàn thành.</div>}
     </div>
   );
 }

@@ -53,10 +53,10 @@ export default async function BidRadarPage() {
       subtitle="Săn gói thầu nhà nước — muasamcong.mpi.gov.vn + dauthau.asia. Alert qua email khi có gói phù hợp NACE code."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng gói thầu</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đóng thầu trong 7 ngày</div><div className="mt-1 text-2xl font-bold text-amber-700">{closingSoon.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng ngân sách (top 30)</div><div className="mt-1 text-xl font-bold">{formatVnd(BigInt(totalBudget))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Watchlist của bạn</div><div className="mt-1 text-2xl font-bold text-slate-400">—</div><div className="text-[10px] text-slate-400">Coming soon</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng gói thầu</div><div className="mt-1 text-2xl font-bold">{total}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đóng thầu trong 7 ngày</div><div className="mt-1 text-2xl font-bold text-amber-700">{closingSoon.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng ngân sách (top 30)</div><div className="mt-1 text-xl font-bold">{formatVnd(BigInt(totalBudget))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Watchlist của bạn</div><div className="mt-1 text-2xl font-bold text-[rgb(var(--muted-2))]">—</div><div className="text-[10px] text-[rgb(var(--muted-2))]">Coming soon</div></CardBody></Card>
       </div>
 
       <div className="mt-6 flex justify-end"><TenderCreateButton /></div>
@@ -66,13 +66,13 @@ export default async function BidRadarPage() {
           <CardHeader><CardTitle className="text-amber-800">⏰ Sắp đóng thầu — {closingSoon.length} gói</CardTitle></CardHeader>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-amber-50 text-xs uppercase text-amber-800">
+              <thead className="border-b border-[rgb(var(--line))] bg-amber-50 text-xs uppercase text-amber-800">
                 <tr><th className="p-2 text-left">Gói thầu</th><th className="p-2 text-left">Bên mời</th><th className="p-2 text-right">Ngân sách</th><th className="p-2 text-left">Đóng thầu</th><th className="p-2 text-left">Nguồn</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {closingSoon.map((t) => (
                   <tr key={t.id} className="hover:bg-amber-50/30">
-                    <td className="p-2"><div className="font-medium">{t.title}</div><div className="text-[10px] font-mono text-slate-500">{t.sourceRef ?? "—"}</div></td>
+                    <td className="p-2"><div className="font-medium">{t.title}</div><div className="text-[10px] font-mono text-[rgb(var(--muted))]">{t.sourceRef ?? "—"}</div></td>
                     <td className="p-2 text-xs">{t.invitor ?? "—"}</td>
                     <td className="p-2 text-right text-sm">{t.budgetVnd ? formatVnd(t.budgetVnd) : "—"}</td>
                     <td className="p-2 text-xs text-amber-800">{t.closingAt ? formatDateVn(t.closingAt) : "—"}</td>
@@ -90,28 +90,28 @@ export default async function BidRadarPage() {
           <CardHeader><CardTitle>Gói thầu mới nhất ({recent.length})</CardTitle></CardHeader>
           <CardBody className="p-0">
             {recent.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">
+              <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
                 Chưa có gói thầu nào. Bấm “Thêm cơ hội” để nhập tay, hoặc hệ thống tự quét muasamcong.mpi.gov.vn theo lịch.
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[rgb(var(--line))]">
                 {recent.slice(0, 20).map((t) => (
                   <li key={t.id} className="p-3 text-sm">
                     <div className="flex items-center gap-2">
                       <Badge variant="neutral">{sourceLabel[t.source] ?? t.source}</Badge>
                       {t.bidMethod && <Badge variant="info">{t.bidMethod}</Badge>}
-                      {t.province && <span className="text-xs text-slate-500">{t.province}</span>}
+                      {t.province && <span className="text-xs text-[rgb(var(--muted))]">{t.province}</span>}
                     </div>
                     <div className="mt-1 flex items-start justify-between gap-2">
-                      <div className="font-medium text-slate-900">{t.title}</div>
+                      <div className="font-medium text-[rgb(var(--ink))]">{t.title}</div>
                       {activeOrgId && <TrackAction opportunityId={t.id} orgId={activeOrgId} />}
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                    <div className="flex items-center justify-between text-[11px] text-[rgb(var(--muted))]">
                       <span>{t.invitor ?? "—"}</span>
                       <span>{t.budgetVnd ? formatVnd(t.budgetVnd) : "—"}</span>
                     </div>
                     {t.closingAt && (
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[11px] text-[rgb(var(--muted))]">
                         Đóng thầu: {formatDateVn(t.closingAt)}
                       </div>
                     )}
@@ -126,12 +126,12 @@ export default async function BidRadarPage() {
           <CardHeader><CardTitle>Theo tỉnh</CardTitle></CardHeader>
           <CardBody>
             {byProvince.length === 0 ? (
-              <div className="text-sm text-slate-500">Chưa có dữ liệu.</div>
+              <div className="text-sm text-[rgb(var(--muted))]">Chưa có dữ liệu.</div>
             ) : (
               <ul className="space-y-1.5">
                 {byProvince.map((p) => (
                   <li key={p.province ?? "unknown"} className="flex items-center justify-between text-sm">
-                    <span className="text-slate-700">{p.province ?? "Không xác định"}</span>
+                    <span className="text-[rgb(var(--ink-2))]">{p.province ?? "Không xác định"}</span>
                     <Badge variant="neutral">{p._count._all}</Badge>
                   </li>
                 ))}

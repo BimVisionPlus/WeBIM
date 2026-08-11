@@ -64,27 +64,27 @@ export default async function PulseOrgPage() {
       subtitle="Dashboard điều hành đa dự án — heatmap rủi ro, escalation matrix khi NCR/safety/handover quá hạn."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Issue mở</div><div className="mt-1 text-2xl font-bold">{openIssues}</div><div className="text-[10px] text-rose-700">{overdueIssues} quá hạn</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Nhật ký hôm nay</div><div className="mt-1 text-2xl font-bold text-blue-700">{todayLogs}/{projects.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Sự cố ATVSLĐ mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{incidentsOpen}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Clash BIM mở</div><div className="mt-1 text-2xl font-bold text-amber-700">{clashesOpen}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Issue mở</div><div className="mt-1 text-2xl font-bold">{openIssues}</div><div className="text-[10px] text-rose-700">{overdueIssues} quá hạn</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Nhật ký hôm nay</div><div className="mt-1 text-2xl font-bold text-blue-700">{todayLogs}/{projects.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Sự cố ATVSLĐ mở</div><div className="mt-1 text-2xl font-bold text-rose-700">{incidentsOpen}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Clash BIM mở</div><div className="mt-1 text-2xl font-bold text-amber-700">{clashesOpen}</div></CardBody></Card>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Handover quá SLA</div><div className="mt-1 text-2xl font-bold text-rose-700">{handoverOverdue}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Hồ sơ chất lượng thiếu</div><div className="mt-1 text-2xl font-bold text-amber-700">{dossierMissing}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">CO chờ CĐT duyệt</div><div className="mt-1 text-2xl font-bold text-violet-700">{changeOrdersAwaitingCdt}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Dự án theo dõi</div><div className="mt-1 text-2xl font-bold">{projects.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Handover quá SLA</div><div className="mt-1 text-2xl font-bold text-rose-700">{handoverOverdue}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Hồ sơ chất lượng thiếu</div><div className="mt-1 text-2xl font-bold text-amber-700">{dossierMissing}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">CO chờ CĐT duyệt</div><div className="mt-1 text-2xl font-bold text-violet-700">{changeOrdersAwaitingCdt}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Dự án theo dõi</div><div className="mt-1 text-2xl font-bold">{projects.length}</div></CardBody></Card>
       </div>
 
       <Card className="mt-6">
         <CardHeader><CardTitle>Heatmap dự án (top {perProject.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {perProject.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Không có dự án nào.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Không có dự án nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Dự án</th>
                   <th className="p-2 text-right">Open</th>
@@ -95,12 +95,12 @@ export default async function PulseOrgPage() {
                   <th className="p-2 text-right">Score</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {perProject.map((r) => {
                   const color = r.score >= 20 ? "bg-rose-50 border-l-4 border-rose-400" : r.score >= 10 ? "bg-amber-50 border-l-4 border-amber-400" : "";
                   return (
-                    <tr key={r.p.id} className={`hover:bg-slate-50 ${color}`}>
-                      <td className="p-2"><div className="font-mono text-xs text-slate-600">{r.p.key}</div><div className="text-xs font-medium text-slate-900">{r.p.name}</div></td>
+                    <tr key={r.p.id} className={`hover:bg-[rgb(var(--raised))] ${color}`}>
+                      <td className="p-2"><div className="font-mono text-xs text-[rgb(var(--muted))]">{r.p.key}</div><div className="text-xs font-medium text-[rgb(var(--ink))]">{r.p.name}</div></td>
                       <td className="p-2 text-right text-sm">{r.open}</td>
                       <td className="p-2 text-right text-sm text-rose-700">{r.overdue}</td>
                       <td className="p-2 text-right text-sm text-rose-700">{r.incidents}</td>
@@ -116,7 +116,7 @@ export default async function PulseOrgPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-6 text-xs text-slate-500">
+      <div className="mt-6 text-xs text-[rgb(var(--muted))]">
         Score composite = overdue×4 + ATVSLĐ×6 + clash×1 + handover quá SLA×5. Càng cao càng cần can thiệp.
       </div>
     </AecModuleShell>

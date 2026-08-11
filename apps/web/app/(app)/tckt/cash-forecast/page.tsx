@@ -76,33 +76,33 @@ export default async function CashForecastPage() {
   return (
     <AecModuleShell group="Tài chính kế toán" name="Dự báo dòng tiền 90 ngày" subtitle="Tạm ứng + thanh toán + bàn giao khoán − thu hợp đồng. Phân bổ theo tuần.">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng chi 90d</div><div className="mt-1 text-xl font-bold text-rose-700">{fmtShort(BigInt(Math.round(totalOut)))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng thu 90d</div><div className="mt-1 text-xl font-bold text-emerald-700">{fmtShort(BigInt(Math.round(totalIn)))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Net 90d</div><div className={`mt-1 text-xl font-bold ${net >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{net >= 0 ? "+" : ""}{fmtShort(BigInt(Math.round(net)))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tuần thiếu hụt</div><div className="mt-1 text-xl font-bold text-amber-700">{ordered.filter((b) => (b as Bucket & { net: number }).net < 0).length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng chi 90d</div><div className="mt-1 text-xl font-bold text-rose-700">{fmtShort(BigInt(Math.round(totalOut)))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng thu 90d</div><div className="mt-1 text-xl font-bold text-emerald-700">{fmtShort(BigInt(Math.round(totalIn)))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Net 90d</div><div className={`mt-1 text-xl font-bold ${net >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{net >= 0 ? "+" : ""}{fmtShort(BigInt(Math.round(net)))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tuần thiếu hụt</div><div className="mt-1 text-xl font-bold text-amber-700">{ordered.filter((b) => (b as Bucket & { net: number }).net < 0).length}</div></CardBody></Card>
       </div>
 
       <Card className="mt-6">
         <CardHeader><CardTitle>Theo tuần ({ordered.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {ordered.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Chưa có dòng tiền dự kiến trong 90 ngày tới.</div>
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">Chưa có dòng tiền dự kiến trong 90 ngày tới.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr><th className="p-2 text-left">Tuần</th><th className="p-2 text-right">Chi</th><th className="p-2 text-right">Thu</th><th className="p-2 text-right">Net</th><th className="p-2 text-right">Tích lũy</th><th className="p-2 text-left">Khoản chính</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {ordered.map((b) => {
                   const wk = b as Bucket & { net: number; running: number };
                   return (
-                    <tr key={wk.weekStart.toISOString()} className={`hover:bg-slate-50 ${wk.net < 0 ? "bg-rose-50/30" : ""}`} data-testid={`week-${wk.weekStart.toISOString().slice(0,10)}`}>
+                    <tr key={wk.weekStart.toISOString()} className={`hover:bg-[rgb(var(--raised))] ${wk.net < 0 ? "bg-rose-50/30" : ""}`} data-testid={`week-${wk.weekStart.toISOString().slice(0,10)}`}>
                       <td className="p-2 text-xs font-medium">{wk.weekLabel}</td>
                       <td className="p-2 text-right text-xs text-rose-700">-{fmtShort(BigInt(Math.round(wk.out)))}</td>
                       <td className="p-2 text-right text-xs text-emerald-700">+{fmtShort(BigInt(Math.round(wk.in)))}</td>
                       <td className={`p-2 text-right text-xs font-medium ${wk.net >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{wk.net >= 0 ? "+" : ""}{fmtShort(BigInt(Math.round(wk.net)))}</td>
                       <td className={`p-2 text-right text-xs ${wk.running >= 0 ? "" : "text-rose-700 font-medium"}`}>{wk.running >= 0 ? "" : "-"}{fmtShort(BigInt(Math.round(Math.abs(wk.running))))}</td>
-                      <td className="p-2 text-[11px] text-slate-600 line-clamp-1">{wk.items.slice(0, 2).map((it) => `${it.kind}: ${it.label}`).join(" · ")}{wk.items.length > 2 && ` +${wk.items.length - 2}`}</td>
+                      <td className="p-2 text-[11px] text-[rgb(var(--muted))] line-clamp-1">{wk.items.slice(0, 2).map((it) => `${it.kind}: ${it.label}`).join(" · ")}{wk.items.length > 2 && ` +${wk.items.length - 2}`}</td>
                     </tr>
                   );
                 })}
@@ -112,7 +112,7 @@ export default async function CashForecastPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-4 text-[11px] text-slate-500">
+      <div className="mt-4 text-[11px] text-[rgb(var(--muted))]">
         Phương pháp: chi = tạm ứng + thanh toán (pending/approved) + giá trị giao khoán còn lại tại endDate. Thu = PaymentApplication đã CĐT duyệt — ước nhận trong 14 ngày.
       </div>
     </AecModuleShell>

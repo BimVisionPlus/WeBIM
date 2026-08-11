@@ -28,7 +28,7 @@ export function ClashDetectButton({ projectId, disabled }: { projectId: string; 
   return (
     <div className="flex items-center gap-2">
       {result && (
-        <span className="text-xs text-slate-600">
+        <span className="text-xs text-[rgb(var(--muted))]">
           Tìm thấy {result.totalHits} clash · tạo mới {result.created}
         </span>
       )}
@@ -36,7 +36,7 @@ export function ClashDetectButton({ projectId, disabled }: { projectId: string; 
         type="button"
         onClick={go}
         disabled={busy || disabled}
-        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        className="rounded-md border border-[rgb(var(--line-2))] bg-[rgb(var(--surface))] px-3 py-1.5 text-sm font-medium text-[rgb(var(--ink-2))] hover:bg-[rgb(var(--raised))] disabled:opacity-50"
       >
         {busy ? "Đang chạy…" : "↻ Chạy clash"}
       </button>

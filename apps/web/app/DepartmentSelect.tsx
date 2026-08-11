@@ -42,7 +42,7 @@ export function DepartmentSelect({ projectId, value }: { projectId: string; valu
         value={current}
         onChange={onChange}
         disabled={busy}
-        className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] text-slate-700 disabled:opacity-50"
+        className="rounded border border-[rgb(var(--line-2))] bg-[rgb(var(--surface))] px-1.5 py-0.5 text-[11px] text-[rgb(var(--ink-2))] disabled:opacity-50"
         title="Đổi phòng phụ trách"
       >
         {DEPT_LABELS.map((d) => (

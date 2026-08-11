@@ -55,7 +55,7 @@ export default async function HandoverPage({ params }: { params: { projectId: st
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Handover — Bảo hành & sửa chữa hậu bàn giao</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           Service desk theo NĐ 06/2021: bảo hành 12 tháng phần phụ · 24 tháng phần chính · 60 tháng hạ tầng. SLA tính theo mức độ.
         </p>
       </div>
@@ -63,25 +63,25 @@ export default async function HandoverPage({ params }: { params: { projectId: st
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tổng ticket</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tổng ticket</div>
             <div className="mt-1 text-2xl font-bold">{tickets.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Đang mở</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Đang mở</div>
             <div className="mt-1 text-2xl font-bold text-blue-700">{open.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Quá SLA</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Quá SLA</div>
             <div className="mt-1 text-2xl font-bold text-rose-700">{overdue.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tỉ lệ xác nhận</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tỉ lệ xác nhận</div>
             <div className="mt-1 text-2xl font-bold text-emerald-700">
               {tickets.length === 0
                 ? "—"
@@ -99,7 +99,7 @@ export default async function HandoverPage({ params }: { params: { projectId: st
           <CardBody className="divide-y divide-rose-100 p-0">
             {overdue.slice(0, 5).map((t) => (
               <div key={t.id} className="p-3 text-sm">
-                <div className="font-mono text-xs text-slate-500">{t.ticketNumber}</div>
+                <div className="font-mono text-xs text-[rgb(var(--muted))]">{t.ticketNumber}</div>
                 <div className="mt-0.5 font-medium">{t.title}</div>
                 <div className="text-[11px] text-rose-700">Quá hạn: {relativeDateVn(t.slaDueAt!)}</div>
               </div>
@@ -114,13 +114,13 @@ export default async function HandoverPage({ params }: { params: { projectId: st
         </CardHeader>
         <CardBody className="p-0">
           {tickets.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có yêu cầu bảo hành. Cư dân/CĐT báo lỗi qua{" "}
-              <code className="rounded bg-slate-100 px-1">POST /api/handover</code>.
+              <code className="rounded bg-[rgb(var(--raised))] px-1">POST /api/handover</code>.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Căn</th>
@@ -133,28 +133,28 @@ export default async function HandoverPage({ params }: { params: { projectId: st
                   <th className="p-2 text-left">Hành động</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {tickets.map((t) => {
                   const slaOverdue = t.slaDueAt && t.slaDueAt.getTime() < now && !["VERIFIED", "REJECTED", "CLOSED"].includes(t.state);
                   return (
-                    <tr key={t.id} className="hover:bg-slate-50">
+                    <tr key={t.id} className="hover:bg-[rgb(var(--raised))]">
                       <td className="p-2 align-top font-mono text-xs">{t.ticketNumber}</td>
                       <td className="p-2 align-top text-xs">{t.unitCode ?? "—"}</td>
                       <td className="p-2 align-top text-xs"><Badge variant="neutral">{categoryLabel[t.category]}</Badge></td>
                       <td className="p-2 align-top text-center"><Badge variant={sevVariant[t.severity]}>{t.severity}</Badge></td>
                       <td className="p-2 align-top">
                         <div className="font-medium">{t.title}</div>
-                        <div className="text-[11px] text-slate-500">Báo: {t.reporterName}{t.reporterPhone ? ` · ${t.reporterPhone}` : ""}</div>
+                        <div className="text-[11px] text-[rgb(var(--muted))]">Báo: {t.reporterName}{t.reporterPhone ? ` · ${t.reporterPhone}` : ""}</div>
                       </td>
                       <td className="p-2 align-top"><Badge variant={stateLabel[t.state]?.variant}>{stateLabel[t.state]?.vn}</Badge></td>
                       <td className="p-2 align-top text-xs">
                         {t.slaDueAt ? (
-                          <span className={slaOverdue ? "text-rose-700" : "text-slate-600"}>
+                          <span className={slaOverdue ? "text-rose-700" : "text-[rgb(var(--muted))]"}>
                             {relativeDateVn(t.slaDueAt)}
                           </span>
                         ) : "—"}
                       </td>
-                      <td className="p-2 align-top text-[11px] text-slate-500">{warrantyLabel[t.warrantyType]}</td>
+                      <td className="p-2 align-top text-[11px] text-[rgb(var(--muted))]">{warrantyLabel[t.warrantyType]}</td>
                       <td className="p-2 align-top">
                         <HandoverStateEdit
                           ticket={{

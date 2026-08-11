@@ -55,10 +55,10 @@ export default async function ChangeOrderOrgPage() {
       subtitle="Change Order — workflow CĐT → TVTK → nhà thầu. Phát sinh khối lượng tự cộng vào EVM."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng lệnh</div><div className="mt-1 text-2xl font-bold">{cos.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã duyệt</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved.length}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Δ chi phí (mọi lệnh)</div><div className={`mt-1 text-2xl font-bold ${totalDelta >= 0 ? "text-rose-700" : "text-emerald-700"}`}>{totalDelta >= 0 ? "+" : ""}{formatVnd(BigInt(totalDelta))}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Δ tiến độ tổng</div><div className={`mt-1 text-2xl font-bold ${totalScheduleDays >= 0 ? "text-rose-700" : "text-emerald-700"}`}>{totalScheduleDays >= 0 ? "+" : ""}{totalScheduleDays} ngày</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng lệnh</div><div className="mt-1 text-2xl font-bold">{cos.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã duyệt</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved.length}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Δ chi phí (mọi lệnh)</div><div className={`mt-1 text-2xl font-bold ${totalDelta >= 0 ? "text-rose-700" : "text-emerald-700"}`}>{totalDelta >= 0 ? "+" : ""}{formatVnd(BigInt(totalDelta))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Δ tiến độ tổng</div><div className={`mt-1 text-2xl font-bold ${totalScheduleDays >= 0 ? "text-rose-700" : "text-emerald-700"}`}>{totalScheduleDays >= 0 ? "+" : ""}{totalScheduleDays} ngày</div></CardBody></Card>
       </div>
 
       <div className="mt-6"><CreateForm projects={projects} /></div>
@@ -67,12 +67,12 @@ export default async function ChangeOrderOrgPage() {
         <CardHeader><CardTitle>Danh sách lệnh thay đổi ({cos.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {cos.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có lệnh thay đổi. Tạo Issue dạng CHANGE_ORDER trong dự án.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Mã</th>
                   <th className="p-2 text-left">Dự án</th>
@@ -83,18 +83,18 @@ export default async function ChangeOrderOrgPage() {
                   <th className="p-2 text-left">Phê duyệt</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {cos.map((co) => {
                   const meta = stateLabel[co.issue.state] ?? { vn: co.issue.state, variant: "neutral" as const };
                   return (
-                    <tr key={co.issueId} className="hover:bg-slate-50">
+                    <tr key={co.issueId} className="hover:bg-[rgb(var(--raised))]">
                       <td className="p-2 font-mono text-xs">{co.issue.key}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{co.issue.project.key}</td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{co.issue.project.key}</td>
                       <td className="p-2"><Badge variant={meta.variant}>{meta.vn}</Badge></td>
-                      <td className="p-2"><div className="font-medium">{co.issue.title}</div><div className="text-[11px] text-slate-500 line-clamp-1">{co.reason}</div></td>
+                      <td className="p-2"><div className="font-medium">{co.issue.title}</div><div className="text-[11px] text-[rgb(var(--muted))] line-clamp-1">{co.reason}</div></td>
                       <td className={`p-2 text-right text-xs font-medium ${Number(co.costDeltaVnd) >= 0 ? "text-rose-700" : "text-emerald-700"}`}>{Number(co.costDeltaVnd) >= 0 ? "+" : ""}{formatVnd(co.costDeltaVnd)}</td>
                       <td className={`p-2 text-right text-xs ${co.scheduleDeltaDays >= 0 ? "text-rose-700" : "text-emerald-700"}`}>{co.scheduleDeltaDays >= 0 ? "+" : ""}{co.scheduleDeltaDays}</td>
-                      <td className="p-2 text-xs text-slate-500">{co.approvedAt ? formatDateVn(co.approvedAt) : "—"}</td>
+                      <td className="p-2 text-xs text-[rgb(var(--muted))]">{co.approvedAt ? formatDateVn(co.approvedAt) : "—"}</td>
                     </tr>
                   );
                 })}
@@ -105,8 +105,8 @@ export default async function ChangeOrderOrgPage() {
       </Card>
 
       {approved.length > 0 && (
-        <div className="mt-4 text-xs text-slate-500">
-          Tổng phát sinh đã duyệt: <span className="font-medium text-slate-700">{formatVnd(BigInt(approvedDelta))}</span>
+        <div className="mt-4 text-xs text-[rgb(var(--muted))]">
+          Tổng phát sinh đã duyệt: <span className="font-medium text-[rgb(var(--ink-2))]">{formatVnd(BigInt(approvedDelta))}</span>
         </div>
       )}
     </AecModuleShell>

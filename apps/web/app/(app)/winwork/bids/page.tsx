@@ -41,7 +41,7 @@ export default async function BidsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Hồ sơ dự thầu</h2>
-          <p className="text-sm text-slate-500">Quản lý vòng đời HSDT: dự toán → nộp → trúng/trượt</p>
+          <p className="text-sm text-[rgb(var(--muted))]">Quản lý vòng đời HSDT: dự toán → nộp → trúng/trượt</p>
         </div>
         <BidCreateButton
           orgs={memberships.map((m) => ({ id: m.org.id, name: m.org.name }))}
@@ -60,12 +60,12 @@ export default async function BidsPage() {
         </CardHeader>
         <CardBody className="p-0">
           {bids.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có hồ sơ dự thầu nào. Tạo HSDT từ một cơ hội đấu thầu hoặc trống.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-3 text-left">Mã</th>
                   <th className="p-3 text-left">Tên gói thầu</th>
@@ -77,16 +77,16 @@ export default async function BidsPage() {
                   <th className="p-3 text-left">Cập nhật</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {bids.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50">
+                  <tr key={b.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-3 font-mono text-xs">
                       <Link href={`/winwork/bids/${b.id}`} className="text-blue-700 hover:underline">{b.key}</Link>
                     </td>
                     <td className="p-3">
                       <div className="font-medium">{b.title}</div>
                       {b.opportunity && (
-                        <div className="text-[11px] text-slate-500">↳ {b.opportunity.title}</div>
+                        <div className="text-[11px] text-[rgb(var(--muted))]">↳ {b.opportunity.title}</div>
                       )}
                     </td>
                     <td className="p-3">
@@ -101,10 +101,10 @@ export default async function BidsPage() {
                       )}
                     </td>
                     <td className="p-3 text-right font-medium">{formatVndShort(b.proposedValueVnd)}</td>
-                    <td className="p-3 text-slate-700">{b.owner.name}</td>
+                    <td className="p-3 text-[rgb(var(--ink-2))]">{b.owner.name}</td>
                     <td className="p-3 text-center">{b._count.bonds}</td>
                     <td className="p-3 text-center">{b._count.complianceChecks}</td>
-                    <td className="p-3 text-xs text-slate-500">{relativeDateVn(b.updatedAt)}</td>
+                    <td className="p-3 text-xs text-[rgb(var(--muted))]">{relativeDateVn(b.updatedAt)}</td>
                   </tr>
                 ))}
               </tbody>

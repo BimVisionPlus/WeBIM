@@ -80,20 +80,20 @@ export default async function ClientPortalPage() {
       subtitle="Mobile-first cho CĐT không kỹ thuật. Hàng đợi duyệt 1-tap từ PaymentRail/ChangeOrder/QAQC/MethodStatement/Material/Acceptance."
     >
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đang chờ duyệt</div><div className="mt-1 text-2xl font-bold text-amber-700">{pending}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Khẩn cần xử lý</div><div className="mt-1 text-2xl font-bold text-rose-700">{urgent}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Đã duyệt 7 ngày qua</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved7d}</div></CardBody></Card>
-        <Card><CardBody className="py-3"><div className="text-xs text-slate-500">Tổng giá trị chờ duyệt</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalPaymentApproval))}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đang chờ duyệt</div><div className="mt-1 text-2xl font-bold text-amber-700">{pending}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Khẩn cần xử lý</div><div className="mt-1 text-2xl font-bold text-rose-700">{urgent}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Đã duyệt 7 ngày qua</div><div className="mt-1 text-2xl font-bold text-emerald-700">{approved7d}</div></CardBody></Card>
+        <Card><CardBody className="py-3"><div className="text-xs text-[rgb(var(--muted))]">Tổng giá trị chờ duyệt</div><div className="mt-1 text-2xl font-bold">{formatVnd(BigInt(totalPaymentApproval))}</div></CardBody></Card>
       </div>
 
       <Card className="mt-6">
         <CardHeader><CardTitle>Dự án của CĐT ({projects.length})</CardTitle></CardHeader>
         <CardBody className="p-0">
           {projects.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">CĐT chưa có DA nào liên quan.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">CĐT chưa có DA nào liên quan.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Dự án</th>
                   <th className="p-2 text-left">Tỉnh / Trạng thái</th>
@@ -103,11 +103,11 @@ export default async function ClientPortalPage() {
                   <th className="p-2 text-right">Giá trị HĐ</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {projects.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="p-2 text-xs"><div className="font-medium">{p.name}</div><div className="text-[10px] font-mono text-slate-500">{p.key}</div></td>
-                    <td className="p-2 text-xs">{p.province}<div className="text-[10px] text-slate-500">{p.status}</div></td>
+                  <tr key={p.id} className="hover:bg-[rgb(var(--raised))]">
+                    <td className="p-2 text-xs"><div className="font-medium">{p.name}</div><div className="text-[10px] font-mono text-[rgb(var(--muted))]">{p.key}</div></td>
+                    <td className="p-2 text-xs">{p.province}<div className="text-[10px] text-[rgb(var(--muted))]">{p.status}</div></td>
                     <td className="p-2 text-right text-xs">{p._count.acceptances}</td>
                     <td className="p-2 text-right text-xs">{p._count.dailyLogs}</td>
                     <td className="p-2 text-right text-xs">{p._count.paymentApps}</td>
@@ -126,10 +126,10 @@ export default async function ClientPortalPage() {
         <CardHeader><CardTitle>Hàng đợi duyệt ({pending} chờ / {requests.length} tổng)</CardTitle></CardHeader>
         <CardBody className="p-0">
           {requests.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Chưa có yêu cầu duyệt nào.</div>
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">Chưa có yêu cầu duyệt nào.</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-2 text-left">Nguồn</th>
                   <th className="p-2 text-left">Dự án</th>
@@ -141,16 +141,16 @@ export default async function ClientPortalPage() {
                   <th className="p-2 text-left">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {requests.map((r) => {
                   const sm = sourceLabel[r.source] ?? { vn: r.source, icon: "📌" };
                   const pm = priorityLabel[r.priority] ?? { vn: r.priority, variant: "neutral" as const };
                   const stm = stateLabel[r.state] ?? { vn: r.state, variant: "neutral" as const };
                   return (
-                    <tr key={r.id} className={`hover:bg-slate-50 ${r.priority === "URGENT" && r.state === "PENDING" ? "bg-rose-50" : ""}`} data-testid={`req-${r.id}`}>
+                    <tr key={r.id} className={`hover:bg-[rgb(var(--raised))] ${r.priority === "URGENT" && r.state === "PENDING" ? "bg-rose-50" : ""}`} data-testid={`req-${r.id}`}>
                       <td className="p-2 text-xs">{sm.icon} {sm.vn}</td>
-                      <td className="p-2 text-xs font-mono text-slate-600">{r.project.key}</td>
-                      <td className="p-2 text-xs"><div className="font-medium">{r.title}</div><div className="text-[10px] text-slate-500 line-clamp-1">{r.summary}</div></td>
+                      <td className="p-2 text-xs font-mono text-[rgb(var(--muted))]">{r.project.key}</td>
+                      <td className="p-2 text-xs"><div className="font-medium">{r.title}</div><div className="text-[10px] text-[rgb(var(--muted))] line-clamp-1">{r.summary}</div></td>
                       <td className="p-2 text-right text-xs">{r.amountVnd ? formatVnd(r.amountVnd) : "—"}</td>
                       <td className="p-2"><Badge variant={pm.variant}>{pm.vn}</Badge></td>
                       <td className="p-2 text-xs">{r.dueAt ? formatDateVn(r.dueAt) : "—"}</td>
@@ -165,7 +165,7 @@ export default async function ClientPortalPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-3 text-[11px] text-slate-500">
+      <div className="mt-3 text-[11px] text-[rgb(var(--muted))]">
         Mobile-first PWA — push notification mỗi yêu cầu khẩn. 1-tap APPROVE/REJECT từ điện thoại
         (chữ ký số VNPT-CA qua Smart Authentication API). Kết nối Site Status (Statuspage) cho overview real-time.
       </div>

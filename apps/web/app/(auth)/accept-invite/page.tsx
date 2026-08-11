@@ -63,28 +63,28 @@ function AcceptInner() {
         <form onSubmit={accept} className="space-y-3">
           {signedIn === "no" && (
             <>
-              <p className="text-xs text-slate-500">Tạo tài khoản để tham gia tổ chức:</p>
+              <p className="text-xs text-[rgb(var(--muted))]">Tạo tài khoản để tham gia tổ chức:</p>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Họ và tên</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Họ và tên</span>
                 <input
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </label>
               <label className="block">
-                <span className="block text-xs font-medium text-slate-700">Mật khẩu</span>
+                <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Mật khẩu</span>
                 <input
                   type="password"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
                   required
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </label>
-              <p className="text-xs text-slate-500">Tối thiểu 8 ký tự, gồm chữ và số.</p>
+              <p className="text-xs text-[rgb(var(--muted))]">Tối thiểu 8 ký tự, gồm chữ và số.</p>
             </>
           )}
           {err && <div className="rounded bg-rose-50 px-3 py-2 text-xs text-rose-700">{err}</div>}

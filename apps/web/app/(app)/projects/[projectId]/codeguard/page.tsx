@@ -59,7 +59,7 @@ export default async function CodeGuardPage({ params }: { params: { projectId: s
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">CodeGuard — TCVN/QCVN & Hồ sơ chất lượng</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           Thư viện tiêu chuẩn áp dụng cho {project?.name} + checklist hồ sơ NĐ 15/2021 + biên bản nghiệm thu NĐ 06/2021.
         </p>
       </div>
@@ -67,26 +67,26 @@ export default async function CodeGuardPage({ params }: { params: { projectId: s
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Hồ sơ hoàn thiện</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Hồ sơ hoàn thiện</div>
             <div className="mt-1 text-2xl font-bold">{completionPct}%</div>
-            <div className="text-[11px] text-slate-500">{accepted}/{total} mục</div>
+            <div className="text-[11px] text-[rgb(var(--muted))]">{accepted}/{total} mục</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Mục còn thiếu</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Mục còn thiếu</div>
             <div className="mt-1 text-2xl font-bold text-rose-700">{missing}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Tiêu chuẩn áp dụng</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Tiêu chuẩn áp dụng</div>
             <div className="mt-1 text-2xl font-bold">{applicable.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Thư viện hiệu lực</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Thư viện hiệu lực</div>
             <div className="mt-1 text-2xl font-bold">{regs.length}+</div>
           </CardBody>
         </Card>
@@ -101,16 +101,16 @@ export default async function CodeGuardPage({ params }: { params: { projectId: s
         </CardHeader>
         <CardBody className="p-0">
           {items.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa khởi tạo checklist hồ sơ. Bấm "Khởi tạo theo NĐ 15/2021" để sinh template chuẩn.
             </div>
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-[rgb(var(--line))]">
               {Object.entries(byCat).map(([cat, list]) => (
                 <div key={cat} className="px-4 py-3">
                   <div className="mb-2 flex items-center gap-2">
                     <Badge variant="violet">{categoryLabel[cat] ?? cat}</Badge>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[rgb(var(--muted))]">
                       {list!.filter((i) => i.status === "ACCEPTED").length}/{list!.length} hoàn thiện
                     </span>
                   </div>
@@ -118,11 +118,11 @@ export default async function CodeGuardPage({ params }: { params: { projectId: s
                     {list!.map((it) => (
                       <div
                         key={it.id}
-                        className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-slate-50"
+                        className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-[rgb(var(--raised))]"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-[11px] text-slate-500">{it.itemCode}</span>
-                          <span className="text-slate-900">{it.itemTitle}</span>
+                          <span className="font-mono text-[11px] text-[rgb(var(--muted))]">{it.itemCode}</span>
+                          <span className="text-[rgb(var(--ink))]">{it.itemTitle}</span>
                           {it.required && <Badge variant="neutral">Bắt buộc</Badge>}
                         </div>
                         <DossierStatusToggle
@@ -149,12 +149,12 @@ export default async function CodeGuardPage({ params }: { params: { projectId: s
         </CardHeader>
         <CardBody className="p-0">
           {regs.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
-              Thư viện trống. Chạy <code className="rounded bg-slate-100 px-1">pnpm db:seed</code> để load baseline.
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
+              Thư viện trống. Chạy <code className="rounded bg-[rgb(var(--raised))] px-1">pnpm db:seed</code> để load baseline.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-3 text-left">Mã</th>
                   <th className="p-3 text-left">Loại</th>
@@ -163,13 +163,13 @@ export default async function CodeGuardPage({ params }: { params: { projectId: s
                   <th className="p-3 text-center">Quy tắc</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {regs.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50">
+                  <tr key={r.id} className="hover:bg-[rgb(var(--raised))]">
                     <td className="p-3 font-mono text-xs">{r.code}</td>
                     <td className="p-3"><Badge variant="neutral">{r.kind}</Badge></td>
-                    <td className="p-3 text-slate-900">{r.title}</td>
-                    <td className="p-3 text-slate-700">{r.issuedBy ?? "—"}</td>
+                    <td className="p-3 text-[rgb(var(--ink))]">{r.title}</td>
+                    <td className="p-3 text-[rgb(var(--ink-2))]">{r.issuedBy ?? "—"}</td>
                     <td className="p-3 text-center">{r._count.rules}</td>
                   </tr>
                 ))}

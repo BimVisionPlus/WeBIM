@@ -53,7 +53,7 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">SiteEye — Computer Vision + Safety</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
           Phát hiện vi phạm PPE từ camera, sự cố ATLĐ (Luật ATVSLĐ 84/2015), cảnh báo thời tiết.
         </p>
       </div>
@@ -61,29 +61,29 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Vi phạm PPE chưa xử lý</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Vi phạm PPE chưa xử lý</div>
             <div className="mt-1 text-2xl font-bold text-rose-700">{ppeCount}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Sự cố ATLĐ (lớn/nghiêm trọng)</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Sự cố ATLĐ (lớn/nghiêm trọng)</div>
             <div className="mt-1 text-2xl font-bold text-amber-700">{criticalIncidents}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Camera đang hoạt động</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Camera đang hoạt động</div>
             <div className="mt-1 text-2xl font-bold">{cameras.length}</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="py-3">
-            <div className="text-xs text-slate-500">Thời tiết hiện tại</div>
+            <div className="text-xs text-[rgb(var(--muted))]">Thời tiết hiện tại</div>
             <div className="mt-1 text-2xl font-bold">
               {weather?.tempC !== null && weather?.tempC !== undefined ? `${Math.round(weather.tempC)}°C` : "—"}
             </div>
-            <div className="text-[11px] text-slate-500">{weather?.condition ?? "Chưa cập nhật"}</div>
+            <div className="text-[11px] text-[rgb(var(--muted))]">{weather?.condition ?? "Chưa cập nhật"}</div>
           </CardBody>
         </Card>
       </div>
@@ -102,12 +102,12 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
               <Stat label="Độ ẩm" value={weather.humidity !== null ? `${weather.humidity}%` : "—"} />
               <Stat label="Mưa" value={weather.rainMmHr !== null ? `${weather.rainMmHr} mm/h` : "—"} />
               <Stat label="Gió" value={weather.windKph !== null ? `${weather.windKph} kph` : "—"} />
-              <div className="col-span-2 md:col-span-4 mt-2 text-xs text-slate-500">
+              <div className="col-span-2 md:col-span-4 mt-2 text-xs text-[rgb(var(--muted))]">
                 Cập nhật: {formatDateTimeVn(weather.ts)} · Nguồn: {weather.source ?? "—"}
               </div>
             </div>
           ) : (
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-[rgb(var(--muted))]">
               Chưa có dữ liệu thời tiết. Bấm "↻ Cập nhật" để pull từ open-meteo.
             </div>
           )}
@@ -123,12 +123,12 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
         </CardHeader>
         <CardBody className="p-0">
           {incidents.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có sự cố — chúc mừng! Mọi sự cố ATLĐ phải báo cáo theo Luật ATVSLĐ 84/2015 Điều 39.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-3 text-left">Thời điểm</th>
                   <th className="p-3 text-left">Loại</th>
@@ -138,18 +138,18 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
                   <th className="p-3 text-left">Mô tả</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {incidents.map((i) => (
                   <tr key={i.id}>
                     <td className="p-3 text-xs">
                       <div>{formatDateTimeVn(i.occurredAt)}</div>
-                      <div className="text-slate-500">{relativeDateVn(i.occurredAt)}</div>
+                      <div className="text-[rgb(var(--muted))]">{relativeDateVn(i.occurredAt)}</div>
                     </td>
                     <td className="p-3">{catLabel[i.category] ?? i.category}</td>
                     <td className="p-3"><Badge variant={severityVariant[i.severity]}>{i.severity}</Badge></td>
-                    <td className="p-3 text-slate-700">{i.location ?? "—"}</td>
+                    <td className="p-3 text-[rgb(var(--ink-2))]">{i.location ?? "—"}</td>
                     <td className="p-3 text-center">{i.injured}</td>
-                    <td className="p-3 text-slate-700 max-w-md truncate">{i.description}</td>
+                    <td className="p-3 text-[rgb(var(--ink-2))] max-w-md truncate">{i.description}</td>
                   </tr>
                 ))}
               </tbody>
@@ -164,12 +164,12 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
         </CardHeader>
         <CardBody className="p-0">
           {ppeEvents.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">
+            <div className="p-6 text-center text-sm text-[rgb(var(--muted))]">
               Chưa có vi phạm. Camera có thể gửi frame qua <code>POST /api/siteeye/vision</code>.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[rgb(var(--line))] bg-[rgb(var(--raised))] text-xs uppercase text-[rgb(var(--muted))]">
                 <tr>
                   <th className="p-3 text-left">Thời điểm</th>
                   <th className="p-3 text-left">Vi phạm</th>
@@ -177,7 +177,7 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
                   <th className="p-3 text-left">Trạng thái</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgb(var(--line))]">
                 {ppeEvents.map((e) => (
                   <tr key={e.id}>
                     <td className="p-3 text-xs">{formatDateTimeVn(e.ts)}</td>
@@ -202,7 +202,7 @@ export default async function SiteEyePage({ params }: { params: { projectId: str
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <div className="text-xs text-slate-500">{label}</div>
+      <div className="text-xs text-[rgb(var(--muted))]">{label}</div>
       <div className="mt-0.5 text-lg font-semibold">{value}</div>
     </div>
   );

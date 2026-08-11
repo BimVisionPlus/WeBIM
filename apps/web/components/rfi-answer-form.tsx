@@ -52,27 +52,27 @@ export function RfiAnswerForm({
         rows={5}
         required
         placeholder="Soạn câu trả lời RFI (có thể nhận nháp từ AI ở khung trên)…"
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
       />
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="block text-xs font-medium text-slate-700">Δ Tiến độ (ngày)</span>
+          <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Δ Tiến độ (ngày)</span>
           <input
             type="number"
             min={0}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
             value={scheduleImpactDays}
             onChange={(e) => setScheduleImpactDays(e.target.value)}
           />
         </label>
         <label className="block">
-          <span className="block text-xs font-medium text-slate-700">Δ Chi phí (VND)</span>
+          <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Δ Chi phí (VND)</span>
           <input
             type="number"
             min={0}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
             value={costImpactVnd}
             onChange={(e) => setCostImpactVnd(e.target.value)}
           />

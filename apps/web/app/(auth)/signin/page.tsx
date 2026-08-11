@@ -37,9 +37,9 @@ function SigninInner() {
       <CardBody>
         <form className="space-y-3" onSubmit={submit}>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Email</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Email</span>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               type="email"
               autoComplete="email"
               required
@@ -48,9 +48,9 @@ function SigninInner() {
             />
           </label>
           <label className="block">
-            <span className="block text-xs font-medium text-slate-700">Mật khẩu</span>
+            <span className="block text-xs font-medium text-[rgb(var(--ink-2))]">Mật khẩu</span>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[rgb(var(--line-2))] px-3 py-2 text-sm"
               type="password"
               autoComplete="current-password"
               required
@@ -62,9 +62,9 @@ function SigninInner() {
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? "Đang đăng nhập…" : "Đăng nhập"}
           </Button>
-          <div className="flex justify-between text-xs text-slate-500">
-            <Link href="/forgot" className="hover:text-slate-900">Quên mật khẩu?</Link>
-            <Link href="/signup" className="hover:text-slate-900">Tạo tài khoản</Link>
+          <div className="flex justify-between text-xs text-[rgb(var(--muted))]">
+            <Link href="/forgot" className="hover:text-[rgb(var(--ink))]">Quên mật khẩu?</Link>
+            <Link href="/signup" className="hover:text-[rgb(var(--ink))]">Tạo tài khoản</Link>
           </div>
         </form>
       </CardBody>

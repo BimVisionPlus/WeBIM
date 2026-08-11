@@ -11,15 +11,15 @@ export default async function PricingPage() {
     <div className="mx-auto max-w-6xl space-y-8 px-6 py-10">
       <header className="text-center">
         <h1 className="text-3xl font-bold">Bảng giá Atlas</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-[rgb(var(--muted))]">
           Self-serve. Không "liên hệ tư vấn". Pay-per-AI-action tách rời phí seat — bạn chỉ trả khi dùng.
         </p>
       </header>
 
       {plans.length === 0 ? (
         <Card>
-          <CardBody className="p-8 text-center text-sm text-slate-500">
-            Chưa có gói nào. Chạy <code className="rounded bg-slate-100 px-1">pnpm db:seed</code>.
+          <CardBody className="p-8 text-center text-sm text-[rgb(var(--muted))]">
+            Chưa có gói nào. Chạy <code className="rounded bg-[rgb(var(--raised))] px-1">pnpm db:seed</code>.
           </CardBody>
         </Card>
       ) : (
@@ -40,14 +40,14 @@ export default async function PricingPage() {
                     <div className="text-2xl font-bold">
                       {pricing.priceMonthlyVnd ? formatVnd(BigInt(pricing.priceMonthlyVnd)) : "0đ"}
                     </div>
-                    <div className="text-xs text-slate-500">/ user / tháng</div>
+                    <div className="text-xs text-[rgb(var(--muted))]">/ user / tháng</div>
                   </div>
                   {pricing.aiActionVnd !== undefined && (
-                    <div className="text-xs text-slate-600">
+                    <div className="text-xs text-[rgb(var(--muted))]">
                       + {formatVnd(BigInt(pricing.aiActionVnd))} / hành động AI
                     </div>
                   )}
-                  <ul className="space-y-1 text-xs text-slate-700">
+                  <ul className="space-y-1 text-xs text-[rgb(var(--ink-2))]">
                     {Array.isArray(features.bullets) &&
                       features.bullets.map((b: string) => (
                         <li key={b} className="flex items-start gap-1">
@@ -63,9 +63,9 @@ export default async function PricingPage() {
         </div>
       )}
 
-      <div className="rounded-lg bg-slate-50 p-6 text-sm">
+      <div className="rounded-lg bg-[rgb(var(--raised))] p-6 text-sm">
         <h2 className="font-semibold">Vì sao Atlas khác MISA / Base</h2>
-        <ul className="mt-2 space-y-1 text-slate-700">
+        <ul className="mt-2 space-y-1 text-[rgb(var(--ink-2))]">
           <li>· Tự host được (on-prem cho Enterprise), không khoá vendor.</li>
           <li>· AI 100% OSS, không gửi dữ liệu công trường ra cloud nước ngoài.</li>
           <li>· Bảng giá công khai, không "liên hệ tư vấn" cho mọi gói.</li>
