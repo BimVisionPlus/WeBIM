@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { store, useStoreVersion } from "../state/store";
+import { AtlasPublishDialog } from "./AtlasPublish";
 
 function AuthControls() {
   const [username, setUsername] = useState("");
@@ -56,6 +57,7 @@ function download(fileName: string, content: string, type: string) {
 export function Toolbar() {
   useStoreVersion();
   const fileInput = useRef<HTMLInputElement>(null);
+  const [publishing, setPublishing] = useState(false);
 
   const openProject = async (file: File | undefined) => {
     if (!file) return;
@@ -194,6 +196,12 @@ export function Toolbar() {
         >
           Export IFC
         </button>
+        <button
+          onClick={() => setPublishing(true)}
+          title="Xuất IFC và đăng vào Models của một dự án Atlas"
+        >
+          Đẩy sang Atlas
+        </button>
       </div>
       <input
         ref={fileInput}
@@ -205,6 +213,7 @@ export function Toolbar() {
           event.target.value = "";
         }}
       />
+      {publishing && <AtlasPublishDialog onClose={() => setPublishing(false)} />}
     </header>
   );
 }

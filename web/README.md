@@ -62,11 +62,18 @@ collaboration covers them for free; only binaries touch the server):
   else owns the port.
   The tab is the application and nothing else — uploading a model is
   something Atlas already does, so a second way to do it here was one
-  panel too many. The publish bridge (`sync/atlasBridge`: export IFC in
-  the browser, presign → PUT to Atlas's S3/MinIO → register, so the bytes
-  never pass through the Atlas server, authenticated by an org-scoped
-  `wbm_…` key) is still there and still wired on the Atlas side; it just
-  has no button of its own. See `../README.md` → **Atlas AEC**.
+  panel too many.
+
+- **Đẩy sang Atlas** (toolbar, next to Export IFC) — publishing the
+  native project is a kind of export, not a screen, so it lives with the
+  other exports and opens a dialog only while in use. What it does that
+  Atlas cannot is take *this* project straight from the native domain,
+  with no export-then-upload round trip: IFC is written in the browser,
+  presigned, PUT to Atlas's S3/MinIO and registered, so the bytes never
+  pass through the Atlas server. Authenticated by an org-scoped `wbm_…`
+  key; same model name + revision replaces the previous upload rather
+  than stacking duplicates. See `../README.md` → **Atlas AEC** for how to
+  mint the key.
 
 Platform server hardening:
 

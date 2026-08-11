@@ -10,7 +10,26 @@
  */
 
 import { createHash, randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
+
+// The Prisma CLI loads .env; a plain script does not, so DATABASE_URL is
+// absent unless the shell happened to have it. Look where the repo actually
+// keeps it rather than requiring a per-package copy nobody documents.
+if (!process.env.DATABASE_URL) {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+  for (const candidate of [join(root, ".env"), join(root, "apps/web/.env")]) {
+    if (!existsSync(candidate)) continue;
+    process.loadEnvFile(candidate);
+    if (process.env.DATABASE_URL) break;
+  }
+}
+if (!process.env.DATABASE_URL) {
+  console.error("Thiếu DATABASE_URL — tạo atlas/.env (xem .env.example).");
+  process.exit(1);
+}
 
 const prisma = new PrismaClient();
 

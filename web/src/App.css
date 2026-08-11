@@ -741,3 +741,39 @@ input[type="text"],
 .climate-finding p {
   margin: 0 0 6px;
 }
+
+/* Publishing to Atlas is a moment, not a place: a dialog over the app it
+   exports from, rather than a pane competing with the Atlas tab. */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8vh 16px 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.dialog {
+  width: min(720px, 100%);
+  max-height: 80vh;
+  overflow: auto;
+  padding: 16px 18px 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.dialog-head h3 {
+  margin: 0;
+  font-size: 14px;
+}
