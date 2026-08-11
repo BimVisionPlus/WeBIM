@@ -691,3 +691,34 @@ input[type="text"],
   display: block;
   margin-bottom: 8px;
 }
+
+/* Atlas AEC embedded as a WeBIM module: the whole app, not a link to it.
+   The host must not scroll — the iframe owns the vertical space. */
+.atlas-host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 12px 16px;
+}
+
+.atlas-frame {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.atlas-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.atlas-tabs .spacer {
+  flex: 1;
+}

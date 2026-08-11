@@ -28,6 +28,18 @@ git subtree push --prefix=atlas atlas main
 Remote `atlas` trỏ tới `git@github.com:aec-platform/atlas.git`; thêm lại
 sau khi clone bằng `git remote add atlas <url>`.
 
+### Atlas là một tab của WeBIM
+
+Module **Atlas** trong WeBIM Web nhúng nguyên ứng dụng Atlas AEC — toàn bộ
+module, session và định tuyến của nó — chứ không phải một liên kết. Atlas là
+app Next.js có server riêng nên không biên dịch chung vào bundle Vite được;
+nó chạy ở origin của chính nó và được frame vào tab.
+
+Atlas phải cho phép nhúng: đặt `FRAME_ANCESTORS=https://webim.vn`. Không có
+biến này thì Atlas gửi `X-Frame-Options: SAMEORIGIN` (mặc định cũ, giữ
+nguyên) và tab hiện ô trống — trình duyệt không báo được frame bị từ chối
+qua khác origin, nên header của tab luôn có sẵn "Mở tab mới".
+
 ### Cầu nối WeBIM → Atlas Models
 
 WeBIM dựng model, Atlas chạy giấy tờ quanh nó. Module **Atlas** trong
@@ -90,7 +102,7 @@ webim/
 - Khi mở lại `.blend`, add-on khôi phục native project từ JSON.
 - IFC không bị thay đổi trong lúc người dùng vẽ Grid.
 - Wall hiện vẫn dùng IFC implementation cũ và sẽ được chuyển sang native domain ở giai đoạn tiếp theo.
-- Native domain đọc và giữ nguyên `walls`/`openings`/`levels`/`sheets` do WeBIM Web (thư mục `web/`) tạo ra; Export IFC của add-on cũng xuất các native wall này. Blender chưa render chúng trong viewport.
+- Native domain đọc và giữ nguyên `walls`/`openings`/`levels`/`sheets` do WeBIM Web (thư mục `web/`) tạo ra; Export IFC của add-on cũng xuất các native wall này (có void cho opening). Blender dựng chúng trong viewport qua **WeBIM → Rebuild Native Walls** (`webim/blender/tools/wall/`), và đồng bộ tự chạy lại sau khi nhận project từ web.
 
 ## Native Grid Drawing Tool
 

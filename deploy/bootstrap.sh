@@ -190,6 +190,9 @@ if [[ "$WITH_ATLAS" == "1" ]]; then
     set_env WINWORK_SCRAPE_SECRET "$(openssl rand -base64 32 | tr -d '\n')"
     # Without this the browser cannot call /api/webim/* from WeBIM Web.
     set_env WEBIM_ALLOWED_ORIGINS "https://$DOMAIN"
+    # WeBIM embeds Atlas whole in its Atlas tab; without this Atlas answers
+    # X-Frame-Options SAMEORIGIN and the tab renders an empty rectangle.
+    set_env FRAME_ANCESTORS "https://$DOMAIN"
     ENV_FILE="$DEPLOY_DIR/.env"
     echo "Đã sinh mật khẩu Postgres/Redis/MinIO + AUTH_SECRET."
   else

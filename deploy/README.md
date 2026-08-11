@@ -59,10 +59,16 @@ docker compose --env-file .env up -d --build
 Client build sẵn tự dùng same-origin `/api` (HTTPS + wss) — không cần
 cấu hình gì thêm; muốn API ở nơi khác thì build với `VITE_API_BASE`.
 
-Module **Atlas** mặc định trỏ tới `https://atlas.webim.vn`; đổi bằng
-`VITE_ATLAS_BASE` lúc build. Phía Atlas phải đặt
-`WEBIM_ALLOWED_ORIGINS=https://webim.vn` thì trình duyệt mới gọi được
-`/api/webim/*` (mặc định chỉ cho vite dev 5173/5174).
+Module **Atlas** nhúng nguyên ứng dụng Atlas AEC trong tab, mặc định trỏ
+tới `https://atlas.webim.vn`; đổi bằng `VITE_ATLAS_BASE` lúc build. Phía
+Atlas cần hai biến:
+
+- `FRAME_ANCESTORS=https://webim.vn` — cho phép WeBIM nhúng. Không có thì
+  Atlas trả `X-Frame-Options: SAMEORIGIN` và tab hiện ô trống.
+- `WEBIM_ALLOWED_ORIGINS=https://webim.vn` — cho phép gọi `/api/webim/*`
+  (mặc định chỉ mở cho vite dev 5173/5174).
+
+`bootstrap.sh --with-atlas` tự đặt cả hai.
 
 ## Chạy Atlas cùng máy
 

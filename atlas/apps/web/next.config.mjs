@@ -22,12 +22,20 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // WeBIM embeds Atlas whole as one of its modules, from its own origin.
+    // X-Frame-Options has no allowlist — it is same-origin or nothing — so
+    // when FRAME_ANCESTORS names who may embed us, express the policy as CSP
+    // instead. Unset, the header stays exactly as it was.
+    const frameAncestors = process.env.FRAME_ANCESTORS?.trim();
+    const framing = frameAncestors
+      ? [{ key: "Content-Security-Policy", value: `frame-ancestors 'self' ${frameAncestors}` }]
+      : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }];
     return [
       {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          ...framing,
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
       },

@@ -48,15 +48,21 @@ collaboration covers them for free; only binaries touch the server):
   hot-humid-climate shading guidance in the spirit of QCVN 09:2017/BXD.
   An early-design screen, not an OTTV/energy calculation.
 
-- **Atlas** — publishes the native project into Atlas AEC (`../atlas/`,
-  the project-management half of the platform) as a versioned model.
-  Exports IFC in the browser, then presign → PUT to Atlas's S3/MinIO →
-  register: the bytes never pass through the Atlas server. Authenticates
-  with an org-scoped API key (`wbm_…`) rather than a session, because
-  WeBIM Web runs on its own origin. Same model name + revision replaces
-  the previous upload instead of stacking duplicates, so retrying a
-  flaky push is safe. See `../README.md` → **Atlas AEC** for how to mint
-  the key and which origins Atlas will accept.
+- **Atlas** — Atlas AEC (`../atlas/`, the project-management half of the
+  platform) embedded whole, not linked to. Atlas is a Next.js app with
+  its own server, so it cannot be compiled into this Vite bundle; the
+  "Ứng dụng" pane frames it at its own origin, which keeps its session,
+  routing and streaming intact while making it one more WeBIM tab. Atlas
+  must permit the embed with `FRAME_ANCESTORS` — it sends
+  `X-Frame-Options: SAMEORIGIN` otherwise, and a refused frame is not
+  reportable cross-origin, so the header always offers "mở tab mới".
+  The "Đẩy model" pane publishes the native project into an Atlas
+  project's Models module: export IFC in the browser, presign → PUT to
+  Atlas's S3/MinIO → register, so the bytes never pass through the Atlas
+  server. It authenticates with an org-scoped API key (`wbm_…`) rather
+  than a session. Same model name + revision replaces the previous
+  upload instead of stacking duplicates, so retrying a flaky push is
+  safe. See `../README.md` → **Atlas AEC** for how to mint the key.
 
 Platform server hardening:
 

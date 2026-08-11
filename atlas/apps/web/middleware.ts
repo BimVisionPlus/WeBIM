@@ -55,7 +55,17 @@ export function middleware(req: NextRequest) {
   const res = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Security headers (on response)
-  res.headers.set("X-Frame-Options", "SAMEORIGIN");
+  // See next.config.mjs: FRAME_ANCESTORS lets WeBIM embed Atlas as a module.
+  // X-Frame-Options cannot express an allowlist, so CSP replaces it there.
+  const frameAncestors = process.env.FRAME_ANCESTORS?.trim();
+  if (frameAncestors) {
+    res.headers.set(
+      "Content-Security-Policy",
+      `frame-ancestors 'self' ${frameAncestors}`,
+    );
+  } else {
+    res.headers.set("X-Frame-Options", "SAMEORIGIN");
+  }
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");

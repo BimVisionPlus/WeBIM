@@ -873,17 +873,27 @@ export function ViewerModule() {
 }
 
 /**
- * Atlas — the project-management half of the platform (atlas/ in this repo).
+ * Atlas — the project-management half of the platform (atlas/ in this repo),
+ * embedded whole rather than linked to.
  *
  * WeBIM authors the model; Atlas runs the paperwork around it (RFI, submittal,
- * nghiệm thu, hồ sơ hoàn công). This module is the seam: it exports the native
- * project to IFC in the browser and publishes it into an Atlas project's
- * Models module, where it becomes a normal versioned model — viewable, and
- * referenceable from every Atlas workflow.
+ * nghiệm thu, hồ sơ hoàn công, Models + canvas review). Atlas is a Next.js app
+ * with its own server, so it cannot be compiled into this Vite bundle — it is
+ * framed at its own origin, which keeps its session, routing and streaming
+ * intact while making it one more tab of WeBIM.
+ *
+ * Atlas must permit the embed: it sends X-Frame-Options SAMEORIGIN unless
+ * FRAME_ANCESTORS names this origin (see atlas/apps/web/next.config.mjs).
+ * The browser cannot report a refused frame to us cross-origin, so the header
+ * always offers "mở tab mới" instead of leaving a blank rectangle.
+ *
+ * "Đẩy model" is the other half of the seam: it exports the native project to
+ * IFC here and publishes it into an Atlas project's Models module.
  */
 export function AtlasModule() {
   useStoreVersion();
   const [config, setConfig] = useState<AtlasConfig>(() => loadAtlasConfig());
+  const [pane, setPane] = useState<"app" | "publish">("app");
   const [projects, setProjects] = useState<AtlasProject[] | null>(null);
   const [modelName, setModelName] = useState(store.project.name);
   const [busy, setBusy] = useState(false);
@@ -947,8 +957,45 @@ export function AtlasModule() {
     }
   };
 
+  const atlasUrl = config.baseUrl.replace(/\/+$/, "");
+
+  if (pane === "app") {
+    return (
+      <div className="atlas-host">
+        <div className="atlas-tabs">
+          <button className="active" onClick={() => setPane("app")}>
+            Ứng dụng
+          </button>
+          <button onClick={() => setPane("publish")}>Đẩy model</button>
+          <span className="spacer" />
+          <span className="module-hint" style={{ margin: 0 }}>
+            {atlasUrl || "Chưa cấu hình địa chỉ Atlas"}
+          </span>
+          {atlasUrl && (
+            <a href={atlasUrl} target="_blank" rel="noreferrer">
+              Mở tab mới ↗
+            </a>
+          )}
+        </div>
+        {atlasUrl ? (
+          <iframe className="atlas-frame" title="Atlas AEC" src={atlasUrl} />
+        ) : (
+          <p className="module-hint">
+            Nhập địa chỉ Atlas ở tab <strong>Đẩy model</strong> rồi quay lại.
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="module-host">
+      <div className="atlas-tabs">
+        <button onClick={() => setPane("app")}>Ứng dụng</button>
+        <button className="active" onClick={() => setPane("publish")}>
+          Đẩy model
+        </button>
+      </div>
       <p className="module-hint">
         Đẩy model native của WeBIM sang Atlas dưới dạng IFC. File đi thẳng lên kho
         của Atlas; WeBIM chỉ xin quyền và đăng ký bản ghi.
