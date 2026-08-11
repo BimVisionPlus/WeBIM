@@ -38,6 +38,13 @@ export const ATLAS_DISCIPLINES: Array<[AtlasDiscipline, string]> = [
 export interface AtlasConfig {
   /** Origin of the Atlas deployment, e.g. https://atlas.aecplatform.vn */
   baseUrl: string;
+  /**
+   * How `baseUrl` was chosen. An address the tab picked by itself has to keep
+   * proving itself — a discovery that was wrong once would otherwise stay
+   * wrong forever, since nothing distinguishes it from a deliberate choice.
+   * A typed address gets the benefit of the doubt instead.
+   */
+  baseUrlSource: "auto" | "manual";
   apiKey: string;
   projectId: string;
   /** Cached label so the picker reads sensibly before projects are fetched. */
@@ -77,6 +84,8 @@ const DEFAULT_ATLAS_BASE =
 
 export const DEFAULT_ATLAS_CONFIG: AtlasConfig = {
   baseUrl: DEFAULT_ATLAS_BASE,
+  // The shipped default is a guess like any other, so treat it as one.
+  baseUrlSource: "auto",
   apiKey: "",
   projectId: "",
   projectLabel: "",
@@ -88,7 +97,15 @@ export function loadAtlasConfig(): AtlasConfig {
   try {
     const raw = localStorage.getItem(CONFIG_KEY);
     if (!raw) return { ...DEFAULT_ATLAS_CONFIG };
-    return { ...DEFAULT_ATLAS_CONFIG, ...(JSON.parse(raw) as Partial<AtlasConfig>) };
+    const stored = JSON.parse(raw) as Partial<AtlasConfig>;
+    // Anything written before provenance was tracked came from a discovery
+    // that could not tell Atlas from whatever else held the port, so treat it
+    // as a guess and re-verify rather than trusting it.
+    return {
+      ...DEFAULT_ATLAS_CONFIG,
+      ...stored,
+      baseUrlSource: stored.baseUrlSource === "manual" ? "manual" : "auto",
+    };
   } catch {
     return { ...DEFAULT_ATLAS_CONFIG };
   }

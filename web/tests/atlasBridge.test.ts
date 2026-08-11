@@ -184,6 +184,31 @@ describe("config persistence", () => {
     localStorage.setItem("webim.atlas", "{not json");
     expect(loadAtlasConfig()).toEqual(DEFAULT_ATLAS_CONFIG);
   });
+
+  /**
+   * The stuck-on-Dagster case: an address auto-picked by a discovery that
+   * could not tell Atlas apart was indistinguishable from a deliberate one,
+   * so it survived every reload. Untagged storage now reads as a guess.
+   */
+  it("treats an address stored before provenance existed as a guess", () => {
+    localStorage.setItem("webim.atlas", JSON.stringify({ baseUrl: "http://localhost:3000" }));
+    const loaded = loadAtlasConfig();
+    expect(loaded.baseUrl).toBe("http://localhost:3000");
+    expect(loaded.baseUrlSource).toBe("auto");
+  });
+
+  it("keeps a typed address deliberate across reloads", () => {
+    saveAtlasConfig({ ...CONFIG, baseUrl: "https://atlas.congty.vn", baseUrlSource: "manual" });
+    expect(loadAtlasConfig().baseUrlSource).toBe("manual");
+  });
+
+  it("does not let a stored value forge provenance", () => {
+    localStorage.setItem(
+      "webim.atlas",
+      JSON.stringify({ baseUrl: "http://localhost:3000", baseUrlSource: "nonsense" }),
+    );
+    expect(loadAtlasConfig().baseUrlSource).toBe("auto");
+  });
 });
 
 describe("probeAtlas — timeouts and empties", () => {

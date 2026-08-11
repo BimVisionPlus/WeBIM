@@ -722,3 +722,22 @@ input[type="text"],
 .atlas-tabs .spacer {
   flex: 1;
 }
+
+/* Commands the user is meant to paste: preserved line breaks, selectable,
+   and scrolling rather than wrapping — a wrapped shell line reads as two. */
+.atlas-commands {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: var(--panel);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  user-select: all;
+}
+
+.climate-finding p {
+  margin: 0 0 6px;
+}

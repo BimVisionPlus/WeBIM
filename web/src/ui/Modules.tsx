@@ -964,6 +964,7 @@ export function AtlasModule() {
   };
 
   const atlasUrl = config.baseUrl.replace(/\/+$/, "");
+  const manualUrl = config.baseUrlSource === "manual";
 
   // Probe before framing: a dead host would otherwise render the browser's
   // own error page inside the app, with nothing to act on. When the
@@ -973,13 +974,23 @@ export function AtlasModule() {
     let cancelled = false;
     setReach("checking");
     void (async () => {
-      if (await probeAtlas(atlasUrl)) {
-        // Frame what the user asked for, but say so when it cannot prove it
-        // is Atlas — that is how a stale auto-picked address ends up showing
-        // whatever else owns the port.
-        const real = await identifyAtlas(atlasUrl);
-        if (cancelled) return;
+      const real = await identifyAtlas(atlasUrl);
+      if (cancelled) return;
+
+      // A typed address is framed on reachability alone — the user has said
+      // what it is, and an older Atlas, or one whose allowlist omits us,
+      // should still display. It only gets a warning when it cannot prove
+      // itself.
+      if (manualUrl) {
         setIdentified(real);
+        setReach((await probeAtlas(atlasUrl)) ? "up" : "down");
+        return;
+      }
+
+      // An address the tab picked must keep proving itself, or a discovery
+      // that was wrong once shows the wrong app forever.
+      if (real) {
+        setIdentified(true);
         setReach("up");
         return;
       }
@@ -989,18 +1000,19 @@ export function AtlasModule() {
         // Set through the updater rather than `update`, which is rebuilt every
         // render — depending on it here would re-run the probe in a loop.
         setConfig((previous) => {
-          const next = { ...previous, baseUrl: found };
+          const next: AtlasConfig = { ...previous, baseUrl: found, baseUrlSource: "auto" };
           saveAtlasConfig(next);
           return next;
         });
         return; // the config change re-runs this effect
       }
+      setIdentified(false);
       setReach("down");
     })();
     return () => {
       cancelled = true;
     };
-  }, [atlasUrl, probeAt]);
+  }, [atlasUrl, manualUrl, probeAt]);
 
   if (pane === "app") {
     return (
@@ -1013,9 +1025,15 @@ export function AtlasModule() {
           <span className="spacer" />
           <input
             value={config.baseUrl}
-            placeholder="https://atlas.webim.vn"
-            style={{ minWidth: 240 }}
-            onChange={(event) => update({ baseUrl: event.target.value })}
+            placeholder="https://atlas.webim.vn — bỏ trống để tự dò"
+            style={{ minWidth: 260 }}
+            onChange={(event) =>
+              update({
+                baseUrl: event.target.value,
+                // Typed, therefore deliberate: stop second-guessing it.
+                baseUrlSource: event.target.value.trim() ? "manual" : "auto",
+              })
+            }
           />
           <button onClick={() => setProbeAt((n) => n + 1)}>Kiểm tra lại</button>
           {atlasUrl && (
@@ -1035,24 +1053,25 @@ export function AtlasModule() {
 
         {atlasUrl && reach === "down" && (
           <div className="climate-finding warning">
-            ⚠ Không tìm thấy Atlas nào đang chạy — đã thử{" "}
-            <strong>{atlasUrl}</strong> và các địa chỉ quen thuộc (
-            <code>/atlas</code>, <code>localhost:3170</code>,{" "}
-            <code>localhost:3000</code>).
-            {"\n\n"}
-            Atlas nằm ngay trong repo này. Khởi động rồi bấm{" "}
-            <strong>Kiểm tra lại</strong> — tab sẽ tự nhận ra, không cần nhập
-            địa chỉ:
-            {"\n"}
-            <code>cd atlas && docker compose up -d postgres redis minio</code>
-            {"\n"}
-            <code>pnpm --filter @atlas/web dev</code>
-            {"\n\n"}
-            Nếu Atlas chạy ở nơi khác thì nhập địa chỉ vào ô trên.
+            <p>
+              ⚠ Không tìm thấy Atlas nào đang chạy — đã thử các địa chỉ quen
+              thuộc (<code>/atlas</code>, <code>localhost:3170</code>,{" "}
+              <code>localhost:3000</code>).
+            </p>
+            <p>
+              Atlas nằm ngay trong repo này. Khởi động rồi bấm{" "}
+              <strong>Kiểm tra lại</strong> — tab sẽ tự nhận ra, không cần nhập
+              địa chỉ:
+            </p>
+            <pre className="atlas-commands">
+              cd atlas && docker compose up -d postgres redis minio{"\n"}
+              pnpm --filter @atlas/web dev
+            </pre>
+            <p>Nếu Atlas chạy ở nơi khác thì nhập địa chỉ vào ô trên.</p>
           </div>
         )}
 
-        {atlasUrl && reach === "up" && !identified && (
+        {atlasUrl && reach === "up" && !identified && manualUrl && (
           <div className="climate-finding warning">
             ⚠ <strong>{atlasUrl}</strong> có trả lời, nhưng không tự nhận là
             Atlas — nhiều khả năng đây là ứng dụng khác đang giữ cổng đó (cổng
