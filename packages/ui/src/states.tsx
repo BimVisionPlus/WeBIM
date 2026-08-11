@@ -15,13 +15,13 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("p-10 text-center", className)}>
-      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(var(--raised))] text-[rgb(var(--muted-2))]">
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M12 4v16M4 12h16" />
         </svg>
       </div>
-      <div className="text-sm font-medium text-slate-900">{title}</div>
-      {description && <div className="mt-1 text-xs text-slate-500">{description}</div>}
+      <div className="text-sm font-medium text-[rgb(var(--ink))]">{title}</div>
+      {description && <div className="mt-1 text-xs text-[rgb(var(--muted))]">{description}</div>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
@@ -30,13 +30,13 @@ export function EmptyState({
 /** Skeleton placeholder for table rows. */
 export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-[rgb(var(--line))]">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 px-3 py-3">
           {Array.from({ length: cols }).map((_, j) => (
             <div
               key={j}
-              className="h-3 animate-pulse rounded bg-slate-100"
+              className="h-3 animate-pulse rounded bg-[rgb(var(--raised))]"
               style={{ width: `${15 + ((i + j) % 4) * 12}%` }}
             />
           ))}

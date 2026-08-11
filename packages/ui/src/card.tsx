@@ -5,7 +5,7 @@ export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-lg border border-slate-200 bg-white shadow-sm", className)}
+      className={cn("rounded-lg border border-[rgb(var(--line))] bg-[rgb(var(--surface))] shadow-sm", className)}
       {...props}
     />
   ),
@@ -13,15 +13,15 @@ export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
 Card.displayName = "Card";
 
 export const CardHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col gap-1 p-4 border-b border-slate-100", className)} {...props} />
+  <div className={cn("flex flex-col gap-1 p-4 border-b border-[rgb(var(--line))]", className)} {...props} />
 );
 
 export const CardTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-  <h3 className={cn("text-sm font-semibold text-slate-900", className)} {...props} />
+  <h3 className={cn("text-sm font-semibold text-[rgb(var(--ink))]", className)} {...props} />
 );
 
 export const CardDescription = ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p className={cn("text-xs text-slate-500", className)} {...props} />
+  <p className={cn("text-xs text-[rgb(var(--muted))]", className)} {...props} />
 );
 
 export const CardBody = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
