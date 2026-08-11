@@ -55,7 +55,11 @@ collaboration covers them for free; only binaries touch the server):
   routing and streaming intact while making it one more WeBIM tab. Atlas
   must permit the embed with `FRAME_ANCESTORS` — it sends
   `X-Frame-Options: SAMEORIGIN` otherwise, and a refused frame is not
-  reportable cross-origin, so the header always offers "mở tab mới".
+  reportable cross-origin, so the header always offers "mở tab mới". The
+  address is discovered rather than typed: `/atlas`, then `:3170`, then
+  `:3000`, taking the first that identifies itself through Atlas's
+  CORS-enabled `/api/webim/health`. Reachability alone picks up whatever
+  else owns the port.
   The "Đẩy model" pane publishes the native project into an Atlas
   project's Models module: export IFC in the browser, presign → PUT to
   Atlas's S3/MinIO → register, so the bytes never pass through the Atlas

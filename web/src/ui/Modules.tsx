@@ -17,6 +17,7 @@ import { Viewer3D } from "../viewport/Viewer3D";
 import {
   ATLAS_DISCIPLINES,
   discoverAtlas,
+  identifyAtlas,
   listAtlasProjects,
   loadAtlasConfig,
   probeAtlas,
@@ -897,6 +898,7 @@ export function AtlasModule() {
   const [config, setConfig] = useState<AtlasConfig>(() => loadAtlasConfig());
   const [pane, setPane] = useState<"app" | "publish">("app");
   const [reach, setReach] = useState<"checking" | "up" | "down">("checking");
+  const [identified, setIdentified] = useState(true);
   const [probeAt, setProbeAt] = useState(0);
   const [projects, setProjects] = useState<AtlasProject[] | null>(null);
   const [modelName, setModelName] = useState(store.project.name);
@@ -972,7 +974,13 @@ export function AtlasModule() {
     setReach("checking");
     void (async () => {
       if (await probeAtlas(atlasUrl)) {
-        if (!cancelled) setReach("up");
+        // Frame what the user asked for, but say so when it cannot prove it
+        // is Atlas — that is how a stale auto-picked address ends up showing
+        // whatever else owns the port.
+        const real = await identifyAtlas(atlasUrl);
+        if (cancelled) return;
+        setIdentified(real);
+        setReach("up");
         return;
       }
       const found = await discoverAtlas();
@@ -1041,6 +1049,15 @@ export function AtlasModule() {
             <code>pnpm --filter @atlas/web dev</code>
             {"\n\n"}
             Nếu Atlas chạy ở nơi khác thì nhập địa chỉ vào ô trên.
+          </div>
+        )}
+
+        {atlasUrl && reach === "up" && !identified && (
+          <div className="climate-finding warning">
+            ⚠ <strong>{atlasUrl}</strong> có trả lời, nhưng không tự nhận là
+            Atlas — nhiều khả năng đây là ứng dụng khác đang giữ cổng đó (cổng
+            3000 hay bị Dagster/Grafana chiếm). Sửa địa chỉ ở ô trên, hoặc bỏ
+            trống rồi bấm <strong>Kiểm tra lại</strong> để dò lại từ đầu.
           </div>
         )}
 

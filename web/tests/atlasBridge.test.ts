@@ -5,6 +5,7 @@ import {
   ifcFileName,
   listAtlasProjects,
   discoverAtlas,
+  identifyAtlas,
   loadAtlasConfig,
   probeAtlas,
   publishToAtlas,
@@ -185,22 +186,7 @@ describe("config persistence", () => {
   });
 });
 
-describe("probeAtlas", () => {
-  it("asks the network before the tab frames anything", async () => {
-    const { calls, fetchImpl } = recorder([{}]);
-    await expect(probeAtlas("https://atlas.test/", fetchImpl)).resolves.toBe(true);
-    expect(calls[0].url).toBe("https://atlas.test/api/health");
-    // Opaque is a fine answer — reachability is the only question asked.
-    expect(calls[0].init?.mode).toBe("no-cors");
-  });
-
-  it("treats a DNS or connection failure as down, not as an exception", async () => {
-    const fetchImpl = (async () => {
-      throw new TypeError("Failed to fetch");
-    }) as unknown as typeof fetch;
-    await expect(probeAtlas("https://atlas.webim.vn", fetchImpl)).resolves.toBe(false);
-  });
-
+describe("probeAtlas — timeouts and empties", () => {
   it("is down rather than hanging when the host swallows the request", async () => {
     const fetchImpl = ((_url: string, init: RequestInit) =>
       new Promise((_resolve, reject) => {
@@ -212,15 +198,18 @@ describe("probeAtlas", () => {
   it("does not probe an empty address", async () => {
     const { calls, fetchImpl } = recorder([{}]);
     await expect(probeAtlas("", fetchImpl)).resolves.toBe(false);
+    expect(identifyAtlas("", fetchImpl)).resolves.toBe(false);
     expect(calls).toHaveLength(0);
   });
 });
 
 describe("discoverAtlas", () => {
-  /** Answers only for the hosts named; everything else fails like DNS would. */
+  /** Only the hosts named identify as Atlas; everything else fails like DNS. */
   function onlyUp(...up: string[]) {
     return (async (url: unknown) => {
-      if (up.some((host) => String(url).startsWith(host))) return {} as Response;
+      if (up.some((host) => String(url).startsWith(host))) {
+        return { ok: true, json: async () => ({ service: "atlas" }) } as unknown as Response;
+      }
       throw new TypeError("Failed to fetch");
     }) as unknown as typeof fetch;
   }
@@ -240,6 +229,16 @@ describe("discoverAtlas", () => {
     expect(found).toBe("https://a.test");
   });
 
+  it("does not adopt another app that merely answers on the port", async () => {
+    const dagsterOn3000 = (async (url: unknown) =>
+      String(url).startsWith("http://localhost:3000")
+        ? ({ ok: true, json: async () => ({ service: "dagster" }) } as unknown as Response)
+        : Promise.reject(new TypeError("Failed to fetch"))) as unknown as typeof fetch;
+    await expect(
+      discoverAtlas(["http://localhost:3170", "http://localhost:3000"], dagsterOn3000),
+    ).resolves.toBeNull();
+  });
+
   it("returns null when nothing is running", async () => {
     await expect(
       discoverAtlas(["https://a.test", "https://b.test"], onlyUp()),
@@ -247,54 +246,69 @@ describe("discoverAtlas", () => {
   });
 });
 
-describe("probeAtlas — same origin", () => {
-  const ORIGIN = "http://localhost:5174";
+describe("identifyAtlas", () => {
+  function respond(body: unknown, ok = true) {
+    return (async () => ({ ok, json: async () => body })) as unknown as typeof fetch;
+  }
 
-  beforeEach(() => {
-    vi.stubGlobal("window", { location: { origin: ORIGIN } });
+  it("accepts an Atlas that names itself", async () => {
+    await expect(
+      identifyAtlas("http://localhost:3170", respond({ service: "atlas", ok: true })),
+    ).resolves.toBe(true);
   });
 
   /**
-   * The bug this pins: a Vite dev server answers 200 + index.html for any
-   * path, so a reachability-only probe of our own origin "finds" an Atlas
-   * and the tab frames WeBIM inside WeBIM.
+   * The bug this pins: port 3000 on a dev machine is as likely to be Dagster,
+   * and a reachability-only check framed it inside the Atlas tab.
    */
-  it("rejects our own dev server answering HTML for anything", async () => {
+  it("rejects another app squatting on the port", async () => {
+    await expect(
+      identifyAtlas("http://localhost:3000", respond({ service: "dagster" })),
+    ).resolves.toBe(false);
+  });
+
+  it("rejects a server answering HTML for every path", async () => {
     const fetchImpl = (async () => ({
       ok: true,
       json: async () => {
-        throw new SyntaxError("Unexpected token < in JSON");
+        throw new SyntaxError("Unexpected token <");
       },
     })) as unknown as typeof fetch;
-    await expect(probeAtlas(`${ORIGIN}/atlas`, fetchImpl)).resolves.toBe(false);
+    await expect(identifyAtlas("http://localhost:5174/atlas", fetchImpl)).resolves.toBe(false);
   });
 
-  it("rejects a JSON service that is not Atlas", async () => {
-    const fetchImpl = (async () => ({
-      ok: true,
-      json: async () => ({ service: "webim-relay", ok: true }),
-    })) as unknown as typeof fetch;
-    await expect(probeAtlas(`${ORIGIN}/atlas`, fetchImpl)).resolves.toBe(false);
+  it("rejects a 404 — the route is what proves the bridge is there", async () => {
+    await expect(
+      identifyAtlas("http://localhost:3170", respond({}, false)),
+    ).resolves.toBe(false);
   });
 
-  it("accepts an Atlas that names itself", async () => {
-    const calls: RequestInit[] = [];
-    const fetchImpl = (async (_url: string, init: RequestInit) => {
-      calls.push(init);
-      return { ok: true, json: async () => ({ service: "atlas", ok: true }) };
+  it("asks the CORS-enabled bridge route, not /api/health", async () => {
+    const calls: string[] = [];
+    const fetchImpl = (async (url: unknown) => {
+      calls.push(String(url));
+      return { ok: true, json: async () => ({ service: "atlas" }) };
     }) as unknown as typeof fetch;
-    await expect(probeAtlas(`${ORIGIN}/atlas`, fetchImpl)).resolves.toBe(true);
-    // Readable body is the whole point same-origin; no-cors would hide it.
-    expect(calls[0].mode).toBe("cors");
+    await identifyAtlas("http://localhost:3170", fetchImpl);
+    expect(calls[0]).toBe("http://localhost:3170/api/webim/health");
   });
+});
 
-  it("still only asks reachability of another origin, where the body is hidden", async () => {
+describe("probeAtlas", () => {
+  it("only asks reachability — the user typed this address", async () => {
     const calls: RequestInit[] = [];
     const fetchImpl = (async (_url: string, init: RequestInit) => {
       calls.push(init);
       return {} as Response;
     }) as unknown as typeof fetch;
-    await expect(probeAtlas("http://localhost:3170", fetchImpl)).resolves.toBe(true);
+    await expect(probeAtlas("http://localhost:3000", fetchImpl)).resolves.toBe(true);
     expect(calls[0].mode).toBe("no-cors");
+  });
+
+  it("is down when nothing answers", async () => {
+    const fetchImpl = (async () => {
+      throw new TypeError("Failed to fetch");
+    }) as unknown as typeof fetch;
+    await expect(probeAtlas("https://atlas.webim.vn", fetchImpl)).resolves.toBe(false);
   });
 });

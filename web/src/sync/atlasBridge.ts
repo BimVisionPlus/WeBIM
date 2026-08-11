@@ -152,31 +152,59 @@ export async function listAtlasProjects(
   return body.projects ?? [];
 }
 
-/** Atlas's health route names itself; nothing else here answers "atlas". */
-const ATLAS_HEALTH_SERVICE = "atlas";
+/** The bridge health route names the service; nothing else answers "atlas". */
+const ATLAS_SERVICE = "atlas";
 
-function isSameOrigin(url: string): boolean {
-  if (typeof window === "undefined") return false;
-  return url === window.location.origin || url.startsWith(`${window.location.origin}/`);
+/**
+ * Does an Atlas answer here, and can it prove it?
+ *
+ * `/api/webim/health` is CORS-enabled precisely so this question is
+ * answerable from another origin. Reachability alone is not: port 3000 on a
+ * developer's machine is as likely to be Dagster or Grafana, and every one of
+ * them returns 200 — framing whichever answered first is how the tab ends up
+ * showing somebody else's app.
+ *
+ * A false negative is possible and deliberate: an Atlas whose
+ * WEBIM_ALLOWED_ORIGINS does not include us will not answer readably. That is
+ * the correct answer for *guessing* — an Atlas that will not talk to this
+ * origin is not one to adopt silently. An address the user typed is handled
+ * differently; see `probeAtlas`.
+ */
+export async function identifyAtlas(
+  baseUrl: string,
+  fetchImpl: typeof fetch = fetch,
+  timeoutMs = 6000,
+): Promise<boolean> {
+  const url = baseUrl.replace(/\/+$/, "");
+  if (!url) return false;
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(`${url}/api/webim/health`, {
+      signal: abort.signal,
+      cache: "no-store",
+    });
+    if (!response.ok) return false;
+    const body = (await response.json()) as { service?: string };
+    return body?.service === ATLAS_SERVICE;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
- * Is there an Atlas at this address at all?
+ * Is anything reachable at this address?
  *
- * A cross-origin iframe cannot report that it failed to load — a wrong host, a
- * name with no DNS, a server that is down and one refusing the embed are
- * indistinguishable from outside: an opaque rectangle, or worse, the browser's
- * own error page rendered inside our layout. So ask the network first.
+ * Used only for an address the user typed: they have said what it is, so
+ * framing what they asked for is right even when it cannot prove itself —
+ * an older Atlas, or one that does not allow this origin, still displays.
+ * The pane warns when `identifyAtlas` disagrees rather than refusing.
  *
- * Two modes, because "something answered" is not the same question as "Atlas
- * answered":
- *
- *  - Same origin, where the body is readable: demand that the health route
- *    identify itself. A dev server answers 200 with index.html for any path,
- *    so a reachability-only check here finds *us* and frames WeBIM inside
- *    WeBIM.
- *  - Cross origin, where CORS hides the body: an opaque response is the most
- *    that can be known. Good enough for an explicit host:port.
+ * A cross-origin iframe cannot report its own load failure, which is why
+ * anything is asked at all: a dead host would otherwise render the browser's
+ * error page inside the app layout.
  */
 export async function probeAtlas(
   baseUrl: string,
@@ -185,19 +213,16 @@ export async function probeAtlas(
 ): Promise<boolean> {
   const url = baseUrl.replace(/\/+$/, "");
   if (!url) return false;
-  const strict = isSameOrigin(url);
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeoutMs);
   try {
-    const response = await fetchImpl(`${url}/api/health`, {
-      mode: strict ? "cors" : "no-cors",
+    // Opaque is a fine answer here — only "did this reach a server" is asked.
+    await fetchImpl(`${url}/api/webim/health`, {
+      mode: "no-cors",
       signal: abort.signal,
       cache: "no-store",
     });
-    if (!strict) return true;
-    if (!response.ok) return false;
-    const body = (await response.json()) as { service?: string };
-    return body?.service === ATLAS_HEALTH_SERVICE;
+    return true;
   } catch {
     return false;
   } finally {
@@ -224,16 +249,16 @@ export function atlasCandidates(): string[] {
 /**
  * Find an Atlas without asking the user to type an address.
  *
- * Probes every candidate at once and returns the first one that answers *in
- * candidate order*, not in whichever-was-fastest order — otherwise the
- * chosen address would change between reloads on a machine running two.
+ * Probes every candidate at once and returns the first that *identifies as
+ * Atlas*, in candidate order rather than whichever-was-fastest — otherwise
+ * the chosen address would change between reloads on a machine running two.
  */
 export async function discoverAtlas(
   candidates: string[] = atlasCandidates(),
   fetchImpl: typeof fetch = fetch,
 ): Promise<string | null> {
   const results = await Promise.all(
-    candidates.map((candidate) => probeAtlas(candidate, fetchImpl)),
+    candidates.map((candidate) => identifyAtlas(candidate, fetchImpl)),
   );
   const index = results.findIndex(Boolean);
   return index === -1 ? null : candidates[index];

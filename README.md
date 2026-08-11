@@ -52,9 +52,13 @@ WeBIM Web  ──POST /api/webim/presign──►  Atlas   (xin quyền, kiểm 
            ──POST /api/webim/commit──►  Atlas   (tạo Model + chạy APS)
 ```
 
-Ba route nằm ở `atlas/apps/web/app/api/webim/`, xác thực bằng `ApiKey`
+Các route nằm ở `atlas/apps/web/app/api/webim/`, xác thực bằng `ApiKey`
 theo tổ chức thay vì session — WeBIM Web chạy ở origin riêng nên không
-có cookie Auth.js.
+có cookie Auth.js. Riêng `/api/webim/health` không cần key: nó chỉ trả
+`{"service":"atlas"}` kèm CORS để tab Atlas **tự nhận ra** Atlas đang
+chạy ở đâu. Không có nó thì "có server trả lời" là tất cả những gì biết
+được từ origin khác — và cổng 3000 trên máy lập trình thường là Dagster
+hay Grafana chứ không phải Atlas.
 
 ```bash
 # phát hành key (chỉ hiện một lần)
