@@ -115,14 +115,14 @@ describe("auth + roles", () => {
     viewer.close();
   });
 
-  it("gates /ai/render-concept: 401 anonymous, 501 without key, 400 bad body", async () => {
-    const original = process.env.ANTHROPIC_API_KEY;
+  it("gates /ai/render-concept: 401 anonymous, 501 unconfigured, 400 bad body", async () => {
+    const original = process.env.AI_BASE_URL;
     const anonymous = await fetch(`http://127.0.0.1:${port}/ai/render-concept`, {
       method: "POST",
       body: JSON.stringify({ image: "data:image/png;base64,AAAA", style: "x" }),
     });
     expect(anonymous.status).toBe(401);
-    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.AI_BASE_URL;
     try {
       const noKey = await fetch(`http://127.0.0.1:${port}/ai/render-concept`, {
         method: "POST",
@@ -130,7 +130,8 @@ describe("auth + roles", () => {
         body: JSON.stringify({ image: "data:image/png;base64,AAAA", style: "x" }),
       });
       expect(noKey.status).toBe(501);
-      process.env.ANTHROPIC_API_KEY = "test-key-not-used";
+      // Configured but never reached: the body check fires first.
+      process.env.AI_BASE_URL = "http://127.0.0.1:1/v1";
       const badBody = await fetch(`http://127.0.0.1:${port}/ai/render-concept`, {
         method: "POST",
         headers: { Authorization: `Bearer ${editorToken}` },
@@ -138,14 +139,14 @@ describe("auth + roles", () => {
       });
       expect(badBody.status).toBe(400);
     } finally {
-      if (original) process.env.ANTHROPIC_API_KEY = original;
-      else delete process.env.ANTHROPIC_API_KEY;
+      if (original) process.env.AI_BASE_URL = original;
+      else delete process.env.AI_BASE_URL;
     }
   });
 
-  it("returns 501 from /ai/read-drawing without an API key", async () => {
-    const original = process.env.ANTHROPIC_API_KEY;
-    delete process.env.ANTHROPIC_API_KEY;
+  it("returns 501 from /ai/read-drawing with no self-hosted model configured", async () => {
+    const original = process.env.AI_BASE_URL;
+    delete process.env.AI_BASE_URL;
     try {
       const response = await fetch(`http://127.0.0.1:${port}/ai/read-drawing`, {
         method: "POST",
@@ -153,8 +154,9 @@ describe("auth + roles", () => {
         body: JSON.stringify({ key: "auth/doc.txt", question: "gì đây?" }),
       });
       expect(response.status).toBe(501);
+      expect((await response.json()).error).toContain("AI_BASE_URL");
     } finally {
-      if (original) process.env.ANTHROPIC_API_KEY = original;
+      if (original) process.env.AI_BASE_URL = original;
     }
   });
 });

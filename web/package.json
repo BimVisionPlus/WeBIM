@@ -13,8 +13,8 @@
     "import-corpus": "node scripts/import-corpus.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.116.0",
     "@types/three": "^0.185.4",
+    "pdfjs-dist": "^4.10.38",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "three": "^0.185.1",

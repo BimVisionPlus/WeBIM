@@ -6,7 +6,10 @@
 3. `cp deploy/.env.example deploy/.env` và điền:
    - `WEBIM_DOMAIN` — Caddy tự xin chứng chỉ Let's Encrypt cho domain này.
    - `WEBIM_SECRET` — `openssl rand -hex 32`.
-   - `ANTHROPIC_API_KEY` — bật AI đọc bản vẽ (tuỳ chọn).
+   - `AI_BASE_URL` + `AI_MODEL` — model server tự host tương thích OpenAI
+     (Ollama/vLLM/llama.cpp) để bật AI đọc bản vẽ + brief render (tuỳ chọn).
+   - `SD_BASE_URL` — Stable Diffusion tự host (A1111/SD.Next/Forge) để sinh
+     ảnh concept thật (tuỳ chọn).
    - `S3_*` — BYO storage (tuỳ chọn; bỏ trống thì file lưu trong volume).
 4. Tạo tài khoản: `node web/relay/auth.mjs hash <mật-khẩu>` rồi ghép vào
    `deploy/users.json` theo `web/relay/users.example.json`.

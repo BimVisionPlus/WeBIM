@@ -12,10 +12,10 @@ collaboration covers them for free; only binaries touch the server):
   view built from the same wallPieces the 2D viewport uses (openings
   cut for real), slabs, per-level coloring, and linked IFC models as
   translucent boxes. "Render concept AI" (mục 11) captures the current
-  view and sends it to the platform server: Claude writes a Vietnamese
-  render brief + an English image prompt grounded in the massing
-  (ANTHROPIC_API_KEY), and with STABILITY_API_KEY the server also
-  returns a real img2img concept render (Stable Image sketch control).
+  view and sends it to the platform server: a self-hosted vision model
+  writes a Vietnamese render brief + an English image prompt grounded
+  in the massing (`AI_BASE_URL`), and with `SD_BASE_URL` the server also
+  returns a real img2img concept render from your own Stable Diffusion.
 
 - **CDE** — ISO 19650-style document containers: code, WIP/SHARED/
   PUBLISHED/ARCHIVED status, P/C revision numbering, notes, upload/
@@ -29,7 +29,8 @@ collaboration covers them for free; only binaries touch the server):
   tags and supersession chains (seed catalog; long-term source is the
   machine-checkable corpus).
 - **Drawings** — PDF viewing straight from CDE revisions plus synced
-  notes (AI reading hook stubbed until a key is configured).
+  notes ("Hỏi AI" answers from a self-hosted model once `AI_BASE_URL`
+  is set — see below).
 - **QTO** — net quantities from the same wallPieces geometry the
   viewport renders (openings deducted, typed walls split per material
   layer), slab volumes, opening counts, CSV export.
@@ -69,10 +70,21 @@ Platform server hardening:
   or any S3-compatible endpoint (AWS/MinIO) via hand-rolled SigV4 —
   set `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`
   (+ `S3_REGION`). Tested against a fake S3 verifying signature shape.
-- **AI drawing reader** — `POST /ai/read-drawing` sends a stored PDF
-  plus the question to Claude (`@anthropic-ai/sdk`, adaptive thinking)
-  and returns the answer into the Drawings module's "Hỏi AI" box;
-  requires `ANTHROPIC_API_KEY` on the server, otherwise a clear 501.
+- **Self-hosted AI** (`relay/ai.mjs`) — no closed API anywhere in the
+  path, so hồ sơ and site imagery never leave the customer's network.
+  Text and vision go to any OpenAI-compatible model server you run
+  (Ollama, vLLM, llama.cpp, LM Studio) via `AI_BASE_URL` + `AI_MODEL`;
+  `POST /ai/read-drawing` extracts a stored PDF's text layer with pdfjs
+  and asks the model about it, answering into the Drawings module's
+  "Hỏi AI" box. A scanned drawing has no text layer and is reported as
+  needing OCR rather than guessed at. `POST /ai/render-concept` asks a
+  vision model for a Vietnamese render brief + an English prompt, then
+  — if `SD_BASE_URL` points at a self-hosted AUTOMATIC1111-compatible
+  Stable Diffusion — img2img's the massing screenshot at denoising
+  0.65, so it dresses the massing instead of inventing a building.
+  Unset `AI_BASE_URL` and both routes answer a 501 naming what to run.
+  `GET /health` reports the configured model. Verified end to end
+  against a local Ollama.
 - **Standards corpus** — `npm run import-corpus` (scripts/
   import-corpus.mjs) parses the machine-checkable qcvn-conflict-map
   repo (registry + cross-regulation conflicts) into corpus.json; the
@@ -277,6 +289,6 @@ pointing DNS and filling `.env`. The client auto-targets same-origin
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # vitest — domain, snapping, IFC export
+npm test           # vitest — domain, snapping, IFC export, AI adapter
 npm run build      # typecheck + production bundle
 ```

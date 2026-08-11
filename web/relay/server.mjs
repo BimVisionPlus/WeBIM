@@ -15,8 +15,10 @@
 // Auth (relay/auth.mjs): token login against relay/users.json with
 // admin/editor/viewer roles; absent users.json = open dev mode.
 //
-// AI (POST /ai/read-drawing): reads a stored PDF and answers a question
-// about it with Claude. Requires ANTHROPIC_API_KEY; otherwise 501.
+// AI (relay/ai.mjs): self-hosted only — an OpenAI-compatible model server
+// (Ollama/vLLM/llama.cpp) at AI_BASE_URL for text+vision, and an
+// AUTOMATIC1111-compatible Stable Diffusion at SD_BASE_URL for img2img.
+// Nothing runs against a closed API; unset AI_BASE_URL answers 501.
 //
 // Run: npm run relay   (defaults to port 8787, override with PORT)
 
@@ -24,10 +26,24 @@ import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
+import {
+  aiConfig,
+  aiEnabled,
+  answerDrawingQuestion,
+  imageRenderEnabled,
+  renderConcept,
+  writeRenderBrief,
+} from "./ai.mjs";
 import { createAuth } from "./auth.mjs";
 import { createStorage } from "./storage.mjs";
 
 const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "data");
+
+const AI_NOT_CONFIGURED =
+  "AI chưa cấu hình — chạy một model server tự host (Ollama/vLLM/llama.cpp) " +
+  "rồi đặt AI_BASE_URL (vd http://127.0.0.1:11434/v1) và AI_MODEL " +
+  "(vd qwen2.5vl:7b). Thêm SD_BASE_URL trỏ tới Stable Diffusion tự host nếu " +
+  "muốn sinh ảnh thật.";
 
 function safeKey(key) {
   const decoded = decodeURIComponent(key);
@@ -48,125 +64,6 @@ async function readBody(request) {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   return Buffer.concat(chunks);
-}
-
-async function answerDrawingQuestion(storage, key, question) {
-  const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  const client = new Anthropic();
-  const pdf = await storage.get(key);
-  const stream = client.messages.stream({
-    model: "claude-opus-5",
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
-    system:
-      "Bạn là kỹ sư xây dựng đọc bản vẽ kỹ thuật. Trả lời ngắn gọn, chính xác," +
-      " bằng ngôn ngữ của câu hỏi. Nếu bản vẽ không đủ thông tin, nói rõ điều đó" +
-      " thay vì suy đoán. Khi trích số liệu, nêu vị trí trên bản vẽ nếu xác định được.",
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: {
-              type: "base64",
-              media_type: "application/pdf",
-              data: pdf.toString("base64"),
-            },
-          },
-          { type: "text", text: question },
-        ],
-      },
-    ],
-  });
-  const message = await stream.finalMessage();
-  return message.content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
-    .join("\n");
-}
-
-async function writeRenderBrief(image, style) {
-  const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  const client = new Anthropic();
-  const base64 = image.replace(/^data:image\/png;base64,/, "");
-  const response = await client.messages.create({
-    model: "claude-opus-5",
-    max_tokens: 4096,
-    thinking: { type: "adaptive" },
-    output_config: {
-      format: {
-        type: "json_schema",
-        schema: {
-          type: "object",
-          properties: {
-            brief_vi: {
-              type: "string",
-              description:
-                "Kịch bản render tiếng Việt: vật liệu, ánh sáng, bối cảnh, góc máy — bám hình khối trong ảnh",
-            },
-            prompt_en: {
-              type: "string",
-              description:
-                "One-paragraph English image-generation prompt for the same concept (photorealistic architectural render)",
-            },
-          },
-          required: ["brief_vi", "prompt_en"],
-          additionalProperties: false,
-        },
-      },
-    },
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: { type: "base64", media_type: "image/png", data: base64 },
-          },
-          {
-            type: "text",
-            text:
-              "Đây là ảnh chụp khối mô hình BIM (massing) của một công trình. " +
-              `Phong cách mong muốn: ${style}. Viết kịch bản render concept bám đúng ` +
-              "hình khối này (không bịa thêm khối mới) và một prompt tiếng Anh cho " +
-              "công cụ sinh ảnh.",
-          },
-        ],
-      },
-    ],
-  });
-  const text = response.content.find((block) => block.type === "text")?.text ?? "{}";
-  return JSON.parse(text);
-}
-
-async function renderWithStability(image, prompt) {
-  const base64 = image.replace(/^data:image\/png;base64,/, "");
-  const form = new FormData();
-  form.append(
-    "image",
-    new Blob([Buffer.from(base64, "base64")], { type: "image/png" }),
-    "model.png",
-  );
-  form.append("prompt", prompt);
-  form.append("control_strength", "0.7");
-  form.append("output_format", "png");
-  const response = await fetch(
-    "https://api.stability.ai/v2beta/stable-image/control/sketch",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
-        Accept: "image/*",
-      },
-      body: form,
-    },
-  );
-  if (!response.ok) {
-    throw new Error(`Stability ${response.status}: ${await response.text()}`);
-  }
-  const bytes = Buffer.from(await response.arrayBuffer());
-  return `data:image/png;base64,${bytes.toString("base64")}`;
 }
 
 export function startRelay(port = 8787, options = {}) {
@@ -198,7 +95,14 @@ export function startRelay(port = 8787, options = {}) {
     }
     try {
       if (url.pathname === "/health") {
-        return reply(200, { ok: true, storage: storage.kind, auth: auth.enabled });
+        const config = aiConfig();
+        return reply(200, {
+          ok: true,
+          storage: storage.kind,
+          auth: auth.enabled,
+          ai: aiEnabled(config) ? config.model : null,
+          imageRender: imageRenderEnabled(config),
+        });
       }
       if (url.pathname === "/auth/mode") {
         return reply(200, { enabled: auth.enabled });
@@ -244,18 +148,20 @@ export function startRelay(port = 8787, options = {}) {
         if (!auth.allows(identity, "editor")) {
           return reply(identity ? 403 : 401, { error: "editor role required" });
         }
-        if (!process.env.ANTHROPIC_API_KEY) {
-          return reply(501, {
-            error:
-              "AI chưa cấu hình — đặt ANTHROPIC_API_KEY trên platform server để bật đọc bản vẽ.",
-          });
+        const config = aiConfig();
+        if (!aiEnabled(config)) {
+          return reply(501, { error: AI_NOT_CONFIGURED });
         }
         const { key, question } = JSON.parse((await readBody(request)).toString());
         const cleanKey = safeKey(key ?? "");
         if (!cleanKey || !question?.trim()) {
           return reply(400, { error: "key and question required" });
         }
-        const answer = await answerDrawingQuestion(storage, cleanKey, question.trim());
+        const answer = await answerDrawingQuestion(
+          await storage.get(cleanKey),
+          question.trim(),
+          config,
+        );
         return reply(200, { answer });
       }
 
@@ -263,22 +169,20 @@ export function startRelay(port = 8787, options = {}) {
         if (!auth.allows(identity, "editor")) {
           return reply(identity ? 403 : 401, { error: "editor role required" });
         }
-        if (!process.env.ANTHROPIC_API_KEY) {
-          return reply(501, {
-            error:
-              "AI chưa cấu hình — đặt ANTHROPIC_API_KEY để viết kịch bản render " +
-              "(thêm STABILITY_API_KEY nếu muốn sinh ảnh thật).",
-          });
+        const config = aiConfig();
+        if (!aiEnabled(config)) {
+          return reply(501, { error: AI_NOT_CONFIGURED });
         }
         const { image, style } = JSON.parse((await readBody(request)).toString());
         if (!image?.startsWith("data:image/png;base64,") || !style?.trim()) {
           return reply(400, { error: "image (png data URL) and style required" });
         }
-        const brief = await writeRenderBrief(image, style.trim());
-        let rendered = null;
-        if (process.env.STABILITY_API_KEY) {
-          rendered = await renderWithStability(image, brief.prompt_en);
-        }
+        const brief = await writeRenderBrief(image, style.trim(), config);
+        // The brief is worth returning on its own; a missing image generator
+        // is a configuration choice, not a failure of the request.
+        const rendered = imageRenderEnabled(config)
+          ? await renderConcept(image, brief.prompt_en, config)
+          : null;
         return reply(200, { ...brief, image: rendered });
       }
 
