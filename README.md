@@ -40,6 +40,31 @@ biến này thì Atlas gửi `X-Frame-Options: SAMEORIGIN` (mặc định cũ, g
 nguyên) và tab hiện ô trống — trình duyệt không báo được frame bị từ chối
 qua khác origin, nên header của tab luôn có sẵn "Mở tab mới".
 
+### Quy trình phối hợp & tiêu chí chuyển giai đoạn
+
+Trang `/processes` trong Atlas. `WorkflowTemplate` sẵn có lưu DAG dạng JSON
+mờ và không có phòng ban, nên không trả lời được hai câu hỏi thực tế: *quy
+trình của phòng tôi là gì* và *bước 3 ai làm, hạn nào*. Bốn model mới —
+`ProcessTemplate` / `ProcessStep` / `ProcessRun` / `ProcessTask` — mô tả đúng
+thứ người ta chạy: một checklist có thứ tự, thuộc về một phòng ban, áp vào
+dự án thì sinh việc có người phụ trách, hạn và tiến độ trên từng bước.
+
+- **Tiêu chí, không phải động từ.** Mỗi bước có `criteria` viết thành thứ
+  kiểm được: *"Khối lượng khớp với bóc tách; sai lệch > 5% phải có giải
+  trình"* chứ không phải *"hoàn thành công việc"*.
+- **Điểm dừng (`isGate`)** — run không tự đóng khi còn điểm dừng chưa đạt.
+  Một stage gate đi vòng qua được thì chỉ là trang trí.
+- **Hạn cộng dồn**: bước 3 đến hạn sau khi bước 1 và 2 đã tiêu hết số ngày
+  của chúng — đúng nghĩa một quy trình tuần tự.
+- ITP (`ItpTemplate`/`ItpItem`) giữ nguyên vai trò nghiệm thu chất lượng
+  hiện trường theo TCVN. Đây là nửa văn phòng: phối hợp nội bộ và chuyển
+  giai đoạn. Hai bên gặp nhau ở điểm dừng, nơi ITP là bằng chứng.
+
+Seed: `scripts/seed-processes.ts` (nằm trong `seed-all.sh`) — 5 quy trình
+mẫu cho các phòng Công việc / Hành chính / Tài chính / Đấu thầu, **seed cho
+mọi tổ chức có thành viên** chứ không chỉ tổ chức đầu tiên: tài khoản demo
+nào đăng nhập cũng phải thấy.
+
 ### Seed dữ liệu demo cho Atlas
 
 ```bash

@@ -3093,6 +3093,108 @@ enum WorkflowScope {
   PUBLIC // shared template gallery
 }
 
+// ============================================================================
+//  Quy trình phối hợp & tiêu chí chuyển giai đoạn
+//
+//  WorkflowTemplate above stores a DAG as opaque JSON and has no department,
+//  so it answers neither "what is my phòng ban's procedure" nor "who owns
+//  step 3 and when is it due". These model the shape people actually run:
+//  an ordered checklist, owned by a department, instantiated per project with
+//  a named owner, a due date and progress on every step.
+//
+//  ITP (ItpTemplate/ItpItem) stays what it is — site quality acceptance
+//  against TCVN. This is the office-side sibling: internal coordination and
+//  stage gates. They meet at the gate, where an ITP can be the evidence.
+// ============================================================================
+
+model ProcessTemplate {
+  id          String              @id @default(cuid())
+  orgId       String
+  name        String // "Quy trình phát hành hồ sơ thiết kế"
+  department  ProjectDepartment   @default(CONG_VIEC_KHAC)
+  kind        ProcessKind         @default(WORKFLOW)
+  /// Mã ISO nội bộ, vd "QT-TK-05" — the number staff actually cite.
+  isoCode     String?
+  description String?             @db.Text
+  version     Int                 @default(1)
+  isActive    Boolean             @default(true)
+  createdById String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  steps ProcessStep[]
+  runs  ProcessRun[]
+
+  @@index([orgId, department, isActive])
+}
+
+enum ProcessKind {
+  WORKFLOW // quy trình phối hợp thường ngày
+  STAGE_GATE // tiêu chí chuyển giai đoạn / nghiệm thu nội bộ
+}
+
+model ProcessStep {
+  id         String     @id @default(cuid())
+  templateId String
+  seq        Int
+  title      String
+  /// Tiêu chí đạt — what "done" means, in words someone can check.
+  criteria   String?    @db.Text
+  /// Vai trò chịu trách nhiệm; the run assigns the actual person.
+  role       MemberRole @default(ENGINEER)
+  /// Số ngày dự kiến, used to compute a due date when a run starts.
+  slaDays    Int        @default(3)
+  /// Điểm dừng: the run cannot be closed while this step is unmet.
+  isGate     Boolean    @default(false)
+
+  template ProcessTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tasks    ProcessTask[]
+
+  @@unique([templateId, seq])
+}
+
+model ProcessRun {
+  id         String        @id @default(cuid())
+  templateId String
+  projectId  String?
+  name       String
+  status     ProcessStatus @default(IN_PROGRESS)
+  startedAt  DateTime      @default(now())
+  closedAt   DateTime?
+
+  template ProcessTemplate @relation(fields: [templateId], references: [id])
+  tasks    ProcessTask[]
+
+  @@index([projectId, status])
+}
+
+model ProcessTask {
+  id             String        @id @default(cuid())
+  runId          String
+  stepId         String
+  assigneeUserId String?
+  dueAt          DateTime?
+  /// 0–100. Kept beside status rather than derived from it: "đang làm 80%"
+  /// and "đang làm 10%" are different answers to "khi nào xong".
+  progress       Int           @default(0)
+  status         ProcessStatus @default(PENDING)
+  note           String?       @db.Text
+  decidedAt      DateTime?
+
+  run  ProcessRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  step ProcessStep @relation(fields: [stepId], references: [id])
+
+  @@unique([runId, stepId])
+  @@index([assigneeUserId, status])
+}
+
+enum ProcessStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
 // Recurring task definition — e.g. "daily site report every weekday 17:00"
 model RecurringTask {
   id          String    @id @default(cuid())
