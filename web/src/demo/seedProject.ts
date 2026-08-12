@@ -9,7 +9,7 @@
 // It is loaded on first run, when there is nothing in localStorage yet, so
 // the app opens on a building instead of an empty grid.
 
-import { NativeBimProject } from "../domain/project";
+import { NativeBimProject, type TaskStatus } from "../domain/project";
 
 /** Nhà phố 12×8 m, hai tầng — small enough to read, complete enough to show. */
 export function buildDemoProject(): NativeBimProject {
@@ -127,16 +127,25 @@ export function buildDemoProject(): NativeBimProject {
   // ── Plan ─────────────────────────────────────────────────────────────────
   // Dates are fixed, not relative to today: a demo that reads "trễ 400 ngày"
   // six months from now is worse than one that is plainly a sample.
-  const tasks: Array<[string, string, string, string]> = [
-    ["Chuẩn bị mặt bằng", "Hạ tầng", "2026-09-01", "2026-09-07"],
-    ["Móng + đài cọc", "Kết cấu", "2026-09-08", "2026-09-28"],
-    ["Kết cấu thân tầng 1", "Kết cấu", "2026-09-29", "2026-10-20"],
-    ["Xây bao che", "Kiến trúc", "2026-10-21", "2026-11-10"],
-    ["Hoàn thiện + MEP", "Hoàn thiện", "2026-11-11", "2026-12-15"],
+  // Statuses and progress are set too: a plan where everything is "chưa bắt
+  // đầu" at 0% leaves the dashboard with nothing to show, and a demo that
+  // demonstrates an empty chart is not a demo.
+  const tasks: Array<[string, string, string, string, TaskStatus, number]> = [
+    ["Chuẩn bị mặt bằng", "Hạ tầng", "2026-09-01", "2026-09-07", "DONE", 100],
+    ["Móng + đài cọc", "Kết cấu", "2026-09-08", "2026-09-28", "DONE", 100],
+    ["Kết cấu thân tầng 1", "Kết cấu", "2026-09-29", "2026-10-20", "IN_PROGRESS", 60],
+    ["Xây bao che", "Kiến trúc", "2026-10-21", "2026-11-10", "BLOCKED", 15],
+    ["Hoàn thiện + MEP", "Hoàn thiện", "2026-11-11", "2026-12-15", "NOT_STARTED", 0],
   ];
-  for (const [name, category, start, end] of tasks) {
-    project.addTask(name, category, start, end);
+  for (const [name, category, start, end, status, progress] of tasks) {
+    const task = project.addTask(name, category, start, end);
+    task.status = status;
+    task.progress = progress;
   }
+
+  // A document that has been issued, so the CDE chart is not one bar.
+  spec.status = "SHARED";
+  drawing.status = "PUBLISHED";
 
   return project;
 }

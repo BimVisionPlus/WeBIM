@@ -59,6 +59,27 @@ collaboration covers them for free; only binaries touch the server):
   hot-humid-climate shading guidance in the spirit of QCVN 09:2017/BXD.
   An early-design screen, not an OTTV/energy calculation.
 
+- **Dashboard** — one picture of the model and the coordination around it:
+  stat tiles (elements, clashes, documents, mean progress) over five
+  single-series bar charts — clashes per system pair, tasks and CDE
+  documents by status, volume by material, openings by kind. Every number
+  comes from the open project; nothing is fetched.
+
+  Charts are hand-rolled SVG like the Gantt — five bar charts do not
+  justify a charting dependency. Colours are the validated data-viz
+  palette re-stepped for this app's panel and checked with the palette
+  validator rather than by eye: a single sequential blue for magnitude, an
+  ordinal blue ramp for the CDE workflow, and the reserved status colours
+  for task state. Status green and red are close under deuteranopia, so
+  every state row carries its own icon and written label — colour is
+  reinforcement, never the message. Single series throughout means no
+  legend is needed; the title names the series and rows are labelled
+  directly.
+
+  The suppressed-clash count is carried onto the tile and repeated under
+  the chart. A dashboard that counts only what survived the clash matrix
+  tells a coordinator the model is cleaner than it is.
+
 - **Atlas** — Atlas AEC (`../atlas/`, the project-management half of the
   platform) embedded whole, not linked to. Atlas is a Next.js app with
   its own server, so it cannot be compiled into this Vite bundle; the
