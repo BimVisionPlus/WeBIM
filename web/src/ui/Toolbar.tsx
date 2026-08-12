@@ -175,6 +175,12 @@ export function Toolbar() {
       </div>
       <div className="tool-group">
         <button onClick={() => store.newProject()}>New</button>
+        <button
+          onClick={() => store.loadDemoProject()}
+          title="Nhà phố demo 12×8 — grid, tường, cửa, sàn, sheet, schedule, CDE, kế hoạch"
+        >
+          Demo
+        </button>
         <button onClick={() => fileInput.current?.click()}>Open JSON</button>
         <button
           onClick={() =>

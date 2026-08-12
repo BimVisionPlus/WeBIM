@@ -3,6 +3,7 @@ import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
 import { SyncEngine, type PeerPresence } from "../sync/syncEngine";
 import { parseIfc, type LinkedElement } from "../ifc/parseIfc";
+import { buildDemoProject } from "../demo/seedProject";
 
 export type ToolId =
   | "SELECT"
@@ -145,8 +146,16 @@ class AppStore {
   private version = 0;
   private listeners = new Set<() => void>();
 
+  /** True when this browser had no project yet and got the demo instead. */
+  seededDemo = false;
+
   constructor() {
-    this.project = this.restore() ?? defaultProject();
+    const restored = this.restore();
+    // First run gets the demo rather than an empty grid: an app that opens on
+    // "No walls yet" demonstrates nothing. Only ever when storage is empty —
+    // it must never overwrite someone's work.
+    this.seededDemo = restored === null;
+    this.project = restored ?? buildDemoProject();
     const storedView = localStorage.getItem(ACTIVE_VIEW_KEY);
     if (storedView && this.project.views.some((view) => view.id === storedView)) {
       this.activeViewId = storedView;
@@ -814,6 +823,18 @@ class AppStore {
 
   renameProject(name: string): void {
     this.project.name = name;
+    this.commit();
+  }
+
+  /** Replace the current project with the demo. Explicit, so it may discard. */
+  loadDemoProject(): void {
+    this.project = buildDemoProject();
+    this.selection = null;
+    this.pendingStart = null;
+    this.activeSheetId = null;
+    this.activeScheduleId = null;
+    this.activeViewId = this.project.views[0]?.id ?? null;
+    this.statusMessage = "Đã nạp dự án demo";
     this.commit();
   }
 

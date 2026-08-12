@@ -40,6 +40,22 @@ biến này thì Atlas gửi `X-Frame-Options: SAMEORIGIN` (mặc định cũ, g
 nguyên) và tab hiện ô trống — trình duyệt không báo được frame bị từ chối
 qua khác origin, nên header của tab luôn có sẵn "Mở tab mới".
 
+### Seed dữ liệu demo cho Atlas
+
+```bash
+cd atlas && bash scripts/seed-all.sh
+```
+
+Chạy migrate, seed gốc (tổ chức · người dùng · dự án) rồi toàn bộ 25 seed
+theo module. Chạy lại được — các seed đều upsert hoặc kiểm tra trước.
+
+Script tồn tại vì chạy lẻ từng seed vướng hai cái bẫy, mà vướng cái nào
+cũng chỉ nhận được một stack trace của Prisma: `DATABASE_URL` (Prisma CLI
+tự đọc `.env`, script tsx thì không) và `tsx` chỉ nằm trong
+`packages/db`, không có ở thư mục gốc.
+
+Đăng nhập demo: `anh.nguyen@cofico.vn` / `demo1234!`
+
 ### Cầu nối WeBIM → Atlas Models
 
 WeBIM dựng model, Atlas chạy giấy tờ quanh nó. Module **Atlas** trong

@@ -286,12 +286,25 @@ IFC4 STEP text → .ifc download
 
 ## Demo
 
-`demo/demo-project.webim.json` — a complete sample project (12×8 m
-two-storey house: grids with bubbles, mitered walls with doors/windows
-and swing symbols, floor/roof slabs, dimension, sheet A101, wall type
-with layered assembly, WALL/QTO/CLASH schedules, a CDE document with a
-P01 revision, and five tasks with dependencies for the Gantt view).
-Load it with **Open JSON** in the toolbar.
+A first visit opens on **Nhà phố demo 12×8** — an app that opens on "No
+walls yet" demonstrates nothing. It is only ever seeded when
+`localStorage` is empty, so it never overwrites work; **Demo** in the
+toolbar reloads it deliberately.
+
+The demo is built by `src/demo/seedProject.ts`, through the same domain
+constructors the tools use, rather than shipped as JSON. A checked-in
+`.webim.json` is a snapshot of a schema and schemas move: the file this
+replaced had no `openings` at all while this README claimed it did. Built
+from code, a changed signature stops the build instead of loading a
+project with holes in it.
+
+Two storeys of a 12×8 m house: seven grids in two families (so IFC export
+takes the `RECTANGULAR IfcGrid` path), mitered brick walls plus a 110
+partition, two doors and five windows, floor/roof slabs, a dimension,
+sheet A101, WALL/OPENING/QTO/CLASH schedules, two CDE documents with
+notes, and five planned tasks. Dates are fixed rather than relative to
+today — a demo reading "trễ 400 ngày" next year is worse than one that is
+plainly a sample.
 
 ## Demo tĩnh (miễn phí, không cần máy chủ)
 
