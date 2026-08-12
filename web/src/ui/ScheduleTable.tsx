@@ -5,6 +5,12 @@ import {
 } from "../application/schedules";
 import { qtoCsv, qtoRows, qtoSummary } from "../application/qto";
 import { clashReport, externalClashes } from "../application/clash";
+import {
+  applyMatrix,
+  clashSystems,
+  modelIndex,
+  ruleFor,
+} from "../application/clashMatrix";
 import type { ScheduleDatum } from "../domain/project";
 import { store, useStoreVersion } from "../state/store";
 
@@ -178,12 +184,99 @@ function QtoTable() {
   );
 }
 
+/**
+ * The matrix: system × system, each cell a checkbox and its own tolerance.
+ * Only the lower triangle is editable — A×B and B×A are one rule, and showing
+ * both invites setting them differently.
+ */
+function ClashMatrixGrid() {
+  const systems = clashSystems(
+    store.project,
+    store.linkedModels.map((model) => model.name),
+  );
+  if (systems.length === 0) return null;
+  const matrix = store.project.clashMatrix;
+
+  return (
+    <details className="clash-matrix" open={Object.keys(matrix).length > 0}>
+      <summary>
+        Ma trận va chạm — {systems.length} hệ
+        {Object.keys(matrix).length > 0 ? ` · ${Object.keys(matrix).length} ô đã đổi` : ""}
+      </summary>
+      <table>
+        <thead>
+          <tr>
+            <th />
+            {systems.map((system) => (
+              <th key={system.id}>{system.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {systems.map((row, rowIndex) => (
+            <tr key={row.id}>
+              <th>{row.label}</th>
+              {systems.map((column, columnIndex) => {
+                if (columnIndex > rowIndex) return <td key={column.id} className="muted-cell" />;
+                const rule = ruleFor(matrix, row.id, column.id);
+                return (
+                  <td key={column.id}>
+                    <label className="clash-cell">
+                      <input
+                        type="checkbox"
+                        checked={rule.enabled}
+                        onChange={(event) =>
+                          store.setClashRule(row.id, column.id, {
+                            enabled: event.target.checked,
+                          })
+                        }
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.001}
+                        value={rule.toleranceM}
+                        disabled={!rule.enabled}
+                        title="Dung sai (m) — bỏ qua va chạm nông hơn mức này"
+                        onChange={(event) =>
+                          store.setClashRule(row.id, column.id, {
+                            toleranceM: Number(event.target.value) || 0,
+                          })
+                        }
+                      />
+                    </label>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="module-form">
+        <button className="mini" onClick={() => store.resetClashMatrix()}>
+          Đặt lại toàn bộ
+        </button>
+        <span className="module-hint" style={{ margin: 0 }}>
+          Tắt ô = không kiểm tra cặp hệ đó. Dung sai tính theo mét, mặc định 0.001.
+        </span>
+      </div>
+    </details>
+  );
+}
+
 function ClashTable() {
   const internal = clashReport(store.project);
   const external = store.linkedModels.flatMap((model) =>
     externalClashes(store.project, model.elements),
   );
-  const clashes = [...internal, ...external].sort((a, b) => b.depth - a.depth);
+  const all = [...internal, ...external].sort((a, b) => b.depth - a.depth);
+  const filtered = applyMatrix(
+    all,
+    store.project.clashMatrix,
+    modelIndex(store.linkedModels),
+  );
+  const clashes = filtered.kept;
+  const suppressed = filtered.suppressedByRule + filtered.suppressedByTolerance;
   const onPickIfc = async (file: File | undefined) => {
     if (!file) return;
     store.linkIfcModel(file.name, await file.text());
@@ -213,10 +306,13 @@ function ClashTable() {
           </span>
         ))}
       </div>
+      <ClashMatrixGrid />
       <p className="module-hint">
         {clashes.length === 0
           ? "Không phát hiện va chạm cứng — các liên kết tường hợp lệ đã được loại trừ."
-          : `${clashes.length} va chạm (${external.length} với model IFC link), sắp xếp theo độ xuyên sâu.`}{" "}
+          : `${clashes.length} va chạm (${external.length} với model IFC link), sắp xếp theo độ xuyên sâu.`}
+        {suppressed > 0 &&
+          ` · ma trận đã ẩn ${suppressed} (${filtered.suppressedByRule} do tắt ô, ${filtered.suppressedByTolerance} dưới dung sai)`}{" "}
         Va chạm với IFC link ở mức AABB (sàng lọc kiểu Navisworks) — chỉ đọc thân
         SweptSolid.
       </p>

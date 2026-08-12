@@ -777,3 +777,44 @@ input[type="text"],
   margin: 0;
   font-size: 14px;
 }
+
+/* Clash matrix: a dense grid, so cells stay tight and the upper triangle
+   reads as unavailable rather than empty. */
+.clash-matrix {
+  margin-bottom: 12px;
+}
+
+.clash-matrix summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.clash-matrix table {
+  min-width: 0;
+}
+
+.clash-matrix th {
+  white-space: nowrap;
+}
+
+.clash-matrix .muted-cell {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    var(--panel) 4px,
+    var(--panel) 8px
+  );
+}
+
+.clash-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clash-cell input[type="number"] {
+  width: 74px;
+}

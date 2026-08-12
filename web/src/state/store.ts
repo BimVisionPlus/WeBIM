@@ -4,6 +4,8 @@ import { exportProjectToIfc } from "../export/ifcGrid";
 import { SyncEngine, type PeerPresence } from "../sync/syncEngine";
 import { parseIfc, type LinkedElement } from "../ifc/parseIfc";
 import { buildDemoProject } from "../demo/seedProject";
+import { pairKey, ruleFor } from "../application/clashMatrix";
+import type { ClashRule } from "../domain/project";
 
 export type ToolId =
   | "SELECT"
@@ -823,6 +825,21 @@ class AppStore {
 
   renameProject(name: string): void {
     this.project.name = name;
+    this.commit();
+  }
+
+  /** Set one cell of the clash matrix; it lives in the project, so it syncs. */
+  setClashRule(a: string, b: string, patch: Partial<ClashRule>): void {
+    const key = pairKey(a, b);
+    const current = ruleFor(this.project.clashMatrix, a, b);
+    this.project.clashMatrix[key] = { ...current, ...patch };
+    this.commit();
+  }
+
+  /** Back to "check everything at 1 mm" without hunting for changed cells. */
+  resetClashMatrix(): void {
+    this.project.clashMatrix = {};
+    this.setStatus("Đã đặt lại ma trận va chạm");
     this.commit();
   }
 

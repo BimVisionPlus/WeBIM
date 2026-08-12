@@ -203,6 +203,20 @@ export interface WallDatum {
   typeId?: string;
 }
 
+/**
+ * One cell of the clash matrix: whether this pair of systems is checked at
+ * all, and how deep an overlap has to be before it counts. Lives in the
+ * project so it travels with it and syncs like every other element.
+ */
+export interface ClashRule {
+  enabled: boolean;
+  /** Metres. Overlaps at or below this are not reported. */
+  toleranceM: number;
+}
+
+/** Sparse — only cells someone changed. Keys are `systemA|systemB`, sorted. */
+export type ClashMatrix = Record<string, ClashRule>;
+
 export type ViewType = "FLOOR_PLAN" | "SECTION" | "ELEVATION";
 
 export interface TechnicalView {
@@ -259,6 +273,12 @@ export class NativeBimProject {
   dimensions: DimensionDatum[];
   documents: DocumentDatum[];
   tasks: TaskDatum[];
+  /**
+   * Not a constructor argument: it is a setting rather than content, and
+   * threading an eleventh positional parameter through every call site to
+   * carry a usually-empty object is not worth it.
+   */
+  clashMatrix: ClashMatrix = {};
 
   constructor(
     id: string,
@@ -308,6 +328,18 @@ export class NativeBimProject {
   toDict(): Record<string, unknown> {
     return {
       schema_version: 4,
+      // Omitted when untouched, so a project that never opened the matrix
+      // serializes exactly as it did before this existed.
+      ...(Object.keys(this.clashMatrix).length > 0
+        ? {
+            clash_matrix: Object.fromEntries(
+              Object.entries(this.clashMatrix).map(([key, rule]) => [
+                key,
+                { enabled: rule.enabled, tolerance_m: rule.toleranceM },
+              ]),
+            ),
+          }
+        : {}),
       id: this.id,
       name: this.name,
       site_name: this.siteName,
@@ -450,7 +482,7 @@ export class NativeBimProject {
       levels.push({ id: uuid4Hex(), name: "Level 1", elevation: 0 });
     }
     const defaultLevelId = levels[0].id;
-    return new NativeBimProject(
+    const project = new NativeBimProject(
       data.id,
       data.name,
       data.site_name,
@@ -580,6 +612,18 @@ export class NativeBimProject {
         dependsOn: (task.depends_on as string[]) ?? [],
       })),
     );
+
+    // Unknown keys are dropped by design; the matrix is restored explicitly.
+    // Rules with a missing flag default to enabled, which matches a fresh
+    // matrix — a half-written file must not silently stop reporting clashes.
+    const storedMatrix = (data.clash_matrix ?? {}) as Record<string, Record<string, unknown>>;
+    for (const [key, rule] of Object.entries(storedMatrix)) {
+      project.clashMatrix[key] = {
+        enabled: rule.enabled !== false,
+        toleranceM: typeof rule.tolerance_m === "number" ? rule.tolerance_m : 0.001,
+      };
+    }
+    return project;
   }
 
   addView(

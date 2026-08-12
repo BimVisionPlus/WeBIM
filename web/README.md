@@ -34,6 +34,17 @@ collaboration covers them for free; only binaries touch the server):
 - **QTO** — net quantities from the same wallPieces geometry the
   viewport renders (openings deducted, typed walls split per material
   layer), slab volumes, opening counts, CSV export.
+- **Clash matrix** — system × system, each cell on/off with its own
+  tolerance in metres (Navisworks' clash matrix, without the licence).
+  Systems are the native categories plus one per linked IFC model, which
+  in practice is the discipline. It wraps the engine rather than changing
+  it: everything is still detected, the matrix only decides what is
+  reported, so turning a cell back on cannot miss a clash that was never
+  looked for. Suppressed counts are always shown — a filter that hides
+  silently lies — and anything it cannot classify is kept, never dropped.
+  Stored in the project (`clash_matrix`), so it travels and syncs; absent
+  from the JSON until a cell is changed. The Blender add-on does not read
+  this key, so a round-trip through `.blend` drops it.
 - **Clash** — separating-axis footprint overlap × z-range checks with
   legitimate wall joins excluded and slab bearing tolerated; plus
   Navisworks-style linked-model screening: "Link IFC…" reads external
