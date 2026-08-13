@@ -4,6 +4,7 @@ import {
   collectElements,
   mergeRemote,
   WebSocketTransport,
+  WS_LOGIN_REQUIRED,
   type ElementClocks,
 } from "../src/sync/syncEngine";
 import { NativeBimProject } from "../src/domain/project";
@@ -193,5 +194,56 @@ describe("relay retry policy", () => {
     expect(DeadSocket.instances).toHaveLength(1);
     vi.advanceTimersByTime(1);
     expect(DeadSocket.instances).toHaveLength(2);
+  });
+});
+
+/**
+ * A relay that is up but refuses a signed-out socket used to produce an
+ * endless loop: open (status → connected), closed 4401 a moment later
+ * (status → offline), retry a second later, forever. The dot flapped, the
+ * status line claimed "Relay connected" half the time, and a signed-out tab
+ * opened a connection per second against the server.
+ */
+describe("a relay that demands a login", () => {
+  class ClosingSocket {
+    static instances = 0;
+    onopen: (() => void) | null = null;
+    onclose: ((event: { code: number }) => void) | null = null;
+    onerror: (() => void) | null = null;
+    onmessage: ((event: { data: string }) => void) | null = null;
+    readyState = 1;
+    constructor() {
+      ClosingSocket.instances += 1;
+      setTimeout(() => {
+        this.onopen?.();
+        this.onclose?.({ code: WS_LOGIN_REQUIRED });
+      }, 0);
+    }
+    send() {}
+    close() {}
+  }
+
+  it("stops retrying and says a login is needed, not that the relay is down", async () => {
+    ClosingSocket.instances = 0;
+    vi.stubGlobal("WebSocket", ClosingSocket as unknown as typeof WebSocket);
+    const status: boolean[] = [];
+    let authRequired = 0;
+    const transport = new WebSocketTransport(
+      "ws://relay/api",
+      () => {},
+      () => {},
+      (connected) => status.push(connected),
+      () => {},
+      () => { authRequired += 1; },
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(authRequired).toBe(1);
+    expect(transport.loginRequired).toBe(true);
+    // Opened once, closed once, and never dialled again.
+    expect(ClosingSocket.instances).toBe(1);
+    // And it did not leave the UI believing it was connected.
+    expect(status.at(-1)).toBe(false);
+    vi.unstubAllGlobals();
   });
 });

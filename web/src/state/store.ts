@@ -1062,6 +1062,15 @@ store.sync = new SyncEngine({
         : store.statusMessage,
     );
   },
+  // The relay is up but will not carry a signed-out tab. Saying so beats
+  // "Relay offline", which reads as "the server is down" and sends someone
+  // looking at the wrong thing.
+  onAuthRequired: () => {
+    store.relayConnected = false;
+    store.standalone = false;
+    store.authRequired = true;
+    store.setStatus("Cần đăng nhập để đồng bộ — mô hình vẫn lưu trong máy này");
+  },
   onRelayStatus: (connected) => {
     store.relayConnected = connected;
     store.standalone = false;

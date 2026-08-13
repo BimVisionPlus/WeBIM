@@ -238,17 +238,29 @@ const RELAY_ATTEMPTS_BEFORE_STANDALONE = 3;
 /** WebSocket transport to the relay; reconnects with backoff, and gives up
  * quietly into standalone mode when there was never a relay to reach.
  * Exported for tests — the retry policy is the part worth pinning down. */
+/** Relay close code for an unauthenticated socket. */
+export const WS_LOGIN_REQUIRED = 4401;
+
 export class WebSocketTransport implements SyncTransport {
   private socket: WebSocket | null = null;
   private closed = false;
   private retryMs = 1000;
   private attempts = 0;
   private everConnected = false;
+  /**
+   * Server said the socket needs a login. Retrying that is a loop that never
+   * ends and never succeeds: every attempt opens (status → connected), gets
+   * closed 4401 a moment later (status → offline), and starts again a second
+   * later. The dot flaps, the status line claims "Relay connected" half the
+   * time, and the server takes a connection per second from a signed-out tab.
+   */
+  private needsAuth = false;
   private url: string;
   private onMessage: (message: WireMessage) => void;
   private onOpen: () => void;
   private onStatus: (connected: boolean) => void;
   private onStandalone: () => void;
+  private onAuthRequired: () => void;
   connected = false;
   standalone = false;
 
@@ -258,7 +270,9 @@ export class WebSocketTransport implements SyncTransport {
     onOpen: () => void,
     onStatus: (connected: boolean) => void,
     onStandalone: () => void = () => {},
+    onAuthRequired: () => void = () => {},
   ) {
+    this.onAuthRequired = onAuthRequired;
     this.url = url;
     this.onMessage = onMessage;
     this.onOpen = onOpen;
@@ -291,10 +305,19 @@ export class WebSocketTransport implements SyncTransport {
         // Ignore malformed frames.
       }
     };
-    this.socket.onclose = () => {
+    // `event` is optional on purpose: the browser always supplies a CloseEvent,
+    // but nothing in the type system guarantees a given environment does.
+    this.socket.onclose = (event?: { code?: number }) => {
       if (this.connected) {
         this.connected = false;
         this.onStatus(false);
+      }
+      // 4401 is the relay's "login required" — see web/relay/server.mjs.
+      if (event?.code === WS_LOGIN_REQUIRED) {
+        this.needsAuth = true;
+        this.closed = true;
+        this.onAuthRequired();
+        return;
       }
       this.scheduleReconnect();
     };
@@ -321,6 +344,11 @@ export class WebSocketTransport implements SyncTransport {
     }
   }
 
+  /** True when the relay refused this socket for want of a login. */
+  get loginRequired(): boolean {
+    return this.needsAuth;
+  }
+
   close(): void {
     this.closed = true;
     this.socket?.close();
@@ -339,6 +367,8 @@ interface EngineHooks {
   onRelayStatus?: (connected: boolean) => void;
   /** No relay here and there never was one — a static build, or offline. */
   onStandalone?: () => void;
+  /** The relay is there but refused the socket until someone signs in. */
+  onAuthRequired?: () => void;
 }
 
 const CLOCKS_KEY = "webim.sync_clocks";
@@ -442,6 +472,9 @@ export class SyncEngine {
         () => {
           this.standalone = true;
           this.hooks.onStandalone?.();
+        },
+        () => {
+          this.hooks.onAuthRequired?.();
         },
       ),
     );

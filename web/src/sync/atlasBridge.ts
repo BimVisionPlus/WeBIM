@@ -273,8 +273,34 @@ export function atlasCandidates(): string[] {
   const here = typeof window === "undefined" ? "" : window.location.origin;
   return [
     ...(here ? [`${here}/atlas`] : []),
+    ...siblingAtlasOrigin(here),
     ...(isLocalOrigin(here) ? ["http://localhost:3170", "http://localhost:3000"] : []),
   ];
+}
+
+/**
+ * `app.webim.vn` → `https://atlas.webim.vn`.
+ *
+ * This is the topology deploy/Caddyfile ships: WeBIM on one hostname, Atlas
+ * on `atlas.` beside it, both behind the same Caddy. Guessing it saves every
+ * user of that deployment from typing an address the deployment already
+ * decided — and the guess is still *verified* by /api/webim/health before
+ * anything is framed, so a wrong guess costs one failed request, not a wrong
+ * application in the tab.
+ */
+function siblingAtlasOrigin(origin: string): string[] {
+  if (!origin || isLocalOrigin(origin)) return [];
+  try {
+    const url = new URL(origin);
+    const labels = url.hostname.split(".");
+    if (labels[0] === "atlas") return [];
+    // Only for a sub-domain: on an apex, "atlas.webim.vn" is a guess about
+    // someone else's DNS, not about ours.
+    if (labels.length < 3) return [];
+    return [`${url.protocol}//atlas.${labels.slice(1).join(".")}`];
+  } catch {
+    return [];
+  }
 }
 
 /**

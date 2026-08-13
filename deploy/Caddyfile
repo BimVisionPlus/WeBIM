@@ -6,9 +6,17 @@
 
 	# Platform server: files + auth + AI + WebSocket sync relay.
 	# handle_path strips /api before proxying, and Caddy upgrades
-	# WebSocket connections automatically — the client uses
-	# wss://<domain>/api for sync.
+	# WebSocket connections automatically.
+	#
+	# Two blocks, because handle_path takes exactly one matcher and `/api/*`
+	# requires a segment after the slash: it matches /api/health but NOT the
+	# bare /api the sync client opens its socket on. That fell through to the
+	# SPA handler and got index.html back, which a WebSocket upgrade cannot
+	# use — so the app reported "chế độ độc lập" on a server running fine.
 	handle_path /api/* {
+		reverse_proxy relay:8787
+	}
+	handle_path /api {
 		reverse_proxy relay:8787
 	}
 

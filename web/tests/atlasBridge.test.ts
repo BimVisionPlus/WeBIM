@@ -368,6 +368,19 @@ describe("where to look for Atlas", () => {
     expect(candidates.some((url) => url.includes("127.0.0.1"))).toBe(false);
   });
 
+  it("guesses atlas.<domain> next to a deployed WeBIM", () => {
+    expect(withOrigin("https://app.webim.vn")).toEqual([
+      "https://app.webim.vn/atlas",
+      "https://atlas.webim.vn",
+    ]);
+    // Không đoán trên apex: "atlas.webim.vn" lúc đó là phỏng đoán về DNS của
+    // người khác, không phải của mình.
+    expect(withOrigin("https://webim.vn")).toEqual(["https://webim.vn/atlas"]);
+    // Đang ở chính Atlas thì không tự trỏ về mình.
+    expect(withOrigin("https://atlas.webim.vn")).toEqual(["https://atlas.webim.vn/atlas"]);
+    expect(withOrigin("http://app.example.co.uk")).toContain("http://atlas.example.co.uk");
+  });
+
   it("knows a local origin from a hostname that merely contains one", () => {
     expect(isLocalOrigin("http://localhost:3000")).toBe(true);
     expect(isLocalOrigin("http://127.0.0.1")).toBe(true);

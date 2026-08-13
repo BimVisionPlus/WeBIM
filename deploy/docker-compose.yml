@@ -24,6 +24,12 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.relay
+    # AI tự host chạy trên chính máy chủ (Ollama/vLLM), ngoài Docker. Địa chỉ
+    # gateway của mạng compose đổi mỗi lần mạng được tạo lại, nên trỏ tay vào
+    # nó là một cấu hình sẽ hỏng lặng lẽ vào một ngày nào đó. host-gateway để
+    # Docker tự điền, và AI_BASE_URL viết cố định host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - WEBIM_SECRET=${WEBIM_SECRET}
       # Self-hosted AI only. AI_BASE_URL points at your own OpenAI-compatible
