@@ -89,7 +89,11 @@ function BarList({
   );
 }
 
-export function DashboardModule() {
+/**
+ * `embedded` drops the page heading: on TRANG CHỦ this is the overview half of
+ * that page, not a page of its own, and two <h2> in a row reads as a mistake.
+ */
+export function DashboardModule({ embedded = false }: { embedded?: boolean } = {}) {
   useStoreVersion();
   const project = store.project;
   const systems = clashSystems(
@@ -105,8 +109,12 @@ export function DashboardModule() {
   const blocked = tasks.find((row) => row.label === "BLOCKED")?.value ?? 0;
 
   return (
-    <div className="module-host">
-      <h2>Dashboard — mô hình &amp; phối hợp</h2>
+    <div className={embedded ? "" : "module-host"}>
+      {embedded ? (
+        <h3>Tổng quan</h3>
+      ) : (
+        <h2>Dashboard — mô hình &amp; phối hợp</h2>
+      )}
       <p className="module-hint">
         Tổng hợp từ chính dự án đang mở: không có số nào lấy từ nơi khác.
       </p>

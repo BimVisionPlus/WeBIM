@@ -131,6 +131,28 @@ export interface RoomDatum {
   occupancyOverride: number | null;
 }
 
+/**
+ * Khối tích nghiên cứu — "box khối" của sơ đồ workflow.
+ *
+ * Một mặt bằng đùn lên tới một chiều cao. Cố ý *không* phải tường và sàn: ở
+ * bước nghiên cứu phương án, người ta muốn thấy hình dạng và ước lượng diện
+ * tích sàn trước khi có cấu kiện nào, và ép giai đoạn đó thành tường sẽ tạo ra
+ * một mô hình trông như đã thiết kế trong khi chưa. Nó mang cờ riêng nên
+ * QTO, va chạm và IFC đều biết đây là khối nghiên cứu chứ không phải kết cấu.
+ */
+export interface MassDatum {
+  id: string;
+  name: string;
+  /** Plan polygon, metres. */
+  outline: [number, number][];
+  /** Extrusion height, metres, above the level + zOffset. */
+  height: number;
+  levelId: string;
+  zOffset: number;
+  /** Số tầng giả định, để quy ra diện tích sàn. 1 = một khối trơn. */
+  storeys: number;
+}
+
 export type SlabKind = "FLOOR" | "ROOF";
 
 /**
@@ -185,6 +207,34 @@ export interface DocumentRevision {
   uploadedAt: string;
 }
 
+/**
+ * Đánh dấu vẽ lên trang PDF — "chỉnh sửa" của sơ đồ workflow.
+ *
+ * Toạ độ là *tỉ lệ của trang* (0–1), không phải pixel màn hình. Đây là cả
+ * điểm mấu chốt: người xem trên laptop, người xem trên máy công trường, người
+ * in ra A3 — một dấu ghi bằng pixel sẽ trôi đi ở cả ba. Ghi theo tỉ lệ trang
+ * thì nó nằm đúng chỗ trên bản vẽ, ở mọi cỡ.
+ *
+ * Nó đánh dấu *lên* PDF chứ không sửa vào file PDF: file gốc trong CDE là bản
+ * đã phát hành, và ghi đè lên nó sẽ phá mất chuỗi revision mà cả module CDE
+ * tồn tại để giữ.
+ */
+export type MarkupKind = "RECT" | "ARROW" | "TEXT" | "CLOUD";
+
+export interface MarkupDatum {
+  id: string;
+  kind: MarkupKind;
+  /** Trang, đếm từ 0. */
+  page: number;
+  /** Hai điểm, mỗi điểm là [x, y] theo tỉ lệ trang 0–1. */
+  from: [number, number];
+  to: [number, number];
+  text: string;
+  color: string;
+  author: string;
+  at: string;
+}
+
 export interface DocumentNote {
   id: string;
   text: string;
@@ -203,6 +253,8 @@ export interface DocumentDatum {
   status: DocumentStatus;
   revisions: DocumentRevision[];
   notes: DocumentNote[];
+  /** Đánh dấu trên bản vẽ; vắng mặt trong JSON cho tới khi có cái đầu tiên. */
+  markups?: MarkupDatum[];
 }
 
 export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "BLOCKED";
@@ -375,6 +427,8 @@ export class NativeBimProject {
   documents: DocumentDatum[];
   tasks: TaskDatum[];
   rooms: RoomDatum[] = [];
+  /** Khối nghiên cứu — cùng lý do như rooms: thêm sau, không nằm trong constructor. */
+  masses: MassDatum[] = [];
   /**
    * Not a constructor argument: it is a setting rather than content, and
    * threading an eleventh positional parameter through every call site to
@@ -383,6 +437,12 @@ export class NativeBimProject {
   clashMatrix: ClashMatrix = {};
   /** Same reasoning as clashMatrix — a setting, not content. */
   fireSettings: FireSettings = { ...DEFAULT_FIRE_SETTINGS };
+  /**
+   * Đơn giá tổng hợp, VND trên đơn vị, khoá theo "category|material|unit" của
+   * bảng khối lượng. Ở trong dự án chứ không ở máy: hai người cùng đọc một
+   * tổng tiền phải đang nhân với cùng bộ giá.
+   */
+  rates: Record<string, number> = {};
 
   constructor(
     id: string,
@@ -434,6 +494,19 @@ export class NativeBimProject {
       schema_version: 4,
       // Omitted when untouched, so a project that never opened the matrix
       // serializes exactly as it did before this existed.
+      ...(this.masses.length > 0
+        ? {
+            masses: this.masses.map((mass) => ({
+              id: mass.id,
+              name: mass.name,
+              outline: mass.outline.map((point) => [...point]),
+              height: mass.height,
+              level_id: mass.levelId,
+              z_offset: mass.zOffset,
+              storeys: mass.storeys,
+            })),
+          }
+        : {}),
       ...(this.rooms.length > 0
         ? {
             rooms: this.rooms.map((room) => ({
@@ -447,6 +520,7 @@ export class NativeBimProject {
             })),
           }
         : {}),
+      ...(Object.keys(this.rates).length > 0 ? { rates: { ...this.rates } } : {}),
       // Written only once it differs from the default, for the same reason:
       // a project that never opened the PCCC tab round-trips unchanged.
       ...(this.fireSettings.grade !== DEFAULT_FIRE_SETTINGS.grade ||
@@ -538,6 +612,21 @@ export class NativeBimProject {
           author: note.author,
           at: note.at,
         })),
+        ...(document.markups && document.markups.length > 0
+          ? {
+              markups: document.markups.map((markup) => ({
+                id: markup.id,
+                kind: markup.kind,
+                page: markup.page,
+                from: [...markup.from],
+                to: [...markup.to],
+                text: markup.text,
+                color: markup.color,
+                author: markup.author,
+                at: markup.at,
+              })),
+            }
+          : {}),
       })),
       tasks: this.tasks.map((task) => ({
         ...(task.elementIds && task.elementIds.length > 0
@@ -736,6 +825,21 @@ export class NativeBimProject {
           author: (note.author as string) ?? "",
           at: (note.at as string) ?? "",
         })),
+        ...(Array.isArray(document.markups)
+          ? {
+              markups: (document.markups as Record<string, unknown>[]).map((markup) => ({
+                id: markup.id as string,
+                kind: (markup.kind as MarkupKind) ?? "RECT",
+                page: typeof markup.page === "number" ? markup.page : 0,
+                from: markup.from as [number, number],
+                to: markup.to as [number, number],
+                text: (markup.text as string) ?? "",
+                color: (markup.color as string) ?? "#e06c75",
+                author: (markup.author as string) ?? "",
+                at: (markup.at as string) ?? "",
+              })),
+            }
+          : {}),
       })),
       ((data.tasks as Record<string, unknown>[]) ?? []).map((task) => ({
         id: task.id as string,
@@ -753,6 +857,18 @@ export class NativeBimProject {
       })),
     );
 
+    for (const mass of (data.masses ?? []) as Record<string, unknown>[]) {
+      project.masses.push({
+        id: mass.id as string,
+        name: (mass.name as string) ?? "Khối",
+        outline: mass.outline as [number, number][],
+        height: typeof mass.height === "number" ? mass.height : 3,
+        levelId: (mass.level_id as string) ?? defaultLevelId,
+        zOffset: typeof mass.z_offset === "number" ? mass.z_offset : 0,
+        storeys: typeof mass.storeys === "number" ? mass.storeys : 1,
+      });
+    }
+
     for (const room of (data.rooms ?? []) as Record<string, unknown>[]) {
       project.rooms.push({
         id: room.id as string,
@@ -764,6 +880,13 @@ export class NativeBimProject {
         occupancyOverride:
           typeof room.occupancy_override === "number" ? room.occupancy_override : null,
       });
+    }
+
+    const storedRates = (data.rates ?? {}) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(storedRates)) {
+      if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+        project.rates[key] = value;
+      }
     }
 
     const storedFire = (data.fire_settings ?? {}) as Record<string, unknown>;
@@ -883,6 +1006,9 @@ export class NativeBimProject {
     if (this.rooms.some((room) => room.levelId === levelId)) {
       throw new Error("Level still hosts rooms");
     }
+    if (this.masses.some((mass) => mass.levelId === levelId)) {
+      throw new Error("Level still hosts masses");
+    }
     return this.levels.splice(index, 1)[0];
   }
 
@@ -919,6 +1045,58 @@ export class NativeBimProject {
     if (!room) throw new Error(`Unknown RoomDatum: ${roomId}`);
     Object.assign(room, changes);
     return room;
+  }
+
+  addMass(
+    outline: [number, number][],
+    options: { name?: string; height?: number; levelId?: string; storeys?: number } = {},
+  ): MassDatum {
+    if (outline.length < 3) {
+      throw new Error("A mass outline needs at least three points");
+    }
+    const height = options.height ?? 3.3;
+    if (height <= 0) {
+      throw new Error("Mass height must be greater than zero");
+    }
+    const storeys = options.storeys ?? 1;
+    if (storeys < 1 || !Number.isInteger(storeys)) {
+      throw new Error("Storeys must be a whole number of at least 1");
+    }
+    if (this.levels.length === 0) {
+      this.addLevel("Level 1", 0);
+    }
+    const level = options.levelId ? this.levelById(options.levelId) : this.levels[0];
+    if (!level) {
+      throw new Error(`Unknown LevelDatum: ${options.levelId}`);
+    }
+    const mass: MassDatum = {
+      id: uuid4Hex(),
+      name: options.name ?? `Khối ${this.masses.length + 1}`,
+      outline,
+      height,
+      levelId: level.id,
+      zOffset: 0,
+      storeys,
+    };
+    this.masses.push(mass);
+    return mass;
+  }
+
+  updateMass(massId: string, changes: Partial<Omit<MassDatum, "id">>): MassDatum {
+    const mass = this.masses.find((candidate) => candidate.id === massId);
+    if (!mass) throw new Error(`Unknown MassDatum: ${massId}`);
+    if (changes.height !== undefined && changes.height <= 0) {
+      throw new Error("Mass height must be greater than zero");
+    }
+    if (changes.storeys !== undefined && (changes.storeys < 1 || !Number.isInteger(changes.storeys))) {
+      throw new Error("Storeys must be a whole number of at least 1");
+    }
+    Object.assign(mass, changes);
+    return mass;
+  }
+
+  removeMass(massId: string): void {
+    this.masses = this.masses.filter((mass) => mass.id !== massId);
   }
 
   removeRoom(roomId: string): void {
@@ -1158,6 +1336,24 @@ export class NativeBimProject {
     };
     document.revisions.push(revision);
     return revision;
+  }
+
+  addMarkup(
+    documentId: string,
+    markup: Omit<MarkupDatum, "id" | "at">,
+    at: string,
+  ): MarkupDatum {
+    const document = this.documents.find((candidate) => candidate.id === documentId);
+    if (!document) throw new Error(`Unknown DocumentDatum: ${documentId}`);
+    const created: MarkupDatum = { ...markup, id: uuid4Hex(), at };
+    document.markups = [...(document.markups ?? []), created];
+    return created;
+  }
+
+  removeMarkup(documentId: string, markupId: string): void {
+    const document = this.documents.find((candidate) => candidate.id === documentId);
+    if (!document) return;
+    document.markups = (document.markups ?? []).filter((markup) => markup.id !== markupId);
   }
 
   addDocumentNote(

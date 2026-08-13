@@ -644,6 +644,19 @@ export class GridViewport {
       return;
     }
 
+    if (store.activeTool === "MASS") {
+      const snap = this.computeSnap(world);
+      if (store.pendingStart === null) {
+        store.setPendingStart(snap.point);
+        store.setStatus("Box khối: click góc đối diện.");
+      } else {
+        store.addMass(store.pendingStart, snap.point);
+        store.setPendingStart(null);
+      }
+      this.syncPreview();
+      return;
+    }
+
     if (store.activeTool === "ROOM") {
       const snap = this.computeSnap(world);
       if (store.pendingStart === null) {

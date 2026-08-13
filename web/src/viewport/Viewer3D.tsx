@@ -82,6 +82,36 @@ function buildModel(
     }
   }
 
+  // Khối nghiên cứu: nửa trong suốt và viền nhạt, để không bao giờ bị nhìn
+  // nhầm là cấu kiện đã thiết kế đứng cạnh tường thật.
+  for (const mass of project.masses) {
+    const shape = new THREE.Shape(
+      mass.outline.map(([x, y]) => new THREE.Vector2(x, y)),
+    );
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: mass.height,
+      bevelEnabled: false,
+    });
+    const level = project.levelById(mass.levelId);
+    geometry.translate(0, 0, (level?.elevation ?? 0) + mass.zOffset);
+    group.add(
+      new THREE.Mesh(
+        geometry,
+        new THREE.MeshLambertMaterial({
+          color: 0x4b6f9c,
+          transparent: true,
+          opacity: 0.35,
+        }),
+      ),
+    );
+    group.add(
+      new THREE.LineSegments(
+        new THREE.EdgesGeometry(geometry),
+        new THREE.LineBasicMaterial({ color: 0x7fa5d4 }),
+      ),
+    );
+  }
+
   for (const slab of project.slabs) {
     const shape = new THREE.Shape(
       slab.outline.map(([x, y]) => new THREE.Vector2(x, y)),

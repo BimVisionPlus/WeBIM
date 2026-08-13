@@ -6,6 +6,7 @@ import { parseIfc, type LinkedElement } from "../ifc/parseIfc";
 import { buildDemoProject } from "../demo/seedProject";
 import { pairKey, ruleFor } from "../application/clashMatrix";
 import type { ClashRule, FireSettings } from "../domain/project";
+import { sectionById, sectionOfPane, type PaneId, type SectionId } from "../ui/navigation";
 
 export type ToolId =
   | "SELECT"
@@ -16,6 +17,7 @@ export type ToolId =
   | "FLOOR"
   | "ROOF"
   | "ROOM"
+  | "MASS"
   | "DIM";
 
 export interface Selection {
@@ -32,23 +34,15 @@ export interface Selection {
     | "dimension"
     | "document"
     | "task"
-    | "room";
+    | "room"
+    | "mass";
   id: string;
 }
 
-export type ModuleId =
-  | "MODEL"
-  | "VIEWER"
-  | "CDE"
-  | "PLAN"
-  | "STANDARDS"
-  | "DRAWINGS"
-  | "CLIMATE"
-  | "DASHBOARD"
-  | "IFCDATA"
-  | "FOURD"
-  | "PCCC"
-  | "ATLAS";
+// The pane the main area is showing, and the branch of the workflow it
+// belongs to. Two fields rather than one because the branch bar must stay lit
+// on the right branch even when a pane is reached without clicking through it.
+export type { PaneId, SectionId } from "../ui/navigation";
 
 import { apiBase } from "../config";
 
@@ -143,7 +137,8 @@ class AppStore {
   snapIncrement = 0.1;
   pendingStart: Point3D | null = null;
   statusMessage = "Ready";
-  activeModule: ModuleId = "MODEL";
+  activePane: PaneId = "HOME";
+  activeSection: SectionId = "HOME";
   /** External IFC models linked for clash checking (local, not synced). */
   linkedModels: LinkedModel[] = [];
   /** Whether the platform server requires login (null until probed). */
@@ -470,13 +465,22 @@ class AppStore {
     return this.auth != null && this.auth.role !== "viewer";
   }
 
-  setModule(module: ModuleId): void {
-    this.activeModule = module;
-    if (module !== "MODEL" && this.activeTool !== "SELECT") {
+  /** Open a pane; the branch bar follows it rather than being set separately. */
+  setPane(pane: PaneId): void {
+    this.activePane = pane;
+    this.activeSection = sectionOfPane(pane);
+    // Drawing tools only mean something on the plan. Leaving one armed while
+    // the user is reading a schedule turns the next stray click into geometry.
+    if (pane !== "PLANVIEW" && pane !== "MASSING" && this.activeTool !== "SELECT") {
       this.activeTool = "SELECT";
       this.pendingStart = null;
     }
     this.commit(false);
+  }
+
+  /** Open a branch at its first pane. */
+  setSection(section: SectionId): void {
+    this.setPane(sectionById(section).panes[0].id);
   }
 
   addDocument(code: string, title: string): void {
@@ -627,6 +631,38 @@ class AppStore {
     const room = this.project.addRoom("", outline, { levelId: this.activeLevel?.id });
     this.selection = { kind: "room", id: room.id };
     this.statusMessage = `Phòng ${room.code} đã tạo`;
+    this.commit();
+  }
+
+  addMass(cornerA: Point3D, cornerB: Point3D): void {
+    const outline: [number, number][] = [
+      [cornerA[0], cornerA[1]],
+      [cornerB[0], cornerA[1]],
+      [cornerB[0], cornerB[1]],
+      [cornerA[0], cornerB[1]],
+    ];
+    try {
+      const mass = this.project.addMass(outline, { levelId: this.activeLevel?.id });
+      this.selection = { kind: "mass", id: mass.id };
+      this.setStatus(`${mass.name} — ${mass.height} m`);
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  updateMass(massId: string, changes: Parameters<NativeBimProject["updateMass"]>[1]): void {
+    try {
+      this.project.updateMass(massId, changes);
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  removeMass(massId: string): void {
+    this.project.removeMass(massId);
+    if (this.selection?.kind === "mass" && this.selection.id === massId) this.selection = null;
     this.commit();
   }
 
@@ -914,6 +950,43 @@ class AppStore {
    */
   setFireSettings(patch: Partial<FireSettings>): void {
     this.project.fireSettings = { ...this.project.fireSettings, ...patch };
+    this.commit();
+  }
+
+  addMarkup(
+    documentId: string,
+    markup: Omit<Parameters<NativeBimProject["addMarkup"]>[1], "author">,
+  ): void {
+    try {
+      this.project.addMarkup(
+        documentId,
+        { ...markup, author: this.auth?.username ?? "local" },
+        new Date().toISOString(),
+      );
+      this.commit();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  removeMarkup(documentId: string, markupId: string): void {
+    this.project.removeMarkup(documentId, markupId);
+    this.commit();
+  }
+
+  /** Persist + broadcast after a caller mutated the project directly. */
+  touch(message?: string): void {
+    if (message) this.statusMessage = message;
+    this.commit();
+  }
+
+  /** Đơn giá cho một dòng khối lượng; 0 hoặc rỗng = xoá khỏi bộ giá. */
+  setRate(key: string, value: number): void {
+    if (!Number.isFinite(value) || value <= 0) {
+      delete this.project.rates[key];
+    } else {
+      this.project.rates[key] = value;
+    }
     this.commit();
   }
 

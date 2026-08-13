@@ -5,6 +5,21 @@ lifecycle workspace: Revit-style BIM authoring plus the platform modules
 of the WeBIM concept — **Model | CDE | Plan | Standards | Drawings |
 Atlas**, with QTO and clash detection as live schedule kinds.
 
+## Điều hướng
+
+Theo `Webim Web_Workflow.drawio`: một **TRANG CHỦ**, rồi tám nhánh — Đọc &
+chỉnh sửa PDF · Tra cứu tiêu chuẩn · Quản lý dự án · BIM · Check va chạm ·
+Kiểm tra khối lượng · Render AI · Mô phỏng. Nhánh nào có nhiều bước thì có
+thanh tab con của riêng nó.
+
+Trước đây là một thanh 12 tab phẳng, mọi thứ ngang hàng, nên không chỗ nào
+nói cho người mới biết nên bắt đầu từ đâu. Bốn module không có trong sơ đồ
+được xếp vào nhánh sẵn có thay vì đẻ ra nhánh thứ chín: **Dashboard** là phần
+tổng quan của chính trang chủ (nó không phải một việc người ta định làm, nó
+là câu trả lời cho "dự án đang thế nào"), **IFC Data** đọc file đã link nên
+thuộc BIM, còn **PCCC** và **Climate** đều là mô phỏng — thoát nạn và vi khí
+hậu — nên nằm cùng 4D.
+
 Platform modules (all metadata lives in the synced project, so realtime
 collaboration covers them for free; only binaries touch the server):
 

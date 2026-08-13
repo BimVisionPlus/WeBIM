@@ -24,6 +24,7 @@ import {
   type AtlasConfig,
 } from "../sync/atlasBridge";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
+import { PdfMarkupView } from "./PdfMarkup";
 import {
   authHeaders,
   fetchFileUrl,
@@ -36,7 +37,7 @@ const DOCUMENT_STATUSES: DocumentStatus[] = ["WIP", "SHARED", "PUBLISHED", "ARCH
 const TASK_STATUSES: TaskStatus[] = ["NOT_STARTED", "IN_PROGRESS", "DONE", "BLOCKED"];
 
 /** Renders a stored file through an authenticated blob URL. */
-function StoredFileFrame({ fileKey, title }: { fileKey: string; title: string }) {
+export function StoredFileFrame({ fileKey, title }: { fileKey: string; title: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -56,6 +57,35 @@ function StoredFileFrame({ fileKey, title }: { fileKey: string; title: string })
   if (error) return <p className="module-hint">Không tải được file: {error}</p>;
   if (!url) return <p className="module-hint">Đang tải…</p>;
   return <iframe className="drawing-frame" title={title} src={url} />;
+}
+
+/** Loads the stored PDF, then hands its object URL to the markup view. */
+function MarkupFrame({
+  document: doc,
+  fileKey,
+}: {
+  document: DocumentDatum;
+  fileKey: string;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let revoked: string | null = null;
+    setUrl(null);
+    setError(null);
+    fetchFileUrl(fileKey)
+      .then((objectUrl) => {
+        revoked = objectUrl;
+        setUrl(objectUrl);
+      })
+      .catch((cause) => setError((cause as Error).message));
+    return () => {
+      if (revoked) URL.revokeObjectURL(revoked);
+    };
+  }, [fileKey]);
+  if (error) return <p className="module-hint">Không tải được file: {error}</p>;
+  if (!url) return <p className="module-hint">Đang tải…</p>;
+  return <PdfMarkupView document={doc} url={url} />;
 }
 
 function downloadStoredFile(fileKey: string, fileName: string): void {
@@ -665,7 +695,7 @@ export function DrawingsModule() {
 
   return (
     <div className="module-host drawings">
-      <h2>Drawings — đọc bản vẽ &amp; ghi chú</h2>
+      <h2>Bản vẽ — đọc, ghi chú &amp; đánh dấu</h2>
       {drawings.length === 0 ? (
         <p className="module-hint">
           Chưa có bản vẽ PDF — upload một revision .pdf trong module CDE.
@@ -709,11 +739,8 @@ export function DrawingsModule() {
               </>
             )}
           </div>
-          {latestPdf?.fileKey && (
-            <StoredFileFrame
-              fileKey={latestPdf.fileKey}
-              title={latestPdf.fileName ?? "drawing"}
-            />
+          {latestPdf?.fileKey && selected && (
+            <MarkupFrame document={selected} fileKey={latestPdf.fileKey} />
           )}
         </div>
       )}

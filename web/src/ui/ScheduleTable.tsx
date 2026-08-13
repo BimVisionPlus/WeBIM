@@ -132,7 +132,7 @@ function SlabTable() {
   );
 }
 
-function QtoTable() {
+export function QtoTable() {
   const rows = qtoRows(store.project);
   const summary = qtoSummary(rows);
   const download = () => {
@@ -189,7 +189,7 @@ function QtoTable() {
  * Only the lower triangle is editable — A×B and B×A are one rule, and showing
  * both invites setting them differently.
  */
-function ClashMatrixGrid() {
+export function ClashMatrixGrid() {
   const systems = clashSystems(
     store.project,
     store.linkedModels.map((model) => model.name),
@@ -264,7 +264,7 @@ function ClashMatrixGrid() {
   );
 }
 
-function ClashTable() {
+export function ClashTable() {
   const internal = clashReport(store.project);
   const external = store.linkedModels.flatMap((model) =>
     externalClashes(store.project, model.elements),
@@ -277,36 +277,8 @@ function ClashTable() {
   );
   const clashes = filtered.kept;
   const suppressed = filtered.suppressedByRule + filtered.suppressedByTolerance;
-  const onPickIfc = async (file: File | undefined) => {
-    if (!file) return;
-    store.linkIfcModel(file.name, await file.text());
-  };
   return (
     <>
-      <div className="module-form">
-        <label className="upload-button">
-          Link IFC…
-          <input
-            type="file"
-            accept=".ifc"
-            style={{ display: "none" }}
-            onChange={(event) => {
-              void onPickIfc(event.target.files?.[0]);
-              event.target.value = "";
-            }}
-          />
-        </label>
-        {store.linkedModels.map((model) => (
-          <span key={model.name} className="peer-chip">
-            {model.name} · {model.elements.length} phần tử
-            {model.skipped > 0 ? ` (bỏ qua ${model.skipped})` : ""}
-            <button className="mini" onClick={() => store.unlinkIfcModel(model.name)}>
-              ×
-            </button>
-          </span>
-        ))}
-      </div>
-      <ClashMatrixGrid />
       <p className="module-hint">
         {clashes.length === 0
           ? "Không phát hiện va chạm cứng — các liên kết tường hợp lệ đã được loại trừ."
