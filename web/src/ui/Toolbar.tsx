@@ -1,3 +1,14 @@
+// Thanh trên cùng: tên dự án bên trái, người dùng và cài đặt bên phải.
+//
+// Công cụ vẽ đã chuyển vào khung dựng hình của BIM (ui/DrawingTools.tsx) —
+// chúng chỉ có nghĩa ở đó, và để chúng nằm đây khiến mọi màn hình khác mang
+// theo mười cái nút bấm vào không xảy ra gì.
+//
+// Những gì còn lại đúng là việc của cả app: đang là ai, ai đang cùng mở, và
+// các thao tác cấp dự án. Nhóm cuối nằm trong một menu chứ không bày ra, vì
+// trong một buổi làm việc người ta bấm chúng vài lần, còn nhìn thanh này thì
+// suốt buổi.
+
 import { useEffect, useRef, useState } from "react";
 import { store, useStoreVersion } from "../state/store";
 import { AtlasPublishDialog } from "./AtlasPublish";
@@ -5,42 +16,78 @@ import { AtlasPublishDialog } from "./AtlasPublish";
 function AuthControls() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [open, setOpen] = useState(false);
+
   useEffect(() => {
     if (store.authRequired === null) void store.probeAuthMode();
   }, []);
+
   if (!store.authRequired) return null;
+
   if (store.auth) {
     return (
-      <span className="auth-controls">
-        <span className="auth-user">
-          {store.auth.username} <em>({store.auth.role})</em>
-        </span>
-        <button onClick={() => store.logout()}>Sign out</button>
-      </span>
+      <details
+        className="top-menu"
+        open={open}
+        onToggle={(event) => setOpen((event.target as HTMLDetailsElement).open)}
+      >
+        <summary title={`Đang đăng nhập — vai trò ${store.auth.role}`}>
+          <span className="avatar">{store.auth.username.slice(0, 1).toUpperCase()}</span>
+          {store.auth.username}
+        </summary>
+        <div className="top-menu-panel">
+          <div className="menu-heading">
+            {store.auth.username} <em>({store.auth.role})</em>
+          </div>
+          <button
+            onClick={() => {
+              store.logout();
+              setOpen(false);
+            }}
+          >
+            Đăng xuất
+          </button>
+        </div>
+      </details>
     );
   }
+
+  const signIn = () => {
+    void store.login(username, password);
+    setPassword("");
+    setOpen(false);
+  };
+
   return (
-    <span className="auth-controls">
-      <input
-        placeholder="user"
-        value={username}
-        onChange={(event) => setUsername(event.target.value)}
-      />
-      <input
-        placeholder="password"
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-      />
-      <button
-        onClick={() => {
-          void store.login(username, password);
-          setPassword("");
-        }}
-      >
-        Sign in
-      </button>
-    </span>
+    <details
+      className="top-menu"
+      open={open}
+      onToggle={(event) => setOpen((event.target as HTMLDetailsElement).open)}
+    >
+      <summary>Đăng nhập</summary>
+      <div className="top-menu-panel">
+        <div className="menu-heading">Đăng nhập</div>
+        <input
+          placeholder="Tài khoản"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+        />
+        <input
+          placeholder="Mật khẩu"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") signIn();
+          }}
+        />
+        <button onClick={signIn}>Đăng nhập</button>
+        <p className="menu-note">
+          Chưa đăng nhập vẫn dựng mô hình được — nó lưu trong máy này. Đồng bộ
+          nhiều máy và kho file thì cần tài khoản.
+        </p>
+      </div>
+    </details>
   );
 }
 
@@ -58,13 +105,15 @@ export function Toolbar() {
   useStoreVersion();
   const fileInput = useRef<HTMLInputElement>(null);
   const [publishing, setPublishing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const close = () => setSettingsOpen(false);
 
   const openProject = async (file: File | undefined) => {
     if (!file) return;
     try {
       store.loadProjectJson(await file.text());
     } catch (error) {
-      store.setStatus(`Could not load project: ${(error as Error).message}`);
+      store.setStatus(`Không mở được dự án: ${(error as Error).message}`);
     }
   };
 
@@ -75,104 +124,22 @@ export function Toolbar() {
         className="project-name"
         value={store.project.name}
         onChange={(event) => store.renameProject(event.target.value)}
-        title="Project name"
+        title="Tên dự án"
       />
-      <div className="tool-group">
-        <button
-          className={store.activeTool === "SELECT" ? "active" : ""}
-          onClick={() => store.setTool("SELECT")}
-          title="Select (Esc)"
-        >
-          Select
-        </button>
-        <button
-          className={store.activeTool === "GRID" ? "active" : ""}
-          onClick={() => store.setTool("GRID")}
-          title="Draw grid axes (G)"
-        >
-          Grid
-        </button>
-        <button
-          className={store.activeTool === "WALL" ? "active" : ""}
-          onClick={() => store.setTool("WALL")}
-          title="Draw walls (W)"
-        >
-          Wall
-        </button>
-        <button
-          className={store.activeTool === "DOOR" ? "active" : ""}
-          onClick={() => store.setTool("DOOR")}
-          title="Place doors (D)"
-        >
-          Door
-        </button>
-        <button
-          className={store.activeTool === "WINDOW" ? "active" : ""}
-          onClick={() => store.setTool("WINDOW")}
-          title="Place windows (O)"
-        >
-          Window
-        </button>
-        <button
-          className={store.activeTool === "ROOM" ? "active" : ""}
-          onClick={() => store.setTool("ROOM")}
-          title="Khoanh phòng — hai góc đối diện"
-        >
-          Room
-        </button>
-        <button
-          className={store.activeTool === "MASS" ? "active" : ""}
-          onClick={() => store.setTool("MASS")}
-          title="Box khối nghiên cứu — hai góc đối diện"
-        >
-          Mass
-        </button>
-        <button
-          className={store.activeTool === "FLOOR" ? "active" : ""}
-          onClick={() => store.setTool("FLOOR")}
-          title="Draw floor slabs (F)"
-        >
-          Floor
-        </button>
-        <button
-          className={store.activeTool === "ROOF" ? "active" : ""}
-          onClick={() => store.setTool("ROOF")}
-          title="Draw roof slabs (R)"
-        >
-          Roof
-        </button>
-        <button
-          className={store.activeTool === "DIM" ? "active" : ""}
-          onClick={() => store.setTool("DIM")}
-          title="Place dimensions (M)"
-        >
-          Dim
-        </button>
-      </div>
-      <label className="field">
-        Snap
-        <select
-          value={store.snapIncrement}
-          onChange={(event) => store.setSnapIncrement(Number(event.target.value))}
-        >
-          {[0.01, 0.05, 0.1, 0.25, 0.5, 1].map((value) => (
-            <option key={value} value={value}>
-              {value} m
-            </option>
-          ))}
-        </select>
-      </label>
+
       <div className="spacer" />
-      <AuthControls />
+
       <div className="presence">
         <span
           className={`relay-dot ${store.relayConnected ? "on" : ""}`}
           title={
             store.relayConnected
-              ? "Relay connected"
+              ? "Đang đồng bộ với máy chủ"
               : store.standalone
                 ? "Chế độ độc lập — không có máy chủ nền tảng"
-                : "Relay offline — tab sync only"
+                : store.authRequired && !store.auth
+                  ? "Cần đăng nhập để đồng bộ"
+                  : "Mất kết nối máy chủ — chỉ đồng bộ giữa các tab"
           }
         />
         {store.peers.map((peer) => (
@@ -180,49 +147,71 @@ export function Toolbar() {
             key={peer.clientId}
             className="peer-chip"
             style={{ borderColor: peer.color }}
-            title={`${peer.name} — ${peer.tool.toLowerCase()} tool`}
+            title={`${peer.name} — công cụ ${peer.tool.toLowerCase()}`}
           >
             <span className="peer-dot" style={{ background: peer.color }} />
             {peer.name}
           </span>
         ))}
       </div>
-      <div className="tool-group">
-        <button onClick={() => store.newProject()}>New</button>
-        <button
-          onClick={() => store.loadDemoProject()}
-          title="Nhà phố demo 12×8 — grid, tường, cửa, sàn, sheet, schedule, CDE, kế hoạch"
-        >
-          Demo
-        </button>
-        <button onClick={() => fileInput.current?.click()}>Open JSON</button>
-        <button
-          onClick={() =>
-            download(`${store.project.name}.webim.json`, store.serializeProject(), "application/json")
-          }
-          title="Native project JSON — loadable by the WeBIM Blender add-on"
-        >
-          Save JSON
-        </button>
-        <button
-          onClick={() => {
-            try {
-              download(`${store.project.name}.ifc`, store.exportIfc(), "application/x-step");
-              store.setStatus("IFC exported");
-            } catch (error) {
-              store.setStatus(`IFC export failed: ${(error as Error).message}`);
-            }
-          }}
-        >
-          Export IFC
-        </button>
-        <button
-          onClick={() => setPublishing(true)}
-          title="Xuất IFC và đăng vào Models của một dự án Atlas"
-        >
-          Đẩy sang Atlas
-        </button>
-      </div>
+
+      <AuthControls />
+
+      <details
+        className="top-menu"
+        open={settingsOpen}
+        onToggle={(event) => setSettingsOpen((event.target as HTMLDetailsElement).open)}
+      >
+        <summary title="Cài đặt & dự án">⚙</summary>
+        <div className="top-menu-panel">
+          <div className="menu-heading">Dự án</div>
+          <button onClick={() => { store.newProject(); close(); }}>Tạo mới</button>
+          <button
+            onClick={() => { store.loadDemoProject(); close(); }}
+            title="Nhà phố demo 12×8 — trục, tường, cửa, sàn, sheet, schedule, CDE, kế hoạch"
+          >
+            Nạp dự án demo
+          </button>
+          <button onClick={() => { fileInput.current?.click(); close(); }}>
+            Mở file JSON…
+          </button>
+          <button
+            onClick={() => {
+              download(
+                `${store.project.name}.webim.json`,
+                store.serializeProject(),
+                "application/json",
+              );
+              close();
+            }}
+            title="JSON native — add-on WeBIM cho Blender đọc được"
+          >
+            Lưu file JSON
+          </button>
+
+          <div className="menu-heading">Xuất</div>
+          <button
+            onClick={() => {
+              try {
+                download(`${store.project.name}.ifc`, store.exportIfc(), "application/x-step");
+                store.setStatus("Đã xuất IFC");
+              } catch (error) {
+                store.setStatus(`Xuất IFC lỗi: ${(error as Error).message}`);
+              }
+              close();
+            }}
+          >
+            Xuất IFC
+          </button>
+          <button
+            onClick={() => { setPublishing(true); close(); }}
+            title="Xuất IFC rồi đăng vào Models của một dự án Atlas"
+          >
+            Đẩy sang Atlas…
+          </button>
+        </div>
+      </details>
+
       <input
         ref={fileInput}
         type="file"

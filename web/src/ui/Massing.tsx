@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import { floorAreaRatio, massRows, massSummary, siteCoverage } from "../application/massing";
+import { DrawingTools } from "./DrawingTools";
 import { Viewport } from "./Viewport";
 import { store, useStoreVersion } from "../state/store";
 
@@ -22,6 +23,7 @@ export function MassingModule() {
   return (
     <div className="massing-host">
       {/* Cùng khung vẽ với mặt bằng — khối được vẽ trên chính mặt bằng đó. */}
+      <DrawingTools />
       <div className="massing-viewport">
         <Viewport />
       </div>

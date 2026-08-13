@@ -21,6 +21,7 @@ import {
   ViewerModule,
 } from "./ui/Modules";
 import { HOME, SECTIONS, sectionById, type PaneId } from "./ui/navigation";
+import { DrawingTools } from "./ui/DrawingTools";
 import { Toolbar } from "./ui/Toolbar";
 import { Viewport } from "./ui/Viewport";
 import { store, useStoreVersion } from "./state/store";
@@ -49,11 +50,13 @@ function Pane({ id }: { id: PaneId }) {
     case "MASSING":
       return <MassingModule />;
     case "PLANVIEW":
-      // Both edit the same plan; the toolbar decides which tools are armed.
+      // A schedule opened from the browser replaces the plan; the drawing
+      // tools go with it, because there is nothing to draw on a table.
       return activeSchedule ? (
         <ScheduleTable schedule={activeSchedule} />
       ) : (
         <>
+          <DrawingTools />
           <Viewport />
           <div className="viewport-hud">
             {activeSheet
