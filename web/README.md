@@ -176,7 +176,15 @@ collaboration covers them for free; only binaries touch the server):
   công báo, which it has not — only the tables above were.
 
 - **Atlas** — Atlas AEC (`../atlas/`, the project-management half of the
-  platform) embedded whole, not linked to. Atlas is a Next.js app with
+  platform) embedded whole, not linked to.
+
+  Discovery only guesses `localhost:3170`/`:3000` when **this page is itself
+  on localhost**. On a deployed site `localhost` is the visitor's machine,
+  not ours: probing it cannot find our Atlas, and reaching into someone's
+  local ports because they opened a web page is not a default worth having.
+  For the same reason the "no Atlas found" panel shows the `docker compose`
+  + `pnpm dev` recipe only to a local reader; a visitor gets told that Atlas
+  is a separate server-side app this static demo does not have. Atlas is a Next.js app with
   its own server, so it cannot be compiled into this Vite bundle; the
   "Ứng dụng" pane frames it at its own origin, which keeps its session,
   routing and streaming intact while making it one more WeBIM tab. Atlas

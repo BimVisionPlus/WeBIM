@@ -247,19 +247,33 @@ export async function probeAtlas(
   }
 }
 
+/** True when this page is itself served from the machine it is running on. */
+export function isLocalOrigin(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Where an Atlas usually is, in the order worth trying.
  *
  * Same-origin first: a deployment that reverse-proxies Atlas under /atlas
  * needs no configuration at all. Then the port `atlas/apps/web` binds in
  * dev, then plain 3000 for anyone who changed it.
+ *
+ * The localhost guesses are only offered when *this page* is on localhost.
+ * On a public deployment `localhost` means the visitor's own machine, not
+ * ours: probing it cannot find our Atlas, and reaching into someone's local
+ * ports because they opened a web page is not something to do by default.
  */
 export function atlasCandidates(): string[] {
   const here = typeof window === "undefined" ? "" : window.location.origin;
   return [
     ...(here ? [`${here}/atlas`] : []),
-    "http://localhost:3170",
-    "http://localhost:3000",
+    ...(isLocalOrigin(here) ? ["http://localhost:3170", "http://localhost:3000"] : []),
   ];
 }
 

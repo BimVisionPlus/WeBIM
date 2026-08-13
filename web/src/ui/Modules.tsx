@@ -17,6 +17,7 @@ import { Viewer3D } from "../viewport/Viewer3D";
 import {
   discoverAtlas,
   identifyAtlas,
+  isLocalOrigin,
   loadAtlasConfig,
   probeAtlas,
   saveAtlasConfig,
@@ -1003,12 +1004,39 @@ export function AtlasModule() {
         <p className="module-hint">Đang kiểm tra {atlasUrl}…</p>
       )}
 
-      {atlasUrl && reach === "down" && (
+      {/*
+        Two different readers land here. On localhost it is whoever cloned the
+        repo, and the recipe below is exactly what they need. On a deployed
+        site it is a visitor with no repo, no docker and no shell — telling
+        them to run pnpm is noise, and the localhost addresses we used to name
+        are *their* machine, not ours.
+      */}
+      {atlasUrl && reach === "down" && !isLocalOrigin(window.location.origin) && (
         <div className="climate-finding warning">
           <p>
-            ⚠ Không tìm thấy Atlas nào đang chạy — đã thử các địa chỉ quen
-            thuộc (<code>/atlas</code>, <code>localhost:3170</code>,{" "}
-            <code>localhost:3000</code>).
+            ⚠ Không có Atlas nào trả lời ở <code>{atlasUrl}</code>.
+          </p>
+          <p>
+            Atlas là ứng dụng máy chủ riêng (Next.js + Postgres + MinIO), không
+            chạy được trong bản demo tĩnh này — bản demo không có máy chủ nào cả
+            (xem dòng trạng thái cuối trang). Phần WeBIM tự dựng mô hình,
+            Standards, QTO, Clash, 4D và PCCC vẫn chạy đầy đủ.
+          </p>
+          <p>
+            Nếu bạn đã có Atlas của mình thì nhập địa chỉ của nó vào ô trên —
+            Atlas cần khai <code>FRAME_ANCESTORS</code> và{" "}
+            <code>WEBIM_ALLOWED_ORIGINS</code> bằng{" "}
+            <code>{window.location.origin}</code> thì tab này mới nhúng và gọi
+            API được.
+          </p>
+        </div>
+      )}
+
+      {atlasUrl && reach === "down" && isLocalOrigin(window.location.origin) && (
+        <div className="climate-finding warning">
+          <p>
+            ⚠ Không tìm thấy Atlas nào đang chạy — đã thử <code>/atlas</code>,{" "}
+            <code>localhost:3170</code> và <code>localhost:3000</code>.
           </p>
           <p>
             Atlas nằm ngay trong repo này. Khởi động rồi bấm{" "}

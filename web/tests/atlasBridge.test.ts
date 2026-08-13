@@ -4,8 +4,10 @@ import {
   IFC_CONTENT_TYPE,
   ifcFileName,
   listAtlasProjects,
+  atlasCandidates,
   discoverAtlas,
   identifyAtlas,
+  isLocalOrigin,
   loadAtlasConfig,
   probeAtlas,
   publishToAtlas,
@@ -335,5 +337,42 @@ describe("probeAtlas", () => {
       throw new TypeError("Failed to fetch");
     }) as unknown as typeof fetch;
     await expect(probeAtlas("https://atlas.webim.vn", fetchImpl)).resolves.toBe(false);
+  });
+});
+
+/**
+ * `localhost` on a deployed page is the *visitor's* machine. Guessing it
+ * cannot find our Atlas, and reaching into someone's local ports because
+ * they opened a web page is not a default worth having — so the localhost
+ * candidates only exist when this page is itself served from localhost.
+ */
+describe("where to look for Atlas", () => {
+  const withOrigin = (origin: string) => {
+    vi.stubGlobal("window", { location: { origin } });
+    return atlasCandidates();
+  };
+
+  it("guesses local ports only when the page is itself local", () => {
+    expect(withOrigin("http://localhost:5174")).toEqual([
+      "http://localhost:5174/atlas",
+      "http://localhost:3170",
+      "http://localhost:3000",
+    ]);
+    expect(withOrigin("http://127.0.0.1:4173")).toContain("http://localhost:3170");
+  });
+
+  it("never probes the visitor's machine from a deployed page", () => {
+    const candidates = withOrigin("https://webim.vn");
+    expect(candidates).toEqual(["https://webim.vn/atlas"]);
+    expect(candidates.some((url) => url.includes("localhost"))).toBe(false);
+    expect(candidates.some((url) => url.includes("127.0.0.1"))).toBe(false);
+  });
+
+  it("knows a local origin from a hostname that merely contains one", () => {
+    expect(isLocalOrigin("http://localhost:3000")).toBe(true);
+    expect(isLocalOrigin("http://127.0.0.1")).toBe(true);
+    expect(isLocalOrigin("https://localhost.webim.vn")).toBe(false);
+    expect(isLocalOrigin("https://notlocalhost")).toBe(false);
+    expect(isLocalOrigin("")).toBe(false);
   });
 });
