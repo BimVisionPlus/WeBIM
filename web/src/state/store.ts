@@ -43,6 +43,7 @@ export type ModuleId =
   | "DRAWINGS"
   | "CLIMATE"
   | "DASHBOARD"
+  | "IFCDATA"
   | "ATLAS";
 
 import { apiBase } from "../config";

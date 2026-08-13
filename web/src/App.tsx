@@ -3,6 +3,7 @@ import { ProjectBrowser } from "./ui/ProjectBrowser";
 import { PropertiesPanel } from "./ui/PropertiesPanel";
 import { ScheduleTable } from "./ui/ScheduleTable";
 import { DashboardModule } from "./ui/Dashboard";
+import { IfcDataModule } from "./ui/IfcData";
 import {
   AtlasModule,
   CdeModule,
@@ -26,6 +27,7 @@ const MODULES: Array<[ModuleId, string]> = [
   ["DRAWINGS", "Drawings"],
   ["CLIMATE", "Climate"],
   ["DASHBOARD", "Dashboard"],
+  ["IFCDATA", "IFC Data"],
   ["ATLAS", "Atlas"],
 ];
 
@@ -66,6 +68,8 @@ export default function App() {
             <ViewerModule />
           ) : module === "DASHBOARD" ? (
             <DashboardModule />
+          ) : module === "IFCDATA" ? (
+            <IfcDataModule />
           ) : module === "ATLAS" ? (
             <AtlasModule />
           ) : activeSchedule ? (

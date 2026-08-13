@@ -905,3 +905,29 @@ input[type="text"],
   height: 12px;
   width: 100%;
 }
+
+/* IFC data table: many columns, so it scrolls inside itself rather than
+   pushing the page sideways. */
+.ifc-table-scroll {
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+}
+
+.ifc-table-scroll table {
+  min-width: 100%;
+}
+
+.ifc-table-scroll th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.column-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 4px 16px;
+  margin-bottom: 10px;
+}

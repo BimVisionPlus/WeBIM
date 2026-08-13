@@ -15,6 +15,14 @@ export interface LinkedElement {
   ifcType: string;
   min: [number, number, number];
   max: [number, number, number];
+  /** IFC GlobalId — the only stable handle back to the authoring tool. */
+  globalId?: string;
+  /**
+   * Property sets and quantities, flattened to "Pset_WallCommon.IsExternal".
+   * Flat because that is how they are read, filtered and exported to CSV;
+   * the nesting carries no information a column name does not.
+   */
+  properties?: Record<string, string | number | boolean>;
 }
 
 export interface ParsedIfc {
@@ -227,14 +235,96 @@ function extrudedSolidBounds(
   };
 }
 
+/**
+ * STEP typed values: IFCBOOLEAN(.T.), IFCLABEL('x'), IFCREAL(1.2), or a bare
+ * literal. Unset ($) and derived (*) yield nothing rather than a string that
+ * would read as data in a spreadsheet.
+ */
+export function parseStepValue(raw: string): string | number | boolean | undefined {
+  const value = raw.trim();
+  if (!value || value === "$" || value === "*") return undefined;
+
+  const typed = /^[A-Z0-9_]+\s*\(([\s\S]*)\)$/.exec(value);
+  const inner = typed ? typed[1].trim() : value;
+
+  if (inner === ".T.") return true;
+  if (inner === ".F.") return false;
+  if (inner === ".U.") return undefined;
+  if (/^'.*'$/.test(inner)) {
+    // STEP escapes an apostrophe by doubling it.
+    return inner.slice(1, -1).replace(/''/g, "'");
+  }
+  if (/^\.[A-Z0-9_]+\.$/.test(inner)) return inner.slice(1, -1); // enum
+  const numeric = Number(inner);
+  return Number.isFinite(numeric) ? numeric : inner || undefined;
+}
+
+/**
+ * Property sets and element quantities, per product.
+ *
+ * IFC attaches them indirectly: IfcRelDefinesByProperties points from a set of
+ * products at one property definition, so the map has to be built from the
+ * relations rather than read off each product.
+ */
+function propertiesByProduct(
+  entities: Map<number, Entity>,
+): Map<number, Record<string, string | number | boolean>> {
+  const byProduct = new Map<number, Record<string, string | number | boolean>>();
+
+  for (const entity of entities.values()) {
+    if (entity.type !== "IFCRELDEFINESBYPROPERTIES") continue;
+    const definitionId = ref(entity.args[5]);
+    if (definitionId === null) continue;
+    const definition = entities.get(definitionId);
+    if (!definition) continue;
+    if (
+      definition.type !== "IFCPROPERTYSET" &&
+      definition.type !== "IFCELEMENTQUANTITY"
+    ) {
+      continue;
+    }
+    const setName = parseStepValue(definition.args[2] ?? "") ?? definition.type;
+
+    // IfcPropertySet holds HasProperties at index 4; IfcElementQuantity has an
+    // extra MethodOfMeasurement before its Quantities, so its list is at 5.
+    const listIndex = definition.type === "IFCELEMENTQUANTITY" ? 5 : 4;
+
+    const values: Record<string, string | number | boolean> = {};
+    for (const propertyId of refList(definition.args[listIndex] ?? "")) {
+      const property = entities.get(propertyId);
+      if (!property) continue;
+      const name = parseStepValue(property.args[0] ?? "");
+      if (typeof name !== "string") continue;
+      // Single values carry the value third; quantities carry it fourth.
+      const raw =
+        property.type === "IFCPROPERTYSINGLEVALUE"
+          ? property.args[2]
+          : property.args[3];
+      const value = parseStepValue(raw ?? "");
+      if (value === undefined) continue;
+      values[`${setName}.${name}`] = value;
+    }
+    if (Object.keys(values).length === 0) continue;
+
+    for (const productId of refList(entity.args[4] ?? "")) {
+      byProduct.set(productId, { ...(byProduct.get(productId) ?? {}), ...values });
+    }
+  }
+
+  return byProduct;
+}
+
 export function parseIfc(text: string): ParsedIfc {
   const entities = parseEntities(text);
+  const properties = propertiesByProduct(entities);
   const elements: LinkedElement[] = [];
   let skipped = 0;
 
-  for (const entity of entities.values()) {
+  for (const [entityId, entity] of entities) {
     if (!PRODUCT_TYPES.has(entity.type)) continue;
     const name = entity.args[2]?.replace(/^'|'$/g, "") || entity.type;
+    const globalId = parseStepValue(entity.args[0] ?? "");
+    const ownProperties = properties.get(entityId);
     const placement = localPlacementTransform(entities, ref(entity.args[5]));
 
     // Product → shape representation → extruded solids.
@@ -266,6 +356,8 @@ export function parseIfc(text: string): ParsedIfc {
         elements.push({
           name,
           ifcType: entity.type,
+          ...(typeof globalId === "string" ? { globalId } : {}),
+          ...(ownProperties ? { properties: ownProperties } : {}),
           min: [
             Math.min(...corners.map((corner) => corner[0])),
             Math.min(...corners.map((corner) => corner[1])),

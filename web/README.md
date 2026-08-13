@@ -80,6 +80,26 @@ collaboration covers them for free; only binaries touch the server):
   the chart. A dashboard that counts only what survived the clash matrix
   tells a coordinator the model is cleaner than it is.
 
+- **IFC Data** — trích xuất & tổ hợp: property sets and element quantities
+  from every linked IFC, unioned into one table, filterable, exportable as
+  CSV. Each discipline exports its own file with its own psets, so the
+  useful question — every element carrying `Pset_WallCommon.IsExternal`
+  across KT and KC — cannot be answered inside a single file.
+
+  Columns are the union across models and a cell is left **blank** where a
+  model does not carry that property: the row survives and nothing is
+  invented as zero. Column order is sorted rather than first-seen, so
+  re-linking a file does not reshuffle a table someone is reading, and
+  coverage (`filled/total`) is shown per column because a federated model
+  carries hundreds of property names, most of them nearly empty.
+
+  This needed the IFC reader to grow past geometry: `parseIfc` now follows
+  `IfcRelDefinesByProperties` to `IfcPropertySet` and `IfcElementQuantity`
+  and keeps each element's `GlobalId` — the only stable handle back to the
+  authoring tool. Typed STEP values are unwrapped (`IFCBOOLEAN(.T.)`,
+  `IFCLABEL('EI 60')`, `IFCLENGTHMEASURE(2.5)`); unset (`$`) yields nothing
+  rather than the string "$".
+
 - **Atlas** — Atlas AEC (`../atlas/`, the project-management half of the
   platform) embedded whole, not linked to. Atlas is a Next.js app with
   its own server, so it cannot be compiled into this Vite bundle; the
