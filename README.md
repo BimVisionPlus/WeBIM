@@ -65,6 +65,28 @@ mẫu cho các phòng Công việc / Hành chính / Tài chính / Đấu thầu,
 mọi tổ chức có thành viên** chứ không chỉ tổ chức đầu tiên: tài khoản demo
 nào đăng nhập cũng phải thấy.
 
+### Thống kê & đánh giá nhân sự
+
+Trang `/people` trong Atlas. Số liệu lấy từ bước quy trình (`ProcessTask`),
+issue và nghiệm thu — những dấu vết đã có thật, không thêm bảng chấm công.
+
+Vì đây là đo lường **con người**, hai quy tắc nằm trong
+`packages/lib/src/people-metrics.ts` chứ không để cho phía hiển thị tự xử:
+
+- **Tỷ lệ bị giữ lại khi mẫu quá nhỏ.** Dưới 5 mẫu trả `null`, bảng ghi
+  “mẫu quá nhỏ (4/5)”. “0% đúng hạn” trên một việc là thông tin về việc đó,
+  không phải về con người.
+- **Luôn có số đếm bên cạnh mọi tỷ lệ**, để không so người có 3 việc với
+  người có 90 việc.
+
+Bước không có hạn thì không thể trễ nên bị loại khỏi mẫu số “đúng hạn” thay
+vì mặc định tính là đúng — cách tính kia sẽ tâng điểm cho ai được giao việc
+không hạn. Nghiệm thu *đang chờ* không tính là đạt. Bảng không xếp hạng,
+không chấm điểm, và nói thẳng điều đó ngay dưới bảng.
+
+`packages/lib` trước đây không có test runner; giờ có vitest và `pnpm test`
+ở gốc chạy cả `@atlas/workflows` lẫn `@atlas/lib`.
+
 ### Seed dữ liệu demo cho Atlas
 
 ```bash
