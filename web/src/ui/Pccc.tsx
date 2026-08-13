@@ -7,6 +7,7 @@
 
 import {
   analyseProject,
+  isUsableFlowDensity,
   PEOPLE_PER_METRE,
   USAGE_RULES,
 } from "../application/pccc";
@@ -145,6 +146,14 @@ export function PcccModule() {
           <span className="stat-label">Chưa xác định được số người</span>
         </div>
       </div>
+
+      {fire.group === "CONG_CONG" && !isUsableFlowDensity(fire.flowDensity) && (
+        <p className="module-hint">
+          ⚠ Mật độ dòng người chưa phải số dương nên Bảng G.2a không tra được —
+          đang lấy <strong>cột ngặt nhất</strong> của bảng. Nhập giá trị của dự
+          án để có ngưỡng đúng.
+        </p>
+      )}
 
       {unknown > 0 && (
         <p className="module-hint">

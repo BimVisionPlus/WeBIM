@@ -162,8 +162,11 @@ collaboration covers them for free; only binaries touch the server):
 
   Bậc chịu lửa, cấp nguy hiểm cháy kết cấu, nhóm nhà, mật độ dòng người and
   Sprinkler are per-project settings (`fire_settings`), because a finding is
-  meaningless without the row it was judged from. Rooms are drawn with the
-  **Room** tool — two opposite corners, like a slab — and carry a code, a
+  meaningless without the row it was judged from. A mật độ that is not a
+  positive number falls to the **strictest** column of Bảng G.2a and says so
+  on screen — a screening tool must not turn an empty field into permission.
+  Rooms are listed in the Project Browser next to walls and slabs, drawn with
+  the **Room** tool — two opposite corners, like a slab — and carry a code, a
   usage and an optional occupancy override. Both serialize only once they
   differ from the default, so a project that never opened the tab round-trips
   byte-identical.
@@ -463,7 +466,7 @@ Bảng **Cấu hình bản ghi tên miền**:
 | Host | Loại | Giá trị | TTL |
 |------|------|---------|-----|
 | `@` | `A` | `75.2.60.5` | 3600 |
-| `www` | `CNAME` | `<tên-site>.netlify.app` | 3600 |
+| `www` | `CNAME` | `webimvn.netlify.app` | 3600 |
 
 `75.2.60.5` là load balancer apex của Netlify (`dig +short
 apex-loadbalancer.netlify.com`). Rồi thêm cả `webim.vn` lẫn

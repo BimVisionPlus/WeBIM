@@ -114,7 +114,11 @@ export function buildDemoProject(): NativeBimProject {
   project.addDimension(groundPlan.id, [0, 0], [12, 0], -1.2);
 
   // ── Sheet ────────────────────────────────────────────────────────────────
-  project.addSheet("Mặt bằng tầng 1");
+  // With nothing placed on it the sheet renders as an empty title block, which
+  // reads as a broken feature rather than as a demo. Place the plan it is
+  // named after, left of centre so the title block stays clear.
+  const sheet = project.addSheet("Mặt bằng tầng 1");
+  project.placeViewOnSheet(sheet.id, groundPlan.id, 120, 150);
 
   // ── Schedules ────────────────────────────────────────────────────────────
   // One of each kind: the last two compute rather than list, so they exercise

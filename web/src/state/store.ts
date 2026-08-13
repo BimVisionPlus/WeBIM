@@ -97,7 +97,12 @@ export async function fetchFileUrl(key: string): Promise<string> {
 }
 
 const STORAGE_KEY = "webim.native_project";
+// Linked reference models are per-project, not per-browser. Keying them by
+// project id is what stops "New" from opening a fresh project that already
+// contains someone else's structural model — and it means reopening a project
+// brings its own links back.
 const LINKED_MODELS_KEY = "webim.linked_models";
+const linkedModelsKey = (projectId: string) => `${LINKED_MODELS_KEY}:${projectId}`;
 
 export interface LinkedModel {
   name: string;
@@ -140,13 +145,7 @@ class AppStore {
   statusMessage = "Ready";
   activeModule: ModuleId = "MODEL";
   /** External IFC models linked for clash checking (local, not synced). */
-  linkedModels: LinkedModel[] = (() => {
-    try {
-      return JSON.parse(localStorage.getItem(LINKED_MODELS_KEY) ?? "[]");
-    } catch {
-      return [];
-    }
-  })();
+  linkedModels: LinkedModel[] = [];
   /** Whether the platform server requires login (null until probed). */
   authRequired: boolean | null = null;
   auth: AuthSession | null = authSession();
@@ -170,6 +169,20 @@ class AppStore {
     } else {
       this.activeViewId = this.project.views[0]?.id ?? null;
     }
+    this.linkedModels = this.loadLinkedModels(this.project.id);
+  }
+
+  private loadLinkedModels(projectId: string): LinkedModel[] {
+    try {
+      const payload = localStorage.getItem(linkedModelsKey(projectId));
+      return payload ? (JSON.parse(payload) as LinkedModel[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveLinkedModels(): void {
+    localStorage.setItem(linkedModelsKey(this.project.id), JSON.stringify(this.linkedModels));
   }
 
   private restore(): NativeBimProject | null {
@@ -402,7 +415,7 @@ class AppStore {
       ...this.linkedModels.filter((model) => model.name !== name),
       { name, elements: parsed.elements, skipped: parsed.skipped },
     ];
-    localStorage.setItem(LINKED_MODELS_KEY, JSON.stringify(this.linkedModels));
+    this.saveLinkedModels();
     this.statusMessage = `Đã link ${name}: ${parsed.elements.length} phần tử${
       parsed.skipped ? `, bỏ qua ${parsed.skipped} (thân không hỗ trợ)` : ""
     }`;
@@ -411,7 +424,7 @@ class AppStore {
 
   unlinkIfcModel(name: string): void {
     this.linkedModels = this.linkedModels.filter((model) => model.name !== name);
-    localStorage.setItem(LINKED_MODELS_KEY, JSON.stringify(this.linkedModels));
+    this.saveLinkedModels();
     this.commit(false);
   }
 
@@ -914,22 +927,32 @@ class AppStore {
   /** Replace the current project with the demo. Explicit, so it may discard. */
   loadDemoProject(): void {
     this.project = buildDemoProject();
-    this.selection = null;
-    this.pendingStart = null;
-    this.activeSheetId = null;
-    this.activeScheduleId = null;
-    this.activeViewId = this.project.views[0]?.id ?? null;
+    this.resetViewState();
     this.statusMessage = "Đã nạp dự án demo";
     this.commit();
   }
 
   newProject(): void {
     this.project = defaultProject();
-    this.activeViewId = this.project.views[0]?.id ?? null;
-    this.selection = null;
-    this.pendingStart = null;
+    this.resetViewState();
     this.statusMessage = "New project";
     this.commit();
+  }
+
+  /**
+   * Everything that points into the old project by id. Forgetting one leaves
+   * the viewport showing neither a view nor a sheet — activeView() returns
+   * null because a sheet is "open", and activeSheet() returns null because
+   * that sheet belongs to a project that is gone. The screen reads
+   * "No active view" and no tool works until the user finds a view to click.
+   */
+  private resetViewState(): void {
+    this.activeViewId = this.project.views[0]?.id ?? null;
+    this.activeSheetId = null;
+    this.activeScheduleId = null;
+    this.selection = null;
+    this.pendingStart = null;
+    this.linkedModels = this.loadLinkedModels(this.project.id);
   }
 
   serializeProject(): string {
@@ -941,9 +964,7 @@ class AppStore {
     if (this.project.views.length === 0) {
       this.project.addView("Level 1", "FLOOR_PLAN", 100, 40);
     }
-    this.activeViewId = this.project.views[0].id;
-    this.selection = null;
-    this.pendingStart = null;
+    this.resetViewState();
     this.statusMessage = `Loaded ${this.project.name}`;
     this.commit();
   }

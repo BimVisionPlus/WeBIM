@@ -15,6 +15,7 @@ import {
   exitsForRoom,
   exitsOnLevel,
   exitSeparation,
+  isUsableFlowDensity,
   MIN_WIDTH_M,
   MIN_WIDTH_CROWDED_M,
   occupancyOf,
@@ -308,5 +309,37 @@ describe("the demo project", () => {
     const empty = NativeBimProject.create("P", "S", "B", "L1");
     expect(empty.toDict()).not.toHaveProperty("rooms");
     expect(empty.toDict()).not.toHaveProperty("fire_settings");
+  });
+});
+
+/**
+ * Bảng G.2a has no column for a density of zero, and reading `<= 2` off the
+ * top of the table hands that case the loosest limit in it. A screen that
+ * turns an empty field into permission is worse than one that refuses to
+ * answer, so the fallback is the strictest column.
+ */
+describe("a flow density the table cannot be read at", () => {
+  it("falls to the strictest column, not the most permissive one", () => {
+    const strictest = travelLimit(settings({ flowDensity: 6 }), 2).metres;
+    for (const bad of [0, -5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(travelLimit(settings({ flowDensity: bad }), 2).metres).toBe(strictest);
+      expect(isUsableFlowDensity(bad)).toBe(false);
+    }
+    // The loosest column is still reachable with a real density.
+    expect(travelLimit(settings({ flowDensity: 2 }), 2).metres).toBe(60);
+    expect(isUsableFlowDensity(2)).toBe(true);
+  });
+
+  it("says in the citation that the density was not usable", () => {
+    expect(travelLimit(settings({ flowDensity: 0 }), 2).source).toContain("chưa nhập");
+    expect(travelLimit(settings({ flowDensity: 3 }), 2).source).toContain("3 người/m²");
+  });
+
+  /** Nhà ở reads Bảng G.1, which has no density axis at all. */
+  it("does not let a bad density touch the residential table", () => {
+    const group = "F1.3" as const;
+    expect(travelLimit(settings({ group, flowDensity: 0 }), 2).metres).toBe(
+      travelLimit(settings({ group, flowDensity: 4 }), 2).metres,
+    );
   });
 });

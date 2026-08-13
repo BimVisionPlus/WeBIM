@@ -267,6 +267,22 @@ describe("levels", () => {
     expect(() => project.removeLevel(l2.id)).toThrow("hosts walls");
   });
 
+  /**
+   * Rooms arrived after the deletion guard was written and were missed by it.
+   * An orphaned room keeps a levelId nothing resolves, and PCCC then finds no
+   * doors on that level — a fire finding manufactured by a dangling reference.
+   */
+  it("refuses to delete a level that still hosts rooms", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const ground = project.addLevel("Level 1", 0);
+    const upper = project.addLevel("Level 2", 3);
+    project.addRoom("P.201", [[0, 0], [4, 0], [4, 4], [0, 4]], { levelId: upper.id });
+    expect(() => project.removeLevel(upper.id)).toThrow("hosts rooms");
+    project.removeRoom(project.rooms[0].id);
+    expect(() => project.removeLevel(upper.id)).not.toThrow();
+    expect(project.levels.map((level) => level.id)).toEqual([ground.id]);
+  });
+
   it("migrates legacy JSON without levels", () => {
     const project = NativeBimProject.create("P", "S", "B", "L1");
     project.addWall([0, 0, 0], [4, 0, 0]);

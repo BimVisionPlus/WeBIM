@@ -223,12 +223,24 @@ const TABLE_G2A = {
   },
 } as const;
 
+/**
+ * Bảng G.2a has no column for zero or negative mật độ dòng người, and the
+ * naive `<= 2` test hands those the *first* column — the loosest limit in the
+ * table. A screening tool must not turn a typo into permission, so anything
+ * outside the table falls to the strictest column instead.
+ */
 function densityColumn(flowDensity: number): number {
+  if (!Number.isFinite(flowDensity) || flowDensity <= 0) return 4;
   if (flowDensity <= 2) return 0;
   if (flowDensity <= 3) return 1;
   if (flowDensity <= 4) return 2;
   if (flowDensity <= 5) return 3;
   return 4;
+}
+
+/** True when the flow density is a number Bảng G.2a can actually be read at. */
+export function isUsableFlowDensity(flowDensity: number): boolean {
+  return Number.isFinite(flowDensity) && flowDensity > 0;
 }
 
 function gradeRow(grade: FireGrade): "I,II,III" | "IV" | "V" {
@@ -263,7 +275,9 @@ export function travelLimit(settings: FireSettings, exitCount: number): TravelLi
   const metres = table[gradeRow(settings.grade)][densityColumn(settings.flowDensity)];
   return {
     metres,
-    source: `Bảng G.2a (bậc ${settings.grade}, mật độ ${settings.flowDensity} người/m²)`,
+    source: isUsableFlowDensity(settings.flowDensity)
+      ? `Bảng G.2a (bậc ${settings.grade}, mật độ ${settings.flowDensity} người/m²)`
+      : `Bảng G.2a (bậc ${settings.grade}, mật độ chưa nhập — lấy cột ngặt nhất)`,
   };
 }
 

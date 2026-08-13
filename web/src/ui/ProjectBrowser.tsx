@@ -1,4 +1,5 @@
 import { store, useStoreVersion } from "../state/store";
+import { USAGE_RULES } from "../application/pccc";
 
 /** Colored dots for collaborators currently pointing at an element. */
 function PeerDots({ elementId }: { elementId: string }) {
@@ -250,6 +251,42 @@ export function ProjectBrowser() {
               onClick={(event) => {
                 event.stopPropagation();
                 store.removeSlab(slab.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        {/*
+          Rooms were the one element kind the tree never listed, so a room you
+          drew was reachable only through the PCCC table — and a room drawn on
+          a level you are not looking at was reachable from nowhere.
+        */}
+        <div className="tree-subbranch">Rooms</div>
+        {project.rooms.length === 0 && (
+          <div className="tree-empty">Chưa có phòng — chọn công cụ Room, click hai góc.</div>
+        )}
+        {project.rooms.map((room) => (
+          <div
+            key={room.id}
+            className={`tree-leaf ${
+              store.selection?.kind === "room" && store.selection.id === room.id
+                ? "selected"
+                : ""
+            }`}
+            onClick={() => store.select({ kind: "room", id: room.id })}
+          >
+            <span>
+              {room.code} {room.name}{" "}
+              <em>{USAGE_RULES[room.usage]?.label ?? room.usage}</em>
+              <PeerDots elementId={room.id} />
+            </span>
+            <button
+              className="mini"
+              title="Xoá phòng"
+              onClick={(event) => {
+                event.stopPropagation();
+                store.removeRoom(room.id);
               }}
             >
               ×

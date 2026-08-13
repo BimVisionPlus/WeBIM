@@ -31,6 +31,15 @@ export interface GanttChart {
   links: GanttLink[];
   /** Day offset of `today`, when it falls inside the range. */
   todayDay: number | null;
+  /**
+   * Tasks whose end precedes their start. `addTask` refuses these, but a
+   * project arriving over sync or from someone else's JSON can still carry
+   * one — and letting it into the range stretches the chart across the
+   * reversed interval until every real bar sits off-screen. Excluded from
+   * the range and named here so the UI can say which row is wrong instead of
+   * showing an empty chart.
+   */
+  reversed: TaskDatum[];
 }
 
 function parseDay(value: string): number | null {
@@ -48,7 +57,13 @@ export function ganttChart(
     .filter((entry) => entry.start !== null || entry.end !== null);
   if (dated.length === 0) return null;
 
-  const days = dated.flatMap((entry) =>
+  const isReversed = (entry: { start: number | null; end: number | null }) =>
+    entry.start !== null && entry.end !== null && entry.end < entry.start;
+  const reversed = dated.filter(isReversed).map((entry) => entry.task);
+  const usable = dated.filter((entry) => !isReversed(entry));
+  if (usable.length === 0) return null;
+
+  const days = usable.flatMap((entry) =>
     [entry.start, entry.end].filter((day): day is number => day !== null),
   );
   const minDay = Math.min(...days);
@@ -59,6 +74,10 @@ export function ganttChart(
     rowByTask.set(task.id, row);
     const start = parseDay(task.start);
     const end = parseDay(task.end);
+    if (start !== null && end !== null && end < start) {
+      // Listed as a row, but given no bar: there is no honest span to draw.
+      return { task, row, startDay: null, endDay: null };
+    }
     return {
       task,
       row,
@@ -100,6 +119,7 @@ export function ganttChart(
     bars,
     links,
     todayDay,
+    reversed,
   };
 }
 

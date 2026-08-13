@@ -227,6 +227,25 @@ export interface TaskDatum {
   elementIds?: string[];
 }
 
+/**
+ * A task whose end precedes its start is not a schedule, it is a typo — and
+ * an expensive one: the Gantt honestly spans min(date)…max(date), so a single
+ * reversed row stretches the chart across the reversed interval and pushes
+ * every real bar off the visible area. The chart looks empty and the plan
+ * looks lost. Cheaper to refuse the row than to explain the empty chart.
+ *
+ * Blank is allowed on either end: an undated task is a normal thing to plan.
+ */
+function assertForwardDates(start: string, end: string): void {
+  if (!start || !end) return;
+  const from = Date.parse(start);
+  const to = Date.parse(end);
+  if (Number.isNaN(from) || Number.isNaN(to)) return;
+  if (to < from) {
+    throw new Error(`Ngày kết thúc (${end}) trước ngày bắt đầu (${start})`);
+  }
+}
+
 export type ScheduleKind = "WALL" | "OPENING" | "SLAB" | "QTO" | "CLASH";
 
 /** A schedule view: a derived element table, persisted by name and kind. */
@@ -857,6 +876,13 @@ export class NativeBimProject {
     if (this.views.some((view) => view.levelId === levelId)) {
       throw new Error("Level still has views");
     }
+    // Rooms were added after this guard was written and were missed. An
+    // orphaned room keeps a levelId nothing resolves, so PCCC finds no doors
+    // on its level and reports "không có lối ra" — a fire finding produced by
+    // a dangling reference rather than by the design.
+    if (this.rooms.some((room) => room.levelId === levelId)) {
+      throw new Error("Level still hosts rooms");
+    }
     return this.levels.splice(index, 1)[0];
   }
 
@@ -1150,6 +1176,7 @@ export class NativeBimProject {
     if (!name.trim()) {
       throw new Error("A task needs a name");
     }
+    assertForwardDates(start, end);
     const task: TaskDatum = {
       id: uuid4Hex(),
       name: name.trim(),
@@ -1177,6 +1204,10 @@ export class NativeBimProject {
     if (progress < 0 || progress > 100) {
       throw new Error("Progress must be between 0 and 100");
     }
+    assertForwardDates(
+      changes.start ?? this.tasks[index].start,
+      changes.end ?? this.tasks[index].end,
+    );
     if (changes.dependsOn) {
       for (const dependencyId of changes.dependsOn) {
         if (dependencyId === taskId) {

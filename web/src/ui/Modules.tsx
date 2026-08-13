@@ -106,6 +106,16 @@ export function CdeModule() {
           Add document
         </button>
       </div>
+      {/*
+        Every other module says something when it has nothing; this one showed
+        a bare header row, which reads as a table that failed to load.
+      */}
+      {documents.length === 0 && (
+        <p className="module-hint">
+          Chưa có tài liệu nào. Nhập mã theo ISO 19650 và tiêu đề, rồi bấm{" "}
+          <strong>Add document</strong>.
+        </p>
+      )}
       <table>
         <thead>
           <tr>
@@ -343,6 +353,14 @@ function GanttView() {
         <p className="module-hint climate-finding warning">
           Có phụ thuộc bị vi phạm (đường đỏ): công việc bắt đầu trước khi công
           việc tiền nhiệm kết thúc.
+        </p>
+      )}
+      {chart.reversed.length > 0 && (
+        <p className="module-hint climate-finding warning">
+          {chart.reversed.length} hạng mục có ngày kết thúc <strong>trước</strong>{" "}
+          ngày bắt đầu ({chart.reversed.map((task) => task.name).join(", ")}) — không
+          vẽ được thanh, và đã bị loại khỏi khoảng thời gian của biểu đồ để những
+          hạng mục còn lại vẫn hiện đúng. Sửa ngày ở chế độ <strong>Bảng</strong>.
         </p>
       )}
     </div>
