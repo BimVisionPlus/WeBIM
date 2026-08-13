@@ -2,6 +2,7 @@
 # Tell me exactly why the domain is not ready yet.
 #
 #   bash deploy/check-dns.sh webim.vn [IP-máy-chủ]
+#   bash deploy/check-dns.sh webim.vn --cname www   # bản demo trên Pages
 #
 # Between buying a domain and running bootstrap.sh there are three separate
 # things that can be missing, and an ordinary `dig` reports all three the
@@ -17,10 +18,21 @@
 set -uo pipefail
 
 DOMAIN="${1:-}"
-EXPECT_IP="${2:-}"
+EXPECT_IP=""
+# The static demo lives on a CNAME (Cloudflare Pages) rather than on an A
+# record of our own, so checking for an A record there reports a working
+# setup as broken. Same three failure modes, different record type.
+CNAME_HOST=""
+shift || true
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --cname) CNAME_HOST="${2:-www}"; shift 2 ;;
+    *)       EXPECT_IP="$1"; shift ;;
+  esac
+done
 
 if [[ -z "$DOMAIN" ]]; then
-  echo "Cách dùng: bash deploy/check-dns.sh <domain> [IP-máy-chủ]" >&2
+  echo "Cách dùng: bash deploy/check-dns.sh <domain> [IP-máy-chủ] [--cname <host>]" >&2
   exit 1
 fi
 
@@ -103,23 +115,41 @@ check_a() {
   fi
 }
 
-check_a "$DOMAIN" required
-check_a "atlas.$DOMAIN" optional
+if [[ -n "$CNAME_HOST" ]]; then
+  target="$(dig +short "$CNAME_HOST.$DOMAIN" CNAME @"$authoritative" 2>/dev/null | head -1)"
+  if [[ -z "$target" ]]; then
+    fail "$CNAME_HOST.$DOMAIN — chưa có bản ghi CNAME"
+    echo
+    echo "  → Thêm ở PA: Host $CNAME_HOST · Loại CNAME · Giá trị <project>.pages.dev"
+  else
+    pass "$CNAME_HOST.$DOMAIN → $target"
+  fi
+  # Apex cannot hold a CNAME (RFC 1034), so say so rather than leaving the
+  # reader to discover it when someone types the domain without the www.
+  apex="$(dig +short "$DOMAIN" A @"$authoritative" 2>/dev/null | grep -E '^[0-9.]+$' | head -1)"
+  [[ -z "$apex" ]] && warn "$DOMAIN trần chưa trỏ đi đâu — người gõ thiếu $CNAME_HOST sẽ thấy lỗi."
+else
+  check_a "$DOMAIN" required
+  check_a "atlas.$DOMAIN" optional
+fi
 
 # ── 4. Đã lan ra ngoài chưa ──────────────────────────────────────────────
-public="$(dig +short "$DOMAIN" A @1.1.1.1 2>/dev/null | grep -E '^[0-9.]+$' | head -1)"
+watched="${CNAME_HOST:+$CNAME_HOST.}$DOMAIN"
+public="$(dig +short "$watched" @1.1.1.1 2>/dev/null | tail -1)"
 if [[ -z "$public" ]]; then
-  warn "Resolver công cộng (1.1.1.1) chưa thấy — chờ TTL hết hạn rồi kiểm lại."
-  warn "Let's Encrypt tra qua resolver công cộng, nên đợi bước này xong hẵng deploy."
+  warn "Resolver công cộng (1.1.1.1) chưa thấy $watched — chờ TTL hết hạn rồi kiểm lại."
+  warn "Bên cấp chứng chỉ cũng tra qua resolver công cộng, nên đợi bước này xong hẵng deploy."
 else
-  pass "1.1.1.1 thấy $DOMAIN → $public"
+  pass "1.1.1.1 thấy $watched → $public"
 fi
 
 echo
-if [[ "$ok" -eq 0 && -n "$public" ]]; then
-  echo "Sẵn sàng:  sudo bash deploy/bootstrap.sh $DOMAIN --with-atlas"
-else
+if [[ "$ok" -ne 0 || -z "$public" ]]; then
   echo "Chưa deploy được — xử lý các dòng ✗ ở trên rồi chạy lại."
+elif [[ -n "$CNAME_HOST" ]]; then
+  echo "Sẵn sàng: thêm $watched vào Custom domains của project Cloudflare Pages."
+else
+  echo "Sẵn sàng:  sudo bash deploy/bootstrap.sh $DOMAIN --with-atlas"
 fi
 echo
 exit "$ok"

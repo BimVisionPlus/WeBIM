@@ -5,7 +5,7 @@ import { SyncEngine, type PeerPresence } from "../sync/syncEngine";
 import { parseIfc, type LinkedElement } from "../ifc/parseIfc";
 import { buildDemoProject } from "../demo/seedProject";
 import { pairKey, ruleFor } from "../application/clashMatrix";
-import type { ClashRule } from "../domain/project";
+import type { ClashRule, FireSettings } from "../domain/project";
 
 export type ToolId =
   | "SELECT"
@@ -891,6 +891,16 @@ class AppStore {
     const key = pairKey(a, b);
     const current = ruleFor(this.project.clashMatrix, a, b);
     this.project.clashMatrix[key] = { ...current, ...patch };
+    this.commit();
+  }
+
+  /**
+   * Fire attributes of the building. Also in the project, so a reviewer on
+   * another machine sees the same bậc chịu lửa the findings were judged by —
+   * a threshold table means nothing without the row it was read from.
+   */
+  setFireSettings(patch: Partial<FireSettings>): void {
+    this.project.fireSettings = { ...this.project.fireSettings, ...patch };
     this.commit();
   }
 

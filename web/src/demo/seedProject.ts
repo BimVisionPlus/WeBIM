@@ -87,8 +87,9 @@ export function buildDemoProject(): NativeBimProject {
 
   // ── Phòng ────────────────────────────────────────────────────────────────
   // The partition at x=8 splits the ground floor, so the rooms follow it.
-  // Occupancy comes from area × usage; the demo leaves the override unset so
-  // the PCCC screen shows the derived figure it would use on a real project.
+  // Occupancy comes from area ÷ hệ số không gian sàn (Bảng G.9); the demo
+  // leaves the override unset so the PCCC screen shows the derived figure it
+  // would use on a real project, labelled with where it came from.
   project.addRoom("P.101", [
     [0.11, 0.11],
     [7.89, 0.11],

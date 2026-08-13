@@ -122,28 +122,55 @@ collaboration covers them for free; only binaries touch the server):
   The other half of B11 is **PCCC**, below — it needed rooms first.
 
 - **PCCC** — sàng lọc thoát nạn, on top of the rooms the domain now
-  carries. Occupancy from area × usage (overridable — someone who counted
-  the seats knows better than a density table), doors read off the walls as
-  exits, worst-corner distance to the nearest exit, and required exit width
-  from the occupant load.
+  carries, with the thresholds read off **QCVN 06:2022/BXD hợp nhất Sửa đổi
+  1:2023** (TT 06/2022/TT-BXD; sửa đổi theo TT 09/2023/TT-BXD, hiệu lực
+  01/12/2023) rather than invented:
 
-  Two caveats are on screen rather than only in the source, because a page
-  that looks authoritative about fire safety while resting on placeholder
-  numbers is worse than no page:
+  | Kiểm tra | Nguồn |
+  |---|---|
+  | Hệ số không gian sàn, m²/người | Bảng G.9 |
+  | Số người: thiết kế duyệt trước, bảng sau | G.3 |
+  | Người trên mét lối ra: 165 / 115 / 80 theo bậc chịu lửa | G.2.1.1 |
+  | Bề rộng tối thiểu 0,8 m — 1,2 m khi > 50 người (trừ F1.3) | 3.2.9 |
+  | Phải có hai lối ra: ≥ 50 người, hoặc quá 25 m | 3.2.5 c), d) |
+  | Cự ly tới lối ra gần nhất, nhà ở | Bảng G.1 |
+  | Cự ly tới lối ra gần nhất, nhà công cộng | Bảng G.2a |
+  | Hai lối ra cách ≥ ½ đường chéo (⅓ nếu có Sprinkler), ≥ 7 m | 3.2.8 |
 
-  - The distance limits and occupant densities are **defaults that have not
-    been checked against công báo** for QCVN 06:2022/BXD (+ Sửa đổi 1:2023).
-    They are data, not constants, so a corrected figure is an edit rather
-    than a code change — and the Standards module already carries QCVN 06
-    with `edition_verified: false`, which this inherits.
-  - Distance is **straight-line**, not the walked route around partitions
-    and furniture. The real path is never shorter, so a room that fails here
-    definitely fails; one that passes may still fail when the route is
-    drawn.
+  The first version of this screen keyed travel distance off **room usage**,
+  which is not an axis the quy chuẩn uses at all: the limits depend on bậc
+  chịu lửa, on where the door opens (giữa hai lối ra vs hành lang cụt) and
+  on mật độ dòng người. Usage only sets the number of people. Fixing that
+  meant restructuring the check, not correcting a constant — which is why
+  the thresholds now live in tables keyed the way the document keys them,
+  and `tests/pccc.test.ts` pins each one to its bảng by name.
 
-  Rooms are drawn with the **Room** tool — two opposite corners, like a slab
-  — and carry a code, a usage and an optional occupancy override. They
-  serialize under `rooms` and stay out of the JSON until one exists.
+  What the model still cannot answer is on screen too, because a page that
+  looks authoritative about fire safety is worse than no page:
+
+  - Distance is **straight-line** from the furthest corner to the nearest
+    door, not the walked route around partitions and furniture. The real
+    path is never shorter, so a room that fails here definitely fails; one
+    that passes may still fail when the route is drawn.
+  - Buồng thang bộ, hành lang chung and the fire rating of individual
+    elements are not modelled, so the leg from the room door through the
+    corridor to the stair is not added in.
+  - Where Bảng G.9 has no row for a usage (phòng kỹ thuật, nhà để xe — the
+    latter counts 2 người/ô đỗ, and WeBIM has no parking bays), occupancy is
+    reported as **không xác định** and the room is excluded from the people
+    total rather than silently counted as empty.
+
+  Bậc chịu lửa, cấp nguy hiểm cháy kết cấu, nhóm nhà, mật độ dòng người and
+  Sprinkler are per-project settings (`fire_settings`), because a finding is
+  meaningless without the row it was judged from. Rooms are drawn with the
+  **Room** tool — two opposite corners, like a slab — and carry a code, a
+  usage and an optional occupancy override. Both serialize only once they
+  differ from the default, so a project that never opened the tab round-trips
+  byte-identical.
+
+  The Standards module still lists QCVN 06 with `edition_verified: false`.
+  That flag means the whole document has been checked page by page against
+  công báo, which it has not — only the tables above were.
 
 - **Atlas** — Atlas AEC (`../atlas/`, the project-management half of the
   platform) embedded whole, not linked to. Atlas is a Next.js app with
@@ -426,9 +453,32 @@ Cloudflare Pages (miễn phí, nhận cả repo private, gắn được domain r
 | Output directory | `web/dist` |
 | Environment variable | `VITE_STANDALONE=1` |
 
-GitHub Pages cũng được, nhưng repo private cần gói trả phí — mà repo này
+GitHub Pages không dùng được: repo private cần gói trả phí — mà repo này
 chưa công khai được vì phần mã kế thừa từ `Hoangduong314/WeBIM` chưa rõ
 giấy phép (xem **Nguồn gốc** ở trên).
+
+### DNS: `www.webim.vn`, giữ nameserver ở PA Việt Nam
+
+Một bản ghi trong bảng **Cấu hình bản ghi tên miền** của PA:
+
+| Host | Loại | Giá trị | TTL |
+|------|------|---------|-----|
+| `www` | `CNAME` | `<tên-project>.pages.dev` | 3600 |
+
+Rồi thêm `www.webim.vn` vào **Custom domains** của project bên Cloudflare
+Pages; chứng chỉ TLS Cloudflare tự cấp sau vài phút.
+
+**`webim.vn` trần sẽ không mở được.** Apex không đặt CNAME được (RFC 1034),
+mà Cloudflare Pages chỉ làm phẳng CNAME khi zone nằm trên nameserver của
+Cloudflare — ở đây zone vẫn ở PA. Muốn apex chạy thì phải hoặc chuyển
+nameserver sang Cloudflare, hoặc đổi sang host có IP apex cố định (Netlify
+`75.2.60.5`). Người gõ thiếu `www` sẽ thấy lỗi tên miền, nên đây là việc
+còn nợ chứ không phải chuyện nhỏ.
+
+Uỷ quyền ở registry .vn đã đúng (`ns1/ns2.pavietnam.vn`) nhưng zone chưa
+được nạp lên máy chủ PA — `dig @ns1.pavietnam.vn webim.vn SOA` còn rỗng,
+nên resolver công cộng trả SERVFAIL. Lưu bản ghi đầu tiên thường sẽ tạo
+zone; kiểm lại bằng `bash ../deploy/check-dns.sh` (hoặc `dig` ở trên).
 
 ## Deploy (HTTPS + domain)
 

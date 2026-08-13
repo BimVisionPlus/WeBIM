@@ -56,20 +56,60 @@ export interface SheetDatum {
 }
 
 /**
+ * Fire attributes of the *building*. These belong here and not in
+ * `application/pccc.ts` because they are facts a designer decides — the bậc
+ * chịu lửa is chosen and stated on the drawings — not numbers QCVN 06 hands
+ * down. The thresholds they select live in the application layer.
+ */
+export type FireGrade = "I" | "II" | "III" | "IV" | "V";
+export type StructureClass = "S0" | "S1" | "S2" | "S3";
+/** Nhóm nguy hiểm cháy theo công năng, rút gọn ở mức sàng lọc cần. */
+export type BuildingGroup = "F1.2" | "F1.3" | "CONG_CONG";
+
+export interface FireSettings {
+  grade: FireGrade;
+  structureClass: StructureClass;
+  group: BuildingGroup;
+  /** Bảo vệ toàn bộ bằng Sprinkler — 3.2.8 cho phép giảm cự ly giữa hai lối ra. */
+  sprinklered: boolean;
+  /**
+   * Mật độ dòng người thoát nạn, người/m². CHÚ THÍCH 2 của Bảng G.2a nói giá
+   * trị này "được lấy cụ thể cho từng dự án", nên nó là số người nhập chứ
+   * không phải số suy ra được.
+   */
+  flowDensity: number;
+}
+
+export const DEFAULT_FIRE_SETTINGS: FireSettings = {
+  grade: "II",
+  structureClass: "S0",
+  group: "CONG_CONG",
+  sprinklered: false,
+  flowDensity: 2,
+};
+
+/**
  * Room usage, which is what sets occupant density. The densities live in
  * `application/pccc.ts` rather than here: the domain records what a room *is*,
  * not what a code says about it, so a corrected figure never means editing
  * every saved project.
  */
 export type RoomUsage =
-  | "O"          // ở — căn hộ, phòng ngủ
-  | "VAN_PHONG"  // văn phòng
-  | "HOP"        // phòng họp, hội trường
-  | "THUONG_MAI" // bán lẻ
-  | "AN_UONG"    // ăn uống
-  | "KHO"        // kho
-  | "KY_THUAT"   // phòng kỹ thuật
-  | "HANH_LANG"; // hành lang, lối đi
+  | "O"            // phòng ngủ
+  | "PHONG_KHACH"  // phòng khách
+  | "VAN_PHONG"    // văn phòng
+  | "HOP"          // phòng họp, phòng đọc, phòng học
+  | "HOI_TRUONG"   // hội trường, khiêu vũ, bar, karaoke — dày người nhất
+  | "SANH"         // sảnh, tiếp đón
+  | "THUONG_MAI"   // chợ, TTTM, siêu thị
+  | "TRIEN_LAM"    // triển lãm
+  | "BAO_TANG"     // bảo tàng
+  | "AN_UONG"      // phòng ăn, căng-tin
+  | "BEP"          // bếp, thư viện
+  | "KHO"          // kho, nơi chứa đồ
+  | "DE_XE"        // nhà để xe
+  | "KY_THUAT"     // phòng kỹ thuật
+  | "HANH_LANG";   // hành lang, lối đi
 
 /**
  * A room: a plan boundary on a level, plus how many people are in it.
@@ -322,6 +362,8 @@ export class NativeBimProject {
    * carry a usually-empty object is not worth it.
    */
   clashMatrix: ClashMatrix = {};
+  /** Same reasoning as clashMatrix — a setting, not content. */
+  fireSettings: FireSettings = { ...DEFAULT_FIRE_SETTINGS };
 
   constructor(
     id: string,
@@ -384,6 +426,23 @@ export class NativeBimProject {
               level_id: room.levelId,
               occupancy_override: room.occupancyOverride,
             })),
+          }
+        : {}),
+      // Written only once it differs from the default, for the same reason:
+      // a project that never opened the PCCC tab round-trips unchanged.
+      ...(this.fireSettings.grade !== DEFAULT_FIRE_SETTINGS.grade ||
+      this.fireSettings.structureClass !== DEFAULT_FIRE_SETTINGS.structureClass ||
+      this.fireSettings.group !== DEFAULT_FIRE_SETTINGS.group ||
+      this.fireSettings.sprinklered !== DEFAULT_FIRE_SETTINGS.sprinklered ||
+      this.fireSettings.flowDensity !== DEFAULT_FIRE_SETTINGS.flowDensity
+        ? {
+            fire_settings: {
+              grade: this.fireSettings.grade,
+              structure_class: this.fireSettings.structureClass,
+              group: this.fireSettings.group,
+              sprinklered: this.fireSettings.sprinklered,
+              flow_density: this.fireSettings.flowDensity,
+            },
           }
         : {}),
       ...(Object.keys(this.clashMatrix).length > 0
@@ -687,6 +746,19 @@ export class NativeBimProject {
           typeof room.occupancy_override === "number" ? room.occupancy_override : null,
       });
     }
+
+    const storedFire = (data.fire_settings ?? {}) as Record<string, unknown>;
+    project.fireSettings = {
+      grade: (storedFire.grade as FireGrade) ?? DEFAULT_FIRE_SETTINGS.grade,
+      structureClass:
+        (storedFire.structure_class as StructureClass) ?? DEFAULT_FIRE_SETTINGS.structureClass,
+      group: (storedFire.group as BuildingGroup) ?? DEFAULT_FIRE_SETTINGS.group,
+      sprinklered: storedFire.sprinklered === true,
+      flowDensity:
+        typeof storedFire.flow_density === "number"
+          ? storedFire.flow_density
+          : DEFAULT_FIRE_SETTINGS.flowDensity,
+    };
 
     // Unknown keys are dropped by design; the matrix is restored explicitly.
     // Rules with a missing flag default to enabled, which matches a fresh

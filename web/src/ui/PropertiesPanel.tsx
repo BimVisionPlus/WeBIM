@@ -9,6 +9,8 @@ import type {
   ScheduleKind,
   OpeningDatum,
   Point3D,
+  RoomDatum,
+  RoomUsage,
   SheetDatum,
   SlabDatum,
   TechnicalView,
@@ -16,6 +18,7 @@ import type {
   WallJoinType,
 } from "../domain/project";
 import { useState } from "react";
+import { occupancyOf, roomArea, USAGE_RULES } from "../application/pccc";
 
 const JOIN_TYPE_LABELS: Array<[WallJoinType, string]> = [
   ["MITER", "Miter"],
@@ -350,6 +353,102 @@ function SlabProperties({ slab }: { slab: SlabDatum }) {
   );
 }
 
+function RoomProperties({ room }: { room: RoomDatum }) {
+  const rule = USAGE_RULES[room.usage];
+  const derived = occupancyOf({ ...room, occupancyOverride: null });
+  return (
+    <>
+      <h3>
+        {room.code} {room.name}
+      </h3>
+      <label className="prop-row">
+        <span>Mã phòng</span>
+        <input
+          value={room.code}
+          onChange={(event) => store.updateRoom(room.id, { code: event.target.value })}
+        />
+      </label>
+      <label className="prop-row">
+        <span>Tên</span>
+        <input
+          value={room.name}
+          onChange={(event) => store.updateRoom(room.id, { name: event.target.value })}
+        />
+      </label>
+      <label className="prop-row">
+        <span>Công năng</span>
+        <select
+          value={room.usage}
+          onChange={(event) =>
+            store.updateRoom(room.id, { usage: event.target.value as RoomUsage })
+          }
+        >
+          {(Object.keys(USAGE_RULES) as RoomUsage[]).map((usage) => (
+            <option key={usage} value={usage}>
+              {USAGE_RULES[usage].label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="prop-row">
+        <span>Level</span>
+        <select
+          value={room.levelId}
+          onChange={(event) => store.updateRoom(room.id, { levelId: event.target.value })}
+        >
+          {store.project.levels.map((level) => (
+            <option key={level.id} value={level.id}>
+              {level.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="prop-static">
+        <span>Diện tích</span>
+        <span>{roomArea(room).toFixed(2)} m²</span>
+      </div>
+      <div className="prop-static" title={rule.source}>
+        <span>Hệ số không gian sàn</span>
+        <span>
+          {rule.floorSpaceFactorM2 === null
+            ? "Bảng G.9 không có"
+            : `${rule.floorSpaceFactorM2} m²/người`}
+        </span>
+      </div>
+      {/*
+        G.3 puts the approved design first and the table second, so the input
+        says so: leaving it blank is not "unknown", it is "use Bảng G.9".
+      */}
+      <label className="prop-row">
+        <span>Số người (thiết kế)</span>
+        <input
+          type="number"
+          min={0}
+          value={room.occupancyOverride ?? ""}
+          placeholder={
+            derived.from === "Bảng G.9" ? `${derived.people} theo Bảng G.9` : "phải nhập"
+          }
+          onChange={(event) =>
+            store.updateRoom(room.id, {
+              occupancyOverride: event.target.value === "" ? null : Number(event.target.value),
+            })
+          }
+        />
+      </label>
+      <p className="module-hint">
+        {room.occupancyOverride !== null
+          ? "Đang dùng số người theo thiết kế được duyệt (G.3 ưu tiên giá trị này)."
+          : rule.floorSpaceFactorM2 === null
+            ? "Bảng G.9 không có hệ số cho công năng này — phòng đang tính 0 người cho tới khi nhập."
+            : "Để trống nghĩa là suy ra từ diện tích và Bảng G.9."}
+      </p>
+      <button className="danger" onClick={() => store.removeRoom(room.id)}>
+        Xoá phòng
+      </button>
+    </>
+  );
+}
+
 function WallTypeProperties({ wallType }: { wallType: WallTypeDatum }) {
   const total = wallType.layers.reduce((sum, layer) => sum + layer.thickness, 0);
   const setLayer = (index: number, patch: Partial<WallTypeDatum["layers"][number]>) => {
@@ -668,6 +767,10 @@ export function PropertiesPanel() {
     selection?.kind === "walltype"
       ? store.project.wallTypes.find((candidate) => candidate.id === selection.id)
       : undefined;
+  const room =
+    selection?.kind === "room"
+      ? store.project.rooms.find((candidate) => candidate.id === selection.id)
+      : undefined;
   const dimension =
     selection?.kind === "dimension"
       ? store.project.dimensions.find((candidate) => candidate.id === selection.id)
@@ -686,6 +789,7 @@ export function PropertiesPanel() {
       {schedule && <ScheduleProperties schedule={schedule} />}
       {wallType && <WallTypeProperties wallType={wallType} />}
       {dimension && <DimensionProperties dimension={dimension} />}
+      {room && <RoomProperties room={room} />}
       {!axis &&
         !view &&
         !wall &&
@@ -695,7 +799,8 @@ export function PropertiesPanel() {
         !slab &&
         !schedule &&
         !wallType &&
-        !dimension && (
+        !dimension &&
+        !room && (
         <div className="tree-empty">Select an element, level, sheet or view.</div>
       )}
     </aside>
