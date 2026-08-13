@@ -5,6 +5,7 @@ import { ScheduleTable } from "./ui/ScheduleTable";
 import { DashboardModule } from "./ui/Dashboard";
 import { IfcDataModule } from "./ui/IfcData";
 import { FourDModule } from "./ui/FourD";
+import { PcccModule } from "./ui/Pccc";
 import {
   AtlasModule,
   CdeModule,
@@ -30,6 +31,7 @@ const MODULES: Array<[ModuleId, string]> = [
   ["DASHBOARD", "Dashboard"],
   ["IFCDATA", "IFC Data"],
   ["FOURD", "4D"],
+  ["PCCC", "PCCC"],
   ["ATLAS", "Atlas"],
 ];
 
@@ -74,6 +76,8 @@ export default function App() {
             <IfcDataModule />
           ) : module === "FOURD" ? (
             <FourDModule />
+          ) : module === "PCCC" ? (
+            <PcccModule />
           ) : module === "ATLAS" ? (
             <AtlasModule />
           ) : activeSchedule ? (

@@ -55,6 +55,42 @@ export interface SheetDatum {
   placements: SheetViewPlacement[];
 }
 
+/**
+ * Room usage, which is what sets occupant density. The densities live in
+ * `application/pccc.ts` rather than here: the domain records what a room *is*,
+ * not what a code says about it, so a corrected figure never means editing
+ * every saved project.
+ */
+export type RoomUsage =
+  | "O"          // ở — căn hộ, phòng ngủ
+  | "VAN_PHONG"  // văn phòng
+  | "HOP"        // phòng họp, hội trường
+  | "THUONG_MAI" // bán lẻ
+  | "AN_UONG"    // ăn uống
+  | "KHO"        // kho
+  | "KY_THUAT"   // phòng kỹ thuật
+  | "HANH_LANG"; // hành lang, lối đi
+
+/**
+ * A room: a plan boundary on a level, plus how many people are in it.
+ *
+ * Occupancy is stored as an override rather than always derived, because the
+ * derived figure is only as good as the density table, and a designer who has
+ * counted the seats knows better than the table does.
+ */
+export interface RoomDatum {
+  id: string;
+  name: string;
+  /** Số hiệu phòng — "P.101". */
+  code: string;
+  usage: RoomUsage;
+  /** Plan polygon, metres. */
+  outline: [number, number][];
+  levelId: string;
+  /** People. Null means "derive from area and usage". */
+  occupancyOverride: number | null;
+}
+
 export type SlabKind = "FLOOR" | "ROOF";
 
 /**
@@ -279,6 +315,7 @@ export class NativeBimProject {
   dimensions: DimensionDatum[];
   documents: DocumentDatum[];
   tasks: TaskDatum[];
+  rooms: RoomDatum[] = [];
   /**
    * Not a constructor argument: it is a setting rather than content, and
    * threading an eleventh positional parameter through every call site to
@@ -336,6 +373,19 @@ export class NativeBimProject {
       schema_version: 4,
       // Omitted when untouched, so a project that never opened the matrix
       // serializes exactly as it did before this existed.
+      ...(this.rooms.length > 0
+        ? {
+            rooms: this.rooms.map((room) => ({
+              id: room.id,
+              name: room.name,
+              code: room.code,
+              usage: room.usage,
+              outline: room.outline.map((point) => [...point]),
+              level_id: room.levelId,
+              occupancy_override: room.occupancyOverride,
+            })),
+          }
+        : {}),
       ...(Object.keys(this.clashMatrix).length > 0
         ? {
             clash_matrix: Object.fromEntries(
@@ -625,6 +675,19 @@ export class NativeBimProject {
       })),
     );
 
+    for (const room of (data.rooms ?? []) as Record<string, unknown>[]) {
+      project.rooms.push({
+        id: room.id as string,
+        name: (room.name as string) ?? "Phòng",
+        code: (room.code as string) ?? "",
+        usage: (room.usage as RoomUsage) ?? "VAN_PHONG",
+        outline: room.outline as [number, number][],
+        levelId: (room.level_id as string) ?? defaultLevelId,
+        occupancyOverride:
+          typeof room.occupancy_override === "number" ? room.occupancy_override : null,
+      });
+    }
+
     // Unknown keys are dropped by design; the matrix is restored explicitly.
     // Rules with a missing flag default to enabled, which matches a fresh
     // matrix — a half-written file must not silently stop reporting clashes.
@@ -727,6 +790,41 @@ export class NativeBimProject {
 
   levelById(levelId: string): LevelDatum | null {
     return this.levels.find((level) => level.id === levelId) ?? null;
+  }
+
+  addRoom(
+    code: string,
+    outline: [number, number][],
+    options: { name?: string; usage?: RoomUsage; levelId?: string } = {},
+  ): RoomDatum {
+    if (outline.length < 3) {
+      throw new Error("Ranh giới phòng cần ít nhất ba điểm");
+    }
+    if (this.levels.length === 0) this.addLevel("Level 1", 0);
+    const level = options.levelId ? this.levelById(options.levelId) : this.levels[0];
+    if (!level) throw new Error(`Unknown LevelDatum: ${options.levelId}`);
+    const room: RoomDatum = {
+      id: uuid4Hex(),
+      name: options.name ?? `Phòng ${this.rooms.length + 1}`,
+      code: code || `P.${this.rooms.length + 1}`,
+      usage: options.usage ?? "VAN_PHONG",
+      outline,
+      levelId: level.id,
+      occupancyOverride: null,
+    };
+    this.rooms.push(room);
+    return room;
+  }
+
+  updateRoom(roomId: string, changes: Partial<Omit<RoomDatum, "id">>): RoomDatum {
+    const room = this.rooms.find((candidate) => candidate.id === roomId);
+    if (!room) throw new Error(`Unknown RoomDatum: ${roomId}`);
+    Object.assign(room, changes);
+    return room;
+  }
+
+  removeRoom(roomId: string): void {
+    this.rooms = this.rooms.filter((room) => room.id !== roomId);
   }
 
   addSlab(

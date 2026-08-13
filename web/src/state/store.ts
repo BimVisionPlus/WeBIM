@@ -15,6 +15,7 @@ export type ToolId =
   | "WINDOW"
   | "FLOOR"
   | "ROOF"
+  | "ROOM"
   | "DIM";
 
 export interface Selection {
@@ -30,7 +31,8 @@ export interface Selection {
     | "walltype"
     | "dimension"
     | "document"
-    | "task";
+    | "task"
+    | "room";
   id: string;
 }
 
@@ -45,6 +47,7 @@ export type ModuleId =
   | "DASHBOARD"
   | "IFCDATA"
   | "FOURD"
+  | "PCCC"
   | "ATLAS";
 
 import { apiBase } from "../config";
@@ -272,8 +275,10 @@ class AppStore {
           ? "Wall: click two points per wall. Esc cancels, Enter exits."
           : tool === "DOOR" || tool === "WINDOW"
             ? `${tool === "DOOR" ? "Door" : "Window"}: click on a wall to place. Esc exits.`
-            : tool === "FLOOR" || tool === "ROOF"
-              ? `${tool === "FLOOR" ? "Floor" : "Roof"}: click two opposite corners. Esc cancels.`
+            : tool === "ROOM"
+              ? "Phòng: click hai góc đối diện. Esc để huỷ."
+              : tool === "FLOOR" || tool === "ROOF"
+                ? `${tool === "FLOOR" ? "Floor" : "Roof"}: click two opposite corners. Esc cancels.`
               : tool === "DIM"
                 ? "Dimension: click two points, then place the line. Esc cancels."
                 : "Ready";
@@ -590,6 +595,37 @@ class AppStore {
     } catch (error) {
       this.setStatus((error as Error).message);
     }
+  }
+
+  /** Two opposite corners, like a slab — rooms in plan are rectangles first. */
+  addRoom(cornerA: Point3D, cornerB: Point3D): void {
+    const [x0, y0] = cornerA;
+    const [x1, y1] = cornerB;
+    if (x0 === x1 || y0 === y1) {
+      this.setStatus("Phòng cần hai góc đối diện tạo thành hình chữ nhật");
+      return;
+    }
+    const outline: [number, number][] = [
+      [Math.min(x0, x1), Math.min(y0, y1)],
+      [Math.max(x0, x1), Math.min(y0, y1)],
+      [Math.max(x0, x1), Math.max(y0, y1)],
+      [Math.min(x0, x1), Math.max(y0, y1)],
+    ];
+    const room = this.project.addRoom("", outline, { levelId: this.activeLevel?.id });
+    this.selection = { kind: "room", id: room.id };
+    this.statusMessage = `Phòng ${room.code} đã tạo`;
+    this.commit();
+  }
+
+  updateRoom(roomId: string, changes: Parameters<NativeBimProject["updateRoom"]>[1]): void {
+    this.project.updateRoom(roomId, changes);
+    this.commit();
+  }
+
+  removeRoom(roomId: string): void {
+    this.project.removeRoom(roomId);
+    if (this.selection?.kind === "room" && this.selection.id === roomId) this.selection = null;
+    this.commit();
   }
 
   addSlab(kind: "FLOOR" | "ROOF", cornerA: Point3D, cornerB: Point3D): void {

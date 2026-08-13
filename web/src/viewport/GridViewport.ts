@@ -644,6 +644,18 @@ export class GridViewport {
       return;
     }
 
+    if (store.activeTool === "ROOM") {
+      const snap = this.computeSnap(world);
+      if (store.pendingStart === null) {
+        store.setPendingStart(snap.point);
+        store.setStatus("Phòng: click góc đối diện.");
+      } else {
+        store.addRoom(store.pendingStart, snap.point);
+        store.setPendingStart(null);
+      }
+      this.syncPreview();
+      return;
+    }
     if (store.activeTool === "FLOOR" || store.activeTool === "ROOF") {
       const snap = this.computeSnap(world);
       if (store.pendingStart === null) {
@@ -751,6 +763,7 @@ export class GridViewport {
     if (
       store.activeTool === "GRID" ||
       store.activeTool === "WALL" ||
+      store.activeTool === "ROOM" ||
       store.activeTool === "FLOOR" ||
       store.activeTool === "ROOF" ||
       store.activeTool === "DIM" ||
@@ -1667,6 +1680,7 @@ export class GridViewport {
     const drawing =
       store.activeTool === "GRID" ||
       store.activeTool === "WALL" ||
+      store.activeTool === "ROOM" ||
       store.activeTool === "FLOOR" ||
       store.activeTool === "ROOF";
     if (!drawing && !this.endpointEdit) return;

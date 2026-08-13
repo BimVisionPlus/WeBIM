@@ -85,6 +85,23 @@ export function buildDemoProject(): NativeBimProject {
   project.addSlab("FLOOR", footprint, { levelId: first.id });
   project.addSlab("ROOF", footprint, { levelId: first.id });
 
+  // ── Phòng ────────────────────────────────────────────────────────────────
+  // The partition at x=8 splits the ground floor, so the rooms follow it.
+  // Occupancy comes from area × usage; the demo leaves the override unset so
+  // the PCCC screen shows the derived figure it would use on a real project.
+  project.addRoom("P.101", [
+    [0.11, 0.11],
+    [7.89, 0.11],
+    [7.89, 7.89],
+    [0.11, 7.89],
+  ], { name: "Không gian chung", usage: "HOP", levelId: ground.id });
+  project.addRoom("P.102", [
+    [8.11, 0.11],
+    [11.89, 0.11],
+    [11.89, 7.89],
+    [8.11, 7.89],
+  ], { name: "Phòng làm việc", usage: "VAN_PHONG", levelId: ground.id });
+
   // ── Views ────────────────────────────────────────────────────────────────
   const groundPlan = project.addView("Tầng 1", "FLOOR_PLAN", 100, 40, ground.id);
   project.addView("Tầng 2", "FLOOR_PLAN", 100, 40, first.id);

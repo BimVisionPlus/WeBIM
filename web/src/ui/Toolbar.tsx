@@ -114,6 +114,13 @@ export function Toolbar() {
           Window
         </button>
         <button
+          className={store.activeTool === "ROOM" ? "active" : ""}
+          onClick={() => store.setTool("ROOM")}
+          title="Khoanh phòng — hai góc đối diện"
+        >
+          Room
+        </button>
+        <button
           className={store.activeTool === "FLOOR" ? "active" : ""}
           onClick={() => store.setTool("FLOOR")}
           title="Draw floor slabs (F)"

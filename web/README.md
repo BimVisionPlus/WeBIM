@@ -119,9 +119,31 @@ collaboration covers them for free; only binaries touch the server):
   a plan covering half the model still ends on a finished building and
   looks correct.
 
-  **PCCC simulation is not included.** Egress modelling needs rooms and
-  occupancy, which the native domain does not have; building the timeline
-  half of B11 and calling the whole row done would be the wrong claim.
+  The other half of B11 is **PCCC**, below — it needed rooms first.
+
+- **PCCC** — sàng lọc thoát nạn, on top of the rooms the domain now
+  carries. Occupancy from area × usage (overridable — someone who counted
+  the seats knows better than a density table), doors read off the walls as
+  exits, worst-corner distance to the nearest exit, and required exit width
+  from the occupant load.
+
+  Two caveats are on screen rather than only in the source, because a page
+  that looks authoritative about fire safety while resting on placeholder
+  numbers is worse than no page:
+
+  - The distance limits and occupant densities are **defaults that have not
+    been checked against công báo** for QCVN 06:2022/BXD (+ Sửa đổi 1:2023).
+    They are data, not constants, so a corrected figure is an edit rather
+    than a code change — and the Standards module already carries QCVN 06
+    with `edition_verified: false`, which this inherits.
+  - Distance is **straight-line**, not the walked route around partitions
+    and furniture. The real path is never shorter, so a room that fails here
+    definitely fails; one that passes may still fail when the route is
+    drawn.
+
+  Rooms are drawn with the **Room** tool — two opposite corners, like a slab
+  — and carry a code, a usage and an optional occupancy override. They
+  serialize under `rooms` and stay out of the JSON until one exists.
 
 - **Atlas** — Atlas AEC (`../atlas/`, the project-management half of the
   platform) embedded whole, not linked to. Atlas is a Next.js app with
