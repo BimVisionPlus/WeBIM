@@ -100,6 +100,29 @@ collaboration covers them for free; only binaries touch the server):
   `IFCLABEL('EI 60')`, `IFCLENGTHMEASURE(2.5)`); unset (`$`) yields nothing
   rather than the string "$".
 
+- **4D** — mô phỏng tiến độ thi công: a date scrubber over the same 3D
+  viewer, showing only what the plan says has been built by that date, plus
+  a WebM export recorded off that canvas so the video is exactly what was
+  on screen. Each task carries `elementIds` — the walls and slabs it
+  builds — and the demo project ships sequenced, so the tab works on first
+  run.
+
+  An element counts as built when its task **finishes**, not when it
+  starts: a half-built wall has no honest geometry, and drawing it whole
+  while the task runs overstates progress on exactly the date someone is
+  checking. Tasks in progress are counted and reported separately rather
+  than rounded either way.
+
+  The tab audits the sequence and says what it does not cover — elements no
+  task claims (they would never appear), tasks that build nothing (normal:
+  permits, procurement), and references to deleted elements. Without that,
+  a plan covering half the model still ends on a finished building and
+  looks correct.
+
+  **PCCC simulation is not included.** Egress modelling needs rooms and
+  occupancy, which the native domain does not have; building the timeline
+  half of B11 and calling the whole row done would be the wrong claim.
+
 - **Atlas** — Atlas AEC (`../atlas/`, the project-management half of the
   platform) embedded whole, not linked to. Atlas is a Next.js app with
   its own server, so it cannot be compiled into this Vite bundle; the

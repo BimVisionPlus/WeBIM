@@ -143,6 +143,12 @@ export interface TaskDatum {
   progress: number;
   /** Ids of tasks that must finish before this one starts. */
   dependsOn: string[];
+  /**
+   * Model elements this task builds — walls and slabs, by id. Empty means the
+   * task has no geometry (permits, procurement), which is normal: the 4D view
+   * shows those as timeline-only rather than pretending they build something.
+   */
+  elementIds?: string[];
 }
 
 export type ScheduleKind = "WALL" | "OPENING" | "SLAB" | "QTO" | "CLASH";
@@ -406,6 +412,9 @@ export class NativeBimProject {
         })),
       })),
       tasks: this.tasks.map((task) => ({
+        ...(task.elementIds && task.elementIds.length > 0
+          ? { element_ids: [...task.elementIds] }
+          : {}),
         id: task.id,
         name: task.name,
         category: task.category,
@@ -610,6 +619,9 @@ export class NativeBimProject {
         end: (task.end as string) ?? "",
         progress: (task.progress as number) ?? 0,
         dependsOn: (task.depends_on as string[]) ?? [],
+        ...(Array.isArray(task.element_ids)
+          ? { elementIds: task.element_ids as string[] }
+          : {}),
       })),
     );
 

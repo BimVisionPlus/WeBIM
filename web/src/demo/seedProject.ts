@@ -137,11 +137,25 @@ export function buildDemoProject(): NativeBimProject {
     ["Xây bao che", "Kiến trúc", "2026-10-21", "2026-11-10", "BLOCKED", 15],
     ["Hoàn thiện + MEP", "Hoàn thiện", "2026-11-11", "2026-12-15", "NOT_STARTED", 0],
   ];
-  for (const [name, category, start, end, status, progress] of tasks) {
+  const added = tasks.map(([name, category, start, end, status, progress]) => {
     const task = project.addTask(name, category, start, end);
     task.status = status;
     task.progress = progress;
-  }
+    return task;
+  });
+
+  // ── 4D ───────────────────────────────────────────────────────────────────
+  // Which task builds what. Without this the 4D tab has a timeline and an
+  // empty building; with it the demo shows the storeys going up in order.
+  const groundWalls = project.walls.filter((wall) => wall.levelId === ground.id);
+  const upperWalls = project.walls.filter((wall) => wall.levelId === first.id);
+  const [groundSlab, upperSlab, roofSlab] = project.slabs;
+
+  added[1].elementIds = [groundSlab.id]; // Móng + đài cọc
+  added[2].elementIds = [...groundWalls.map((wall) => wall.id), upperSlab.id];
+  added[3].elementIds = [...upperWalls.map((wall) => wall.id), roofSlab.id];
+  // "Chuẩn bị mặt bằng" and "Hoàn thiện + MEP" build no geometry, which the
+  // 4D audit reports rather than treating as a mistake.
 
   // A document that has been issued, so the CDE chart is not one bar.
   spec.status = "SHARED";

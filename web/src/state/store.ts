@@ -44,6 +44,7 @@ export type ModuleId =
   | "CLIMATE"
   | "DASHBOARD"
   | "IFCDATA"
+  | "FOURD"
   | "ATLAS";
 
 import { apiBase } from "../config";
@@ -827,6 +828,25 @@ class AppStore {
 
   renameProject(name: string): void {
     this.project.name = name;
+    this.commit();
+  }
+
+  /** Attach the current selection to a task, so 4D knows when it gets built. */
+  assignSelectionToTask(taskId: string): void {
+    const selection = this.selection;
+    if (!selection || (selection.kind !== "wall" && selection.kind !== "slab")) {
+      this.setStatus("Chọn một tường hoặc sàn trước, rồi gán vào hạng mục.");
+      return;
+    }
+    const task = this.project.tasks.find((candidate) => candidate.id === taskId);
+    if (!task) return;
+    const ids = new Set(task.elementIds ?? []);
+    // Toggle: the same click that attaches also detaches, so a mis-assignment
+    // does not need a different control to undo.
+    if (ids.has(selection.id)) ids.delete(selection.id);
+    else ids.add(selection.id);
+    task.elementIds = [...ids];
+    this.setStatus(`${task.name}: ${task.elementIds.length} phần tử`);
     this.commit();
   }
 
