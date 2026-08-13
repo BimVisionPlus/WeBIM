@@ -1,0 +1,24 @@
+# Bản demo tĩnh của WeBIM Web (https://webim.vn).
+#
+# Netlify chứ không phải Cloudflare Pages vì một lý do duy nhất: Netlify có
+# IP apex cố định, nên `webim.vn` trần trỏ được bằng bản ghi A thường và
+# toàn bộ DNS ở lại PA Việt Nam. Cloudflare Pages chỉ phục vụ apex khi zone
+# nằm trên nameserver của Cloudflare.
+#
+# Đây là bản KHÔNG có máy chủ nền tảng: VITE_STANDALONE=1 khiến app không
+# mở socket nào cả, thay vì mở một socket được thiết kế để hỏng. CDE,
+# Drawings, cộng tác nhiều máy và AI sẽ nói rõ là cần máy chủ.
+
+[build]
+  base = "web"
+  command = "npm ci && npm run build:demo"
+  publish = "dist"
+
+[build.environment]
+  # vite 8 đòi ^20.19 || >=22.12; ghim ở đây để bản dựng trên Netlify không
+  # phụ thuộc vào mặc định của họ đổi lúc nào.
+  NODE_VERSION = "22"
+  VITE_STANDALONE = "1"
+
+# Không có client router nên không cần SPA fallback. Nếu sau này thêm
+# router thì mới cần /* → /index.html 200.

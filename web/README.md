@@ -445,40 +445,42 @@ Plan/Gantt · Export IFC · Open/Save JSON. Mọi thứ lưu trong `localStorage
 **Cần máy chủ**: CDE + Drawings (kho file), cộng tác nhiều máy, AI. Ở chế
 độ này chúng báo rõ lý do thay vì ném lỗi `Failed to fetch`.
 
-Cloudflare Pages (miễn phí, nhận cả repo private, gắn được domain riêng):
+Host là **Netlify**, cấu hình nằm sẵn ở `../netlify.toml` nên trang tạo
+project không phải điền tay gì cả. Miễn phí, dựng được repo private, gói
+free cho phép dùng thương mại.
 
-| Thiết lập | Giá trị |
-|-----------|---------|
-| Build command | `cd web && npm ci && npm run build:demo` |
-| Output directory | `web/dist` |
-| Environment variable | `VITE_STANDALONE=1` |
+Chọn Netlify vì đúng một lý do: **IP apex cố định**. `webim.vn` trần trỏ
+được bằng bản ghi A thường, nên toàn bộ DNS ở lại PA Việt Nam. Cloudflare
+Pages nhanh hơn ở VN nhưng chỉ phục vụ apex khi zone nằm trên nameserver
+của Cloudflare — tức là phải rời PA. GitHub Pages thì loại hẳn: repo
+private cần gói trả phí, mà repo này chưa công khai được vì phần mã kế
+thừa từ `Hoangduong314/WeBIM` chưa rõ giấy phép (xem **Nguồn gốc**).
 
-GitHub Pages không dùng được: repo private cần gói trả phí — mà repo này
-chưa công khai được vì phần mã kế thừa từ `Hoangduong314/WeBIM` chưa rõ
-giấy phép (xem **Nguồn gốc** ở trên).
+### DNS: hai bản ghi ở PA Việt Nam
 
-### DNS: `www.webim.vn`, giữ nameserver ở PA Việt Nam
-
-Một bản ghi trong bảng **Cấu hình bản ghi tên miền** của PA:
+Bảng **Cấu hình bản ghi tên miền**:
 
 | Host | Loại | Giá trị | TTL |
 |------|------|---------|-----|
-| `www` | `CNAME` | `<tên-project>.pages.dev` | 3600 |
+| `@` | `A` | `75.2.60.5` | 3600 |
+| `www` | `CNAME` | `<tên-site>.netlify.app` | 3600 |
 
-Rồi thêm `www.webim.vn` vào **Custom domains** của project bên Cloudflare
-Pages; chứng chỉ TLS Cloudflare tự cấp sau vài phút.
+`75.2.60.5` là load balancer apex của Netlify (`dig +short
+apex-loadbalancer.netlify.com`). Rồi thêm cả `webim.vn` lẫn
+`www.webim.vn` vào **Domain management** của site; Netlify tự cấp
+Let's Encrypt sau vài phút và tự chuyển hướng www → apex.
 
-**`webim.vn` trần sẽ không mở được.** Apex không đặt CNAME được (RFC 1034),
-mà Cloudflare Pages chỉ làm phẳng CNAME khi zone nằm trên nameserver của
-Cloudflare — ở đây zone vẫn ở PA. Muốn apex chạy thì phải hoặc chuyển
-nameserver sang Cloudflare, hoặc đổi sang host có IP apex cố định (Netlify
-`75.2.60.5`). Người gõ thiếu `www` sẽ thấy lỗi tên miền, nên đây là việc
-còn nợ chứ không phải chuyện nhỏ.
+Kiểm trước khi bấm gì bên Netlify:
 
-Uỷ quyền ở registry .vn đã đúng (`ns1/ns2.pavietnam.vn`) nhưng zone chưa
-được nạp lên máy chủ PA — `dig @ns1.pavietnam.vn webim.vn SOA` còn rỗng,
-nên resolver công cộng trả SERVFAIL. Lưu bản ghi đầu tiên thường sẽ tạo
-zone; kiểm lại bằng `bash ../deploy/check-dns.sh` (hoặc `dig` ở trên).
+```bash
+bash ../deploy/check-dns.sh webim.vn 75.2.60.5
+```
+
+Tính đến 13-8-2026, uỷ quyền ở registry .vn đã đúng
+(`ns1/ns2.pavietnam.vn`) nhưng **zone chưa được nạp lên máy chủ PA** — cả
+ba nameserver trả `REFUSED`, nên resolver công cộng trả SERVFAIL. Lưu bản
+ghi đầu tiên thường sẽ tạo zone; nếu 30 phút sau vẫn REFUSED thì là lỗi
+phía PA.
 
 ## Deploy (HTTPS + domain)
 
