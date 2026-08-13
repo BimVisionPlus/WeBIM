@@ -65,6 +65,30 @@ mẫu cho các phòng Công việc / Hành chính / Tài chính / Đấu thầu,
 mọi tổ chức có thành viên** chứ không chỉ tổ chức đầu tiên: tài khoản demo
 nào đăng nhập cũng phải thấy.
 
+### Danh mục tài liệu ISO
+
+Trang `/iso` trong Atlas — sổ tay, chính sách, quy trình, hướng dẫn, biểu
+mẫu của công ty và dự án, mỗi cái có mã hiệu, phiên bản, ngày hiệu lực,
+hạn soát xét. Tách khỏi CDE: CDE giữ sản phẩm của dự án, còn đây là **luật
+để làm ra** những sản phẩm ấy, và chúng sống lâu hơn bất kỳ dự án nào.
+
+Một danh mục chỉ để liệt kê thì đúng bằng một file Excel có database phía
+sau. Thứ làm nó đáng có là những phép soát mà kiểm toán viên vẫn làm bằng
+tay, nay chạy liên tục (`packages/lib/src/iso-register.ts`, 11 test):
+
+- **Quá hạn soát xét** — chỉ tính tài liệu đang hiệu lực.
+- **Hai phiên bản cùng hiệu lực** — nghiêm trọng: người đọc chọn bản nào
+  thì nửa công ty đang làm theo bản kia.
+- **Bản cũ bị thay thế nhưng vẫn để hiệu lực** — đúng thứ auditor ghi biên bản.
+- **Lệch giữa quyển ISO và hệ thống, cả hai chiều**: quy trình đang chạy mà
+  không có tài liệu nào phê duyệt, và quy trình trong danh mục mà hệ thống
+  chưa chạy được. Biểu mẫu không bị đòi phải chạy được.
+
+Seed cố ý **không sạch** (`scripts/seed-iso.ts`): có sẵn một tài liệu quá
+hạn và một cặp v01/v02 cùng hiệu lực. Danh mục demo không có phát hiện nào
+thì không chứng minh được gì về tính năng mà mục đích chính là tìm ra
+phát hiện.
+
 ### Thống kê & đánh giá nhân sự
 
 Trang `/people` trong Atlas. Số liệu lấy từ bước quy trình (`ProcessTask`),

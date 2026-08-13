@@ -21,3 +21,4 @@ export * from "./observability";
 export * from "./canvas/geometry";
 export * from "./canvas/presence";
 export * from "./people-metrics";
+export * from "./iso-register";

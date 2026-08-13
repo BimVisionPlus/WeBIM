@@ -3094,6 +3094,74 @@ enum WorkflowScope {
 }
 
 // ============================================================================
+//  Danh mục tài liệu ISO (controlled documents)
+//
+//  The register an ISO 9001 company keeps: every quy trình, biểu mẫu, hướng
+//  dẫn with its code, version, effective date and next review. Kept apart
+//  from CDE, which holds project deliverables — these are the rules those
+//  deliverables are produced under, and they outlive any one project.
+//
+//  A document may point at the ProcessTemplate that executes it. That link is
+//  the point: a procedure in the binder that nothing runs, and a process the
+//  binder never approved, are both findings an auditor writes up.
+// ============================================================================
+
+model IsoDocument {
+  id           String            @id @default(cuid())
+  orgId        String
+  /// Mã hiệu — "QT-TK-05", "BM-TK-05-01". Unique per org, not globally.
+  code         String
+  title        String
+  kind         IsoDocKind        @default(QUY_TRINH)
+  department   ProjectDepartment @default(CONG_VIEC_KHAC)
+  scope        IsoScope          @default(COMPANY)
+  /// Set only when scope is PROJECT.
+  projectId    String?
+  version      String            @default("01")
+  status       IsoStatus         @default(DRAFT)
+  issuedAt     DateTime?
+  effectiveAt  DateTime?
+  /// ISO wants periodic review; an overdue one is a finding, so it is a field
+  /// rather than something a spreadsheet remembers.
+  reviewDueAt  DateTime?
+  ownerUserId  String?
+  fileUrl      String?
+  /// The document this one replaces — the chain an auditor follows.
+  supersedesId String?           @unique
+  /// The runnable procedure, when there is one.
+  processTemplateId String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  supersedes IsoDocument? @relation("IsoSupersedes", fields: [supersedesId], references: [id])
+  supersededBy IsoDocument? @relation("IsoSupersedes")
+
+  @@unique([orgId, code, version])
+  @@index([orgId, status])
+  @@index([orgId, department])
+}
+
+enum IsoDocKind {
+  SO_TAY // sổ tay chất lượng
+  CHINH_SACH // chính sách
+  QUY_TRINH // quy trình
+  HUONG_DAN // hướng dẫn công việc
+  BIEU_MAU // biểu mẫu
+}
+
+enum IsoScope {
+  COMPANY
+  PROJECT
+}
+
+enum IsoStatus {
+  DRAFT
+  EFFECTIVE
+  SUPERSEDED
+  WITHDRAWN
+}
+
+// ============================================================================
 //  Quy trình phối hợp & tiêu chí chuyển giai đoạn
 //
 //  WorkflowTemplate above stores a DAG as opaque JSON and has no department,
