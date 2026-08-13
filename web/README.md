@@ -456,57 +456,41 @@ notes, and five planned tasks. Dates are fixed rather than relative to
 today — a demo reading "trễ 400 ngày" next year is worse than one that is
 plainly a sample.
 
-## Demo tĩnh (miễn phí, không cần máy chủ)
+## Tên miền
+
+| | |
+|---|---|
+| `webim.vn` | Trang giới thiệu — tĩnh, trên Netlify, nguồn ở `../landing/` |
+| `app.webim.vn` | Ứng dụng WeBIM Web, sau Caddy trên máy chủ |
+| `atlas.webim.vn` | Atlas AEC, cùng máy, cùng Caddy |
+
+Apex từng phục vụ chính bản demo tĩnh của app. Từ khi có máy chủ, app sống
+ở `app.webim.vn` với đầy đủ relay, kho file và AI — nên một bản demo thứ
+hai ở apex chỉ tạo ra **hai thứ khác nhau mang cùng một cái tên**, và bản ở
+apex là bản kém hơn. Bookmark cũ vào `/app/*` và `/atlas/*` được chuyển
+hướng 301 sang đúng chỗ thay vì trả 404.
+
+Trang giới thiệu ở lại Netlify chứ không dồn về máy chủ: nó không phụ thuộc
+gì vào server, nên để trên CDN có nghĩa là trang giới thiệu vẫn sống khi ta
+đang nghịch máy chủ.
+
+## Bản dựng tĩnh (không cần máy chủ)
 
 ```bash
 npm run build:demo     # VITE_STANDALONE=1 → không mở socket nào
 ```
 
-`dist/` ~950 KB, tải lên bất kỳ host tĩnh nào. Không có router nên không
-cần cấu hình SPA fallback.
+Vẫn giữ được, vì nó là cách chạy WeBIM khi *không* có nền tảng — hữu ích để
+gửi cho ai đó một thư mục, hoặc chạy trong mạng nội bộ không có server.
+`dist/` tải lên bất kỳ host tĩnh nào. Không có router nên không cần cấu hình
+SPA fallback.
 
-**Chạy được**: Model · 3D Viewer · Standards · Climate · QTO · Clash ·
-Plan/Gantt · Export IFC · Open/Save JSON. Mọi thứ lưu trong `localStorage`.
+**Chạy được**: BIM · 3D · Standards · Climate · QTO + đơn giá · Clash ·
+Plan/Gantt · 4D · PCCC · Export IFC · Open/Save JSON. Mọi thứ lưu trong
+`localStorage`.
 
-**Cần máy chủ**: CDE + Drawings (kho file), cộng tác nhiều máy, AI. Ở chế
-độ này chúng báo rõ lý do thay vì ném lỗi `Failed to fetch`.
-
-Host là **Netlify**, cấu hình nằm sẵn ở `../netlify.toml` nên trang tạo
-project không phải điền tay gì cả. Miễn phí, dựng được repo private, gói
-free cho phép dùng thương mại.
-
-Chọn Netlify vì đúng một lý do: **IP apex cố định**. `webim.vn` trần trỏ
-được bằng bản ghi A thường, nên toàn bộ DNS ở lại PA Việt Nam. Cloudflare
-Pages nhanh hơn ở VN nhưng chỉ phục vụ apex khi zone nằm trên nameserver
-của Cloudflare — tức là phải rời PA. GitHub Pages thì loại hẳn: repo
-private cần gói trả phí, mà repo này chưa công khai được vì phần mã kế
-thừa từ `Hoangduong314/WeBIM` chưa rõ giấy phép (xem **Nguồn gốc**).
-
-### DNS: hai bản ghi ở PA Việt Nam
-
-Bảng **Cấu hình bản ghi tên miền**:
-
-| Host | Loại | Giá trị | TTL |
-|------|------|---------|-----|
-| `@` | `A` | `75.2.60.5` | 3600 |
-| `www` | `CNAME` | `webimvn.netlify.app` | 3600 |
-
-`75.2.60.5` là load balancer apex của Netlify (`dig +short
-apex-loadbalancer.netlify.com`). Rồi thêm cả `webim.vn` lẫn
-`www.webim.vn` vào **Domain management** của site; Netlify tự cấp
-Let's Encrypt sau vài phút và tự chuyển hướng www → apex.
-
-Kiểm trước khi bấm gì bên Netlify:
-
-```bash
-bash ../deploy/check-dns.sh webim.vn 75.2.60.5
-```
-
-Tính đến 13-8-2026, uỷ quyền ở registry .vn đã đúng
-(`ns1/ns2.pavietnam.vn`) nhưng **zone chưa được nạp lên máy chủ PA** — cả
-ba nameserver trả `REFUSED`, nên resolver công cộng trả SERVFAIL. Lưu bản
-ghi đầu tiên thường sẽ tạo zone; nếu 30 phút sau vẫn REFUSED thì là lỗi
-phía PA.
+**Cần máy chủ**: CDE + Bản vẽ (kho file), cộng tác nhiều máy, AI. Ở chế độ
+này chúng báo rõ lý do thay vì ném lỗi `Failed to fetch`.
 
 ## Deploy (HTTPS + domain)
 

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WeBIM — BIM và hồ sơ công trình, chạy thẳng trên trình duyệt</title>
+<meta name="description" content="Dựng mô hình BIM, dò va chạm, bóc khối lượng, sàng lọc thoát nạn theo QCVN 06 và quản lý hồ sơ dự án — trong một trình duyệt, không cần cài đặt." />
+<meta property="og:title" content="WeBIM — BIM và hồ sơ công trình trên trình duyệt" />
+<meta property="og:description" content="Mô hình, va chạm, khối lượng, PCCC theo QCVN 06, hồ sơ ISO 19650 — mở là dùng." />
+<meta property="og:locale" content="vi_VN" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e2513d'/><text x='16' y='23' font-family='system-ui' font-size='18' font-weight='700' fill='white' text-anchor='middle'>W</text></svg>" />
+<style>
+  :root {
+    --bg: #14161b;
+    --panel: #1f2229;
+    --panel-2: #262a32;
+    --border: #333844;
+    --text: #e8eaee;
+    --muted: #9aa1ad;
+    --accent: #3987e5;
+    --warm: #e2513d;
+    --ok: #5f9e6e;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(20, 22, 27, 0.88);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar { display: flex; align-items: center; gap: 16px; padding: 12px 0; }
+  .brand { font-weight: 800; color: var(--warm); letter-spacing: .02em; font-size: 18px; }
+  .bar nav { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+  .bar nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  .bar nav a:hover { color: var(--text); }
+
+  .btn {
+    display: inline-block; text-decoration: none;
+    background: var(--accent); color: #fff;
+    padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 15px;
+    border: 1px solid transparent;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; border-color: var(--border); color: var(--text); }
+
+  .hero { padding: 72px 0 56px; }
+  .hero h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 0 0 18px; letter-spacing: -0.02em; }
+  .hero p.lede { font-size: clamp(16px, 2vw, 19px); color: var(--muted); max-width: 62ch; margin: 0 0 28px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .cta .note { color: var(--muted); font-size: 13.5px; }
+
+  h2 { font-size: clamp(22px, 3vw, 28px); margin: 0 0 8px; letter-spacing: -0.01em; }
+  section { padding: 44px 0; border-top: 1px solid var(--border); }
+  .sub { color: var(--muted); margin: 0 0 26px; max-width: 68ch; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 16.5px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+  .card .steps { margin-top: 10px; font-size: 12.5px; color: var(--muted); opacity: .8; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
+  td code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+
+  .callout {
+    background: var(--panel); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 16px 18px; color: var(--muted); font-size: 14.5px;
+  }
+  .callout strong { color: var(--text); }
+
+  /* Trên màn hẹp, ba mục nav chen chỗ với logo và đẩy nút CTA xuống. Giữ
+     lại đúng cái người ta tới đây để bấm. */
+  @media (max-width: 640px) {
+    .bar nav a:not(.btn) { display: none; }
+    .hero { padding: 44px 0 36px; }
+    section { padding: 32px 0; }
+  }
+
+  /* Bảng quy chuẩn không bao giờ được làm cả trang trượt ngang. */
+  .table-scroll { overflow-x: auto; }
+  .table-scroll table { min-width: 460px; }
+
+  footer { border-top: 1px solid var(--border); padding: 28px 0 44px; color: var(--muted); font-size: 13.5px; }
+  footer a { color: var(--muted); }
+  .foot { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  .foot .spacer { flex: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <span class="brand">WeBIM</span>
+    <nav>
+      <a href="#lam-duoc-gi">Làm được gì</a>
+      <a href="#quy-chuan">Quy chuẩn</a>
+      <a href="#tu-host">Tự host</a>
+      <a class="btn" href="https://app.webim.vn">Mở ứng dụng</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <h1>BIM và hồ sơ công trình,<br />chạy thẳng trên trình duyệt.</h1>
+    <p class="lede">
+      Dựng mặt bằng và cấu kiện 3D, dò va chạm, bóc khối lượng rồi áp đơn giá,
+      sàng lọc thoát nạn theo QCVN 06 — và quản lý hồ sơ dự án theo ISO 19650.
+      Không cài đặt, không license theo máy.
+    </p>
+    <div class="cta">
+      <a class="btn" href="https://app.webim.vn">Mở ứng dụng</a>
+      <a class="btn ghost" href="https://atlas.webim.vn">Atlas — quản lý dự án</a>
+      <span class="note">Mở là chạy — mô hình lưu ngay trong trình duyệt, chưa cần tài khoản.</span>
+    </div>
+  </div>
+
+  <section id="lam-duoc-gi">
+    <div class="wrap">
+      <h2>Tám việc, mỗi việc một nhánh</h2>
+      <p class="sub">
+        Không phải một rừng tính năng ngang hàng: chọn việc cần làm ở trang chủ,
+        rồi đi theo các bước của đúng việc đó.
+      </p>
+      <div class="grid">
+        <div class="card">
+          <h3>Đọc &amp; chỉnh sửa PDF</h3>
+          <p>Mở bản vẽ từ CDE, ghi chú và đánh dấu ngay trên trang — khung, mây sửa đổi, mũi tên, chữ.</p>
+          <div class="steps">Dấu ghi theo tỉ lệ trang, nên nằm đúng chỗ trên cả laptop lẫn bản in A3.</div>
+        </div>
+        <div class="card">
+          <h3>Tra cứu tiêu chuẩn</h3>
+          <p>QCVN / TCVN: tình trạng hiệu lực, chuỗi thay thế, và các xung đột giữa quy chuẩn với nhau.</p>
+          <div class="steps">Corpus tự cập nhật hằng tuần.</div>
+        </div>
+        <div class="card">
+          <h3>Quản lý dự án</h3>
+          <p>Hồ sơ CDE theo ISO 19650, tiến độ hạng mục với Gantt và ràng buộc, cùng Atlas cho phần giấy tờ.</p>
+          <div class="steps">CDE · Tiến độ · Atlas</div>
+        </div>
+        <div class="card">
+          <h3>BIM</h3>
+          <p>Dựng mặt bằng và cấu kiện 3D, dựng box khối cho bước phương án, import IFC, xem 3D.</p>
+          <div class="steps">Mặt bằng · Box khối · Import IFC · View 3D · Dữ liệu IFC</div>
+        </div>
+        <div class="card">
+          <h3>Check va chạm</h3>
+          <p>Ma trận hệ × hệ, mỗi ô một dung sai riêng, rồi báo cáo va chạm sắp theo độ xuyên sâu.</p>
+          <div class="steps">Số bị ma trận ẩn luôn được đếm và hiện ra.</div>
+        </div>
+        <div class="card">
+          <h3>Kiểm tra khối lượng</h3>
+          <p>Khối lượng tính từ chính hình học đã dựng — lỗ mở đã trừ — rồi áp đơn giá ra ước tính sơ bộ.</p>
+          <div class="steps">Bảng thống kê · Áp đơn giá</div>
+        </div>
+        <div class="card">
+          <h3>Render AI</h3>
+          <p>Dựng ảnh concept từ khối hiện có, bằng model tự host trên máy chủ của bạn.</p>
+          <div class="steps">Không gửi mô hình ra dịch vụ ngoài.</div>
+        </div>
+        <div class="card">
+          <h3>Mô phỏng</h3>
+          <p>Tiến độ 4D xuất được video, sàng lọc thoát nạn theo QCVN 06, và vi khí hậu vỏ bao che theo 8 hướng.</p>
+          <div class="steps">Tiến độ 4D · Thoát nạn · Vi khí hậu</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="quy-chuan">
+    <div class="wrap">
+      <h2>Ngưỡng lấy từ văn bản, có ghi nguồn</h2>
+      <p class="sub">
+        Phần sàng lọc thoát nạn đọc thẳng từ <strong>QCVN 06:2022/BXD</strong> hợp nhất
+        <strong>Sửa đổi 1:2023</strong> (Thông tư 09/2023/TT-BXD, hiệu lực 01/12/2023).
+        Mỗi phát hiện ghi kèm điều hoặc bảng đã dùng, để người đọc tra ngược thay vì phải tin.
+      </p>
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Kiểm tra</th><th>Nguồn</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Hệ số không gian sàn, m²/người</td><td><code>Bảng G.9</code></td></tr>
+          <tr><td>Số người: thiết kế được duyệt trước, bảng sau</td><td><code>G.3</code></td></tr>
+          <tr><td>Định mức người trên mét lối ra: 165 / 115 / 80 theo bậc chịu lửa</td><td><code>G.2.1.1</code></td></tr>
+          <tr><td>Bề rộng tối thiểu 0,8 m — 1,2 m khi trên 50 người</td><td><code>3.2.9</code></td></tr>
+          <tr><td>Phải có hai lối ra: từ 50 người, hoặc quá 25 m</td><td><code>3.2.5 c), d)</code></td></tr>
+          <tr><td>Cự ly tới lối ra gần nhất</td><td><code>Bảng G.1 / G.2a</code></td></tr>
+          <tr><td>Khoảng cách giữa hai lối ra</td><td><code>3.2.8</code></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="sub" style="margin-top:22px">
+        Đây là <strong>sàng lọc sơ bộ, không thay thế hồ sơ thẩm duyệt</strong>. Màn hình
+        nói rõ cái nó chưa kiểm được: cự ly đang tính theo đường thẳng chứ không phải
+        quãng đi vòng qua vách, và buồng thang bộ với hành lang chung chưa được mô hình hoá.
+      </p>
+    </div>
+  </section>
+
+  <section id="tu-host">
+    <div class="wrap">
+      <h2>Chạy trên máy chủ của bạn</h2>
+      <p class="sub">
+        Toàn bộ nền tảng gói trong Docker: một lệnh dựng xong Caddy (HTTPS tự cấp),
+        máy chủ đồng bộ, kho file, và Atlas. AI dùng model tự host — không có API đóng nào.
+      </p>
+      <div class="callout">
+        <strong>Dữ liệu ở đâu là bạn quyết.</strong> Hồ sơ nghiệm thu, bản vẽ hoàn công và
+        mô hình nằm trên máy chủ bạn chỉ định — kể cả một máy đặt trong nước, nếu chủ đầu tư
+        yêu cầu dữ liệu không ra khỏi Việt Nam.
+      </div>
+      <div class="grid" style="margin-top:18px">
+        <div class="card">
+          <h3>Cộng tác thời gian thực</h3>
+          <p>Nhiều máy cùng sửa một mô hình, đồng bộ tới từng phần tử, có phân quyền admin · editor · viewer.</p>
+        </div>
+        <div class="card">
+          <h3>IFC hai chiều</h3>
+          <p>Xuất IFC từ mô hình native, và link file IFC của bộ môn khác để dò va chạm ở mức hộp bao.</p>
+        </div>
+        <div class="card">
+          <h3>Đẩy sang Atlas</h3>
+          <p>Xuất IFC rồi đăng thẳng vào Models của một dự án Atlas; file đi thẳng lên kho, không qua máy chủ ứng dụng.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Bắt đầu</h2>
+      <p class="sub">Không có bước cài đặt. Mở ứng dụng, bấm <em>Nạp dự án demo</em> trong menu ⚙ là có ngay một căn nhà phố 12×8 đầy đủ trục, tường, cửa, sàn, sheet, bảng thống kê, hồ sơ CDE và kế hoạch.</p>
+      <div class="cta">
+        <a class="btn" href="https://app.webim.vn">Mở ứng dụng</a>
+        <a class="btn ghost" href="https://atlas.webim.vn">Atlas</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span><strong style="color:var(--text)">WeBIM</strong> — Công ty Cổ phần Công nghệ số và Xây dựng BimVisionPlus</span>
+    <span class="spacer"></span>
+    <a href="https://app.webim.vn">Ứng dụng</a>
+    <a href="https://atlas.webim.vn">Atlas</a>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,24 +1,31 @@
-# Bản demo tĩnh của WeBIM Web (https://webim.vn).
+# webim.vn — landing page.
 #
-# Netlify chứ không phải Cloudflare Pages vì một lý do duy nhất: Netlify có
-# IP apex cố định, nên `webim.vn` trần trỏ được bằng bản ghi A thường và
-# toàn bộ DNS ở lại PA Việt Nam. Cloudflare Pages chỉ phục vụ apex khi zone
-# nằm trên nameserver của Cloudflare.
+# Trước đây tên miền này phục vụ chính bản demo tĩnh của app. Từ khi có máy
+# chủ, app sống ở app.webim.vn với đầy đủ relay, kho file và AI, nên một bản
+# demo thứ hai ở apex chỉ tạo ra hai thứ khác nhau mang cùng một cái tên —
+# và bản ở apex là bản kém hơn. Apex giờ là trang giới thiệu, app chỉ có một
+# chỗ.
 #
-# Đây là bản KHÔNG có máy chủ nền tảng: VITE_STANDALONE=1 khiến app không
-# mở socket nào cả, thay vì mở một socket được thiết kế để hỏng. CDE,
-# Drawings, cộng tác nhiều máy và AI sẽ nói rõ là cần máy chủ.
+# Vẫn ở Netlify chứ không dồn về máy chủ: đây là trang tĩnh không phụ thuộc
+# gì vào server, nên để nó trên CDN có nghĩa là trang giới thiệu vẫn sống khi
+# ta đang nghịch máy chủ. Netlify cũng là host duy nhất phục vụ được apex
+# bằng bản ghi A thường, nên toàn bộ DNS ở lại PA Việt Nam.
 
 [build]
-  base = "web"
-  command = "npm ci && npm run build:demo"
-  publish = "dist"
+  publish = "landing"
+  # Trang tĩnh một file, không có bước dựng nào.
+  command = ""
 
-[build.environment]
-  # vite 8 đòi ^20.19 || >=22.12; ghim ở đây để bản dựng trên Netlify không
-  # phụ thuộc vào mặc định của họ đổi lúc nào.
-  NODE_VERSION = "22"
-  VITE_STANDALONE = "1"
+# Bookmark cũ trỏ vào đường dẫn của app; đưa chúng sang app.webim.vn thay vì
+# trả 404 cho người đã từng dùng.
+[[redirects]]
+  from = "/app/*"
+  to = "https://app.webim.vn/:splat"
+  status = 301
+  force = true
 
-# Không có client router nên không cần SPA fallback. Nếu sau này thêm
-# router thì mới cần /* → /index.html 200.
+[[redirects]]
+  from = "/atlas/*"
+  to = "https://atlas.webim.vn/:splat"
+  status = 301
+  force = true
