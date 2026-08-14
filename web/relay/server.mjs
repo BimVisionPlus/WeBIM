@@ -115,13 +115,24 @@ export function startRelay(port = 8787, options = {}) {
 
       const identity = identityOf(request);
 
+      /**
+       * Cùng một câu "editor role required" từng được trả cho cả hai trường
+       * hợp, kể cả 401. Người chưa đăng nhập bị nói là thiếu *quyền* — họ đi
+       * tìm ai cấp quyền cho mình, trong khi việc phải làm là bấm Đăng nhập.
+       * Mã HTTP đã phân biệt hai thứ đó rồi; câu chữ phải nói theo.
+       */
+      const needsEditor = () =>
+        identity
+          ? reply(403, {
+              error: `Cần quyền editor trở lên — tài khoản này là ${identity.role}.`,
+            })
+          : reply(401, { error: "Cần đăng nhập để dùng chức năng này." });
+
       if (url.pathname.startsWith("/files/")) {
         const key = safeKey(url.pathname.slice("/files/".length));
         if (!key) return reply(400, { error: "bad key" });
         if (request.method === "PUT") {
-          if (!auth.allows(identity, "editor")) {
-            return reply(identity ? 403 : 401, { error: "editor role required" });
-          }
+          if (!auth.allows(identity, "editor")) return needsEditor();
           await storage.put(key, await readBody(request));
           return reply(200, { ok: true, key });
         }
@@ -145,9 +156,7 @@ export function startRelay(port = 8787, options = {}) {
       }
 
       if (url.pathname === "/ai/read-drawing" && request.method === "POST") {
-        if (!auth.allows(identity, "editor")) {
-          return reply(identity ? 403 : 401, { error: "editor role required" });
-        }
+        if (!auth.allows(identity, "editor")) return needsEditor();
         const config = aiConfig();
         if (!aiEnabled(config)) {
           return reply(501, { error: AI_NOT_CONFIGURED });
@@ -166,9 +175,7 @@ export function startRelay(port = 8787, options = {}) {
       }
 
       if (url.pathname === "/ai/render-concept" && request.method === "POST") {
-        if (!auth.allows(identity, "editor")) {
-          return reply(identity ? 403 : 401, { error: "editor role required" });
-        }
+        if (!auth.allows(identity, "editor")) return needsEditor();
         const config = aiConfig();
         if (!aiEnabled(config)) {
           return reply(501, { error: AI_NOT_CONFIGURED });

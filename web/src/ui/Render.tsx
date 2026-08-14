@@ -11,6 +11,7 @@
 import { useRef, useState } from "react";
 import { Viewer3D } from "../viewport/Viewer3D";
 import { authHeaders, fileServerBase, store, useStoreVersion } from "../state/store";
+import { aiBlockedReason } from "./Modules";
 
 const RENDER_STYLES = [
   "Hiện đại nhiệt đới (tropical modern)",
@@ -32,6 +33,9 @@ export function RenderModule() {
   const [style, setStyle] = useState(RENDER_STYLES[0]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<RenderResult | null>(null);
+
+  // Cùng điều kiện với "AI đọc bản vẽ" — một nguồn, không phải hai bản lệch.
+  const blocked = aiBlockedReason();
 
   const renderConcept = async () => {
     const capture = captureRef.current;
@@ -66,16 +70,17 @@ export function RenderModule() {
             </option>
           ))}
         </select>
-        <button disabled={busy} onClick={() => void renderConcept()}>
+        <button disabled={busy || blocked !== null} onClick={() => void renderConcept()}>
           {busy ? "Đang render…" : "Render concept"}
         </button>
       </div>
 
-      {store.standalone && (
-        <p className="module-hint">
-          Chế độ độc lập — render cần máy chủ nền tảng và một model tự host.
-        </p>
-      )}
+      {/*
+        Nói trước khi bấm. Nút vẫn bấm được thì người ta bấm, rồi nhận một
+        lỗi ở cuối một việc mất vài giây — trong khi điều kiện đã biết ngay
+        từ lúc mở màn hình.
+      */}
+      {blocked && <div className="climate-finding warning">⚠ {blocked}</div>}
 
       <Viewer3D
         project={store.project}

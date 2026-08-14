@@ -68,6 +68,13 @@ services:
       start_period: 10s
 
   web:
+    # Atlas dùng chung Ollama đang chạy trên máy chủ với WeBIM thay vì dựng
+    # thêm một cái nữa (docker-compose.ai.yml của upstream). Hai Ollama trên
+    # một máy 8 GB nghĩa là hai bản sao trọng số trong RAM cho cùng một việc.
+    # host-gateway để Docker tự điền địa chỉ host — gateway của mạng compose
+    # đổi mỗi lần mạng được tạo lại.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,6 +87,8 @@ services:
           - atlas-web
 
   worker:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

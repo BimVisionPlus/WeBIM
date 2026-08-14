@@ -633,10 +633,26 @@ export function StandardsModule() {
   );
 }
 
+/**
+ * Điều kiện dùng AI, tính một chỗ cho cả hai màn hình gọi nó. Biết trước khi
+ * bấm — nút bấm được thì người ta bấm, rồi nhận lỗi ở cuối một việc chậm.
+ */
+export function aiBlockedReason(): string | null {
+  if (store.standalone) return "Chế độ độc lập — chức năng AI cần máy chủ nền tảng.";
+  if (store.authRequired && !store.auth) {
+    return "Cần đăng nhập để dùng AI — bấm Đăng nhập ở góc trên bên phải.";
+  }
+  if (store.auth?.role === "viewer") {
+    return "Tài khoản này là viewer, chỉ xem được. AI cần quyền editor trở lên.";
+  }
+  return null;
+}
+
 function AiAskBox({ fileKey }: { fileKey: string | null }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const blocked = aiBlockedReason();
   const ask = async () => {
     if (!fileKey || !question.trim() || busy) return;
     setBusy(true);
@@ -658,6 +674,7 @@ function AiAskBox({ fileKey }: { fileKey: string | null }) {
   return (
     <div className="ai-ask">
       <h3>AI đọc bản vẽ</h3>
+      {blocked && <p className="module-hint">⚠ {blocked}</p>}
       <div className="module-form">
         <input
           placeholder="Hỏi về bản vẽ này… (vd: liệt kê các trục và khoảng cách)"
@@ -668,7 +685,7 @@ function AiAskBox({ fileKey }: { fileKey: string | null }) {
           }}
           style={{ minWidth: 240 }}
         />
-        <button disabled={!fileKey || busy} onClick={() => void ask()}>
+        <button disabled={!fileKey || busy || blocked !== null} onClick={() => void ask()}>
           {busy ? "Đang đọc…" : "Hỏi AI"}
         </button>
       </div>

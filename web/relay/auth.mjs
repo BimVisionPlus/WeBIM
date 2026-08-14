@@ -91,6 +91,21 @@ export function createAuth({ usersPath, secret } = {}) {
   };
 }
 
+/**
+ * Một mục users.json cho mật khẩu này. Tách ra khỏi khối CLI vì test cần
+ * dựng người dùng thật — băm lại bằng tay trong test là băm bằng một cách
+ * khác với cách server đọc, và cái sai đó sẽ không lộ ra ở đâu cả.
+ */
+export function hashEntry(password, { username = "CHANGE_ME", role = "editor" } = {}) {
+  const salt = randomBytes(16);
+  return {
+    username,
+    role,
+    salt: salt.toString("hex"),
+    hash: scryptSync(password, salt, 32).toString("hex"),
+  };
+}
+
 /** Build a users.json entry: node relay/auth.mjs hash <password> */
 const isMain =
   process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop());
@@ -100,18 +115,5 @@ if (isMain && process.argv[2] === "hash") {
     console.error("usage: node relay/auth.mjs hash <password>");
     process.exit(1);
   }
-  const salt = randomBytes(16);
-  const hash = scryptSync(password, salt, 32);
-  console.log(
-    JSON.stringify(
-      {
-        username: "CHANGE_ME",
-        role: "editor",
-        salt: salt.toString("hex"),
-        hash: hash.toString("hex"),
-      },
-      null,
-      2,
-    ),
-  );
+  console.log(JSON.stringify(hashEntry(password), null, 2));
 }
