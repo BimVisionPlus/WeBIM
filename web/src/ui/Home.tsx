@@ -15,7 +15,7 @@ export function HomeModule() {
 
   return (
     <div className="module-host">
-      <h2>{project.name}</h2>
+      <h2>{store.projectLabel}</h2>
       <p className="module-hint">
         {project.siteName} · {project.buildingName} — chọn việc cần làm.
       </p>

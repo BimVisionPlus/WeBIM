@@ -8,6 +8,7 @@ import type {
   ScheduleDatum,
   ScheduleKind,
   OpeningDatum,
+  MassDatum,
   Point3D,
   RoomDatum,
   RoomUsage,
@@ -19,6 +20,7 @@ import type {
 } from "../domain/project";
 import { useState } from "react";
 import { occupancyOf, roomArea, USAGE_RULES } from "../application/pccc";
+import { outlineArea } from "../application/schedules";
 
 const JOIN_TYPE_LABELS: Array<[WallJoinType, string]> = [
   ["MITER", "Miter"],
@@ -348,6 +350,62 @@ function SlabProperties({ slab }: { slab: SlabDatum }) {
       </div>
       <button className="danger" onClick={() => store.removeSlab(slab.id)}>
         Delete slab
+      </button>
+    </>
+  );
+}
+
+function MassProperties({ mass }: { mass: MassDatum }) {
+  const footprint = Math.abs(outlineArea(mass.outline));
+  return (
+    <>
+      <h3>{mass.name}</h3>
+      <label className="prop-row">
+        <span>Tên</span>
+        <input
+          value={mass.name}
+          onChange={(event) => store.updateMass(mass.id, { name: event.target.value })}
+        />
+      </label>
+      <NumberField
+        label="Chiều cao (m)"
+        value={mass.height}
+        step={0.3}
+        onCommit={(value) => store.updateMass(mass.id, { height: value })}
+      />
+      <NumberField
+        label="Số tầng"
+        value={mass.storeys}
+        step={1}
+        onCommit={(value) => store.updateMass(mass.id, { storeys: value })}
+      />
+      <label className="prop-row">
+        <span>Level</span>
+        <select
+          value={mass.levelId}
+          onChange={(event) => store.updateMass(mass.id, { levelId: event.target.value })}
+        >
+          {store.project.levels.map((level) => (
+            <option key={level.id} value={level.id}>
+              {level.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="prop-static">
+        <span>Diện tích chân</span>
+        <span>{footprint.toFixed(2)} m²</span>
+      </div>
+      <div className="prop-static">
+        <span>Sàn quy đổi</span>
+        <span>{(footprint * mass.storeys).toFixed(2)} m²</span>
+      </div>
+      <p className="module-hint">
+        Khối là hình nghiên cứu phương án — không sinh tường, không vào bảng
+        khối lượng thi công, không tham gia dò va chạm.
+      </p>
+      <button className="danger" onClick={() => store.removeMass(mass.id)}>
+        Xoá khối
       </button>
     </>
   );
@@ -771,6 +829,10 @@ export function PropertiesPanel() {
     selection?.kind === "room"
       ? store.project.rooms.find((candidate) => candidate.id === selection.id)
       : undefined;
+  const mass =
+    selection?.kind === "mass"
+      ? store.project.masses.find((candidate) => candidate.id === selection.id)
+      : undefined;
   const dimension =
     selection?.kind === "dimension"
       ? store.project.dimensions.find((candidate) => candidate.id === selection.id)
@@ -790,6 +852,7 @@ export function PropertiesPanel() {
       {wallType && <WallTypeProperties wallType={wallType} />}
       {dimension && <DimensionProperties dimension={dimension} />}
       {room && <RoomProperties room={room} />}
+      {mass && <MassProperties mass={mass} />}
       {!axis &&
         !view &&
         !wall &&
@@ -800,7 +863,8 @@ export function PropertiesPanel() {
         !schedule &&
         !wallType &&
         !dimension &&
-        !room && (
+        !room &&
+        !mass && (
         <div className="tree-empty">Select an element, level, sheet or view.</div>
       )}
     </aside>

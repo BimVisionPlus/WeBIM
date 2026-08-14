@@ -262,6 +262,41 @@ export function ProjectBrowser() {
           drew was reachable only through the PCCC table — and a room drawn on
           a level you are not looking at was reachable from nowhere.
         */}
+        {/*
+          Khối phải có mặt ở đây vì cùng lý do phòng phải có: nó là một phần
+          tử của mô hình. Thiếu nó thì khối vẽ ở cao độ đang không xem chỉ
+          tới được qua bảng Box khối, và chọn nó xong Properties không nói gì.
+        */}
+        <div className="tree-subbranch">Khối</div>
+        {project.masses.length === 0 && (
+          <div className="tree-empty">Chưa có khối — chọn công cụ Box khối, click hai góc.</div>
+        )}
+        {project.masses.map((mass) => (
+          <div
+            key={mass.id}
+            className={`tree-leaf ${
+              store.selection?.kind === "mass" && store.selection.id === mass.id
+                ? "selected"
+                : ""
+            }`}
+            onClick={() => store.select({ kind: "mass", id: mass.id })}
+          >
+            <span>
+              {mass.name} <em>{mass.height} m · {mass.storeys} tầng</em>
+              <PeerDots elementId={mass.id} />
+            </span>
+            <button
+              className="mini"
+              title="Xoá khối"
+              onClick={(event) => {
+                event.stopPropagation();
+                store.removeMass(mass.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
         <div className="tree-subbranch">Rooms</div>
         {project.rooms.length === 0 && (
           <div className="tree-empty">Chưa có phòng — chọn công cụ Room, click hai góc.</div>

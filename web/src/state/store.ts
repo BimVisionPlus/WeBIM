@@ -912,8 +912,22 @@ class AppStore {
   }
 
   renameProject(name: string): void {
+    // Cố tình cho phép rỗng *khi đang gõ*: chặn ở đây thì bôi đen rồi xoá để
+    // gõ lại là không làm được. Chỗ phải chặn là tên file và tiêu đề — xem
+    // projectLabel().
     this.project.name = name;
     this.commit();
+  }
+
+  /**
+   * Tên dự án để hiện và để đặt tên file.
+   *
+   * Tên rỗng từng đi thẳng ra ngoài: file tải về thành ".ifc" và
+   * ".webim.json" — trên macOS/Linux dấu chấm đầu là file ẩn, nên người dùng
+   * bấm tải rồi không tìm thấy gì trong thư mục Downloads.
+   */
+  get projectLabel(): string {
+    return this.project.name.trim() || "Dự án chưa đặt tên";
   }
 
   /** Attach the current selection to a task, so 4D knows when it gets built. */

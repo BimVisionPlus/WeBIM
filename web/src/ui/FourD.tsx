@@ -92,7 +92,7 @@ export function FourDModule() {
       const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${project.name}-4D.webm`;
+      anchor.download = `${store.projectLabel}-4D.webm`;
       anchor.click();
       URL.revokeObjectURL(url);
       setRecording(false);

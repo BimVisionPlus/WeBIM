@@ -178,7 +178,7 @@ export function Toolbar() {
           <button
             onClick={() => {
               download(
-                `${store.project.name}.webim.json`,
+                `${store.projectLabel}.webim.json`,
                 store.serializeProject(),
                 "application/json",
               );
@@ -193,7 +193,7 @@ export function Toolbar() {
           <button
             onClick={() => {
               try {
-                download(`${store.project.name}.ifc`, store.exportIfc(), "application/x-step");
+                download(`${store.projectLabel}.ifc`, store.exportIfc(), "application/x-step");
                 store.setStatus("Đã xuất IFC");
               } catch (error) {
                 store.setStatus(`Xuất IFC lỗi: ${(error as Error).message}`);

@@ -12,6 +12,7 @@ import {
 } from "../src/application/pricing";
 import { massRows, massSummary, floorAreaRatio, siteCoverage } from "../src/application/massing";
 import { planImport, specsForTypes, massSpec } from "../src/application/ifcImport";
+import { applyMatrix, pairKey } from "../src/application/clashMatrix";
 
 describe("áp đơn giá", () => {
   it("chỉ cộng những dòng đã có đơn giá, và đếm phần chưa có", () => {
@@ -236,5 +237,40 @@ describe("markup trên bản vẽ", () => {
     project.removeMarkup(doc.id, first.id);
     expect(project.documents[0].markups).toHaveLength(1);
     expect(project.documents[0].markups![0].at).toBe("t2");
+  });
+});
+
+/**
+ * Bảng va chạm rỗng có hai lý do khác hẳn nhau: không có va chạm nào, và có
+ * nhưng ma trận ẩn hết. Câu "Không phát hiện va chạm cứng" đứng trước một
+ * câu đính chính là câu sai đứng trước câu đúng — người đọc lướt dừng ở vế
+ * đầu. Đây là test cho phần *số liệu* đứng sau câu đó.
+ */
+describe("ma trận ẩn hết thì phần đếm phải nói ra", () => {
+  it("đếm đúng số bị ẩn do tắt ô, tách khỏi số dưới dung sai", () => {
+    const project = buildDemoProject();
+    const all = [
+      { kind: "SLAB_SLAB" as const, aId: "a", bId: "b", aName: "F1", bName: "R1", depth: 1 },
+    ];
+    const matrix = { [pairKey("NATIVE_SLAB", "NATIVE_SLAB")]: { enabled: false, toleranceM: 0.001 } };
+    const filtered = applyMatrix(all, matrix, () => undefined);
+    expect(filtered.kept).toHaveLength(0);
+    expect(filtered.suppressedByRule).toBe(1);
+    expect(filtered.suppressedByTolerance).toBe(0);
+    // Và không phải vì dự án không có gì để va chạm.
+    expect(project.slabs.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * Tên rỗng từng đi thẳng ra tên file: ".ifc" và ".webim.json" là file ẩn trên
+ * macOS/Linux, nên người dùng bấm tải rồi không thấy gì trong Downloads.
+ */
+describe("nhãn dự án", () => {
+  it("có phương án lui khi tên rỗng hoặc chỉ có khoảng trắng", () => {
+    const project = NativeBimProject.create("  ", "S", "B", "L1");
+    const label = project.name.trim() || "Dự án chưa đặt tên";
+    expect(label).toBe("Dự án chưa đặt tên");
+    expect(`${label}.ifc`.startsWith(".")).toBe(false);
   });
 });

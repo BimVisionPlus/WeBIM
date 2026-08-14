@@ -30,7 +30,7 @@ export function PricingModule() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${store.project.name}-uoc-tinh.csv`;
+    anchor.download = `${store.projectLabel}-uoc-tinh.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
   };

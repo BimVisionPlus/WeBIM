@@ -591,6 +591,17 @@ export function StandardsModule() {
           style={{ minWidth: 320 }}
         />
       </div>
+      {/*
+        Không có dòng nào khớp thì bảng chỉ còn hàng tiêu đề trần, đọc như
+        một bảng nạp hỏng chứ không như "không tìm thấy".
+      */}
+      {query.trim() && results.length === 0 && (
+        <p className="module-hint">
+          Không có văn bản nào khớp “{query.trim()}”. Corpus đang có{" "}
+          {STANDARDS_CATALOG.length} văn bản — thử mã hiệu (QCVN 06), một từ
+          khoá ngắn hơn, hoặc bỏ dấu.
+        </p>
+      )}
       <table>
         <thead>
           <tr>

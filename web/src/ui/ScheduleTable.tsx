@@ -140,7 +140,7 @@ export function QtoTable() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${store.project.name}-qto.csv`;
+    anchor.download = `${store.projectLabel}-qto.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -280,8 +280,15 @@ export function ClashTable() {
   return (
     <>
       <p className="module-hint">
+        {/*
+          "Không phát hiện va chạm cứng" khi ma trận vừa ẩn hết là một câu
+          sai đứng trước một câu đúng — người đọc lướt dừng ở vế đầu. Khi
+          bảng rỗng *vì bị lọc*, phải nói ra ngay từ mệnh đề đầu tiên.
+        */}
         {clashes.length === 0
-          ? "Không phát hiện va chạm cứng — các liên kết tường hợp lệ đã được loại trừ."
+          ? suppressed > 0
+            ? `Không còn va chạm nào để hiện — ma trận đang ẩn toàn bộ ${suppressed} va chạm tìm thấy.`
+            : "Không phát hiện va chạm cứng — các liên kết tường hợp lệ đã được loại trừ."
           : `${clashes.length} va chạm (${external.length} với model IFC link), sắp xếp theo độ xuyên sâu.`}
         {suppressed > 0 &&
           ` · ma trận đã ẩn ${suppressed} (${filtered.suppressedByRule} do tắt ô, ${filtered.suppressedByTolerance} dưới dung sai)`}{" "}
