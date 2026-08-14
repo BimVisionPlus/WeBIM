@@ -8,8 +8,25 @@
 <meta property="og:title" content="WeBIM — BIM và hồ sơ công trình trên trình duyệt" />
 <meta property="og:description" content="Mô hình, va chạm, khối lượng, PCCC theo QCVN 06, hồ sơ ISO 19650 — mở là dùng." />
 <meta property="og:locale" content="vi_VN" />
+<link rel="preload" href="fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e2513d'/><text x='16' y='23' font-family='system-ui' font-size='18' font-weight='700' fill='white' text-anchor='middle'>W</text></svg>" />
 <style>
+  /* Inter Variable tự host — cùng font với bản Adobe Fonts, lấy từ tác giả
+     (SIL OFL). Trang này là trang tĩnh trên CDN; font đi cùng repo. */
+  @font-face {
+    font-family: "Inter";
+    src: url("fonts/InterVariable.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Inter";
+    src: url("fonts/InterVariable-Italic.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+  }
   :root {
     --bg: #14161b;
     --panel: #1f2229;
@@ -27,7 +44,7 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 16px/1.6 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   a { color: inherit; }

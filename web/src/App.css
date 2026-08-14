@@ -1,3 +1,28 @@
+/*
+ * Inter Variable, tự host — cùng font với bản trên Adobe Fonts, lấy từ chính
+ * tác giả (rsms.me/inter, giấy phép SIL OFL). Nhúng qua Adobe cần tài khoản
+ * trả phí và kéo font từ CDN của họ; ở đây font đi cùng app, đúng nguyên tắc
+ * không phụ thuộc dịch vụ ngoài của cả nền tảng.
+ *
+ * Đặt tên family là "Inter": stack bên dưới đã khai "Inter" từ đầu nhưng
+ * chưa từng có @font-face nào nạp nó — máy nào cũng lặng lẽ rơi về Segoe UI.
+ * Khai đúng tên là ý định cũ bắt đầu chạy, không phải đổi thiết kế.
+ */
+@font-face {
+  font-family: "Inter";
+  src: url("./assets/fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("./assets/fonts/InterVariable-Italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
   --bg: #16181d;
