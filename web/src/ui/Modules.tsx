@@ -15,6 +15,7 @@ import { climateFindings, facadeByOrientation } from "../application/climate";
 import { ganttChart, weekTicks } from "../application/gantt";
 import { Viewer3D } from "../viewport/Viewer3D";
 import {
+  atlasTargetPath,
   discoverAtlas,
   identifyAtlas,
   isLocalOrigin,
@@ -22,6 +23,7 @@ import {
   probeAtlas,
   saveAtlasConfig,
   type AtlasConfig,
+  type AtlasTarget,
 } from "../sync/atlasBridge";
 import type { DocumentDatum, DocumentStatus, TaskStatus } from "../domain/project";
 import { PdfMarkupView } from "./PdfMarkup";
@@ -963,7 +965,7 @@ export function ViewerModule() {
  * The browser cannot report a refused frame to us cross-origin, so the header
  * always offers "mở tab mới" instead of leaving a blank rectangle.
  */
-export function AtlasModule() {
+export function AtlasModule({ target = "root" }: { target?: AtlasTarget } = {}) {
   useStoreVersion();
   const [config, setConfig] = useState<AtlasConfig>(() => loadAtlasConfig());
   const [reach, setReach] = useState<"checking" | "up" | "down">("checking");
@@ -1058,7 +1060,11 @@ export function AtlasModule() {
             </div>
           </details>
           <span className="spacer" />
-          <a href={atlasUrl} target="_blank" rel="noreferrer">
+          <a
+            href={atlasUrl + atlasTargetPath(target, config.projectId)}
+            target="_blank"
+            rel="noreferrer"
+          >
             Mở tab mới ↗
           </a>
         </div>
@@ -1161,7 +1167,11 @@ export function AtlasModule() {
       )}
 
       {atlasUrl && reach === "up" && (
-        <iframe className="atlas-frame" title="Atlas AEC" src={atlasUrl} />
+        <iframe
+          className="atlas-frame"
+          title="Atlas AEC"
+          src={atlasUrl + atlasTargetPath(target, config.projectId)}
+        />
       )}
     </div>
   );

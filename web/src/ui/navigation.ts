@@ -15,6 +15,9 @@ export type PaneId =
   | "STANDARDS"
   | "CDE"
   | "PLAN"
+  | "ATLASPROCESS"
+  | "ATLASPEOPLE"
+  | "ATLASSITE"
   | "ATLAS"
   | "PLANVIEW"
   | "MASSING"
@@ -71,10 +74,20 @@ export const SECTIONS: Section[] = [
   {
     id: "PROJECT",
     label: "Quản lý dự án",
-    blurb: "Hồ sơ CDE theo ISO 19650, tiến độ hạng mục, và Atlas.",
+    blurb:
+      "Hồ sơ CDE, tiến độ hạng mục, quy trình ISO của công ty, đánh giá nhân sự và hồ sơ công trường.",
+    // Quy hoạch theo bảng nhu cầu (nhóm A — CDE quản lý quy trình làm việc):
+    // trước đây ba pane xếp theo *ứng dụng nào cài nó* (CDE · Tiến độ ·
+    // Atlas), nên toàn bộ nhóm A — sổ ISO, quy trình phối hợp, tiêu chí
+    // chuyển giai đoạn, đánh giá nhân sự — bị giấu sau một ô "Atlas" nguyên
+    // khối, và người cần duyệt một quy trình phải biết trước rằng nó nằm
+    // trong đó. Giờ mỗi cụm việc là một pane, nhúng thẳng đúng trang.
     panes: [
       { id: "CDE", label: "CDE" },
       { id: "PLAN", label: "Tiến độ" },
+      { id: "ATLASPROCESS", label: "Quy trình & ISO" },
+      { id: "ATLASPEOPLE", label: "Nhân sự" },
+      { id: "ATLASSITE", label: "Công trường" },
       { id: "ATLAS", label: "Atlas" },
     ],
   },

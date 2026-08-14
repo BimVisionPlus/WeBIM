@@ -169,6 +169,33 @@ export async function listAtlasProjects(
   return body.projects ?? [];
 }
 
+/**
+ * Trang Atlas mà mỗi pane của nhánh Quản lý dự án nhúng vào.
+ *
+ * Deep link là *trang đáp xuống*, không phải cái lồng: iframe hiện Atlas kèm
+ * nav đầy đủ của nó, nên từ bất kỳ trang nào cũng đi tiếp được. Cái pane
+ * quyết định là người dùng đáp xuống đúng việc — thay vì đáp xuống trang chủ
+ * Atlas rồi tự mò xem "quy trình ISO" nằm đâu.
+ *
+ * "Công trường" cần một dự án cụ thể. Khi cấu hình bridge đã ghi projectId
+ * (đặt lúc chọn dự án để đẩy IFC), đáp thẳng vào dự án đó; chưa có thì đáp
+ * xuống danh sách dự án — bắt người dùng chọn còn hơn đoán hộ họ.
+ */
+export type AtlasTarget = "processes" | "people" | "site" | "root";
+
+export function atlasTargetPath(target: AtlasTarget, projectId: string): string {
+  switch (target) {
+    case "processes":
+      return "/processes";
+    case "people":
+      return "/people";
+    case "site":
+      return projectId ? `/projects/${encodeURIComponent(projectId)}` : "/projects";
+    case "root":
+      return "";
+  }
+}
+
 /** The bridge health route names the service; nothing else answers "atlas". */
 const ATLAS_SERVICE = "atlas";
 

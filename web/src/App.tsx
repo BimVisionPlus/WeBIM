@@ -45,6 +45,12 @@ function Pane({ id }: { id: PaneId }) {
       return <CdeModule />;
     case "PLAN":
       return <PlanModule />;
+    case "ATLASPROCESS":
+      return <AtlasModule target="processes" />;
+    case "ATLASPEOPLE":
+      return <AtlasModule target="people" />;
+    case "ATLASSITE":
+      return <AtlasModule target="site" />;
     case "ATLAS":
       return <AtlasModule />;
     case "MASSING":

@@ -5,6 +5,7 @@ import {
   ifcFileName,
   listAtlasProjects,
   atlasCandidates,
+  atlasTargetPath,
   discoverAtlas,
   identifyAtlas,
   isLocalOrigin,
@@ -387,5 +388,30 @@ describe("where to look for Atlas", () => {
     expect(isLocalOrigin("https://localhost.webim.vn")).toBe(false);
     expect(isLocalOrigin("https://notlocalhost")).toBe(false);
     expect(isLocalOrigin("")).toBe(false);
+  });
+});
+
+/**
+ * Deep link của nhánh Quản lý dự án: mỗi pane đáp xuống đúng trang Atlas.
+ * "Công trường" cần dự án cụ thể — chưa cấu hình thì đáp xuống danh sách để
+ * người dùng chọn, thay vì đoán hộ.
+ */
+describe("trang đáp xuống của từng pane Atlas", () => {
+  it("trỏ đúng trang cho quy trình, nhân sự và trang gốc", () => {
+    expect(atlasTargetPath("processes", "")).toBe("/processes");
+    expect(atlasTargetPath("people", "")).toBe("/people");
+    expect(atlasTargetPath("root", "prj_1")).toBe("");
+  });
+
+  it("công trường: vào thẳng dự án đã cấu hình, chưa có thì ra danh sách", () => {
+    expect(atlasTargetPath("site", "cmsrdfgzs000b1003km9c84vb")).toBe(
+      "/projects/cmsrdfgzs000b1003km9c84vb",
+    );
+    expect(atlasTargetPath("site", "")).toBe("/projects");
+  });
+
+  /** projectId đi vào URL — không được để nó phá đường dẫn. */
+  it("mã dự án lạ được encode chứ không chèn thẳng", () => {
+    expect(atlasTargetPath("site", "a/b?c")).toBe("/projects/a%2Fb%3Fc");
   });
 });
