@@ -54,11 +54,46 @@
   .btn:hover { filter: brightness(1.08); }
   .btn.ghost { background: transparent; border-color: var(--border); color: var(--text); }
 
-  .hero { padding: 72px 0 56px; }
-  .hero h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 0 0 18px; letter-spacing: -0.02em; }
-  .hero p.lede { font-size: clamp(16px, 2vw, 19px); color: var(--muted); max-width: 62ch; margin: 0 0 28px; }
-  .cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-  .cta .note { color: var(--muted); font-size: 13.5px; }
+  .hero { padding: 76px 0 0; text-align: center; }
+  .hero .eyebrow { color: var(--muted); font-size: 14.5px; margin: 0 0 18px; }
+  .hero h1 {
+    font-size: clamp(30px, 5.4vw, 54px); line-height: 1.12; margin: 0 auto 22px;
+    letter-spacing: -0.025em; max-width: 20ch;
+  }
+  .hero p.lede {
+    font-size: clamp(15.5px, 1.6vw, 18px); color: var(--muted);
+    max-width: 66ch; margin: 0 auto 30px;
+  }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: center; }
+  .cta .note { color: var(--muted); font-size: 13.5px; width: 100%; margin-top: 4px; }
+
+  /* Ảnh sản phẩm: nghiêng ra sau như đang đặt trên mặt bàn. Chỉ là một phép
+     biến hình CSS trên ảnh chụp thật — không vẽ lại giao diện, vì một mockup
+     đẹp hơn cái app thật là lời hứa mà app không giữ được. */
+  .hero-shot {
+    margin: 56px auto 0;
+    /* Phối cảnh làm mặt phẳng rộng hơn hộp chứa nó, và `overflow: hidden`
+       không cắt được phần đó — nên hộp được đặt hẹp lại để phần loe ra rơi
+       đúng vào lề trang, thành chủ ý chứ không phải tai nạn. Trang vẫn không
+       trượt ngang: phần loe nằm trong vùng nhìn, không đẩy scrollWidth. */
+    max-width: 960px;
+    perspective: 1500px;
+  }
+  .hero-shot img {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transform: rotateX(36deg);
+    transform-origin: 50% 0;
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+  }
+  .hero-shot figcaption {
+    margin-top: 14px; color: var(--muted); font-size: 12.5px;
+  }
+  @media (max-width: 860px) {
+    /* Nghiêng mạnh trên màn hẹp thì chữ trong ảnh không còn đọc được. */
+    .hero-shot img { transform: none; }
+  }
 
   h2 { font-size: clamp(22px, 3vw, 28px); margin: 0 0 8px; letter-spacing: -0.01em; }
   section { padding: 44px 0; border-top: 1px solid var(--border); }
@@ -119,17 +154,29 @@
 
 <main>
   <div class="wrap hero">
-    <h1>BIM và hồ sơ công trình,<br />chạy thẳng trên trình duyệt.</h1>
+    <p class="eyebrow">Môi trường dữ liệu chung cho ngành xây dựng Việt Nam</p>
+    <h1>Nền tảng Việt – Công trình Việt – Tầm nhìn Việt.</h1>
     <p class="lede">
-      Dựng mặt bằng và cấu kiện 3D, dò va chạm, bóc khối lượng rồi áp đơn giá,
-      sàng lọc thoát nạn theo QCVN 06 — và quản lý hồ sơ dự án theo ISO 19650.
-      Không cài đặt, không license theo máy.
+      Chúng tôi kiến tạo một Môi trường Dữ liệu và công cụ duy nhất, nối liền
+      khoảng cách giữa Kiến trúc sư, Kỹ sư và Nhà thầu. Một nền tảng thuần Việt,
+      phụng sự cho khát vọng nâng tầm công trình Việt.
     </p>
     <div class="cta">
       <a class="btn" href="https://app.webim.vn">Mở ứng dụng</a>
       <a class="btn ghost" href="https://atlas.webim.vn">Atlas — quản lý dự án</a>
       <span class="note">Mở là chạy — mô hình lưu ngay trong trình duyệt, chưa cần tài khoản.</span>
     </div>
+
+    <figure class="hero-shot">
+      <img
+        src="hero-app.png"
+        width="1600" height="913"
+        alt="Màn hình BIM của WeBIM: cây dự án, thanh công cụ dựng hình, mặt bằng tầng 1 với trục, tường, cửa và bảng thuộc tính."
+        loading="eager"
+        decoding="async"
+      />
+      <figcaption>Ảnh chụp thật từ app.webim.vn, không phải dựng lại.</figcaption>
+    </figure>
   </div>
 
   <section id="lam-duoc-gi">
