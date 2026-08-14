@@ -21,6 +21,26 @@
 	}
 
 	# Static SPA build.
+	#
+	# Không đặt Cache-Control thì Caddy chỉ gửi ETag/Last-Modified, và trình
+	# duyệt được phép *tự đoán* thời gian sống (heuristic caching) — nó dùng
+	# lại index.html cũ mà không hỏi lại server. index.html cũ trỏ tới tên
+	# file JS cũ, và bản JS đó cũng còn trong cache, nên người dùng chạy bản
+	# app của mấy ngày trước sau khi đã deploy. Triệu chứng không giống lỗi
+	# cache chút nào: app báo một thông điệp đã bị xoá khỏi mã nguồn từ lâu.
+	#
+	# Hợp đồng chuẩn cho SPA có tên file băm nội dung:
+	#   index.html  → luôn hỏi lại server (no-cache, không phải no-store)
+	#   /assets/*   → tên đã chứa hash, nội dung không bao giờ đổi → cache vĩnh viễn
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	@html {
+		path /
+		path *.html
+	}
+	header @html Cache-Control "no-cache"
+
 	handle {
 		root * /srv/webim
 		try_files {path} /index.html
