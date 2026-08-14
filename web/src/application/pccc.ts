@@ -10,9 +10,10 @@
 // **mật độ dòng người trên đường thoát nạn**. Công năng chỉ quyết định số
 // người (Bảng G.9). Sửa cấu trúc, không chỉ sửa số.
 //
-// VẪN LÀ SÀNG LỌC, KHÔNG PHẢI THẨM DUYỆT. Cự ly tính theo đường thẳng, không
-// phải đường đi thực tế vòng qua vách; buồng thang, hành lang và bậc chịu lửa
-// của từng cấu kiện chưa được mô hình hoá.
+// VẪN LÀ SÀNG LỌC, KHÔNG PHẢI THẨM DUYỆT. Cự ly nay đo theo đường đi thật
+// trên mặt bằng (application/escapeRoute.ts): vòng qua tường, qua cửa đi,
+// cộng đoạn dọc hành lang tới lối ra kế tiếp. Chưa mô hình hoá: buồng thang
+// bộ và giới hạn chịu lửa của từng cấu kiện.
 
 import {
   DEFAULT_FIRE_SETTINGS,
@@ -23,6 +24,13 @@ import {
   type RoomUsage,
 } from "../domain/project";
 import { outlineArea } from "./schedules";
+import {
+  buildEscapeGrid,
+  corridorLegs,
+  distanceField,
+  routedWorstDistance,
+  type EscapeGrid,
+} from "./escapeRoute";
 
 export { DEFAULT_FIRE_SETTINGS };
 export type { FireGrade, FireSettings };
@@ -336,7 +344,7 @@ export function occupancyOf(room: RoomDatum): Occupancy {
   return { people: Math.ceil(roomArea(room) / factor), from: "Bảng G.9" };
 }
 
-function pointInPolygon(point: [number, number], polygon: readonly [number, number][]): boolean {
+export function pointInPolygon(point: [number, number], polygon: readonly [number, number][]): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
     const [xi, yi] = polygon[i];
@@ -445,6 +453,14 @@ export interface RoomEgress {
   occupancy: Occupancy;
   exits: Exit[];
   travelM: number | null;
+  /**
+   * Cách đo travelM. "ROUTED" = đường đi thật trên lưới mặt bằng; "STRAIGHT"
+   * = đường thẳng, chỉ còn dùng khi cao độ trống không dựng được lưới. Người
+   * đọc phải biết con số họ nhìn là loại nào.
+   */
+  travelMode: "ROUTED" | "STRAIGHT";
+  /** m² trong phòng bị tường chắn, không tới được lối ra nào. */
+  unreachableM2: number;
   limit: TravelLimit;
   requiredWidthM: number;
   availableWidthM: number;
@@ -452,14 +468,38 @@ export interface RoomEgress {
   findings: RoomFinding[];
 }
 
+export interface RouteContext {
+  grid: EscapeGrid;
+  /** Đoạn hành lang cộng thêm cho từng openingId. */
+  legs: Map<string, number>;
+}
+
 export function analyseRoom(
   room: RoomDatum,
   allExits: readonly Exit[],
   settings: FireSettings = DEFAULT_FIRE_SETTINGS,
+  route?: RouteContext,
 ): RoomEgress {
   const exits = exitsForRoom(room, allExits);
   const occupancy = occupancyOf(room);
-  const travelM = worstTravelDistance(room, exits);
+
+  let travelM = worstTravelDistance(room, exits);
+  let travelMode: "ROUTED" | "STRAIGHT" = "STRAIGHT";
+  let unreachableM2 = 0;
+  if (route && exits.length > 0) {
+    const field = distanceField(
+      route.grid,
+      exits.map((exit) => ({ at: exit.at, extraM: route.legs.get(exit.openingId) ?? 0 })),
+    );
+    const routed = routedWorstDistance(route.grid, field, room);
+    // Phòng nhỏ hơn một ô lưới thì routed không lấy mẫu được — giữ đường
+    // thẳng thay vì báo null cho một phòng rõ ràng có cửa.
+    if (routed.worstM !== null || routed.unreachableM2 > 0) {
+      travelM = routed.worstM;
+      travelMode = "ROUTED";
+      unreachableM2 = routed.unreachableM2;
+    }
+  }
   const limit = travelLimit(settings, exits.length);
   const availableWidthM = exits.reduce((sum, exit) => sum + exit.widthM, 0);
   const requiredWidthM = requiredExitWidthM(occupancy.people, settings);
@@ -503,8 +543,28 @@ export function analyseRoom(
   if (travelM !== null && travelM > limit.metres) {
     findings.push({
       level: "serious",
-      message: `Cự ly trực tiếp ${travelM.toFixed(1)} m > ${limit.metres} m cho phép.`,
+      message:
+        travelMode === "ROUTED"
+          ? `Đường thoát nạn ${travelM.toFixed(1)} m > ${limit.metres} m cho phép.`
+          : `Cự ly đường thẳng ${travelM.toFixed(1)} m > ${limit.metres} m cho phép (cao độ trống, chưa dựng được đường đi).`,
       clause: limit.source,
+    });
+  }
+
+  // Nửa ô lưới là nhiễu rát hoá; hơn thế là tường thật đang chắn người thật.
+  if (unreachableM2 > 0.25) {
+    findings.push({
+      level: "serious",
+      message: `${unreachableM2.toFixed(1)} m² trong phòng bị tường chắn, không tới được lối ra nào.`,
+      clause: "3.2.1",
+    });
+  }
+
+  if (exits.length > 0 && travelM === null && travelMode === "ROUTED") {
+    findings.push({
+      level: "serious",
+      message: "Không điểm nào trong phòng tới được lối ra — kiểm tra cửa có thật sự mở vào phòng.",
+      clause: "3.2.1",
     });
   }
 
@@ -530,6 +590,8 @@ export function analyseRoom(
     occupancy,
     exits,
     travelM,
+    travelMode,
+    unreachableM2,
     limit,
     requiredWidthM,
     availableWidthM,
@@ -543,7 +605,25 @@ export function analyseProject(
   project: NativeBimProject,
   settings: FireSettings = project.fireSettings,
 ): RoomEgress[] {
+  // Lưới và đoạn hành lang dựng một lần cho mỗi cao độ — Dijkstra chạy theo
+  // phòng, nhưng rát hoá tường thì không có lý do gì làm lại n lần.
+  const routes = new Map<string, RouteContext | undefined>();
+  const routeFor = (levelId: string): RouteContext | undefined => {
+    if (!routes.has(levelId)) {
+      const grid = buildEscapeGrid(project, levelId);
+      if (!grid) {
+        routes.set(levelId, undefined);
+      } else {
+        const exits = exitsOnLevel(project, levelId);
+        routes.set(levelId, {
+          grid,
+          legs: corridorLegs(project, levelId, grid, exits, exitsForRoom),
+        });
+      }
+    }
+    return routes.get(levelId);
+  };
   return project.rooms.map((room) =>
-    analyseRoom(room, exitsOnLevel(project, room.levelId), settings),
+    analyseRoom(room, exitsOnLevel(project, room.levelId), settings, routeFor(room.levelId)),
   );
 }

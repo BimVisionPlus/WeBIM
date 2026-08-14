@@ -102,6 +102,8 @@ export interface LinkedModel {
   name: string;
   elements: LinkedElement[];
   skipped: number;
+  /** Đã có hình học đầy đủ từ web-ifc trong phiên này chưa. */
+  fullGeometry?: boolean;
 }
 const ACTIVE_VIEW_KEY = "webim.active_view";
 
@@ -141,6 +143,13 @@ class AppStore {
   activeSection: SectionId = "HOME";
   /** External IFC models linked for clash checking (local, not synced). */
   linkedModels: LinkedModel[] = [];
+  /**
+   * Mesh tam giác thật của model link, theo tên file — CHỈ trong phiên.
+   * Một model vừa phải là hàng chục MB Float32Array; localStorage chết ở
+   * 5 MB, nên chỉ AABB được lưu bền. Reload → viewer rơi về hộp bao cho tới
+   * khi link lại file, và chip model nói rõ điều đó.
+   */
+  meshCache = new Map<string, import("../ifc/realGeometry").RealMesh[]>();
   /** Whether the platform server requires login (null until probed). */
   authRequired: boolean | null = null;
   auth: AuthSession | null = authSession();
@@ -158,7 +167,10 @@ class AppStore {
     // it must never overwrite someone's work.
     this.seededDemo = restored === null;
     this.project = restored ?? buildDemoProject();
-    const storedView = localStorage.getItem(ACTIVE_VIEW_KEY);
+    // Store bị import cả trong node (test của Viewer3D) — nơi localStorage
+    // là undefined chứ không phải ReferenceError, nên try/catch không đỡ.
+    const storedView =
+      typeof localStorage === "undefined" ? null : localStorage.getItem(ACTIVE_VIEW_KEY);
     if (storedView && this.project.views.some((view) => view.id === storedView)) {
       this.activeViewId = storedView;
     } else {
@@ -415,9 +427,73 @@ class AppStore {
       parsed.skipped ? `, bỏ qua ${parsed.skipped} (thân không hỗ trợ)` : ""
     }`;
     this.commit(false);
+    // Hình học đầy đủ chạy nền: web-ifc mất vài giây với file lớn, và bảng
+    // thuộc tính + hộp bao ở trên đã đủ để làm việc ngay trong lúc chờ.
+    void this.enrichLinkedModel(name, text);
+  }
+
+  /**
+   * Nâng model link lên hình học đầy đủ bằng web-ifc: mesh thật cho viewer
+   * (trong phiên) + AABB chính xác cho MỌI phần tử (lưu bền, vào clash).
+   * Thất bại thì giữ nguyên kết quả của bộ đọc thường — một file IFC hỏng
+   * không được phép làm mất những gì đã đọc được.
+   */
+  private async enrichLinkedModel(name: string, text: string): Promise<void> {
+    if (typeof window === "undefined") return;
+    try {
+      const { parseRealGeometry } = await import("../ifc/realGeometry");
+      const real = await parseRealGeometry(text);
+      const model = this.linkedModels.find((candidate) => candidate.name === name);
+      // Người dùng có thể đã unlink trong lúc WASM chạy.
+      if (!model || real.elements.length === 0) return;
+
+      this.meshCache.set(name, real.meshes);
+
+      // Hợp nhất theo GlobalId: phần tử bộ đọc thường đã thấy thì siết lại
+      // AABB (giữ pset); phần tử nó bỏ qua thì thêm mới — từ đây clash phủ
+      // toàn bộ file, kể cả thân không phải SweptSolid.
+      const byGlobalId = new Map(
+        model.elements.filter((e) => e.globalId).map((e) => [e.globalId as string, e]),
+      );
+      const merged: LinkedElement[] = model.elements.map((element) => ({ ...element }));
+      for (const realElement of real.elements) {
+        const known = realElement.globalId ? byGlobalId.get(realElement.globalId) : undefined;
+        if (known) {
+          const target = merged.find((e) => e.globalId === realElement.globalId);
+          if (target) {
+            target.min = realElement.min;
+            target.max = realElement.max;
+          }
+        } else {
+          merged.push({
+            name: realElement.name,
+            ifcType: realElement.ifcType,
+            min: realElement.min,
+            max: realElement.max,
+            globalId: realElement.globalId || undefined,
+          });
+        }
+      }
+
+      this.linkedModels = this.linkedModels.map((candidate) =>
+        candidate.name === name
+          ? { ...candidate, elements: merged, skipped: 0, fullGeometry: true }
+          : candidate,
+      );
+      this.saveLinkedModels();
+      this.setStatus(
+        `${name}: hình học đầy đủ — ${real.meshes.length} mesh, ${merged.length} phần tử vào va chạm`,
+      );
+    } catch (error) {
+      // Không phá kết quả sẵn có; nói ra để người dùng biết vì sao cảnh chỉ có hộp.
+      this.setStatus(
+        `${name}: không dựng được hình học đầy đủ (${(error as Error).message}) — dùng hộp bao`,
+      );
+    }
   }
 
   unlinkIfcModel(name: string): void {
+    this.meshCache.delete(name);
     this.linkedModels = this.linkedModels.filter((model) => model.name !== name);
     this.saveLinkedModels();
     this.commit(false);
@@ -1040,6 +1116,9 @@ class AppStore {
     this.selection = null;
     this.pendingStart = null;
     this.linkedModels = this.loadLinkedModels(this.project.id);
+    // Mesh cache theo tên file — dự án khác có thể có file trùng tên khác
+    // nội dung, nên không được mang cache qua ranh giới dự án.
+    this.meshCache.clear();
   }
 
   serializeProject(): string {

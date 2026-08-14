@@ -37,6 +37,7 @@ function LinkedModelBar() {
           <span key={model.name} className="peer-chip">
             {model.name} · {model.elements.length} phần tử
             {model.skipped > 0 ? ` (bỏ qua ${model.skipped})` : ""}
+            {model.fullGeometry ? " · hình học đầy đủ" : ""}
             <button className="mini" onClick={() => store.unlinkIfcModel(model.name)}>
               ×
             </button>

@@ -48,13 +48,16 @@ export function PcccModule() {
           kèm điều/bảng đã dùng.
         </p>
         <p>
-          <strong>Cái quy chuẩn yêu cầu mà mô hình chưa kiểm được:</strong> cự ly
-          ở đây là <em>đường thẳng</em> từ góc phòng xa nhất tới cửa gần nhất,
-          không phải quãng đi vòng qua vách và đồ đạc — phòng{" "}
-          <em>không đạt</em> ở đây thì chắc chắn không đạt, phòng <em>đạt</em>{" "}
-          vẫn có thể trượt khi vẽ đường thoát thật. Buồng thang bộ, hành lang
-          chung và giới hạn chịu lửa của từng cấu kiện chưa được mô hình hoá,
-          nên cự ly qua hành lang tới buồng thang chưa được cộng vào.
+          Cự ly đo theo <strong>đường đi thật trên mặt bằng</strong>: vòng qua
+          tường, qua cửa đi, và cộng đoạn dọc hành lang tới lối ra kế tiếp khi
+          cửa phòng mở vào hành lang. Vùng bị tường chắn không tới được lối ra
+          được báo riêng — đó là lỗi bố trí, không phải "cự ly xa". Sai số
+          lưới nghiêng về phía ngặt (dài hơn thực tế tối đa ~8%).
+        </p>
+        <p>
+          <strong>Chưa kiểm được:</strong> buồng thang bộ và giới hạn chịu lửa
+          của từng cấu kiện chưa được mô hình hoá — quãng đi trong buồng thang
+          chưa được cộng, và đồ đạc kê trong phòng thì mô hình không biết.
         </p>
       </div>
 
@@ -179,7 +182,7 @@ export function PcccModule() {
               <th>Diện tích</th>
               <th>Người</th>
               <th>Lối ra</th>
-              <th>Cự ly / cho phép</th>
+              <th>Đường thoát / cho phép</th>
               <th>Bề rộng có / cần</th>
               <th>Cách nhau / cần</th>
               <th>Phát hiện</th>
@@ -206,6 +209,9 @@ export function PcccModule() {
                 <td title={row.limit.source}>
                   {row.travelM === null ? "—" : `${row.travelM.toFixed(1)}`} /{" "}
                   {row.limit.metres} m
+                  {row.travelMode === "STRAIGHT" && row.travelM !== null && (
+                    <span className="module-hint"> (đường thẳng)</span>
+                  )}
                 </td>
                 <td>
                   {row.availableWidthM.toFixed(2)} / {row.requiredWidthM.toFixed(2)} m

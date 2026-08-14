@@ -163,13 +163,16 @@ collaboration covers them for free; only binaries touch the server):
   What the model still cannot answer is on screen too, because a page that
   looks authoritative about fire safety is worse than no page:
 
-  - Distance is **straight-line** from the furthest corner to the nearest
-    door, not the walked route around partitions and furniture. The real
-    path is never shorter, so a room that fails here definitely fails; one
-    that passes may still fail when the route is drawn.
-  - Buồng thang bộ, hành lang chung and the fire rating of individual
-    elements are not modelled, so the leg from the room door through the
-    corridor to the stair is not added in.
+  - Distance is now the **walked route** (application/escapeRoute.ts): the
+    plan is rasterised, walls block cells except at door openings, and a
+    multi-source Dijkstra from the room's exits gives the farthest walkable
+    point. A door opening into a corridor adds the corridor leg to its next
+    exit. Areas walled off from every exit are reported as their own serious
+    finding — "unreachable" is a layout defect, not a long distance. Grid
+    error leans strict (≤ ~8% over the true optimum).
+  - Buồng thang bộ and the fire rating of individual elements are still not
+    modelled — the stair leg is not added, and furniture is invisible to the
+    model.
   - Where Bảng G.9 has no row for a usage (phòng kỹ thuật, nhà để xe — the
     latter counts 2 người/ô đỗ, and WeBIM has no parking bays), occupancy is
     reported as **không xác định** and the room is excluded from the people

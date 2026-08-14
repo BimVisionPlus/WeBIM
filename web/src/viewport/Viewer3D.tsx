@@ -10,7 +10,8 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { NativeBimProject } from "../domain/project";
-import type { LinkedModel } from "../state/store";
+import { store, type LinkedModel } from "../state/store";
+import type { RealMesh } from "../ifc/realGeometry";
 import { wallPieces } from "../application/wallGeometry";
 
 const LEVEL_COLORS = [0x8a94a8, 0xa89a7c, 0x7ca8a0, 0xa87c94];
@@ -54,6 +55,7 @@ export function sceneBounds(
 function buildModel(
   project: NativeBimProject,
   linked: readonly LinkedModel[],
+  meshLookup?: (name: string) => RealMesh[] | undefined,
 ): THREE.Group {
   const group = new THREE.Group();
   const levelIndex = new Map(project.levels.map((level, index) => [level.id, index]));
@@ -139,6 +141,33 @@ function buildModel(
   }
 
   for (const model of linked) {
+    // Có mesh thật từ web-ifc (trong phiên) thì vẽ hình học thật; không thì
+    // hộp bao từ AABB đã lưu — reload là rơi về hộp cho tới khi link lại.
+    const realMeshes = meshLookup?.(model.name);
+    if (realMeshes && realMeshes.length > 0) {
+      // web-ifc trả toạ độ Y-up; cảnh này Z-up → cả cụm xoay X +90°.
+      const yUpGroup = new THREE.Group();
+      yUpGroup.rotation.x = Math.PI / 2;
+      for (const real of realMeshes) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.BufferAttribute(real.positions, 3));
+        geometry.setAttribute("normal", new THREE.BufferAttribute(real.normals, 3));
+        geometry.setIndex(new THREE.BufferAttribute(real.indices, 1));
+        const material = new THREE.MeshLambertMaterial({
+          color: new THREE.Color(real.color.r, real.color.g, real.color.b),
+          transparent: real.color.a < 1,
+          opacity: real.color.a,
+          side: THREE.DoubleSide,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.matrixAutoUpdate = false;
+        mesh.matrix.fromArray(real.matrix);
+        yUpGroup.add(mesh);
+      }
+      group.add(yUpGroup);
+      continue;
+    }
+
     const material = new THREE.MeshLambertMaterial({
       color: 0xd96c5f,
       transparent: true,
@@ -253,7 +282,7 @@ export function Viewer3D({ project, linked, version, onReady }: Viewer3DProps) {
     if (state.model) {
       state.scene.remove(state.model);
     }
-    const model = buildModel(project, linked);
+    const model = buildModel(project, linked, (name) => store.meshCache.get(name));
     state.scene.add(model);
     state.model = model;
 
