@@ -1018,27 +1018,62 @@ export function AtlasModule() {
 
   return (
     <div className="atlas-host">
-      <div className="atlas-tabs">
-        <input
-          value={config.baseUrl}
-          placeholder="https://atlas.webim.vn — bỏ trống để tự dò"
-          style={{ minWidth: 260 }}
-          onChange={(event) =>
-            update({
-              baseUrl: event.target.value,
-              // Typed, therefore deliberate: stop second-guessing it.
-              baseUrlSource: event.target.value.trim() ? "manual" : "auto",
-            })
-          }
-        />
-        <button onClick={() => setProbeAt((n) => n + 1)}>Kiểm tra lại</button>
-        <span className="spacer" />
-        {atlasUrl && (
+      {/*
+        Khi Atlas đã tìm thấy và trả lời được — trường hợp thường — thanh địa
+        chỉ biến mất. Bày một ô "nhập địa chỉ Atlas" lên đầu một tab nằm sẵn
+        trong app khiến Atlas trông như một dịch vụ bên ngoài phải tự đi nối,
+        trong khi nó là nửa còn lại của chính nền tảng này. Ai tự host ở nơi
+        khác vẫn đổi được, chỉ là nó không còn là thứ đầu tiên đập vào mắt.
+      */}
+      {reach === "up" ? (
+        <div className="atlas-tabs atlas-tabs-slim">
+          <details className="atlas-address">
+            <summary>Địa chỉ Atlas</summary>
+            <div className="atlas-address-panel">
+              <input
+                value={config.baseUrl}
+                placeholder="https://atlas.webim.vn — bỏ trống để tự dò"
+                onChange={(event) =>
+                  update({
+                    baseUrl: event.target.value,
+                    baseUrlSource: event.target.value.trim() ? "manual" : "auto",
+                  })
+                }
+              />
+              <button onClick={() => setProbeAt((n) => n + 1)}>Kiểm tra lại</button>
+              <p className="module-hint" style={{ margin: 0 }}>
+                Để trống thì tab tự dò — mặc định là Atlas nằm cạnh app này.
+              </p>
+            </div>
+          </details>
+          <span className="spacer" />
           <a href={atlasUrl} target="_blank" rel="noreferrer">
             Mở tab mới ↗
           </a>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="atlas-tabs">
+          <input
+            value={config.baseUrl}
+            placeholder="https://atlas.webim.vn — bỏ trống để tự dò"
+            style={{ minWidth: 260 }}
+            onChange={(event) =>
+              update({
+                baseUrl: event.target.value,
+                // Typed, therefore deliberate: stop second-guessing it.
+                baseUrlSource: event.target.value.trim() ? "manual" : "auto",
+              })
+            }
+          />
+          <button onClick={() => setProbeAt((n) => n + 1)}>Kiểm tra lại</button>
+          <span className="spacer" />
+          {atlasUrl && (
+            <a href={atlasUrl} target="_blank" rel="noreferrer">
+              Mở tab mới ↗
+            </a>
+          )}
+        </div>
+      )}
 
       {!atlasUrl && (
         <p className="module-hint">Nhập địa chỉ Atlas ở ô trên rồi bấm Kiểm tra lại.</p>
