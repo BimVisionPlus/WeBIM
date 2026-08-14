@@ -21,6 +21,7 @@ import {
   StandardsModule,
   ViewerModule,
 } from "./ui/Modules";
+import { NamingModule } from "./ui/Naming";
 import { HOME, SECTIONS, sectionById, type PaneId } from "./ui/navigation";
 import { DrawingTools } from "./ui/DrawingTools";
 import { Toolbar } from "./ui/Toolbar";
@@ -44,6 +45,8 @@ function Pane({ id }: { id: PaneId }) {
       return <StandardsModule />;
     case "CDE":
       return <CdeModule />;
+    case "NAMING":
+      return <NamingModule />;
     case "PLAN":
       return <PlanModule />;
     case "ATLASPROCESS":

@@ -15,6 +15,7 @@ export type PaneId =
   | "STANDARDS"
   | "CDE"
   | "PLAN"
+  | "NAMING"
   | "ATLASPROCESS"
   | "ATLASPEOPLE"
   | "ATLASSITE"
@@ -84,6 +85,7 @@ export const SECTIONS: Section[] = [
     // trong đó. Giờ mỗi cụm việc là một pane, nhúng thẳng đúng trang.
     panes: [
       { id: "CDE", label: "CDE" },
+      { id: "NAMING", label: "Đặt tên ISO" },
       { id: "PLAN", label: "Tiến độ" },
       { id: "ATLASPROCESS", label: "Quy trình & ISO" },
       { id: "ATLASPEOPLE", label: "Nhân sự" },

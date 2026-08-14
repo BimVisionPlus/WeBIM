@@ -1168,6 +1168,14 @@ export class AppStore {
     this.commit();
   }
 
+  setNamingConvention(convention: import("../application/naming").NamingConvention | null): void {
+    this.project.namingConvention = convention;
+    this.statusMessage = convention
+      ? "Đã lưu quy ước đặt tên của công ty"
+      : "Quy ước đặt tên trở về mặc định ISO 19650";
+    this.commit();
+  }
+
   addMarkup(
     documentId: string,
     markup: Omit<Parameters<NativeBimProject["addMarkup"]>[1], "author">,

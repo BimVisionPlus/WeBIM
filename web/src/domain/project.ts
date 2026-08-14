@@ -48,6 +48,8 @@ export interface SheetViewPlacement {
   y: number;
 }
 
+import { normalizeConvention, type NamingConvention } from "../application/naming";
+
 export interface SheetDatum {
   id: string;
   name: string;
@@ -435,6 +437,12 @@ export class NativeBimProject {
    * carry a usually-empty object is not worth it.
    */
   clashMatrix: ClashMatrix = {};
+  /**
+   * Quy ước đặt tên ISO của công ty — null = dùng mặc định (ISO 19650-2 rút
+   * gọn). Là dữ liệu dự án chứ không phải cài đặt máy: hai người cùng dự án
+   * phải kiểm cùng một quy ước.
+   */
+  namingConvention: NamingConvention | null = null;
   /** Same reasoning as clashMatrix — a setting, not content. */
   fireSettings: FireSettings = { ...DEFAULT_FIRE_SETTINGS };
   /**
@@ -537,6 +545,9 @@ export class NativeBimProject {
               flow_density: this.fireSettings.flowDensity,
             },
           }
+        : {}),
+      ...(this.namingConvention
+        ? { naming_rules: JSON.parse(JSON.stringify(this.namingConvention)) }
         : {}),
       ...(Object.keys(this.clashMatrix).length > 0
         ? {
@@ -901,6 +912,8 @@ export class NativeBimProject {
           ? storedFire.flow_density
           : DEFAULT_FIRE_SETTINGS.flowDensity,
     };
+
+    project.namingConvention = normalizeConvention(data.naming_rules);
 
     // Unknown keys are dropped by design; the matrix is restored explicitly.
     // Rules with a missing flag default to enabled, which matches a fresh

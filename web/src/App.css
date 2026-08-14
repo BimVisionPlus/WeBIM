@@ -1307,3 +1307,38 @@ input[type="text"],
   color: var(--muted);
   font-style: italic;
 }
+
+/* ── Đặt tên ISO ───────────────────────────────────────────────────────── */
+
+.naming-editor input,
+.naming-editor select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.naming-separator {
+  width: 3em;
+  text-align: center;
+}
+
+.naming-seq {
+  color: var(--muted);
+}
+
+.naming-code {
+  font-family: var(--mono, monospace);
+  white-space: nowrap;
+}
+
+.naming-problems {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.naming-ok {
+  color: var(--ok, #3fb950);
+}
+
+.naming-bad {
+  color: var(--warn, #d29922);
+}
