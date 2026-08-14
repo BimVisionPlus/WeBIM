@@ -2448,6 +2448,31 @@ model AuditEvent {
 }
 
 // ============================================================================
+//  NOTIFICATIONS — thông báo trong ứng dụng
+//
+//  Sinh ra ở các điểm mà im lặng là có hại: giai đoạn dự án bị chặn vì điểm
+//  dừng chưa đạt, bước gate được giao cho ai đó, và lúc bộ tiêu chí đã đủ.
+//  Chỉ in-app: email đã có transport riêng (lib/email) khi cần leo thang.
+// ============================================================================
+
+model Notification {
+  id        String    @id @default(cuid())
+  /// Người nhận.
+  userId    String
+  projectId String?
+  /// "STAGE_BLOCKED" | "STAGE_CHANGED" | "GATE_TASK_ASSIGNED" | "GATE_READY"
+  kind      String
+  title     String
+  body      String?   @db.Text
+  /// Đường dẫn trong app để bấm vào là tới đúng chỗ.
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+// ============================================================================
 //  WINWORK module — Bidding Intelligence
 //  Tender scraping + bid workflow + bond tracking + Luật Đấu thầu 22/2023 checks
 // ============================================================================

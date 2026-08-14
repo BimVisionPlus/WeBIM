@@ -9,7 +9,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@atlas/db";
 import { requireProject, AuthError } from "@atlas/auth";
-import { audit, reqMeta, rateLimitGuard } from "@atlas/lib";
+import { audit, notifyUsers, orgManagerIds, reqMeta, rateLimitGuard } from "@atlas/lib";
+
+/**
+ * Thứ tự giai đoạn — chỉ chiều TIẾN mới bị cưỡng chế qua điểm dừng. Lùi
+ * giai đoạn (phát hiện làm sai, mở lại hồ sơ) là việc sửa chữa, chặn nó
+ * bằng gate của giai đoạn sau là khoá luôn đường quay đầu.
+ */
+const STAGE_ORDER = ["PLANNING", "IN_PROGRESS", "HANDOVER", "WARRANTY", "CLOSED"] as const;
+const STAGE_LABEL: Record<string, string> = {
+  PLANNING: "Chuẩn bị",
+  IN_PROGRESS: "Đang thi công",
+  HANDOVER: "Bàn giao",
+  WARRANTY: "Bảo hành",
+  CLOSED: "Đã đóng hồ sơ",
+};
 
 const Body = z.object({
   name: z.string().min(2).max(200).optional(),
@@ -46,6 +60,69 @@ export async function PATCH(req: NextRequest, ctx: { params: { id: string } | Pr
     });
     if (!before) return NextResponse.json({ error: "Không tìm thấy dự án" }, { status: 404 });
 
+    // ── Cưỡng chế chuyển giai đoạn (A3) ─────────────────────────────────
+    // Tiến giai đoạn đòi mọi run STAGE_GATE của dự án đã đóng. Đây là chốt
+    // PHÍA MÁY CHỦ: một stage gate mà UI ẩn nút là trang trí, còn API vẫn
+    // nhận PATCH thì ai gọi thẳng API cũng đi vòng được.
+    const movingForward =
+      d.status !== undefined &&
+      STAGE_ORDER.indexOf(d.status) > STAGE_ORDER.indexOf(before.status as (typeof STAGE_ORDER)[number]);
+    if (movingForward) {
+      const openGateRuns = await prisma.processRun.findMany({
+        where: {
+          projectId: params.id,
+          status: { not: "DONE" },
+          template: { kind: "STAGE_GATE" },
+        },
+        include: {
+          template: { select: { name: true, isoCode: true } },
+          tasks: {
+            where: { status: { not: "DONE" } },
+            include: { step: { select: { title: true, seq: true } } },
+            orderBy: { step: { seq: "asc" } },
+          },
+        },
+      });
+      if (openGateRuns.length > 0) {
+        const unmet = openGateRuns.flatMap((run) =>
+          run.tasks.map((task) => ({
+            run: `${run.template.isoCode ?? ""} ${run.name}`.trim(),
+            step: `${task.step.seq}. ${task.step.title}`,
+            assigneeUserId: task.assigneeUserId,
+          })),
+        );
+        // Người đang giữ bước chưa đạt cần biết cả dự án chờ mình.
+        await notifyUsers(
+          unmet.map((item) => item.assigneeUserId),
+          {
+            kind: "STAGE_BLOCKED",
+            title: `${before.name}: chuyển giai đoạn đang chờ bước của bạn`,
+            body: `Dự án không thể chuyển sang "${STAGE_LABEL[d.status!] ?? d.status}" khi tiêu chí chuyển giai đoạn chưa đạt.`,
+            link: "/processes",
+            projectId: params.id,
+            actorId: session.userId,
+          },
+        );
+        await audit({
+          action: "project.stage.blocked", entityType: "Project", entityId: params.id,
+          actorId: session.userId, projectId: params.id, ...reqMeta(req),
+          before: { status: before.status }, after: { wanted: d.status, unmet: unmet.length },
+        });
+        return NextResponse.json(
+          {
+            error:
+              `Chưa thể chuyển sang "${STAGE_LABEL[d.status!] ?? d.status}" — còn ` +
+              `${unmet.length} bước tiêu chí chuyển giai đoạn chưa đạt: ` +
+              unmet.slice(0, 3).map((item) => item.step).join("; ") +
+              (unmet.length > 3 ? "…" : "") +
+              ". Hoàn tất trong mục Quy trình rồi thử lại.",
+            unmet,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
     const updated = await prisma.project.update({
       where: { id: params.id },
       data: {
@@ -56,6 +133,17 @@ export async function PATCH(req: NextRequest, ctx: { params: { id: string } | Pr
         permitDate: d.permitDate ? new Date(d.permitDate) : (d.permitDate === null ? null : undefined),
       },
     });
+
+    if (d.status !== undefined && d.status !== before.status) {
+      const managers = await orgManagerIds(updated.ownerOrgId);
+      await notifyUsers(managers, {
+        kind: "STAGE_CHANGED",
+        title: `${updated.name}: ${STAGE_LABEL[before.status] ?? before.status} → ${STAGE_LABEL[updated.status] ?? updated.status}`,
+        link: "/",
+        projectId: params.id,
+        actorId: session.userId,
+      });
+    }
 
     await audit({
       action: "project.update", entityType: "Project", entityId: params.id,

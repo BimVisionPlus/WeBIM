@@ -6,6 +6,7 @@ import { getSession } from "@atlas/auth";
 import { Card, CardBody, CardHeader, CardTitle } from "@atlas/ui";
 import { formatDateVn } from "@atlas/lib";
 import { OrgSwitcher } from "@/components/org-switcher";
+import { NotificationsBell } from "@/components/notifications-bell";
 import { DepartmentSelect } from "./DepartmentSelect";
 import { ProjectRowActions } from "./ProjectRowActions";
 import { RiskBanner } from "@/components/risk-banner";
@@ -212,6 +213,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
             <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">v1 · LIVE</span>
           </div>
           <nav className="flex items-center gap-4 text-sm text-[rgb(var(--muted))]">
+            <NotificationsBell />
             <OrgSwitcher orgs={orgs} activeSlug={activeOrg.slug} />
             <Link href="/demo" className="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-[rgb(var(--inverse-ink))] hover:bg-blue-700">★ Demo</Link>
             <Link href="/" className="hover:text-[rgb(var(--ink))]">Dự án</Link>

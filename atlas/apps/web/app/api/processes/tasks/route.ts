@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@atlas/db";
 import { requireSession } from "@atlas/auth";
-import { audit, rateLimitGuard, reqMeta } from "@atlas/lib";
+import { audit, notifyUsers, orgManagerIds, rateLimitGuard, reqMeta } from "@atlas/lib";
 
 const Body = z.object({
   taskId: z.string().min(1),
@@ -66,6 +66,13 @@ export async function PATCH(req: NextRequest) {
     });
     const allDone = siblings.every((row) => row.status === "DONE");
     const gateOpen = siblings.some((row) => row.step.isGate && row.status !== "DONE");
+    // Đọc TRƯỚC khi cập nhật run: cần trạng thái cũ để biết run "vừa đóng"
+    // ở lần gọi này — đọc sau thì run nào đã đóng cũng trông như mới đóng… và
+    // run vừa đóng thật thì lại trông như đã đóng từ trước.
+    const run = await prisma.processRun.findUnique({
+      where: { id: task.runId },
+      include: { template: { select: { name: true, isoCode: true, kind: true, orgId: true } } },
+    });
     await prisma.processRun.update({
       where: { id: task.runId },
       data:
@@ -73,6 +80,35 @@ export async function PATCH(req: NextRequest) {
           ? { status: "DONE", closedAt: new Date() }
           : { status: "IN_PROGRESS", closedAt: null },
     });
+
+    // Được giao một bước là việc phải biết ngay, không phải lúc mở trang.
+    if (
+      patch.assigneeUserId !== undefined &&
+      patch.assigneeUserId &&
+      patch.assigneeUserId !== existing.assigneeUserId
+    ) {
+      await notifyUsers([patch.assigneeUserId], {
+        kind: "GATE_TASK_ASSIGNED",
+        title: `Bạn được giao bước "${existing.step.title}"`,
+        body: run ? `${run.template.isoCode ?? ""} ${run.name}`.trim() : undefined,
+        link: "/processes",
+        projectId: run?.projectId ?? null,
+        actorId: session.userId,
+      });
+    }
+
+    // Run STAGE_GATE vừa đóng = đủ tiêu chí chuyển giai đoạn — báo cho người
+    // quản lý, vì bước tiếp theo (PATCH trạng thái dự án) là của họ.
+    if (allDone && !gateOpen && run && run.template.kind === "STAGE_GATE" && run.status !== "DONE") {
+      await notifyUsers(await orgManagerIds(run.template.orgId), {
+        kind: "GATE_READY",
+        title: `Đủ tiêu chí chuyển giai đoạn: ${run.name}`,
+        body: "Mọi bước của bộ tiêu chí đã đạt — có thể chuyển giai đoạn dự án.",
+        link: "/processes",
+        projectId: run.projectId,
+        actorId: session.userId,
+      });
+    }
 
     await audit({
       action: "process.task.updated",

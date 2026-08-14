@@ -6,6 +6,7 @@
  */
 
 import Link from "next/link";
+import { NotificationsBell } from "./notifications-bell";
 
 export function AecModuleShell({
   group,
@@ -21,7 +22,8 @@ export function AecModuleShell({
   return (
     <div className="min-h-screen bg-[rgb(var(--raised))]">
       <header className="border-b border-[rgb(var(--line))] bg-[rgb(var(--surface))]">
-        <div className="mx-auto max-w-7xl px-6 py-3">
+        <div className="mx-auto flex max-w-7xl items-start justify-between px-6 py-3">
+          <div>
           <div className="flex items-center gap-3 text-sm text-[rgb(var(--muted))]">
             <a href="https://aecplatform.vn" className="hover:text-[rgb(var(--ink))]">AEC Platform</a>
             <span>/</span>
@@ -32,6 +34,8 @@ export function AecModuleShell({
             <span className="font-semibold text-[rgb(var(--ink))]">{name}</span>
           </div>
           <div className="mt-1 text-xs text-[rgb(var(--muted))]">{subtitle}</div>
+          </div>
+          <NotificationsBell />
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-6 py-6">{children}</main>
