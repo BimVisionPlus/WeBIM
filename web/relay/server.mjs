@@ -76,6 +76,22 @@ export function startRelay(port = 8787, options = {}) {
     );
   }
 
+  // Nói ra trạng thái AI ngay lúc khởi động.
+  //
+  // Không có dòng này thì một tiến trình cũ còn sống trông y hệt một tiến
+  // trình mới: cùng cổng, cùng /health "ok". Nó đã khiến một thông điệp lỗi
+  // bị xoá từ nhiều ngày trước vẫn hiện ra, và mất hai vòng chẩn đoán mới
+  // tìm ra thủ phạm là chính cái tiến trình đang chạy.
+  {
+    const ai = aiConfig();
+    console.log(
+      aiEnabled(ai)
+        ? `[webim] AI: ${ai.model} @ ${ai.baseUrl}` +
+            (ai.sdBaseUrl ? ` · Stable Diffusion @ ${ai.sdBaseUrl}` : " · chưa có SD (chỉ brief chữ)")
+        : "[webim] AI: tắt — đặt AI_BASE_URL + AI_MODEL trỏ tới model server tự host",
+    );
+  }
+
   const identityOf = (request) => {
     const header = request.headers.authorization ?? "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;
