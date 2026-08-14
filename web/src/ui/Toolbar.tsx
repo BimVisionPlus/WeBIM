@@ -127,6 +127,50 @@ export function Toolbar() {
         title="Tên dự án"
       />
 
+      <div className="tool-group">
+        <button
+          onClick={() => store.undo()}
+          disabled={!store.canUndo}
+          title="Hoàn tác (Ctrl/Cmd+Z) — chỉ thao tác của chính bạn; phần tử đồng nghiệp đã sửa tiếp sẽ được giữ nguyên"
+        >
+          ↺
+        </button>
+        <button
+          onClick={() => store.redo()}
+          disabled={!store.canRedo}
+          title="Làm lại (Ctrl/Cmd+Shift+Z)"
+        >
+          ↻
+        </button>
+      </div>
+
+      <details className="top-menu">
+        <summary title="Lịch sử phiên này">Lịch sử</summary>
+        <div className="top-menu-panel history-panel">
+          <div className="menu-heading">Phiên này ({store.history.length} bước)</div>
+          {store.history.length === 0 && (
+            <p className="menu-note">Chưa có thao tác nào trong phiên.</p>
+          )}
+          {[...store.history]
+            .reverse()
+            .slice(0, 30)
+            .map((item, index) => (
+              <div key={index} className={`history-row history-${item.kind}`}>
+                <span className="history-time">
+                  {new Date(item.at).toLocaleTimeString("vi-VN", { hour12: false })}
+                </span>
+                <span className="history-label">{item.label}</span>
+                <span className="history-count">{item.count}</span>
+              </div>
+            ))}
+          <p className="menu-note">
+            Lịch sử sống trong phiên này. Hoàn tác theo từng phần tử: bước có
+            phần tử đã bị người khác sửa tiếp sẽ giữ nguyên phần tử đó và báo
+            lại — Ctrl+Z của bạn không đè lên việc của đồng nghiệp.
+          </p>
+        </div>
+      </details>
+
       <div className="spacer" />
 
       <div className="presence">

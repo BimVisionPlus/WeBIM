@@ -1,4 +1,5 @@
 import "./App.css";
+import { useEffect } from "react";
 import { ProjectBrowser } from "./ui/ProjectBrowser";
 import { PropertiesPanel } from "./ui/PropertiesPanel";
 import { ScheduleTable, QtoTable } from "./ui/ScheduleTable";
@@ -105,6 +106,28 @@ function Pane({ id }: { id: PaneId }) {
 
 export default function App() {
   useStoreVersion();
+
+  // Ctrl/Cmd+Z toàn app — trừ khi đang gõ trong ô nhập, nơi phím đó thuộc về
+  // trình soạn thảo văn bản chứ không phải mô hình.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "z" || !(event.metaKey || event.ctrlKey)) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (event.shiftKey) store.redo();
+      else store.undo();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const pane = store.activePane;
   const section = sectionById(store.activeSection);
   const railed = RAILED.includes(pane);

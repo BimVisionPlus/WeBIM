@@ -1,7 +1,14 @@
 import { useSyncExternalStore } from "react";
 import { NativeBimProject, type Point3D } from "../domain/project";
 import { exportProjectToIfc } from "../export/ifcGrid";
-import { SyncEngine, type PeerPresence } from "../sync/syncEngine";
+import { collectElements, SyncEngine, type ElementRecord, type PeerPresence } from "../sync/syncEngine";
+import {
+  applyUndo,
+  diffElements,
+  invert,
+  type HistoryItem,
+  type UndoEntry,
+} from "../sync/history";
 import { parseIfc, type LinkedElement } from "../ifc/parseIfc";
 import { buildDemoProject } from "../demo/seedProject";
 import { pairKey, ruleFor } from "../application/clashMatrix";
@@ -127,7 +134,7 @@ function defaultProject(): NativeBimProject {
   return project;
 }
 
-class AppStore {
+export class AppStore {
   project: NativeBimProject;
   activeTool: ToolId = "SELECT";
   selection: Selection | null = null;
@@ -150,6 +157,15 @@ class AppStore {
    * khi link lại file, và chip model nói rõ điều đó.
    */
   meshCache = new Map<string, import("../ifc/realGeometry").RealMesh[]>();
+  /** Lịch sử phiên — chỉ để đọc; undo/redo dùng hai stack riêng bên dưới. */
+  history: HistoryItem[] = [];
+  private undoStack: UndoEntry[] = [];
+  private redoStack: UndoEntry[] = [];
+  /** Snapshot phần tử sau lần commit/merge gần nhất — mốc so cho bước kế. */
+  private lastElements: Map<string, ElementRecord> | null = null;
+  /** Đang áp undo/redo — commit trong lúc đó không được tự ghi thêm bước. */
+  private replaying = false;
+
   /** Whether the platform server requires login (null until probed). */
   authRequired: boolean | null = null;
   auth: AuthSession | null = authSession();
@@ -177,6 +193,9 @@ class AppStore {
       this.activeViewId = this.project.views[0]?.id ?? null;
     }
     this.linkedModels = this.loadLinkedModels(this.project.id);
+    // Mốc lịch sử phải có từ đầu — nếu chờ commit đầu tiên thì chính thao
+    // tác đầu tiên của phiên không bao giờ hoàn tác được.
+    this.lastElements = collectElements(this.project.toDict());
   }
 
   private loadLinkedModels(projectId: string): LinkedModel[] {
@@ -220,10 +239,14 @@ class AppStore {
   private commit(persist = true): void {
     this.version += 1;
     if (persist) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.project.toDict()));
-      if (this.activeViewId) {
-        localStorage.setItem(ACTIVE_VIEW_KEY, this.activeViewId);
+      const dict = this.project.toDict();
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dict));
+        if (this.activeViewId) {
+          localStorage.setItem(ACTIVE_VIEW_KEY, this.activeViewId);
+        }
       }
+      this.recordStep(dict);
       this.sync?.onLocalCommit();
     }
     for (const listener of this.listeners) {
@@ -231,8 +254,108 @@ class AppStore {
     }
   }
 
+  /**
+   * Ghi một bước lịch sử từ commit cục bộ: diff phần tử so với mốc trước.
+   * Bước rỗng (commit không đổi gì) không ghi. Chỉnh sửa mới xoá redo stack —
+   * trừ khi chính undo/redo đang chạy.
+   */
+  private recordStep(dict: Record<string, unknown>): void {
+    const next = collectElements(dict);
+    const previous = this.lastElements;
+    this.lastElements = next;
+    if (!previous || this.replaying) return;
+    const patches = diffElements(previous, next);
+    if (patches.length === 0) return;
+    this.undoStack.push({
+      label: this.statusMessage,
+      at: new Date().toISOString(),
+      patches,
+    });
+    if (this.undoStack.length > 100) this.undoStack.shift();
+    this.redoStack = [];
+    this.pushHistory({ label: this.statusMessage, count: patches.length, kind: "local" });
+  }
+
+  private pushHistory(item: Omit<HistoryItem, "at">): void {
+    this.history.push({ ...item, at: new Date().toISOString() });
+    if (this.history.length > 200) this.history.shift();
+  }
+
+  get canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  get canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  undo(): void {
+    this.applyHistoryEntry(this.undoStack, this.redoStack, "undo", "Hoàn tác");
+  }
+
+  redo(): void {
+    this.applyHistoryEntry(this.redoStack, this.undoStack, "redo", "Làm lại");
+  }
+
+  /**
+   * Undo và redo là một phép: lấy entry từ stack này, áp chiều "trước", đẩy
+   * bản đảo sang stack kia. Phần tử đã bị người khác sửa tiếp bị BỎ QUA và
+   * đếm ra — hoàn tác của mình không được nuốt chỉnh sửa mới hơn của người
+   * khác, và việc bỏ qua phải được nói thành lời.
+   */
+  private applyHistoryEntry(
+    from: UndoEntry[],
+    to: UndoEntry[],
+    kind: "undo" | "redo",
+    verb: string,
+  ): void {
+    const entry = from.pop();
+    if (!entry) {
+      this.setStatus(`Không còn gì để ${verb.toLowerCase()}.`);
+      return;
+    }
+    const result = applyUndo(this.project.toDict(), entry);
+    if (result.applied.length === 0) {
+      this.setStatus(
+        `${verb} "${entry.label}" không áp được — cả ${result.skipped.length} phần tử đã bị sửa tiếp sau đó.`,
+      );
+      return;
+    }
+    this.project = NativeBimProject.fromJson(JSON.stringify(result.project));
+    if (!this.project.views.some((view) => view.id === this.activeViewId)) {
+      this.activeViewId = this.project.views[0]?.id ?? null;
+    }
+    this.selection = null;
+    this.pendingStart = null;
+    to.push(invert(entry, result.applied));
+    this.replaying = true;
+    this.statusMessage =
+      `${verb}: ${entry.label}` +
+      (result.skipped.length > 0
+        ? ` · ${result.skipped.length} phần tử đã bị sửa tiếp, giữ nguyên`
+        : "");
+    this.pushHistory({ label: this.statusMessage, count: result.applied.length, kind });
+    this.commit();
+    this.replaying = false;
+  }
+
   /** Replace the project with a merged state received from a peer. */
   applyRemoteProject(projectDict: Record<string, unknown>): void {
+    // Mốc lịch sử dời theo — thay đổi từ xa hiện trong lịch sử để ai cũng
+    // thấy, nhưng KHÔNG vào undo stack: Ctrl+Z của tôi không có quyền hoàn
+    // tác việc của đồng nghiệp.
+    const next = collectElements(projectDict);
+    if (this.lastElements) {
+      const patches = diffElements(this.lastElements, next);
+      if (patches.length > 0) {
+        this.pushHistory({
+          label: "Đồng bộ từ cộng tác viên",
+          count: patches.length,
+          kind: "remote",
+        });
+      }
+    }
+    this.lastElements = next;
     this.project = NativeBimProject.fromJson(JSON.stringify(projectDict));
     if (!this.project.views.some((view) => view.id === this.activeViewId)) {
       this.activeViewId = this.project.views[0]?.id ?? null;
@@ -240,7 +363,9 @@ class AppStore {
     this.pendingStart = null;
     this.statusMessage = "Synced changes from a collaborator";
     this.version += 1;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.project.toDict()));
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.project.toDict()));
+    }
     for (const listener of this.listeners) {
       listener();
     }
@@ -1119,6 +1244,12 @@ class AppStore {
     // Mesh cache theo tên file — dự án khác có thể có file trùng tên khác
     // nội dung, nên không được mang cache qua ranh giới dự án.
     this.meshCache.clear();
+    // Undo xuyên ranh giới dự án là áp patch của dự án cũ lên dự án mới —
+    // vô nghĩa ở mức tốt nhất, phá dữ liệu ở mức xấu nhất.
+    this.undoStack = [];
+    this.redoStack = [];
+    this.history = [];
+    this.lastElements = null;
   }
 
   serializeProject(): string {

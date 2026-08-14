@@ -1261,3 +1261,49 @@ input[type="text"],
   border-radius: 8px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
+
+/* ── Lịch sử phiên ─────────────────────────────────────────────────────── */
+
+.history-panel {
+  min-width: 320px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.history-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.history-time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.history-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-count {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.history-remote .history-label {
+  color: var(--accent);
+}
+
+.history-undo .history-label,
+.history-redo .history-label {
+  color: var(--muted);
+  font-style: italic;
+}

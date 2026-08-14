@@ -20,6 +20,13 @@ export const SYNCED_COLLECTIONS = [
   "schedules",
   "wall_types",
   "dimensions",
+  // Bốn nhóm sau vào domain muộn hơn và từng bị bỏ quên ở đây — chúng trôi
+  // trong META như một cục: hai người sửa hai PHÒNG khác nhau vẫn LWW đè
+  // nhau cả cục, và undo chạm tới META là lật cả bốn nhóm cùng lúc.
+  "documents",
+  "tasks",
+  "rooms",
+  "masses",
 ] as const;
 
 /** Pseudo-element carrying the project-level fields (name, site, ...). */
@@ -106,7 +113,7 @@ export function prunePeers(
   return changed;
 }
 
-type ElementRecord = { collection: string; json: string };
+export type ElementRecord = { collection: string; json: string };
 
 /** Flatten a project dict into id -> serialized element. */
 export function collectElements(project: ProjectDict): Map<string, ElementRecord> {
@@ -411,9 +418,11 @@ export class SyncEngine {
       this.transports.push(new BroadcastChannelTransport(onMessage));
     }
     this.connectRelay(onMessage);
-    window.addEventListener("beforeunload", () => {
-      this.send({ type: "leave", clientId: this.clientId });
-    });
+    if (typeof window !== "undefined") {
+      window.addEventListener("beforeunload", () => {
+        this.send({ type: "leave", clientId: this.clientId });
+      });
+    }
     this.heartbeat = setInterval(() => {
       this.broadcastPresence();
       if (prunePeers(this.peers, Date.now())) {
@@ -434,6 +443,12 @@ export class SyncEngine {
     // A demo build ships without a platform server; not opening a socket at
     // all is cleaner than opening one that is designed to fail.
     if (import.meta.env?.VITE_STANDALONE === "1") {
+      this.standalone = true;
+      this.hooks.onStandalone?.();
+      return;
+    }
+    // Node (test) không có window/WebSocket — engine chạy chế độ độc lập.
+    if (typeof window === "undefined") {
       this.standalone = true;
       this.hooks.onStandalone?.();
       return;
