@@ -1392,3 +1392,48 @@ input[type="text"],
 .rev-current {
   color: var(--ok, #3fb950);
 }
+
+/* ── Banner chỉ-xem ────────────────────────────────────────────────────── */
+
+.role-banner {
+  background: color-mix(in srgb, var(--warn, #d29922) 18%, transparent);
+  border-bottom: 1px solid var(--warn, #d29922);
+  color: var(--warn, #d29922);
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+/* ── Hồ sơ theo hạng mục (bảng Tiến độ) ────────────────────────────────── */
+
+.task-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  max-width: 260px;
+}
+
+.task-doc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+.task-doc-status {
+  color: var(--muted);
+}
+
+.task-doc-status.s-PUBLISHED {
+  color: var(--ok, #3fb950);
+}
+
+.task-doc-none {
+  color: var(--muted);
+}
+
+.task-doc-warn {
+  font-size: 11px;
+  color: var(--warn, #d29922);
+}

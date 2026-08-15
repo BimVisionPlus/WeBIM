@@ -141,6 +141,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <Toolbar />
+      {store.roleBanner && <div className="role-banner">👁 {store.roleBanner}</div>}
 
       <nav className="module-bar">
         <button

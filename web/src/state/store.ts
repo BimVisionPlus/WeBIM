@@ -166,6 +166,14 @@ export class AppStore {
   /** Đang áp undo/redo — commit trong lúc đó không được tự ghi thêm bước. */
   private replaying = false;
 
+  /**
+   * Quyền của TÔI trong DỰ ÁN NÀY, hỏi máy chủ (/projects/:id/members).
+   * null = chưa biết (standalone, chưa đăng nhập, server cũ) — khi đó UI
+   * rơi về quyền toàn cục. Server vẫn là người chặn thật; cái này chỉ để
+   * UI nói trước thay vì để người dùng vẽ rồi thấy nét vẽ không đồng bộ.
+   */
+  projectRole: { scope: "open" | "project"; role: string | null } | null = null;
+
   /** Whether the platform server requires login (null until probed). */
   authRequired: boolean | null = null;
   auth: AuthSession | null = authSession();
@@ -649,6 +657,7 @@ export class AppStore {
       this.statusMessage = `Đã đăng nhập: ${this.auth.username} (${this.auth.role})`;
       this.sync?.reconnectRelay();
       this.commit(false);
+      void this.refreshProjectRole();
     } catch (error) {
       this.setStatus((error as Error).message);
     }
@@ -658,12 +667,49 @@ export class AppStore {
     this.auth = null;
     localStorage.removeItem(AUTH_KEY);
     this.sync?.reconnectRelay();
+    this.projectRole = null;
+    void this.refreshProjectRole();
     this.setStatus("Đã đăng xuất");
   }
 
+  async refreshProjectRole(): Promise<void> {
+    if (this.standalone || typeof fetch === "undefined") {
+      this.projectRole = null;
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${fileServerBase()}/projects/${encodeURIComponent(this.project.id)}/members`,
+        { headers: authHeaders() },
+      );
+      this.projectRole = response.ok
+        ? ((await response.json()) as { you: { scope: "open" | "project"; role: string | null } })
+            .you
+        : null;
+    } catch {
+      this.projectRole = null;
+    }
+    this.commit(false);
+  }
+
   get canEdit(): boolean {
+    // Dự án đã đăng ký: quyền theo dự án là câu trả lời cuối.
+    if (this.projectRole?.scope === "project") {
+      return this.projectRole.role === "owner" || this.projectRole.role === "editor";
+    }
     if (this.authRequired === false || this.authRequired === null) return true;
     return this.auth != null && this.auth.role !== "viewer";
+  }
+
+  /** Câu banner khi bị khoá chỉnh sửa — null nghĩa là không có gì phải nói. */
+  get roleBanner(): string | null {
+    if (this.canEdit) return null;
+    if (this.projectRole?.scope === "project") {
+      return this.projectRole.role === "viewer"
+        ? "Bạn là VIEWER trong dự án này — chỉ xem. Chỉnh sửa và nộp file đã khoá (máy chủ cũng chặn)."
+        : "Bạn KHÔNG PHẢI THÀNH VIÊN dự án này — nội dung không đồng bộ về máy bạn. Hỏi chủ dự án để được mời.";
+    }
+    return "Tài khoản của bạn là viewer — chỉ xem, chỉnh sửa đã khoá.";
   }
 
   /** Open a pane; the branch bar follows it rather than being set separately. */
@@ -1263,6 +1309,9 @@ export class AppStore {
     this.selection = null;
     this.pendingStart = null;
     this.linkedModels = this.loadLinkedModels(this.project.id);
+    // Dự án khác = câu hỏi quyền khác — hỏi lại máy chủ.
+    this.projectRole = null;
+    void this.refreshProjectRole();
     // Mesh cache theo tên file — dự án khác có thể có file trùng tên khác
     // nội dung, nên không được mang cache qua ranh giới dự án.
     this.meshCache.clear();
@@ -1320,6 +1369,9 @@ store.sync = new SyncEngine({
   onRelayStatus: (connected) => {
     store.relayConnected = connected;
     store.standalone = false;
+    if (connected && store.projectRole === null) {
+      void store.refreshProjectRole();
+    }
     store.setStatus(connected ? "Relay connected" : "Relay offline — tab sync only");
   },
   onStandalone: () => {

@@ -25,6 +25,9 @@ const TOOLS: { id: ToolId; label: string; title: string }[] = [
 
 export function DrawingTools() {
   useStoreVersion();
+  // Server đã chặn frame của viewer/người ngoài rồi; khoá nút ở đây chỉ để
+  // người dùng không vẽ ra thứ trông như đã lưu mà thật ra không đồng bộ.
+  const locked = !store.canEdit;
   return (
     <div className="drawing-tools">
       {TOOLS.map((tool) => (
@@ -32,7 +35,8 @@ export function DrawingTools() {
           key={tool.id}
           className={store.activeTool === tool.id ? "active" : ""}
           onClick={() => store.setTool(tool.id)}
-          title={tool.title}
+          disabled={locked && tool.id !== "SELECT"}
+          title={locked && tool.id !== "SELECT" ? "Chỉ xem — bạn không có quyền editor trong dự án này" : tool.title}
         >
           {tool.label}
         </button>

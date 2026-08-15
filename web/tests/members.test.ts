@@ -206,3 +206,26 @@ describe("WebSocket theo dự án", () => {
     member.close();
   });
 });
+
+describe("store: quyền dự án điều khiển UI", () => {
+  it("viewer/người ngoài bị khoá chỉnh sửa và có banner; editor thì không", async () => {
+    const { AppStore } = await import("../src/state/store");
+    const store = new AppStore();
+
+    // Chưa biết gì (standalone) → cho phép, không banner.
+    expect(store.canEdit).toBe(true);
+    expect(store.roleBanner).toBeNull();
+
+    store.projectRole = { scope: "project", role: "viewer" };
+    expect(store.canEdit).toBe(false);
+    expect(store.roleBanner).toContain("VIEWER");
+
+    store.projectRole = { scope: "project", role: null };
+    expect(store.canEdit).toBe(false);
+    expect(store.roleBanner).toContain("KHÔNG PHẢI THÀNH VIÊN");
+
+    store.projectRole = { scope: "project", role: "editor" };
+    expect(store.canEdit).toBe(true);
+    expect(store.roleBanner).toBeNull();
+  });
+});

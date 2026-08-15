@@ -43,6 +43,9 @@ export function MembersModule() {
         throw new Error(body.error ?? `Lỗi ${response.status}`);
       }
       setInfo((await response.json()) as MembersInfo);
+      // Quyền của chính mình có thể vừa đổi (claim, bị hạ quyền…) — banner
+      // và khoá công cụ phải đổi theo ngay, không chờ reload.
+      void store.refreshProjectRole();
     } catch (err) {
       setInfo(null);
       setError(

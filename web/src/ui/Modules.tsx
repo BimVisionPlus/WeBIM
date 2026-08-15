@@ -515,6 +515,7 @@ export function PlanModule() {
             <th>Trạng thái</th>
             <th>Phụ thuộc</th>
             <th style={{ minWidth: 160 }}>Tiến độ</th>
+            <th>Hồ sơ</th>
             <th />
           </tr>
         </thead>
@@ -584,6 +585,9 @@ export function PlanModule() {
                 </div>
               </td>
               <td>
+                <TaskDocuments taskId={task.id} status={task.status} />
+              </td>
+              <td>
                 <button className="mini" onClick={() => store.removeTask(task.id)}>
                   ×
                 </button>
@@ -593,6 +597,49 @@ export function PlanModule() {
         </tbody>
       </table>
       </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Hồ sơ của một hạng mục, nhìn từ phía Tiến độ — file là SẢN PHẨM của hạng
+ * mục, nên bảng tiến độ phải thấy được sản phẩm đã nộp chưa. Một hạng mục
+ * ĐÃ XONG mà chưa có tài liệu PUBLISHED là lỗ hổng bàn giao; nói ra tại
+ * chỗ, không bắt ai mở CDE dò từng dòng.
+ */
+function TaskDocuments({ taskId, status }: { taskId: string; status: TaskStatus }) {
+  const documents = store.project.documents.filter(
+    (document) => document.taskId === taskId,
+  );
+  const published = documents.some((document) => document.status === "PUBLISHED");
+  return (
+    <div className="task-docs">
+      {documents.map((document) => {
+        const latest = document.revisions[document.revisions.length - 1];
+        return (
+          <button
+            key={document.id}
+            className="task-doc-chip"
+            title={`${document.title} · ${document.status}${latest ? ` · ${latest.rev}` : " · chưa có phiên bản"} — mở trong CDE`}
+            onClick={() => {
+              store.select({ kind: "document", id: document.id });
+              store.setPane("CDE");
+            }}
+          >
+            {document.code}
+            <span className={`task-doc-status s-${document.status}`}>
+              {document.status}
+              {latest ? ` ${latest.rev}` : ""}
+            </span>
+          </button>
+        );
+      })}
+      {documents.length === 0 && <span className="task-doc-none">—</span>}
+      {status === "DONE" && !published && (
+        <span className="task-doc-warn" title="Hạng mục đã xong nhưng chưa có tài liệu nào ở trạng thái PUBLISHED — hồ sơ bàn giao đang thiếu">
+          ⚠ chưa có file PUBLISHED
+        </span>
       )}
     </div>
   );
