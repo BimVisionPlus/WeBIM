@@ -155,6 +155,7 @@ export function CdeModule() {
           <tr>
             <th>Code</th>
             <th>Title</th>
+            <th>Hạng mục</th>
             <th>Status</th>
             <th>Revs</th>
             <th />
@@ -169,6 +170,27 @@ export function CdeModule() {
             >
               <td>{document.code}</td>
               <td>{document.title}</td>
+              <td>
+                {/* Tài liệu là SẢN PHẨM của một hạng mục — liên kết ở đây là
+                    cái nối CDE với tiến độ: hạng mục xong mà chưa có file
+                    PUBLISHED là điều bảng tiến độ phải thấy được. */}
+                <select
+                  value={document.taskId ?? ""}
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(event) =>
+                    store.updateDocument(document.id, {
+                      taskId: event.target.value || null,
+                    })
+                  }
+                >
+                  <option value="">— chung —</option>
+                  {store.project.tasks.map((task) => (
+                    <option key={task.id} value={task.id}>
+                      {task.name}
+                    </option>
+                  ))}
+                </select>
+              </td>
               <td>
                 <select
                   value={document.status}
@@ -249,12 +271,18 @@ function DocumentDetail({ document }: { document: DocumentDatum }) {
             <th>Note</th>
             <th>File</th>
             <th>Uploaded</th>
+            <th />
           </tr>
         </thead>
         <tbody>
-          {document.revisions.map((revision) => (
+          {document.revisions.map((revision, index) => (
             <tr key={revision.id}>
-              <td>{revision.rev}</td>
+              <td>
+                {revision.rev}
+                {index === document.revisions.length - 1 && (
+                  <span className="rev-current" title="Phiên bản hiện hành"> ●</span>
+                )}
+              </td>
               <td>{revision.note}</td>
               <td>
                 {revision.fileKey ? (
@@ -271,10 +299,25 @@ function DocumentDetail({ document }: { document: DocumentDatum }) {
                 )}
               </td>
               <td>{revision.uploadedAt.slice(0, 19).replace("T", " ")}</td>
+              <td>
+                {revision.fileKey && index < document.revisions.length - 1 && (
+                  <button
+                    className="mini"
+                    title="Khôi phục: thêm một phiên bản mới trỏ lại file này — lịch sử giữ nguyên"
+                    onClick={() => store.restoreDocumentRevision(document.id, revision.id)}
+                  >
+                    ↩
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <p className="module-hint">
+        ● = phiên bản hiện hành. Khôi phục không xoá lịch sử — nó thêm một
+        phiên bản mới trỏ lại file cũ, bảng vẫn kể đúng chuyện đã xảy ra.
+      </p>
     </div>
   );
 }

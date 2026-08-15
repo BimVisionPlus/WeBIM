@@ -1388,3 +1388,7 @@ input[type="text"],
 .members-error {
   color: var(--warn, #d29922);
 }
+
+.rev-current {
+  color: var(--ok, #3fb950);
+}

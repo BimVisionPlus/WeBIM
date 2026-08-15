@@ -694,6 +694,20 @@ export class AppStore {
     }
   }
 
+  restoreDocumentRevision(documentId: string, revisionId: string): void {
+    try {
+      const revision = this.project.restoreDocumentRevision(
+        documentId,
+        revisionId,
+        new Date().toISOString(),
+      );
+      this.statusMessage = `Đã khôi phục — phiên bản hiện hành mới là ${revision.rev}`;
+      this.commit();
+    } catch (error) {
+      this.setStatus(error instanceof Error ? error.message : String(error));
+    }
+  }
+
   updateDocument(
     documentId: string,
     changes: Parameters<NativeBimProject["updateDocument"]>[1],

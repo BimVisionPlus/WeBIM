@@ -253,6 +253,11 @@ export interface DocumentDatum {
   code: string;
   title: string;
   status: DocumentStatus;
+  /**
+   * Hạng mục công trình (TaskDatum) mà tài liệu này là sản phẩm — trục
+   * "file theo hạng mục" của DB dự án. Vắng mặt = tài liệu chung.
+   */
+  taskId?: string;
   revisions: DocumentRevision[];
   notes: DocumentNote[];
   /** Đánh dấu trên bản vẽ; vắng mặt trong JSON cho tới khi có cái đầu tiên. */
@@ -609,6 +614,7 @@ export class NativeBimProject {
         code: document.code,
         title: document.title,
         status: document.status,
+        ...(document.taskId ? { task_id: document.taskId } : {}),
         revisions: document.revisions.map((revision) => ({
           id: revision.id,
           rev: revision.rev,
@@ -820,6 +826,7 @@ export class NativeBimProject {
         code: document.code as string,
         title: (document.title as string) ?? "",
         status: (document.status as DocumentStatus) ?? "WIP",
+        ...(typeof document.task_id === "string" ? { taskId: document.task_id } : {}),
         revisions: ((document.revisions as Record<string, unknown>[]) ?? []).map(
           (revision) => ({
             id: revision.id as string,
@@ -1309,12 +1316,29 @@ export class NativeBimProject {
 
   updateDocument(
     documentId: string,
-    changes: { code?: string; title?: string; status?: DocumentStatus },
+    changes: {
+      code?: string;
+      title?: string;
+      status?: DocumentStatus;
+      taskId?: string | null;
+    },
   ): DocumentDatum {
     const document = this.documentById(documentId);
     document.code = changes.code ?? document.code;
     document.title = changes.title ?? document.title;
     document.status = changes.status ?? document.status;
+    if (changes.taskId !== undefined) {
+      if (changes.taskId === null) {
+        delete document.taskId;
+      } else {
+        // Liên kết phải trúng một hạng mục có thật — một taskId mồ côi
+        // trong file JSON sẽ hiện thành "—" và không ai biết vì sao.
+        if (!this.tasks.some((task) => task.id === changes.taskId)) {
+          throw new Error(`Unknown TaskDatum: ${changes.taskId}`);
+        }
+        document.taskId = changes.taskId;
+      }
+    }
     return document;
   }
 
@@ -1349,6 +1373,35 @@ export class NativeBimProject {
     };
     document.revisions.push(revision);
     return revision;
+  }
+
+  /**
+   * Khôi phục một phiên bản cũ: KHÔNG xoá lịch sử, mà thêm một revision mới
+   * trỏ lại đúng file của phiên bản đó — audit trail giữ nguyên, ai nhìn
+   * bảng cũng thấy "P04 khôi phục từ P02" thay vì lịch sử bị viết lại.
+   */
+  restoreDocumentRevision(
+    documentId: string,
+    revisionId: string,
+    uploadedAt: string,
+  ): DocumentRevision {
+    const document = this.documentById(documentId);
+    const source = document.revisions.find((revision) => revision.id === revisionId);
+    if (!source) throw new Error(`Unknown DocumentRevision: ${revisionId}`);
+    if (!source.fileKey) {
+      throw new Error("Phiên bản này không có file để khôi phục (metadata-only).");
+    }
+    const latest = document.revisions[document.revisions.length - 1];
+    if (latest && latest.id === revisionId) {
+      throw new Error("Đây đã là phiên bản hiện hành.");
+    }
+    return this.addDocumentRevision(
+      documentId,
+      `Khôi phục từ ${source.rev}${source.note ? ` (${source.note})` : ""}`,
+      source.fileKey,
+      source.fileName,
+      uploadedAt,
+    );
   }
 
   addMarkup(
