@@ -22,6 +22,7 @@ import {
   ViewerModule,
 } from "./ui/Modules";
 import { NamingModule } from "./ui/Naming";
+import { MembersModule } from "./ui/Members";
 import { HOME, SECTIONS, sectionById, type PaneId } from "./ui/navigation";
 import { DrawingTools } from "./ui/DrawingTools";
 import { Toolbar } from "./ui/Toolbar";
@@ -47,6 +48,8 @@ function Pane({ id }: { id: PaneId }) {
       return <CdeModule />;
     case "NAMING":
       return <NamingModule />;
+    case "MEMBERS":
+      return <MembersModule />;
     case "PLAN":
       return <PlanModule />;
     case "ATLASPROCESS":

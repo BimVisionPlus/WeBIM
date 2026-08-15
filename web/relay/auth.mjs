@@ -43,6 +43,12 @@ export function createAuth({ usersPath, secret } = {}) {
   return {
     enabled,
 
+    /** Máy chủ có biết username này không — để mời thành viên khỏi gõ nhầm. */
+    userExists(username) {
+      if (!enabled) return true;
+      return users.some((candidate) => candidate.username === username);
+    },
+
     login(username, password) {
       const user = users.find((candidate) => candidate.username === username);
       if (!user) return null;

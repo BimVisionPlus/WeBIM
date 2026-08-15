@@ -35,6 +35,7 @@ import {
   writeRenderBrief,
 } from "./ai.mjs";
 import { createAuth } from "./auth.mjs";
+import { createMembers } from "./members.mjs";
 import { createStorage } from "./storage.mjs";
 
 const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "data");
@@ -69,6 +70,7 @@ async function readBody(request) {
 export function startRelay(port = 8787, options = {}) {
   const auth = options.auth ?? createAuth();
   const storage = options.storage ?? createStorage(DATA_DIR);
+  const members = options.members ?? createMembers();
   if (!auth.enabled) {
     console.warn(
       "[webim] auth OPEN mode — create relay/users.json to require login " +
@@ -144,17 +146,81 @@ export function startRelay(port = 8787, options = {}) {
             })
           : reply(401, { error: "Cần đăng nhập để dùng chức năng này." });
 
+      // ── Thành viên & phân quyền theo dự án ────────────────────────────
+      const membersMatch = url.pathname.match(
+        /^\/projects\/([^/]+)\/members(?:\/([^/]+))?$/,
+      );
+      if (membersMatch) {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const projectId = decodeURIComponent(membersMatch[1]);
+        try {
+          if (request.method === "GET") {
+            const record = members.get(projectId);
+            const you = members.effectiveRole(identity, projectId);
+            return reply(200, {
+              registered: record !== null,
+              owner: record?.owner ?? null,
+              members: record?.members ?? {},
+              you,
+            });
+          }
+          if (request.method === "PUT" && !membersMatch[2]) {
+            const { username, role } = JSON.parse((await readBody(request)).toString());
+            if (!auth.userExists(username)) {
+              return reply(400, { error: `Không có tài khoản "${username}" trên máy chủ.` });
+            }
+            members.setMember(projectId, identity, username, role);
+            return reply(200, { ok: true });
+          }
+          if (request.method === "DELETE" && membersMatch[2]) {
+            members.removeMember(projectId, identity, decodeURIComponent(membersMatch[2]));
+            return reply(200, { ok: true });
+          }
+        } catch (error) {
+          return reply(403, { error: String(error.message ?? error) });
+        }
+      }
+      if (url.pathname.match(/^\/projects\/[^/]+\/claim$/) && request.method === "POST") {
+        if (!auth.allows(identity, "editor")) return needsEditor();
+        const projectId = decodeURIComponent(url.pathname.split("/")[2]);
+        try {
+          members.claim(projectId, identity);
+          return reply(200, { ok: true });
+        } catch (error) {
+          return reply(409, { error: String(error.message ?? error) });
+        }
+      }
+
+      /**
+       * Key file luôn có tiền tố projectId (store tạo `${projectId}/…`) —
+       * dự án đã đăng ký thì file của nó chỉ thành viên chạm được. Chặn ở
+       * đây chứ không phải trong UI: người ngoài có URL cũng không tải nổi.
+       */
+      const fileAccess = (key, need) => {
+        const projectId = key.split("/")[0];
+        const eff = members.effectiveRole(identity, projectId);
+        if (eff.scope === "open") return auth.allows(identity, need);
+        if (eff.role === null) return false;
+        return need === "viewer" || eff.role === "owner" || eff.role === "editor";
+      };
+
       if (url.pathname.startsWith("/files/")) {
         const key = safeKey(url.pathname.slice("/files/".length));
         if (!key) return reply(400, { error: "bad key" });
         if (request.method === "PUT") {
-          if (!auth.allows(identity, "editor")) return needsEditor();
+          if (!identity) return needsEditor();
+          if (!fileAccess(key, "editor")) {
+            return reply(403, {
+              error: "Bạn không có quyền editor trong dự án này.",
+            });
+          }
           await storage.put(key, await readBody(request));
           return reply(200, { ok: true, key });
         }
         if (request.method === "GET") {
-          if (!auth.allows(identity, "viewer")) {
-            return reply(401, { error: "login required" });
+          if (!identity) return reply(401, { error: "login required" });
+          if (!fileAccess(key, "viewer")) {
+            return reply(403, { error: "Bạn không phải thành viên dự án này." });
           }
           const body = await storage.get(key);
           response.writeHead(200, corsHeaders({ "Content-Type": "application/octet-stream" }));
@@ -168,7 +234,12 @@ export function startRelay(port = 8787, options = {}) {
           return reply(401, { error: "login required" });
         }
         const prefix = safeKey(url.searchParams.get("prefix") ?? "") ?? "";
-        return reply(200, { files: await storage.list(prefix) });
+        const files = await storage.list(prefix);
+        // Danh sách cũng là dữ liệu: file của dự án riêng tư không được lộ
+        // tên cho người ngoài dự án.
+        return reply(200, {
+          files: files.filter((file) => fileAccess(file.key ?? file, "viewer")),
+        });
       }
 
       if (url.pathname === "/ai/read-drawing" && request.method === "POST") {
@@ -218,7 +289,19 @@ export function startRelay(port = 8787, options = {}) {
   });
 
   const server = new WebSocketServer({ server: httpServer });
-  const clients = new Map(); // socket -> {clientId, role}
+  const clients = new Map(); // socket -> {clientId, role, identity}
+
+  /**
+   * Quyền của một danh tính với MỘT frame — mọi frame mang projectId, và
+   * đó là đơn vị phân quyền: dự án đã đăng ký thì frame của nó chỉ đi tới
+   * (và đi từ) thành viên. Relay vẫn "dumb" về nội dung; nó chỉ nhìn địa
+   * chỉ dự án trên phong bì.
+   */
+  const frameRole = (identity, projectId) => {
+    const eff = members.effectiveRole(identity, projectId ?? "");
+    if (eff.scope === "open") return eff.role; // role toàn cục như trước
+    return eff.role === "owner" ? "editor" : eff.role; // null = không quyền
+  };
 
   server.on("connection", (socket, request) => {
     const url = new URL(request.url ?? "/", "http://localhost");
@@ -227,7 +310,7 @@ export function startRelay(port = 8787, options = {}) {
       socket.close(4401, "login required");
       return;
     }
-    clients.set(socket, { clientId: null, role: identity.role });
+    clients.set(socket, { clientId: null, role: identity.role, identity });
 
     socket.on("message", (data) => {
       const text = data.toString();
@@ -241,12 +324,18 @@ export function startRelay(port = 8787, options = {}) {
       if (frame.clientId && state.clientId === null) {
         state.clientId = frame.clientId;
       }
-      // Authorization: viewers may broadcast presence, never model state.
-      if (frame.type === "sync" && state.role === "viewer") return;
-      for (const [peer] of clients) {
-        if (peer !== socket && peer.readyState === peer.OPEN) {
-          peer.send(text);
-        }
+      const senderRole = frameRole(state.identity, frame.projectId);
+      // Người ngoài dự án không gửi được gì; viewer gửi presence, không
+      // bao giờ gửi model state.
+      if (senderRole === null) return;
+      if (frame.type === "sync" && senderRole !== "editor" && senderRole !== "admin") {
+        return;
+      }
+      for (const [peer, peerState] of clients) {
+        if (peer === socket || peer.readyState !== peer.OPEN) continue;
+        // Người ngoài dự án cũng không NHẬN được frame của nó.
+        if (frameRole(peerState.identity, frame.projectId) === null) continue;
+        peer.send(text);
       }
     });
 
