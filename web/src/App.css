@@ -1359,3 +1359,28 @@ input[type="text"],
   color: var(--warn, #d29922);
   max-width: 220px;
 }
+
+/* ── Tầng sản phẩm trên trang chủ ──────────────────────────────────────── */
+
+.home-tier {
+  margin-top: 14px;
+}
+
+.home-tier-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.home-tier-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.home-tier-note {
+  font-size: 12px;
+  color: var(--muted);
+}

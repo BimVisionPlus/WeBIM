@@ -50,30 +50,43 @@ export interface Pane {
   label: string;
 }
 
+/**
+ * Tầng sản phẩm — trang chủ nhóm thẻ theo tầng, đúng chiến lược:
+ *   FREE: công cụ miễn phí kéo người dùng (PDF, tiêu chuẩn).
+ *   CORE: cốt lõi giai đoạn 1, xoay quanh dự án (CDE, va chạm, view IFC).
+ *   PLUS: giá trị gia tăng trên dự án (quản lý dự án, khối lượng, render, mô phỏng).
+ *   BIM:  dựng hình — khó nhất, làm sau cùng, không phải cửa vào.
+ */
+export type SectionTier = "FREE" | "CORE" | "PLUS" | "BIM";
+
 export interface Section {
   id: SectionId;
   /** Nhãn ở trang chủ và trên thanh nhánh — chữ của sơ đồ, không dịch lại. */
   label: string;
   /** Một câu nói nhánh này làm gì, hiện trên thẻ ở trang chủ. */
   blurb: string;
+  tier: SectionTier;
   panes: Pane[];
 }
 
 export const SECTIONS: Section[] = [
   {
     id: "PDF",
+    tier: "FREE",
     label: "Đọc & chỉnh sửa PDF",
     blurb: "Mở bản vẽ PDF từ CDE, ghi chú và đánh dấu ngay trên trang.",
     panes: [{ id: "PDF", label: "Bản vẽ" }],
   },
   {
     id: "STANDARDS",
+    tier: "FREE",
     label: "Tra cứu tiêu chuẩn",
     blurb: "QCVN / TCVN, tình trạng hiệu lực, chuỗi thay thế và xung đột.",
     panes: [{ id: "STANDARDS", label: "QCVN / TCVN" }],
   },
   {
     id: "PROJECT",
+    tier: "PLUS",
     label: "Quản lý dự án",
     blurb:
       "Hồ sơ CDE, tiến độ hạng mục, quy trình ISO của công ty, đánh giá nhân sự và hồ sơ công trường.",
@@ -95,6 +108,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "BIM",
+    tier: "BIM",
     label: "BIM",
     blurb: "Dựng mặt bằng và cấu kiện 3D, dựng box khối, import IFC, xem 3D.",
     panes: [
@@ -107,6 +121,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "CLASH",
+    tier: "CORE",
     label: "Check va chạm",
     blurb: "Ma trận hệ × hệ với dung sai riêng, rồi báo cáo va chạm.",
     panes: [
@@ -116,6 +131,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "QTO",
+    tier: "PLUS",
     label: "Kiểm tra khối lượng",
     blurb: "Bảng thống kê khối lượng từ hình học, rồi áp đơn giá.",
     panes: [
@@ -125,12 +141,14 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "RENDER",
+    tier: "PLUS",
     label: "Render AI",
     blurb: "Dựng ảnh concept từ khối hiện có, bằng model tự host.",
     panes: [{ id: "RENDER", label: "Render concept" }],
   },
   {
     id: "SIM",
+    tier: "PLUS",
     label: "Mô phỏng",
     blurb: "Tiến độ 4D, thoát nạn theo QCVN 06, vi khí hậu theo hướng.",
     panes: [
@@ -145,6 +163,7 @@ export const HOME: Section = {
   id: "HOME",
   label: "Trang chủ",
   blurb: "",
+  tier: "FREE",
   panes: [{ id: "HOME", label: "Trang chủ" }],
 };
 
