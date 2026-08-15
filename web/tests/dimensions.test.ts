@@ -46,3 +46,27 @@ describe("dimension domain", () => {
     expect(restored.dimensions[0].offset).toBe(-2);
   });
 });
+
+describe("toạ độ NaN bị chặn ở biên domain", () => {
+  it("addDimension từ chối NaN (NaN từng lách qua check hai-điểm-trùng)", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const view = project.addView("Tầng 1", "FLOOR_PLAN", 100, 40);
+    expect(() =>
+      project.addDimension(view.id, [NaN, NaN], [NaN, NaN], 1),
+    ).toThrow(/không hợp lệ/);
+    expect(() => project.addWall([NaN, 0, 0], [4, 0, 0])).toThrow(/không hợp lệ/);
+  });
+
+  it("fromJson bỏ dimension [null,null] của bug cũ, giữ dimension lành", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const view = project.addView("Tầng 1", "FLOOR_PLAN", 100, 40);
+    project.addDimension(view.id, [0, 0], [5, 0], 1);
+    const dict = project.toDict() as Record<string, unknown>;
+    (dict.dimensions as unknown[]).push({
+      id: "bad", view_id: view.id, start: [null, null], end: [null, null], offset: 1,
+    });
+    const reloaded = NativeBimProject.fromJson(JSON.stringify(dict));
+    expect(reloaded.dimensions).toHaveLength(1);
+    expect(reloaded.dimensions[0].end[0]).toBe(5);
+  });
+});

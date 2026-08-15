@@ -531,7 +531,12 @@ export class AppStore {
     dimensionId: string,
     changes: Parameters<NativeBimProject["updateDimension"]>[1],
   ): void {
-    this.project.updateDimension(dimensionId, changes);
+    try {
+      this.project.updateDimension(dimensionId, changes);
+    } catch (error) {
+      this.setStatus((error as Error).message);
+      return;
+    }
     this.commit();
   }
 

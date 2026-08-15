@@ -108,17 +108,25 @@ export function PdfMarkupView({
   const markups = (doc.markups ?? []).filter((markup) => markup.page === page);
 
   // Chuột → tỉ lệ trang. Đây là chỗ duy nhất pixel được phép xuất hiện.
-  const toPageRatio = (event: React.MouseEvent<SVGSVGElement>): [number, number] => {
+  const toPageRatio = (
+    event: React.MouseEvent<SVGSVGElement>,
+  ): [number, number] | null => {
     const box = event.currentTarget.getBoundingClientRect();
+    // SVG chưa layout xong thì width/height = 0 — chia cho nó cho ra
+    // Infinity, và toạ độ Infinity từng bị LƯU vào dự án (thành null qua
+    // JSON) rồi vẽ NaN mãi mãi. Click lúc chưa sẵn sàng thì bỏ, không đoán.
+    if (!(box.width > 0) || !(box.height > 0)) return null;
+    const clamp = (value: number) => Math.min(1, Math.max(0, value));
     return [
-      (event.clientX - box.left) / box.width,
-      (event.clientY - box.top) / box.height,
+      clamp((event.clientX - box.left) / box.width),
+      clamp((event.clientY - box.top) / box.height),
     ];
   };
 
   const onClick = (event: React.MouseEvent<SVGSVGElement>) => {
     if (!tool) return;
     const at = toPageRatio(event);
+    if (at === null) return;
     if (tool === "TEXT") {
       const text = window.prompt("Nội dung ghi chú:");
       if (!text?.trim()) return;

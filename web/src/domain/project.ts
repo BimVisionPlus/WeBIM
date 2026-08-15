@@ -389,7 +389,17 @@ export interface TechnicalView {
   levelId?: string;
 }
 
-export function uuid4Hex(): string {
+export /** Toạ độ/kích thước phải là số hữu hạn — NaN "trốn" được mọi phép so sánh
+ * bằng, nên phải bắt đích danh trước khi nó thành dữ liệu bền. */
+function assertFiniteCoords(what: string, values: number[]): void {
+  for (const value of values) {
+    if (!Number.isFinite(value)) {
+      throw new Error(`Toạ độ ${what} không hợp lệ (NaN/Infinity)`);
+    }
+  }
+}
+
+function uuid4Hex(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 0x0f) | 0x40;
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
@@ -814,13 +824,22 @@ export class NativeBimProject {
           thickness: layer.thickness as number,
         })),
       })),
-      ((data.dimensions as Record<string, unknown>[]) ?? []).map((dimension) => ({
-        id: dimension.id as string,
-        viewId: dimension.view_id as string,
-        start: dimension.start as [number, number],
-        end: dimension.end as [number, number],
-        offset: (dimension.offset as number) ?? 1,
-      })),
+      ((data.dimensions as Record<string, unknown>[]) ?? [])
+        // Dọn rác của bug NaN cũ: dimension [null,null] trong file sẽ render
+        // NaN mãi — bỏ ngay lúc load, như markup.
+        .filter((dimension) =>
+          [
+            ...((dimension.start as unknown[]) ?? []),
+            ...((dimension.end as unknown[]) ?? []),
+          ].every((value) => Number.isFinite(value)),
+        )
+        .map((dimension) => ({
+          id: dimension.id as string,
+          viewId: dimension.view_id as string,
+          start: dimension.start as [number, number],
+          end: dimension.end as [number, number],
+          offset: (dimension.offset as number) ?? 1,
+        })),
       ((data.documents as Record<string, unknown>[]) ?? []).map((document) => ({
         id: document.id as string,
         code: document.code as string,
@@ -845,17 +864,26 @@ export class NativeBimProject {
         })),
         ...(Array.isArray(document.markups)
           ? {
-              markups: (document.markups as Record<string, unknown>[]).map((markup) => ({
-                id: markup.id as string,
-                kind: (markup.kind as MarkupKind) ?? "RECT",
-                page: typeof markup.page === "number" ? markup.page : 0,
-                from: markup.from as [number, number],
-                to: markup.to as [number, number],
-                text: (markup.text as string) ?? "",
-                color: (markup.color as string) ?? "#e06c75",
-                author: (markup.author as string) ?? "",
-                at: (markup.at as string) ?? "",
-              })),
+              markups: (document.markups as Record<string, unknown>[])
+                // Dọn rác của chính bug cũ: markup từng lưu Infinity (thành
+                // null trong JSON) sẽ vẽ NaN mãi — bỏ ngay lúc load.
+                .filter((markup) =>
+                  [
+                    ...((markup.from as unknown[]) ?? []),
+                    ...((markup.to as unknown[]) ?? []),
+                  ].every((value) => Number.isFinite(value)),
+                )
+                .map((markup) => ({
+                  id: markup.id as string,
+                  kind: (markup.kind as MarkupKind) ?? "RECT",
+                  page: typeof markup.page === "number" ? markup.page : 0,
+                  from: markup.from as [number, number],
+                  to: markup.to as [number, number],
+                  text: (markup.text as string) ?? "",
+                  color: (markup.color as string) ?? "#e06c75",
+                  author: (markup.author as string) ?? "",
+                  at: (markup.at as string) ?? "",
+                })),
             }
           : {}),
       })),
@@ -1041,6 +1069,7 @@ export class NativeBimProject {
     outline: [number, number][],
     options: { name?: string; usage?: RoomUsage; levelId?: string } = {},
   ): RoomDatum {
+    assertFiniteCoords("room", (outline ?? []).flat());
     if (outline.length < 3) {
       throw new Error("Ranh giới phòng cần ít nhất ba điểm");
     }
@@ -1071,6 +1100,7 @@ export class NativeBimProject {
     outline: [number, number][],
     options: { name?: string; height?: number; levelId?: string; storeys?: number } = {},
   ): MassDatum {
+    assertFiniteCoords("mass", (outline ?? []).flat());
     if (outline.length < 3) {
       throw new Error("A mass outline needs at least three points");
     }
@@ -1128,6 +1158,7 @@ export class NativeBimProject {
     outline: [number, number][],
     options: { thickness?: number; levelId?: string; zOffset?: number } = {},
   ): SlabDatum {
+    assertFiniteCoords("slab", (outline ?? []).flat());
     if (outline.length < 3) {
       throw new Error("A slab outline needs at least three points");
     }
@@ -1256,6 +1287,10 @@ export class NativeBimProject {
     if (!this.views.some((view) => view.id === viewId)) {
       throw new Error(`Unknown TechnicalView: ${viewId}`);
     }
+    // NaN từng LÁCH QUA check hai-điểm-trùng bên dưới (NaN !== NaN) và được
+    // lưu thành [null,null] trong JSON — rồi render NaN mãi mãi. Toạ độ phải
+    // hữu hạn ngay tại biên domain.
+    assertFiniteCoords("dimension", [...start, ...end, offset]);
     if (start[0] === end[0] && start[1] === end[1]) {
       throw new Error("A dimension needs two different points");
     }
@@ -1411,6 +1446,14 @@ export class NativeBimProject {
   ): MarkupDatum {
     const document = this.documents.find((candidate) => candidate.id === documentId);
     if (!document) throw new Error(`Unknown DocumentDatum: ${documentId}`);
+    // Toạ độ phải là số hữu hạn NGAY TẠI BIÊN domain: một markup Infinity
+    // lọt vào đây sẽ thành null trong JSON, đồng bộ đi khắp nơi và vẽ NaN
+    // trên mọi máy — lỗi phải chết ở cửa chứ không được sống thành dữ liệu.
+    for (const value of [...markup.from, ...markup.to]) {
+      if (!Number.isFinite(value)) {
+        throw new Error("Toạ độ markup không hợp lệ (không phải số hữu hạn)");
+      }
+    }
     const created: MarkupDatum = { ...markup, id: uuid4Hex(), at };
     document.markups = [...(document.markups ?? []), created];
     return created;
@@ -1618,6 +1661,7 @@ export class NativeBimProject {
     if (pointsEqual(start, end)) {
       throw new Error("A grid axis requires two different points");
     }
+    assertFiniteCoords("grid", [...start, ...end]);
     const headScale = options.headScale ?? 1.0;
     if (headScale <= 0) {
       throw new Error("Grid head scale must be greater than zero");
@@ -1665,6 +1709,7 @@ export class NativeBimProject {
     if (pointsEqual(updated.start, updated.end)) {
       throw new Error("A grid axis requires two different points");
     }
+    assertFiniteCoords("grid", [...updated.start, ...updated.end]);
     if (updated.headScale <= 0) {
       throw new Error("Grid head scale must be greater than zero");
     }
@@ -1755,6 +1800,7 @@ export class NativeBimProject {
     if (pointsEqual(start, end)) {
       throw new Error("Wall endpoints must be different");
     }
+    assertFiniteCoords("wall", [...start, ...end]);
     if (this.levels.length === 0) {
       this.addLevel("Level 1", 0);
     }

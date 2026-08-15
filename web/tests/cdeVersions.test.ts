@@ -66,3 +66,35 @@ describe("khôi phục phiên bản", () => {
     ).toThrow(/hiện hành/);
   });
 });
+
+describe("markup toạ độ phải hữu hạn", () => {
+  it("addMarkup từ chối Infinity/NaN ngay tại biên domain", () => {
+    const { project, document } = (() => {
+      const p = NativeBimProject.create("P", "S", "B", "L1");
+      return { project: p, document: p.addDocument("X-001", "MB") };
+    })();
+    expect(() =>
+      project.addMarkup(
+        document.id,
+        { kind: "RECT", page: 0, from: [Infinity, 0], to: [1, 1], text: "", color: "#fff", author: "a" },
+        "2026-01-01",
+      ),
+    ).toThrow(/không hợp lệ/);
+  });
+
+  it("fromJson bỏ markup rác (null từ bug Infinity cũ), giữ markup lành", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const document = project.addDocument("X-001", "MB");
+    project.addMarkup(
+      document.id,
+      { kind: "RECT", page: 0, from: [0.1, 0.1], to: [0.5, 0.4], text: "", color: "#fff", author: "a" },
+      "2026-01-01",
+    );
+    const dict = project.toDict() as Record<string, unknown>;
+    const docDict = (dict.documents as { markups: unknown[] }[])[0];
+    docDict.markups.push({ id: "bad", kind: "RECT", page: 0, from: [null, null], to: [null, null] });
+    const reloaded = NativeBimProject.fromJson(JSON.stringify(dict));
+    expect(reloaded.documents[0].markups).toHaveLength(1);
+    expect(reloaded.documents[0].markups?.[0].to[0]).toBe(0.5);
+  });
+});

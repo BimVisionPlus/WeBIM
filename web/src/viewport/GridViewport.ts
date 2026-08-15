@@ -577,6 +577,9 @@ export class GridViewport {
     }
     if (event.button !== 0 || !this.inPlanView) return;
     const world = this.screenToWorld(event.clientX, event.clientY);
+    // Canvas chưa layout (kích thước 0) cho ra world NaN — một cú click lúc
+    // đó từng ghi dimension [NaN,NaN] vào dự án. Không toạ độ thì không vẽ.
+    if (!Number.isFinite(world[0]) || !Number.isFinite(world[1])) return;
 
     if (this.openingDrag) {
       // Second click commits the opening move.

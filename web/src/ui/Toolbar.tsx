@@ -209,9 +209,33 @@ export function Toolbar() {
         <summary title="Cài đặt & dự án">⚙</summary>
         <div className="top-menu-panel">
           <div className="menu-heading">Dự án</div>
-          <button onClick={() => { store.newProject(); close(); }}>Tạo mới</button>
+          {/* Thay dự án là thao tác MẤT DỮ LIỆU nếu chưa lưu: undo không cứu
+              được (stack xoá khi đổi dự án). Một câu hỏi rẻ hơn một mô hình. */}
           <button
-            onClick={() => { store.loadDemoProject(); close(); }}
+            onClick={() => {
+              if (
+                window.confirm(
+                  `Tạo dự án mới sẽ thay "${store.projectLabel}" đang mở. Chưa lưu JSON thì các chỉnh sửa cục bộ sẽ mất. Tiếp tục?`,
+                )
+              ) {
+                store.newProject();
+              }
+              close();
+            }}
+          >
+            Tạo mới
+          </button>
+          <button
+            onClick={() => {
+              if (
+                window.confirm(
+                  `Nạp demo sẽ thay "${store.projectLabel}" đang mở. Chưa lưu JSON thì các chỉnh sửa cục bộ sẽ mất. Tiếp tục?`,
+                )
+              ) {
+                store.loadDemoProject();
+              }
+              close();
+            }}
             title="Nhà phố demo 12×8 — trục, tường, cửa, sàn, sheet, schedule, CDE, kế hoạch"
           >
             Nạp dự án demo
