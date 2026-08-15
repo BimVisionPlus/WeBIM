@@ -1,0 +1,223 @@
+{
+  "source": "vbpl.vn (CSDL quốc gia về pháp luật — Bộ Tư pháp)",
+  "fetchedAt": "2026-08-15",
+  "entries": {
+    "QCVN 06:2022/BXD": {
+      "query": "QCVN 06:2022/BXD",
+      "total": 2,
+      "matches": [
+        {
+          "vbplId": "162885",
+          "docNum": "09/2023/TT-BXD",
+          "title": "Thông tư số 09/2023/TT- BXD Ban hành Sửa đổi 1:2023 QCVN 06:2022/BXD Quy chuẩn kỹ thuật quốc gia về an toàn cháy cho nhà và công trình",
+          "amending": true,
+          "status": "CHL",
+          "statusName": "Còn hiệu lực",
+          "issueDate": "2023-10-16",
+          "effFrom": "2023-12-01",
+          "effTo": null,
+          "url": "https://vbpl.vn/van-ban/chi-tiet/162885"
+        },
+        {
+          "vbplId": "159422",
+          "docNum": "06/2022/TT-BXD",
+          "title": "Thông tư số 06/2022/TT-BXD Quy chuẩn kỹ thuật quốc gia QCVN 06:2022/BXD về an toàn cháy cho nhà và công trình",
+          "amending": false,
+          "status": "CHL",
+          "statusName": "Còn hiệu lực",
+          "issueDate": "2022-11-30",
+          "effFrom": "2023-01-16",
+          "effTo": null,
+          "url": "https://vbpl.vn/van-ban/chi-tiet/159422"
+        }
+      ]
+    },
+    "QCVN 04:2021/BXD": {
+      "query": "QCVN 04:2021/BXD",
+      "total": 1,
+      "matches": [
+        {
+          "vbplId": "148070",
+          "docNum": "03/2021/TT-BXD",
+          "title": "Thông tư số 03/2021/TT-BXD  ban hành QCVN 04:2021/BXD quy chuẩn kỹ thuật quốc gia về Nhà chung cư",
+          "amending": false,
+          "status": "CHL",
+          "statusName": "Còn hiệu lực",
+          "issueDate": "2021-05-19",
+          "effFrom": "2021-07-05",
+          "effTo": null,
+          "url": "https://vbpl.vn/van-ban/chi-tiet/148070"
+        }
+      ]
+    },
+    "QCVN 01:2021/BXD": {
+      "query": "QCVN 01:2021/BXD",
+      "total": 1,
+      "matches": [
+        {
+          "vbplId": "148068",
+          "docNum": "01/2021/TT-BXD",
+          "title": "Thông tư số 01/2021/TT-BXD ban hành QCVN 01:2021/BXD quy chuẩn kỹ thuật quốc gia về Quy hoạch xây dựng",
+          "amending": false,
+          "status": "CHL",
+          "statusName": "Còn hiệu lực",
+          "issueDate": "2021-05-19",
+          "effFrom": "2021-07-05",
+          "effTo": "2027-01-01",
+          "url": "https://vbpl.vn/van-ban/chi-tiet/148068"
+        }
+      ]
+    },
+    "QCVN 07:2016/BXD": {
+      "query": "QCVN 07:2016/BXD",
+      "total": 0,
+      "matches": []
+    },
+    "QCVN 09:2017/BXD": {
+      "query": "QCVN 09:2017/BXD",
+      "total": 0,
+      "matches": []
+    },
+    "TCVN 2622:1995": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 9411:2012": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 7114-1:2008": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCXD 25:1991": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "Nghị định 06/2021/NĐ-CP": {
+      "query": "06/2021/NĐ-CP",
+      "total": 2,
+      "matches": [
+        {
+          "vbplId": "147597",
+          "docNum": "06/2021/ND-CP",
+          "title": "Nghị định số 06/2021/NĐ-CP Quy định chi tiết một số nội dung về quản lý chất lượng, thi công xây dựng và bảo trì công trình xây dựng",
+          "amending": false,
+          "status": "HHL",
+          "statusName": "Hết hiệu lực toàn bộ",
+          "issueDate": "2021-01-26",
+          "effFrom": "2021-01-26",
+          "effTo": "2026-07-01",
+          "url": "https://vbpl.vn/van-ban/chi-tiet/147597"
+        }
+      ]
+    },
+    "QCVN 07:2023/BXD": {
+      "query": "QCVN 07:2023/BXD",
+      "total": 2,
+      "matches": [
+        {
+          "vbplId": "185687",
+          "docNum": "42/2025/TT-BXD",
+          "title": "Thông tư số 42/2025/TT-BXD Ban hành Sửa đổi 1:2025 QCVN 07:2023/BXD Quy chuẩn kỹ thuật quốc gia về Hệ thống công trình hạ tầng kỹ thuật",
+          "amending": true,
+          "status": "CHL",
+          "statusName": "Còn hiệu lực",
+          "issueDate": "2025-12-09",
+          "effFrom": "2026-01-23",
+          "effTo": null,
+          "url": "https://vbpl.vn/van-ban/chi-tiet/185687"
+        },
+        {
+          "vbplId": "165674",
+          "docNum": "15/2023/TT-BXD",
+          "title": "Thông tư số 15/2023/TT-BXD Ban hành QCVN 07:2023/BXD Quy chuẩn kỹ thuật quốc gia về Hệ thống công trình hạ tầng kỹ thuật",
+          "amending": false,
+          "status": "CHL",
+          "statusName": "Còn hiệu lực",
+          "issueDate": "2023-12-29",
+          "effFrom": "2024-07-01",
+          "effTo": null,
+          "url": "https://vbpl.vn/van-ban/chi-tiet/165674"
+        }
+      ]
+    },
+    "QCVN 02:2022/BXD": {
+      "query": "QCVN 02:2022/BXD",
+      "total": 1,
+      "matches": [
+        {
+          "vbplId": "156199",
+          "docNum": "02/2022/TT-BXD",
+          "title": "Thông tư số 02/2022/TT-BXD Ban hành QCVN 02:2022/BXD Quy chuẩn kỹ thuật quốc gia về Số liệu điều kiện tự nhiên dùng trong xây dựng",
+          "amending": false,
+          "status": "CHL",
+          "statusName": "Còn hiệu lực",
+          "issueDate": "2022-09-26",
+          "effFrom": "2023-03-26",
+          "effTo": null,
+          "url": "https://vbpl.vn/van-ban/chi-tiet/156199"
+        }
+      ]
+    },
+    "QCVN 03:2022/BXD": {
+      "query": "QCVN 03:2022/BXD",
+      "total": 0,
+      "matches": []
+    },
+    "QCVN 10:2023/BXD": {
+      "query": "QCVN 10:2023/BXD",
+      "total": 0,
+      "matches": []
+    },
+    "TCVN 2737:2023": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 5574:2018": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 5575:2024": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 9362:2012": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 10304:2014": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 9386:2012": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 4453:1995": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 4055:2012": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    },
+    "TCVN 9385:2012": {
+      "query": null,
+      "note": "TCVN/TCXD không phải văn bản QPPL — vbpl.vn không tra được",
+      "matches": []
+    }
+  }
+}

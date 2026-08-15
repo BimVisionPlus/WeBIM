@@ -7,6 +7,7 @@
 // corpus (qcvn-conflict-map / plancheck).
 
 import corpusData from "./corpus.json";
+import vbplData from "./vbpl.json";
 
 export type StandardKind = "QCVN" | "TCVN" | "VBPL";
 export type StandardStatus = "HIEN_HANH" | "HET_HIEU_LUC";
@@ -34,6 +35,27 @@ export interface StandardEntry {
   /** Known cross-regulation conflicts referencing this document. */
   conflicts: StandardConflict[];
   note?: string;
+  /** Văn bản khớp trên vbpl.vn — [0] là bản gốc nếu tách được. */
+  vbpl?: VbplRef[];
+  /** Ngày đối chiếu vbpl.vn gần nhất (có dữ liệu cho mã này). */
+  vbplCheckedAt?: string;
+  /** Khác biệt tình trạng hiệu lực giữa catalog và vbpl.vn, nếu có. */
+  vbplMismatch?: string;
+  /** Lý do không đối chiếu được (TCVN…) hoặc đối chiếu gián tiếp. */
+  vbplNote?: string;
+}
+
+/** Một văn bản trên vbpl.vn khớp với mục catalog (gốc hoặc sửa đổi). */
+export interface VbplRef {
+  docNum: string;
+  title: string;
+  /** Mã tình trạng của vbpl.vn: CHL, HHLTB, HHLMP, NHL, CCHL… */
+  status: string;
+  statusName: string;
+  amending: boolean;
+  effFrom: string;
+  effTo: string | null;
+  url: string;
 }
 
 const SEED_CATALOG: Omit<StandardEntry, "source" | "editionVerified" | "conflicts">[] = [
@@ -265,7 +287,66 @@ function buildCatalog(): StandardEntry[] {
   return [...corpusEntries, ...seedEntries];
 }
 
-export const STANDARDS_CATALOG: StandardEntry[] = buildCatalog();
+/** CHL/CCHL của vbpl.vn ↔ trạng thái hai mức của catalog. */
+function vbplToCatalogStatus(code: string): StandardStatus {
+  return code === "CHL" || code === "CCHL" ? "HIEN_HANH" : "HET_HIEU_LUC";
+}
+
+function formatVnDate(iso: string | null): string {
+  if (!iso) return "";
+  const [year, month, day] = iso.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+interface VbplSnapshotEntry {
+  query: string | null;
+  note?: string;
+  matches: VbplRef[];
+}
+
+/**
+ * Gắn kết quả đối chiếu vbpl.vn (scripts/crawl-vbpl.mjs, cào hằng tuần) vào
+ * catalog. vbpl.vn chỉ BỔ SUNG — status của catalog không bị ghi đè: khi hai
+ * nguồn lệch nhau, việc đúng là nói ra chỗ lệch chứ không phải chọn im lặng
+ * một nguồn. Bản gốc (không phải văn bản sửa đổi) là mốc so tình trạng.
+ */
+function attachVbpl(entries: StandardEntry[]): StandardEntry[] {
+  const snapshot = vbplData as unknown as {
+    fetchedAt: string;
+    entries: Record<string, VbplSnapshotEntry>;
+  };
+  for (const entry of entries) {
+    const checked = snapshot.entries[entry.code];
+    if (!checked) continue;
+    if (checked.matches.length === 0) {
+      if (checked.note) entry.vbplNote = checked.note;
+      continue;
+    }
+    // Bản gốc trước, các bản sửa đổi sau — UI đọc [0] làm mốc.
+    const ordered = [
+      ...checked.matches.filter((match) => !match.amending),
+      ...checked.matches.filter((match) => match.amending),
+    ];
+    entry.vbpl = ordered;
+    entry.vbplCheckedAt = snapshot.fetchedAt;
+    if (checked.note) entry.vbplNote = checked.note;
+    const base = ordered[0];
+    if (!base.amending && vbplToCatalogStatus(base.status) !== entry.status) {
+      entry.vbplMismatch =
+        `vbpl.vn ghi "${base.statusName}"` +
+        (base.effTo ? ` (đến ${formatVnDate(base.effTo)})` : "") +
+        ` — catalog đang ghi ${entry.status === "HIEN_HANH" ? "hiện hành" : "hết hiệu lực"}.`;
+    }
+  }
+  return entries;
+}
+
+export const VBPL_PROVENANCE = {
+  source: (vbplData as { source: string }).source,
+  fetchedAt: (vbplData as { fetchedAt: string }).fetchedAt,
+};
+
+export const STANDARDS_CATALOG: StandardEntry[] = attachVbpl(buildCatalog());
 
 /**
  * Where the corpus half of the catalog came from and when. A weekly job

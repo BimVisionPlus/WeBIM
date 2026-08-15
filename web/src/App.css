@@ -1342,3 +1342,20 @@ input[type="text"],
 .naming-bad {
   color: var(--warn, #d29922);
 }
+
+/* ── Đối chiếu vbpl.vn ─────────────────────────────────────────────────── */
+
+.vbpl-refs {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.vbpl-mismatch {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--warn, #d29922);
+  max-width: 220px;
+}

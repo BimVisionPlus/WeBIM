@@ -1,11 +1,11 @@
 name: Standards corpus
 
-# Re-import the machine-checkable QCVN/TCVN corpus once a week so the
-# Standards module does not quietly drift behind the upstream registry.
+# Re-import the machine-checkable QCVN/TCVN corpus once a week, then re-check
+# effectiveness status against vbpl.vn (CSDL quốc gia về pháp luật) so the
+# Standards module does not quietly drift behind either upstream.
 #
-# The importer leaves corpus.json alone when nothing changed, so a quiet
-# week produces no commit at all — a diff here always means the corpus
-# actually moved.
+# Both steps leave their JSON alone when nothing changed, so a quiet week
+# produces no commit at all — a diff here always means data actually moved.
 
 on:
   schedule:
@@ -49,15 +49,28 @@ jobs:
         working-directory: web
         run: node scripts/import-corpus.mjs "$GITHUB_WORKSPACE/corpus"
 
+      # Cào qua trình duyệt thật vì vbpl.vn là SPA server-action (xem đầu
+      # scripts/crawl-vbpl.mjs). Cào hỏng không được phép chặn corpus:
+      # continue-on-error giữ snapshot tuần trước — dữ liệu cũ có ghi ngày
+      # đối chiếu, còn workflow đỏ mỗi tuần vì WAF thì sẽ bị ngó lơ.
+      - name: Install Playwright Chromium
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - name: Đối chiếu vbpl.vn
+        working-directory: web
+        continue-on-error: true
+        run: node scripts/crawl-vbpl.mjs
+
       - name: Stop early if nothing moved
         id: diff
         run: |
-          if git diff --quiet -- web/src/standards/corpus.json; then
+          if git diff --quiet -- web/src/standards/corpus.json web/src/standards/vbpl.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Corpus unchanged this week."
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            git --no-pager diff --stat -- web/src/standards/corpus.json
+            git --no-pager diff --stat -- web/src/standards/corpus.json web/src/standards/vbpl.json
           fi
 
       # The catalog merges corpus over seed, so a corpus change can break
@@ -76,7 +89,7 @@ jobs:
           count=$(node -e "process.stdout.write(String(require('./web/src/standards/corpus.json').entries.length))")
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web/src/standards/corpus.json
+          git add web/src/standards/corpus.json web/src/standards/vbpl.json
           git commit -m "chore: refresh standards corpus to ${revision}" \
-                     -m "${count} văn bản QCVN/TCVN, nhập tự động từ aec-platform/qcvn-conflict-map@${revision}."
+                     -m "${count} văn bản QCVN/TCVN từ aec-platform/qcvn-conflict-map@${revision}, kèm đối chiếu hiệu lực vbpl.vn."
           git push

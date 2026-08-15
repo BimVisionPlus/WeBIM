@@ -10,6 +10,7 @@ import {
   supersessionChain,
   CORPUS_PROVENANCE,
   STANDARDS_CATALOG,
+  VBPL_PROVENANCE,
 } from "../standards/catalog";
 import { climateFindings, facadeByOrientation } from "../application/climate";
 import { ganttChart, weekTicks } from "../application/gantt";
@@ -585,6 +586,14 @@ export function StandardsModule() {
           </>
         )}
       </p>
+      <p className="module-hint">
+        Tình trạng hiệu lực đối chiếu với <strong>vbpl.vn</strong> (CSDL quốc
+        gia về pháp luật, Bộ Tư pháp) ngày {VBPL_PROVENANCE.fetchedAt} —{" "}
+        {STANDARDS_CATALOG.filter((entry) => entry.vbpl?.length).length} văn bản
+        khớp, kèm link toàn văn chính thức. TCVN không phải văn bản QPPL nên
+        không nằm trong CSDL đó; hai nguồn lệch nhau sẽ được ghi rõ thay vì
+        chọn im lặng một nguồn.
+      </p>
       <div className="module-form">
         <input
           placeholder="Tìm theo mã, tên, tag… (vd: chay, tai trong, chung cu)"
@@ -621,7 +630,28 @@ export function StandardsModule() {
             <tr key={entry.id}>
               <td>{entry.code}</td>
               <td>{entry.title}</td>
-              <td>{entry.status === "HIEN_HANH" ? "Hiện hành" : "Hết hiệu lực"}</td>
+              <td>
+                {entry.status === "HIEN_HANH" ? "Hiện hành" : "Hết hiệu lực"}
+                {entry.vbpl && entry.vbpl.length > 0 && (
+                  <div className="vbpl-refs">
+                    {entry.vbpl.map((ref) => (
+                      <a
+                        key={ref.url}
+                        href={ref.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={`${ref.title} — ${ref.statusName}`}
+                      >
+                        {ref.amending ? "SĐ " : ""}
+                        {ref.docNum} ↗
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {entry.vbplMismatch && (
+                  <div className="vbpl-mismatch">⚠ {entry.vbplMismatch}</div>
+                )}
+              </td>
               <td>{supersessionChain(entry).join(" → ") || "—"}</td>
               <td>
                 <span className={`source-badge ${entry.source}`}>
