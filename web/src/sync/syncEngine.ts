@@ -534,7 +534,15 @@ export class SyncEngine {
       const response = await fetch(this.snapshotUrl(), {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!response.ok) return; // 404 = dự án chưa từng đẩy; 401/403 = không phận sự
+      if (response.status === 404) {
+        // Dự án chưa từng có trên server — ĐẨY bản local lên làm snapshot
+        // đầu tiên. Không có nhánh này thì một dự án vừa "đăng ký riêng tư"
+        // nhưng chưa ai vẽ thêm gì sẽ trống trơn trên server mãi mãi, và
+        // "đổi máy" mất trắng đúng lúc người ta tin là đã an toàn.
+        this.schedulePushSnapshot();
+        return;
+      }
+      if (!response.ok) return; // 401/403 = không phận sự
       const snapshot = (await response.json()) as {
         projectId?: string;
         clocks?: ElementClocks;

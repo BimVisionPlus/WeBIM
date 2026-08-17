@@ -772,6 +772,9 @@ export class AppStore {
       this.projectRole = null;
     }
     this.commit(false);
+    // Dự án của mình (vừa claim / vừa đăng nhập) mà server chưa có snapshot
+    // thì đẩy luôn — push là debounce + idempotent, gọi thừa vô hại.
+    if (this.canEdit) this.sync?.schedulePushSnapshot();
   }
 
   get canEdit(): boolean {
