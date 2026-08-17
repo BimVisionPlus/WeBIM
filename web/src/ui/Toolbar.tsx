@@ -245,6 +245,45 @@ export function Toolbar() {
           </button>
           <button
             onClick={() => {
+              close();
+              void (async () => {
+                try {
+                  const projects = await store.listServerProjects();
+                  if (projects.length === 0) {
+                    store.setStatus("Máy chủ chưa có snapshot dự án nào bạn xem được.");
+                    return;
+                  }
+                  const menu = projects
+                    .map((project, index) => `${index + 1}. ${project.name}`)
+                    .join("\n");
+                  const picked = window.prompt(
+                    `Mở dự án nào từ máy chủ?\n${menu}\n\nNhập số thứ tự:`,
+                    "1",
+                  );
+                  const index = Number(picked) - 1;
+                  const target = projects[index];
+                  if (!target) return;
+                  if (
+                    !window.confirm(
+                      `Mở "${target.name}" sẽ thay "${store.projectLabel}" đang mở. Tiếp tục?`,
+                    )
+                  ) {
+                    return;
+                  }
+                  await store.openServerProject(target.id);
+                } catch (error) {
+                  store.setStatus(
+                    error instanceof Error ? error.message : String(error),
+                  );
+                }
+              })();
+            }}
+            title="Dự án đã đồng bộ snapshot lên máy chủ nền tảng — mở được từ bất kỳ máy nào"
+          >
+            Mở từ máy chủ…
+          </button>
+          <button
+            onClick={() => {
               download(
                 `${store.projectLabel}.webim.json`,
                 store.serializeProject(),

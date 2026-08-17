@@ -379,7 +379,7 @@ interface EngineHooks {
 }
 
 const CLOCKS_KEY = "webim.sync_clocks";
-import { relayBase } from "../config";
+import { apiBase, relayBase } from "../config";
 
 const RELAY_URL_KEY = "webim.relay_url";
 
@@ -480,9 +480,11 @@ export class SyncEngine {
           this.broadcastPresence();
         },
         (connected) => {
+          const cameOnline = connected && !this.relayConnected;
           this.relayConnected = connected;
           this.standalone = false;
           this.hooks.onRelayStatus?.(connected);
+          if (cameOnline) void this.pullSnapshot();
         },
         () => {
           this.standalone = true;
@@ -497,6 +499,93 @@ export class SyncEngine {
 
   /** True when there is no relay to talk to: tab-local sync only. */
   standalone = false;
+
+  // ── Snapshot server (quyết định C1, docs/KIEN-TRUC.md) ────────────────
+  //
+  // Trước đây "late joiner nhận state từ peer đang online" — không ai
+  // online thì thành viên mới nhận dự án RỖNG, đổi máy là mất dự án.
+  // Relay giờ lưu snapshot {project, clocks} theo projectId: mở dự án thì
+  // KÉO về merge LWW (đường onRemote sẵn có), mỗi commit thì ĐẨY lên
+  // (debounce) — nguồn sự thật nằm ở server, localStorage chỉ còn là cache.
+
+  private pushTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private authToken(): string | null {
+    try {
+      return (
+        (JSON.parse(localStorage.getItem("webim.auth") ?? "null") as {
+          token?: string;
+        } | null)?.token ?? null
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  private snapshotUrl(): string {
+    return `${apiBase()}/projects/${encodeURIComponent(this.hooks.getProjectId())}/state`;
+  }
+
+  /** Kéo snapshot từ server và merge như một frame sync từ peer "__server__". */
+  async pullSnapshot(): Promise<void> {
+    if (this.standalone) return;
+    try {
+      const token = this.authToken();
+      const response = await fetch(this.snapshotUrl(), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) return; // 404 = dự án chưa từng đẩy; 401/403 = không phận sự
+      const snapshot = (await response.json()) as {
+        projectId?: string;
+        clocks?: ElementClocks;
+        project?: Record<string, unknown>;
+      };
+      if (!snapshot.project || !snapshot.clocks) return;
+      if (snapshot.projectId && snapshot.projectId !== this.hooks.getProjectId()) return;
+      this.onRemote({
+        type: "sync",
+        projectId: this.hooks.getProjectId(),
+        clientId: "__server__",
+        clocks: snapshot.clocks,
+        project: snapshot.project,
+      });
+      // Bản merge (local ⊕ server) là bản đầy đủ hơn cả hai — đẩy lại ngay
+      // để server không giữ mãi snapshot cũ.
+      this.schedulePushSnapshot();
+    } catch {
+      // Mất mạng thoáng qua: snapshot là tăng cường, không phải điều kiện sống.
+    }
+  }
+
+  /** Nhận bộ đồng hồ LWW của một dự án vừa mở từ máy chủ. */
+  adoptClocks(clocks: ElementClocks): void {
+    this.clocks = { ...clocks };
+    this.lamport = Math.max(0, ...Object.values(this.clocks).map((clock) => clock.t));
+    localStorage.setItem(CLOCKS_KEY, JSON.stringify(this.clocks));
+    this.shadow = collectElements(this.hooks.getProjectDict());
+  }
+
+  /** Đẩy snapshot sau commit, gộp các commit dồn dập thành một lần ghi. */
+  schedulePushSnapshot(): void {
+    if (this.standalone || typeof fetch === "undefined") return;
+    if (this.pushTimer) clearTimeout(this.pushTimer);
+    this.pushTimer = setTimeout(() => {
+      this.pushTimer = null;
+      const token = this.authToken();
+      void fetch(this.snapshotUrl(), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          projectId: this.hooks.getProjectId(),
+          clocks: this.clocks,
+          project: this.hooks.getProjectDict(),
+        }),
+      }).catch(() => undefined);
+    }, 3000);
+  }
 
   /** Drop and re-open the relay connection (after login/logout). */
   reconnectRelay(): void {
@@ -542,6 +631,7 @@ export class SyncEngine {
     this.shadow = next;
     if (changed.length > 0) {
       this.broadcastState();
+      this.schedulePushSnapshot();
     }
   }
 

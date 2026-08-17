@@ -1332,6 +1332,48 @@ export class AppStore {
     return JSON.stringify(this.project.toDict());
   }
 
+  /** Danh sách dự án có snapshot trên máy chủ mà tôi xem được. */
+  async listServerProjects(): Promise<{ id: string; name: string }[]> {
+    const response = await fetch(`${fileServerBase()}/projects`, {
+      headers: authHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(
+        response.status === 401
+          ? "Cần đăng nhập để xem dự án trên máy chủ."
+          : `Máy chủ trả lỗi ${response.status}`,
+      );
+    }
+    return ((await response.json()) as { projects: { id: string; name: string }[] })
+      .projects;
+  }
+
+  /** Mở một dự án từ snapshot trên máy chủ — trái tim của "đổi máy". */
+  async openServerProject(projectId: string): Promise<void> {
+    try {
+      const response = await fetch(
+        `${fileServerBase()}/projects/${encodeURIComponent(projectId)}/state`,
+        { headers: authHeaders() },
+      );
+      if (!response.ok) {
+        throw new Error(`Không tải được dự án (${response.status})`);
+      }
+      const snapshot = (await response.json()) as {
+        project: Record<string, unknown>;
+        clocks: Record<string, { t: number; c: string }>;
+      };
+      this.project = NativeBimProject.fromJson(JSON.stringify(snapshot.project));
+      this.resetViewState();
+      // Đồng hồ LWW đi theo dự án — thiếu nó thì commit đầu tiên trên máy
+      // mới sẽ thua mọi phần tử cũ khi merge.
+      this.sync?.adoptClocks(snapshot.clocks);
+      this.statusMessage = `Đã mở "${this.projectLabel}" từ máy chủ`;
+      this.commit();
+    } catch (error) {
+      this.setStatus(error instanceof Error ? error.message : String(error));
+    }
+  }
+
   loadProjectJson(payload: string): void {
     this.project = NativeBimProject.fromJson(payload);
     if (this.project.views.length === 0) {

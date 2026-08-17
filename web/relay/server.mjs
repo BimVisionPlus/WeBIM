@@ -204,6 +204,76 @@ export function startRelay(port = 8787, options = {}) {
         return need === "viewer" || eff.role === "owner" || eff.role === "editor";
       };
 
+      /**
+       * Snapshot dự án (C1, docs/KIEN-TRUC.md): nguồn sự thật nằm ở server.
+       * GET = thành viên (viewer trở lên) kéo về merge; PUT = editor đẩy
+       * {projectId, clocks, project} sau mỗi đợt commit. Lưu qua storage
+       * adapter dưới key `<projectId>/.state/snapshot.json` — /list giấu
+       * tiền tố .state/ để nó không hiện thành "file CDE".
+       */
+      /**
+       * Danh sách dự án có snapshot trên máy chủ mà NGƯỜI GỌI xem được —
+       * "đổi máy" đi qua đây: máy mới không có localStorage thì không biết
+       * projectId nào để kéo; danh sách này là cửa "Mở từ máy chủ".
+       */
+      if (url.pathname === "/projects" && request.method === "GET") {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const files = await storage.list("");
+        const projects = [];
+        for (const file of files) {
+          const key = file.key ?? file;
+          if (!key.endsWith("/.state/snapshot.json")) continue;
+          if (!fileAccess(key, "viewer")) continue;
+          const projectId = key.split("/")[0];
+          let name = projectId;
+          try {
+            name =
+              JSON.parse((await storage.get(key)).toString("utf8")).project?.name ?? projectId;
+          } catch {
+            // snapshot hỏng vẫn được liệt kê — người dùng còn thấy mà báo.
+          }
+          projects.push({ id: projectId, name, size: file.size ?? null });
+        }
+        return reply(200, { projects });
+      }
+
+      const stateMatch = url.pathname.match(/^\/projects\/([^/]+)\/state$/);
+      if (stateMatch) {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const projectId = decodeURIComponent(stateMatch[1]);
+        const stateKey = `${projectId}/.state/snapshot.json`;
+        if (request.method === "GET") {
+          if (!fileAccess(stateKey, "viewer")) {
+            return reply(403, { error: "Bạn không phải thành viên dự án này." });
+          }
+          try {
+            return reply(200, (await storage.get(stateKey)).toString("utf8"));
+          } catch {
+            return reply(404, { error: "Dự án chưa có snapshot trên máy chủ." });
+          }
+        }
+        if (request.method === "PUT") {
+          if (!fileAccess(stateKey, "editor")) {
+            return reply(403, { error: "Bạn không có quyền editor trong dự án này." });
+          }
+          const raw = await readBody(request);
+          if (raw.length > 25 * 1024 * 1024) {
+            return reply(413, { error: "Snapshot quá 25 MB." });
+          }
+          let parsed;
+          try {
+            parsed = JSON.parse(raw.toString("utf8"));
+          } catch {
+            return reply(400, { error: "Snapshot không phải JSON hợp lệ." });
+          }
+          if (!parsed.project || !parsed.clocks) {
+            return reply(400, { error: "Snapshot cần {project, clocks}." });
+          }
+          await storage.put(stateKey, raw);
+          return reply(200, { ok: true });
+        }
+      }
+
       if (url.pathname.startsWith("/files/")) {
         const key = safeKey(url.pathname.slice("/files/".length));
         if (!key) return reply(400, { error: "bad key" });
@@ -238,7 +308,10 @@ export function startRelay(port = 8787, options = {}) {
         // Danh sách cũng là dữ liệu: file của dự án riêng tư không được lộ
         // tên cho người ngoài dự án.
         return reply(200, {
-          files: files.filter((file) => fileAccess(file.key ?? file, "viewer")),
+          files: files.filter((file) => {
+            const key = file.key ?? file;
+            return !key.includes("/.state/") && fileAccess(key, "viewer");
+          }),
         });
       }
 

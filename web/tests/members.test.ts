@@ -229,3 +229,51 @@ describe("store: quyền dự án điều khiển UI", () => {
     expect(store.roleBanner).toBeNull();
   });
 });
+
+describe("snapshot dự án trên server (C1)", () => {
+  const snapshot = {
+    projectId: "duanA",
+    clocks: { w1: { t: 1, c: "a" } },
+    project: { name: "Dự án A", walls: [{ id: "w1" }] },
+  };
+
+  it("editor thành viên đẩy được, viewer/người ngoài thì không", async () => {
+    const put = (user: string) =>
+      api("/projects/duanA/state", {
+        method: "PUT",
+        headers: asUser(user, { "Content-Type": "application/json" }),
+        body: JSON.stringify(snapshot),
+      });
+    expect((await put("thanhvien")).status).toBe(200);
+    expect((await put("nguoingoai")).status).toBe(403);
+  });
+
+  it("thành viên kéo về đúng snapshot; người ngoài bị chặn; dự án lạ 404", async () => {
+    const got = await api("/projects/duanA/state", { headers: asUser("chu") });
+    expect(got.status).toBe(200);
+    const body = (await got.json()) as typeof snapshot;
+    expect(body.project.name).toBe("Dự án A");
+    expect(body.clocks.w1.t).toBe(1);
+
+    expect(
+      (await api("/projects/duanA/state", { headers: asUser("nguoingoai") })).status,
+    ).toBe(403);
+    expect(
+      (await api("/projects/chua-co/state", { headers: asUser("chu") })).status,
+    ).toBe(404);
+  });
+
+  it("snapshot rác bị từ chối; file .state không lộ trong /list", async () => {
+    const bad = await api("/projects/duanA/state", {
+      method: "PUT",
+      headers: asUser("thanhvien", { "Content-Type": "application/json" }),
+      body: "khong phai json",
+    });
+    expect(bad.status).toBe(400);
+
+    const list = (await (
+      await api("/list?prefix=", { headers: asUser("chu") })
+    ).json()) as { files: { key: string }[] };
+    expect(list.files.some((file) => file.key.includes("/.state/"))).toBe(false);
+  });
+});
