@@ -23,6 +23,8 @@ import type { IfcAPI as IfcApiType } from "web-ifc";
 
 export interface RealMesh {
   expressId: number;
+  /** Id hình học gốc — các phần tử LẶP (cột, cửa…) chia sẻ cùng một id. */
+  geometryId: number;
   /** Vị trí đỉnh, Y-up, đã ở toạ độ thế giới cục bộ của geometry. */
   positions: Float32Array;
   normals: Float32Array;
@@ -75,6 +77,19 @@ function toZUp(x: number, y: number, z: number): [number, number, number] {
 }
 
 export async function parseRealGeometry(text: string): Promise<RealGeometry> {
+  // Tiền kiểm TRƯỚC khi đưa vào WASM: web-ifc gặp file cụt giữa chừng sẽ
+  // quay ~18 GIÂY rồi mới chết "memory access out of bounds" (đo bằng
+  // fixture broken-truncated.ifc) — 18 giây UI đơ vì một file hỏng. File
+  // STEP lành luôn đóng bằng END-ISO-10303-21; thiếu nó là cụt, chặn ngay.
+  const tail = text.slice(-256);
+  if (!text.trimStart().startsWith("ISO-10303-21")) {
+    throw new Error("Không phải file IFC (thiếu header ISO-10303-21).");
+  }
+  if (!/END-ISO-10303-21\s*;?\s*$/.test(tail.trimEnd())) {
+    throw new Error(
+      "File IFC cụt giữa chừng (thiếu END-ISO-10303-21) — tải lại file gốc thay vì đưa bản hỏng vào bộ dựng hình.",
+    );
+  }
   const api = await ifcApi();
   const modelID = api.OpenModel(new TextEncoder().encode(text));
   const meshes: RealMesh[] = [];
@@ -137,6 +152,7 @@ export async function parseRealGeometry(text: string): Promise<RealGeometry> {
 
         meshes.push({
           expressId: mesh.expressID,
+          geometryId: placed.geometryExpressID,
           positions,
           normals,
           indices: new Uint32Array(indices),
@@ -185,4 +201,41 @@ export async function parseRealGeometry(text: string): Promise<RealGeometry> {
   } finally {
     api.CloseModel(modelID);
   }
+}
+
+/** Một nhóm instance: hình học dùng chung + danh sách ma trận đặt chỗ. */
+export interface InstanceGroup {
+  /** Mesh đại diện (mang positions/normals/indices/color dùng chung). */
+  template: RealMesh;
+  /** Ma trận của TỪNG instance — kể cả khi chỉ có một. */
+  matrices: number[][];
+}
+
+/**
+ * Gom mesh theo (geometryId, màu): 40 cây cột giống nhau là MỘT geometry
+ * + 40 ma trận thay vì 40 bản sao đầy đủ — draw call và RAM giảm theo số
+ * lần lặp. Màu vào khoá vì hai placed item cùng hình có thể khác vật liệu,
+ * và InstancedMesh chỉ có một material.
+ */
+export function groupInstances(meshes: RealMesh[]): InstanceGroup[] {
+  const groups = new Map<string, InstanceGroup>();
+  for (const mesh of meshes) {
+    const key = `${mesh.geometryId}|${mesh.color.r.toFixed(3)},${mesh.color.g.toFixed(3)},${mesh.color.b.toFixed(3)},${mesh.color.a.toFixed(3)}`;
+    const group = groups.get(key);
+    if (group) {
+      group.matrices.push(mesh.matrix);
+    } else {
+      groups.set(key, { template: mesh, matrices: [mesh.matrix] });
+    }
+  }
+  return [...groups.values()];
+}
+
+/** Bytes một mesh chiếm trong RAM — để trần bộ nhớ đo được thay vì đoán. */
+export function meshBytes(meshes: RealMesh[]): number {
+  return meshes.reduce(
+    (sum, mesh) =>
+      sum + mesh.positions.byteLength + mesh.normals.byteLength + mesh.indices.byteLength,
+    0,
+  );
 }

@@ -586,7 +586,24 @@ export class AppStore {
       // Người dùng có thể đã unlink trong lúc WASM chạy.
       if (!model || real.elements.length === 0) return;
 
-      this.meshCache.set(name, real.meshes);
+      // Trần bộ nhớ mesh ĐO ĐƯỢC: model vượt trần thì vẫn lấy AABB (clash
+      // chạy được) nhưng không cache tam giác — viewer rơi về hộp bao và
+      // status NÓI RA, thay vì để tab chết OOM trong im lặng.
+      const { meshBytes } = await import("../ifc/realGeometry");
+      const MESH_BUDGET_BYTES = 256 * 1024 * 1024;
+      const incoming = meshBytes(real.meshes);
+      const cached = [...this.meshCache.values()].reduce(
+        (sum, meshes) => sum + meshBytes(meshes),
+        0,
+      );
+      if (cached + incoming > MESH_BUDGET_BYTES) {
+        this.setStatus(
+          `${name}: hình học ${(incoming / 1048576).toFixed(0)} MB vượt trần bộ nhớ viewer — ` +
+            `giữ AABB cho va chạm, viewer hiện hộp bao. Unlink model khác để nhả chỗ.`,
+        );
+      } else {
+        this.meshCache.set(name, real.meshes);
+      }
 
       // Hợp nhất theo GlobalId: phần tử bộ đọc thường đã thấy thì siết lại
       // AABB (giữ pset); phần tử nó bỏ qua thì thêm mới — từ đây clash phủ

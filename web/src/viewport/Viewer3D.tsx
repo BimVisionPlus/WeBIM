@@ -11,7 +11,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { NativeBimProject } from "../domain/project";
 import { store, type LinkedModel } from "../state/store";
-import type { RealMesh } from "../ifc/realGeometry";
+import { groupInstances, type RealMesh } from "../ifc/realGeometry";
 import { wallPieces } from "../application/wallGeometry";
 
 const LEVEL_COLORS = [0x8a94a8, 0xa89a7c, 0x7ca8a0, 0xa87c94];
@@ -148,21 +148,34 @@ function buildModel(
       // web-ifc trả toạ độ Y-up; cảnh này Z-up → cả cụm xoay X +90°.
       const yUpGroup = new THREE.Group();
       yUpGroup.rotation.x = Math.PI / 2;
-      for (const real of realMeshes) {
+      // Instancing: 40 cột giống nhau = MỘT geometry + 40 ma trận, không
+      // phải 40 bản sao — model KC/MEP toàn phần tử lặp là nơi ăn tiền.
+      for (const { template, matrices } of groupInstances(realMeshes)) {
         const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute("position", new THREE.BufferAttribute(real.positions, 3));
-        geometry.setAttribute("normal", new THREE.BufferAttribute(real.normals, 3));
-        geometry.setIndex(new THREE.BufferAttribute(real.indices, 1));
+        geometry.setAttribute("position", new THREE.BufferAttribute(template.positions, 3));
+        geometry.setAttribute("normal", new THREE.BufferAttribute(template.normals, 3));
+        geometry.setIndex(new THREE.BufferAttribute(template.indices, 1));
         const material = new THREE.MeshLambertMaterial({
-          color: new THREE.Color(real.color.r, real.color.g, real.color.b),
-          transparent: real.color.a < 1,
-          opacity: real.color.a,
+          color: new THREE.Color(template.color.r, template.color.g, template.color.b),
+          transparent: template.color.a < 1,
+          opacity: template.color.a,
           side: THREE.DoubleSide,
         });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.matrixAutoUpdate = false;
-        mesh.matrix.fromArray(real.matrix);
-        yUpGroup.add(mesh);
+        if (matrices.length === 1) {
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.matrixAutoUpdate = false;
+          mesh.matrix.fromArray(matrices[0]);
+          yUpGroup.add(mesh);
+        } else {
+          const instanced = new THREE.InstancedMesh(geometry, material, matrices.length);
+          const matrix = new THREE.Matrix4();
+          matrices.forEach((values, index) => {
+            matrix.fromArray(values);
+            instanced.setMatrixAt(index, matrix);
+          });
+          instanced.instanceMatrix.needsUpdate = true;
+          yUpGroup.add(instanced);
+        }
       }
       group.add(yUpGroup);
       continue;
