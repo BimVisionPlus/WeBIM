@@ -221,3 +221,39 @@ describe("nhật ký kiểm toán (GĐ4)", () => {
     expect(denied.status).toBe(403);
   });
 });
+
+describe("render credit (GĐ6)", () => {
+  it("free có 10 credit; 501 khi AI off KHÔNG đốt credit; admin nạp thêm", async () => {
+    const who = await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "hoa.si", password: "matkhau8kytu" }),
+    });
+    const token = ((await who.json()) as { token: string }).token;
+    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+
+    const plan = (await (
+      await api("/billing/plan", { headers })
+    ).json()) as { renderCredits: number };
+    expect(plan.renderCredits).toBe(10);
+
+    // AI chưa cấu hình → 501 và KHÔNG được đốt credit: server thiếu cấu
+    // hình không phải lỗi của người dùng.
+    const blocked = await api("/ai/render-concept", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ image: "data:image/png;base64,x", style: "x" }),
+    });
+    expect(blocked.status).toBe(501);
+    const after = (await (
+      await api("/billing/plan", { headers })
+    ).json()) as { renderCredits: number };
+    expect(after.renderCredits).toBe(10);
+
+    const refill = await api("/auth/users/hoa.si/credits", {
+      method: "PUT",
+      headers: asUser("quantri", { "Content-Type": "application/json" }),
+      body: JSON.stringify({ amount: 5 }),
+    });
+    expect(((await refill.json()) as { renderCredits: number }).renderCredits).toBe(15);
+  });
+});

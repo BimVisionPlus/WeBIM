@@ -149,12 +149,53 @@ export function createAuth({ usersPath, accountsPath, secret } = {}) {
       const user = users.find((candidate) => candidate.username === username);
       if (!user) throw new Error(`Không có tài khoản "${username}".`);
       user.plan = plan;
+      // Nâng gói kèm nạp credit render lên mức gói mới (không hạ nếu đang cao hơn).
+      if (plan !== "free") {
+        user.renderCredits = Math.max(user.renderCredits ?? 0, 200);
+      }
       user.planUntil =
         plan === "free" || months === null
           ? null
           : new Date(Date.now() + months * 30.44 * 86_400_000).toISOString();
       persist();
       return { plan: user.plan, planUntil: user.planUntil };
+    },
+
+    /**
+     * Credit render AI — mỗi lượt render ảnh (Stable Diffusion) trừ 1.
+     * Gói free khởi đầu 10, team lên 200; admin nạp thêm được. Đếm ở
+     * SERVER vì GPU là tiền thật; UI chỉ hiển thị số dư.
+     */
+    renderCreditsOf(username) {
+      if (!enabled) return Infinity;
+      const user = users.find((candidate) => candidate.username === username);
+      if (!user) return 0;
+      if (user.renderCredits === undefined) {
+        return effectivePlan(user) === "free" ? 10 : 200;
+      }
+      return user.renderCredits;
+    },
+
+    /** Trừ 1 credit — trả false khi hết (và không trừ). */
+    consumeRenderCredit(username) {
+      if (!enabled) return true;
+      const user = users.find((candidate) => candidate.username === username);
+      if (!user) return false;
+      const balance =
+        user.renderCredits ?? (effectivePlan(user) === "free" ? 10 : 200);
+      if (balance <= 0) return false;
+      user.renderCredits = balance - 1;
+      persist();
+      return true;
+    },
+
+    /** Admin nạp credit. */
+    grantRenderCredits(username, amount) {
+      const user = users.find((candidate) => candidate.username === username);
+      if (!user) throw new Error(`Không có tài khoản "${username}".`);
+      user.renderCredits = Math.max(0, this.renderCreditsOf(username) + Number(amount || 0));
+      persist();
+      return user.renderCredits;
     },
 
     /** Admin đổi role người khác. Không tự hạ admin cuối cùng. */

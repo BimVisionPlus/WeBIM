@@ -12,7 +12,7 @@ import {
   STANDARDS_CATALOG,
   VBPL_PROVENANCE,
 } from "../standards/catalog";
-import { climateFindings, facadeByOrientation } from "../application/climate";
+import { climateFindings, estimateOttv, facadeByOrientation } from "../application/climate";
 import { ganttChart, weekTicks } from "../application/gantt";
 import { Viewer3D } from "../viewport/Viewer3D";
 import {
@@ -913,6 +913,7 @@ export function ClimateModule() {
   useStoreVersion();
   const rows = facadeByOrientation(store.project);
   const findings = climateFindings(rows);
+  const ottv = estimateOttv(rows);
   return (
     <div className="module-host">
       <h2>Climate — phân tích vi khí hậu theo hướng</h2>
@@ -964,6 +965,39 @@ export function ClimateModule() {
           </div>
         ))}
       </div>
+      {ottv && (
+        <>
+          <h3>OTTV ước tính (QCVN 09:2017/BXD)</h3>
+          <p className="module-hint">
+            Công thức rút gọn với hệ số mặc định (tường gạch U=2.5, kính đơn
+            U=5.8 · SHGC 0.85, bức xạ theo hướng vĩ độ VN) — model chưa mang
+            lớp vật liệu thật nên đây là <strong>sàng lọc phương án</strong>{" "}
+            (đổi kính, đổi WWR thấy số đổi), không phải hồ sơ thẩm tra QCVN 09.
+          </p>
+          <p className={ottv.pass ? "naming-ok" : "naming-bad"}>
+            OTTV trung bình {ottv.overall.toFixed(1)} W/m² / ngưỡng {ottv.limit} —{" "}
+            {ottv.pass ? "đạt định hướng" : "VƯỢT — cân nhắc giảm WWR hướng Tây hoặc kính Low-E"}
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Hướng</th>
+                <th>Diện tích (m²)</th>
+                <th>OTTV (W/m²)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ottv.rows.map((row) => (
+                <tr key={row.orientation} className={row.ottv > ottv.limit ? "row-warning" : ""}>
+                  <td>{row.orientation}</td>
+                  <td>{row.grossArea.toFixed(1)}</td>
+                  <td>{row.ottv.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </div>
   );
 }

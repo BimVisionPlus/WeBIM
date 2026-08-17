@@ -247,6 +247,22 @@ export function startRelay(port = 8787, options = {}) {
         }
       }
 
+      if (url.pathname.match(/^\/auth\/users\/[^/]+\/credits$/) && request.method === "PUT") {
+        const caller = identityOf(request);
+        if (!auth.allows(caller, "admin")) {
+          return reply(caller ? 403 : 401, { error: "Chỉ admin nạp được credit." });
+        }
+        try {
+          const { amount } = JSON.parse((await readBody(request)).toString());
+          const target = decodeURIComponent(url.pathname.split("/")[3]);
+          const balance = auth.grantRenderCredits(target, amount);
+          audit.log({ user: caller.username, action: "credits.grant", detail: `${target} +${amount} → ${balance}` });
+          return reply(200, { renderCredits: balance });
+        } catch (error) {
+          return reply(400, { error: String(error.message ?? error) });
+        }
+      }
+
       if (url.pathname.match(/^\/auth\/users\/[^/]+\/role$/) && request.method === "PUT") {
         const caller = identityOf(request);
         if (!auth.allows(caller, "admin")) {
@@ -353,6 +369,7 @@ export function startRelay(port = 8787, options = {}) {
         const config = vnpayConfig();
         return reply(200, {
           ...auth.planInfoOf(identity.username),
+          renderCredits: auth.renderCreditsOf(identity.username),
           ownedProjects: members.countOwned(identity.username),
           teamPriceVnd: config.teamPriceVnd,
           teamMonths: config.teamMonths,
@@ -592,6 +609,20 @@ export function startRelay(port = 8787, options = {}) {
         if (!image?.startsWith("data:image/png;base64,") || !style?.trim()) {
           return reply(400, { error: "image (png data URL) and style required" });
         }
+        // Credit render (GĐ6): GPU là tiền thật — đếm ở server, hết là 402.
+        // Trừ SAU mọi kiểm tra (AI bật, input hợp lệ): server cấu hình thiếu
+        // hay request lỗi không được phép đốt credit của người dùng.
+        if (!auth.consumeRenderCredit(identity.username)) {
+          return reply(402, {
+            error:
+              "Hết credit render. Nâng cấp Team (200 credit) hoặc liên hệ quản trị viên để nạp thêm.",
+          });
+        }
+        audit.log({
+          user: identity.username,
+          action: "ai.render",
+          detail: `còn ${auth.renderCreditsOf(identity.username)}`,
+        });
         const brief = await writeRenderBrief(image, style.trim(), config);
         // The brief is worth returning on its own; a missing image generator
         // is a configuration choice, not a failure of the request.

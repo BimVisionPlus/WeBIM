@@ -65,3 +65,21 @@ describe("climate analysis", () => {
     expect(calmFindings.every((finding) => finding.severity === "info")).toBe(true);
   });
 });
+
+describe("OTTV ước tính (QCVN 09)", () => {
+  it("kính nhiều hướng Tây đẩy OTTV vượt 60; đặc hoàn toàn thì đạt", async () => {
+    const { estimateOttv } = await import("../src/application/climate");
+    const glassyWest = estimateOttv([
+      { orientation: "Tây", wallCount: 1, wallArea: 100, windowArea: 60, doorArea: 0, wwr: 0.6 },
+    ]);
+    expect(glassyWest?.pass).toBe(false);
+    expect(glassyWest!.overall).toBeGreaterThan(60);
+
+    const solidNorth = estimateOttv([
+      { orientation: "Bắc", wallCount: 1, wallArea: 100, windowArea: 0, doorArea: 0, wwr: 0 },
+    ]);
+    expect(solidNorth?.pass).toBe(true);
+
+    expect(estimateOttv([])).toBeNull();
+  });
+});

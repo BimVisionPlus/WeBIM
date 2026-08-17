@@ -158,3 +158,84 @@ export function climateFindings(rows: FacadeRow[]): ClimateFinding[] {
   }
   return findings;
 }
+
+// ── OTTV ước tính theo QCVN 09:2017/BXD ──────────────────────────────────
+//
+// OTTV (Overall Thermal Transfer Value) là chỉ tiêu vỏ bao che của QCVN
+// 09:2017/BXD — công trình thuộc phạm vi phải có OTTV tường ≤ 60 W/m².
+// Bản ước tính này dùng công thức rút gọn ba thành phần:
+//
+//   OTTV = (Aw·Uw·TDeq + Af·Uf·ΔT + Af·SC·ESM·SF) / (Aw + Af)
+//
+// với hệ số MẶC ĐỊNH khai báo rõ (U tường, U kính, SHGC, bức xạ theo
+// hướng cho khí hậu VN). Model chưa có lớp vật liệu kính/tường thật, nên
+// đây là SÀNG LỌC phương án — đổi kính, đổi WWR thấy OTTV đổi — không
+// phải hồ sơ thẩm tra. UI phải nói câu đó.
+
+export interface OttvAssumptions {
+  /** U-value tường (W/m²K) — tường gạch trát hai mặt chưa cách nhiệt. */
+  wallU: number;
+  /** Chênh nhiệt tương đương qua tường đặc (K). */
+  wallTdeq: number;
+  /** U-value kính (W/m²K) — kính đơn phổ thông. */
+  glassU: number;
+  /** Chênh nhiệt qua kính (K). */
+  glassDt: number;
+  /** SHGC kính (kính đơn ~0.85; Low-E ~0.4). */
+  shgc: number;
+  /** Bức xạ mặt trời trung bình theo hướng (W/m²) — vĩ độ VN. */
+  solarByOrientation: Record<Orientation, number>;
+}
+
+export const DEFAULT_OTTV_ASSUMPTIONS: OttvAssumptions = {
+  wallU: 2.5,
+  wallTdeq: 12,
+  glassU: 5.8,
+  glassDt: 5,
+  shgc: 0.85,
+  solarByOrientation: {
+    "Bắc": 80, "Đông Bắc": 110, "Đông": 150, "Đông Nam": 130,
+    "Nam": 100, "Tây Nam": 150, "Tây": 190, "Tây Bắc": 130,
+  },
+};
+
+export interface OttvRow {
+  orientation: Orientation;
+  ottv: number;
+  grossArea: number;
+}
+
+export interface OttvResult {
+  rows: OttvRow[];
+  /** OTTV trung bình trọng số theo diện tích — con số so với ngưỡng 60. */
+  overall: number;
+  limit: number;
+  pass: boolean;
+}
+
+/** OTTV ước tính từ bảng mặt đứng theo hướng (facadeByOrientation). */
+export function estimateOttv(
+  rows: FacadeRow[],
+  assumptions: OttvAssumptions = DEFAULT_OTTV_ASSUMPTIONS,
+): OttvResult | null {
+  const out: OttvRow[] = [];
+  let weighted = 0;
+  let total = 0;
+  for (const row of rows) {
+    const glassArea = row.windowArea;
+    const opaqueArea = Math.max(0, row.wallArea - row.windowArea - row.doorArea);
+    const gross = opaqueArea + glassArea;
+    if (gross <= 0) continue;
+    const conductionWalls = opaqueArea * assumptions.wallU * assumptions.wallTdeq;
+    const conductionGlass = glassArea * assumptions.glassU * assumptions.glassDt;
+    const solar =
+      glassArea * assumptions.shgc * assumptions.solarByOrientation[row.orientation];
+    const ottv = (conductionWalls + conductionGlass + solar) / gross;
+    out.push({ orientation: row.orientation, ottv, grossArea: gross });
+    weighted += ottv * gross;
+    total += gross;
+  }
+  if (total === 0) return null;
+  const overall = weighted / total;
+  return { rows: out, overall, limit: 60, pass: overall <= 60 };
+}

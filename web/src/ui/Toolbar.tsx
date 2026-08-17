@@ -20,11 +20,13 @@ function PlanRow() {
     void store.fetchPlan().then(setInfo);
   }, []);
   if (!info) return null;
+  const credits =
+    "renderCredits" in info ? ` · ${(info as { renderCredits: number }).renderCredits} credit render` : "";
   const label =
-    info.plan === "free"
+    (info.plan === "free"
       ? `Gói Free · ${info.ownedProjects}/1 dự án riêng`
       : `Gói ${info.plan === "team" ? "Team" : "Enterprise"}` +
-        (info.planUntil ? ` · đến ${info.planUntil.slice(0, 10)}` : "");
+        (info.planUntil ? ` · đến ${info.planUntil.slice(0, 10)}` : "")) + credits;
   return (
     <div className="plan-row">
       <span>{label}</span>
