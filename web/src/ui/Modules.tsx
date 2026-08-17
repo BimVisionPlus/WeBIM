@@ -13,6 +13,13 @@ import {
   VBPL_PROVENANCE,
 } from "../standards/catalog";
 import { climateFindings, estimateOttv, facadeByOrientation } from "../application/climate";
+import {
+  citedIndices,
+  excerptsOf,
+  rankClauses,
+  type RankedClause,
+} from "../application/standardsQa";
+import { CLAUSES, CLAUSES_PROVENANCE } from "../standards/clauses";
 import { DEFAULT_CONVENTION } from "../application/naming";
 import { PdfCompare } from "./PdfCompare";
 import {
@@ -890,6 +897,113 @@ function TaskDocuments({ taskId, status }: { taskId: string; status: TaskStatus 
   );
 }
 
+/**
+ * Q&A trên corpus điều khoản: máy trích trước (retrieval từ vựng, chạy cả
+ * khi chưa đăng nhập), AI trả lời sau và CHỈ từ các trích đoạn đó. Trích
+ * dẫn [n] trong câu trả lời được đối chiếu lại — số lạ bị cảnh báo thay vì
+ * lặng lẽ hiển thị.
+ */
+function StandardsQaBox() {
+  const [question, setQuestion] = useState("");
+  const [hits, setHits] = useState<RankedClause[] | null>(null);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const ask = async () => {
+    const trimmed = question.trim();
+    if (!trimmed || busy) return;
+    const found = rankClauses(trimmed, CLAUSES, 5);
+    setHits(found);
+    setAnswer(null);
+    setAiNote(null);
+    if (found.length === 0) return;
+    if (!store.auth) {
+      setAiNote("Đăng nhập để AI tổng hợp câu trả lời — bên dưới là các điều khoản máy tìm được.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const response = await fetch(`${fileServerBase()}/ai/standards-qa`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ question: trimmed, excerpts: excerptsOf(found) }),
+      });
+      const body = (await response.json()) as { answer?: string; error?: string };
+      if (response.ok) setAnswer(body.answer ?? "");
+      else setAiNote(`⚠ ${body.error} — bên dưới vẫn là các điều khoản máy tìm được.`);
+    } catch (error) {
+      setAiNote(`⚠ ${(error as Error).message} — bên dưới vẫn là các điều khoản máy tìm được.`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cited = answer && hits ? citedIndices(answer, hits.length) : null;
+  return (
+    <div className="standards-qa">
+      <h3>Hỏi đáp có trích điều khoản</h3>
+      <p className="module-hint">
+        {CLAUSES.length} điều khoản máy-đọc từ{" "}
+        {[...new Set(CLAUSES.map((clause) => clause.document))].length} văn bản
+        (plancheck, nhập {CLAUSES_PROVENANCE.importedAt}). AI chỉ được trả lời
+        từ các trích đoạn máy tìm được — không đủ căn cứ thì nói vậy. Câu trả
+        lời là máy tổng hợp: đối chiếu văn bản gốc trước khi đưa vào hồ sơ.
+      </p>
+      <div className="module-form">
+        <input
+          placeholder="vd: hành lang thoát nạn rộng tối thiểu bao nhiêu?"
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") void ask();
+          }}
+          style={{ minWidth: 320 }}
+        />
+        <button disabled={busy || !question.trim()} onClick={() => void ask()}>
+          {busy ? "Đang hỏi…" : "Hỏi"}
+        </button>
+      </div>
+      {hits && hits.length === 0 && (
+        <p className="module-hint">
+          Không có điều khoản nào khớp — corpus mới phủ {CLAUSES.length} điều
+          khoản (an toàn cháy, căn hộ, quy hoạch). Thử từ khoá khác hoặc bỏ dấu.
+        </p>
+      )}
+      {aiNote && <p className="module-hint">{aiNote}</p>}
+      {answer && (
+        <div className="ai-answer">
+          {answer}
+          {cited && cited.invalid.length > 0 && (
+            <p className="module-hint members-error">
+              ⚠ Câu trả lời nhắc tới trích dẫn không tồn tại (
+              {cited.invalid.map((n) => `[${n}]`).join(", ")}) — phần đó không
+              có căn cứ trong các trích đoạn, đừng dùng.
+            </p>
+          )}
+        </div>
+      )}
+      {hits && hits.length > 0 && (
+        <div className="qa-citations">
+          {hits.map(({ clause }, index) => {
+            const isCited = cited?.indices.includes(index + 1) ?? false;
+            return (
+              <div key={clause.id} className={`qa-clause${isCited ? " cited" : ""}`}>
+                <strong>
+                  [{index + 1}] {clause.document}, điều {clause.clause}
+                </strong>{" "}
+                — {clause.title}
+                <p>{clause.text}</p>
+                {clause.notes && <p className="module-hint">Giới hạn: {clause.notes}</p>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function StandardsModule() {
   useStoreVersion();
   const [query, setQuery] = useState("");
@@ -929,6 +1043,7 @@ export function StandardsModule() {
         không nằm trong CSDL đó; hai nguồn lệch nhau sẽ được ghi rõ thay vì
         chọn im lặng một nguồn.
       </p>
+      <StandardsQaBox />
       <div className="module-form">
         <input
           placeholder="Tìm theo mã, tên, tag… (vd: chay, tai trong, chung cu)"

@@ -1,0 +1,382 @@
+{
+ "source": "https://github.com/sophie-nguyenthuthuy/plancheck",
+ "revision": "5258c655c33519732321fd5d94808277939ebcd3",
+ "importedAt": "2026-08-17",
+ "clauses": [
+  {
+   "id": "TCVN-QCVN04-BEDROOM-MIN-AREA",
+   "document": "QCVN 04:2021/BXD",
+   "clause": "2.2.6",
+   "title": "Diện tích tối thiểu của phòng ngủ trong căn hộ",
+   "text": "Phòng ngủ trong căn hộ chung cư phải có diện tích không nhỏ hơn 9 m².",
+   "notes": "Quy chuẩn còn phân biệt phòng ngủ chính và phòng ngủ phụ trong một số trường\nhợp; luật này lấy mức sàn chung 9 m².\nDiện tích ở đây là diện tích sử dụng của phòng, không tính tường bao.",
+   "tags": [
+    "apartment",
+    "bedroom",
+    "area",
+    "habitability"
+   ],
+   "severity": "warning"
+  },
+  {
+   "id": "TCVN-QCVN04-APARTMENT-MIN-AREA",
+   "document": "QCVN 04:2021/BXD",
+   "clause": "2.2",
+   "title": "Diện tích sử dụng tối thiểu của căn hộ chung cư",
+   "text": "Căn hộ chung cư phải có diện tích sử dụng không nhỏ hơn 25 m².",
+   "notes": "Đối chiếu QCVN 04:2021/BXD hiện hành; căn hộ cho thuê ngắn hạn và nhà ở xã hội có quy định riêng.",
+   "tags": [
+    "residential",
+    "space"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-COMPARTMENT-AREA",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "4.18 (Bảng H.4)",
+   "title": "Diện tích khoang cháy nhà chung cư",
+   "text": "Khoang cháy trong nhà ở nhóm F1.3 bị giới hạn diện tích: không quá 2500 m² khi\ncông trình có hệ thống chữa cháy tự động, không quá 1500 m² khi không có. Giới\nhạn diện tích là cách quy chuẩn khống chế quy mô đám cháy lớn nhất có thể xảy ra.",
+   "notes": "Bảng H.4 phân biệt theo cả bậc chịu lửa và số tầng; bản mã hoá này lấy hai mức\ncơ bản cho F1.3 và chưa phủ hết bảng — đây là lý do status vẫn là draft.\nCông trình không khai sprinklered lấy ngưỡng nghiêm hơn 1500 m².",
+   "tags": [
+    "compartmentation",
+    "area",
+    "residential",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-COMPARTMENT-WALL-REI",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "4.13",
+   "title": "Giới hạn chịu lửa của tường ngăn cháy loại 1",
+   "text": "Tường ngăn cháy loại 1 — bộ phận chia công trình thành các khoang cháy độc lập —\nphải đạt giới hạn chịu lửa không nhỏ hơn REI 150. Đây là mức cao nhất trong các\nbộ phận ngăn cháy, vì toàn bộ giả thiết về giới hạn diện tích khoang cháy sụp đổ\nnếu tường này thủng.",
+   "notes": "Cửa, van và ống xuyên qua tường ngăn cháy có yêu cầu riêng theo Bảng 3; luật này\nmới soát bản thân tường.",
+   "tags": [
+    "fire-resistance",
+    "compartmentation",
+    "wall",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-CORRIDOR-DEAD-END",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.2.9 (Bảng 11)",
+   "title": "Chiều dài hành lang cụt",
+   "text": "Hành lang cụt — đoạn hành lang chỉ thoát được về một phía — bị giới hạn chiều\ndài vì người trong đó không có lựa chọn hướng chạy. Giới hạn nới ra khi công\ntrình được bảo vệ bằng hệ thống chữa cháy tự động: 25 m khi không có sprinkler,\n40 m khi có.",
+   "notes": "Công trình không khai báo sprinklered được coi là KHÔNG có sprinkler, tức lấy\nngưỡng nghiêm hơn 25 m. Đây là lựa chọn có chủ ý: một dữ liệu bỏ trống không\nđược phép mua lấy phần nới lỏng.\nBảng 11 còn phân biệt theo nhóm nguy hiểm cháy và số tầng; bản mã hoá này mới\nlấy hai mức cơ bản, chưa phủ hết bảng.",
+   "tags": [
+    "egress",
+    "corridor",
+    "dead-end",
+    "fire"
+   ],
+   "severity": "warning"
+  },
+  {
+   "id": "TCVN-QCVN06-CORRIDOR-WIDTH-ASSEMBLY",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.2.5",
+   "title": "Chiều rộng thông thủy lối thoát nạn trong nhà tập trung đông người",
+   "text": "Nhà thuộc nhóm F2 (tập trung đông người — nhà hát, rạp chiếu phim, hội trường,\ncơ sở thể thao) đòi chiều rộng thông thủy lối thoát nạn lớn hơn mức chung: không\nnhỏ hơn 1,35 m. Luật này chỉ áp cho hành lang trong công trình đã khai báo nhóm\nF2.1 hoặc F2.2 ở cấp công trình.",
+   "notes": "Ngưỡng chung 1,2 m nằm ở luật TCVN-QCVN06-CORRIDOR-WIDTH và vẫn chạy song song;\nhành lang trong nhà F2 sẽ bị soát bởi cả hai, mức nghiêm hơn quyết định.\nKhi công trình chưa khai báo occupancy_class thì luật này trả n/a, không phải pass.",
+   "tags": [
+    "egress",
+    "corridor",
+    "assembly",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-CORRIDOR-WIDTH",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.3.5",
+   "title": "Chiều rộng hành lang thoát nạn",
+   "text": "Hành lang nằm trên đường thoát nạn phải có chiều rộng thông thủy không nhỏ\nhơn 1,2 m. Chiều rộng được đo tại vị trí hẹp nhất, sau khi trừ các vật cản cố\nđịnh (tủ kỹ thuật, cột, cánh cửa mở vào hành lang).",
+   "notes": "1,2 m là ngưỡng chung cho hành lang thoát nạn. Hành lang phục vụ số lượng\nngười lớn hoặc nhà nhóm F1.1/F4.1 có yêu cầu riêng, chưa mã hóa trong luật này.",
+   "tags": [
+    "egress",
+    "corridor",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-DOOR-CLEAR-HEIGHT",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.2.9",
+   "title": "Chiều cao thông thủy của cửa trên lối ra thoát nạn",
+   "text": "Chiều cao thông thủy của cửa trên lối ra thoát nạn không nhỏ hơn 1,9 m.",
+   "notes": "Đối chiếu với QCVN 06 hiện hành; một số trường hợp tầng hầm/tầng kỹ thuật có ngoại lệ.",
+   "tags": [
+    "egress",
+    "door",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-DOOR-CLEAR-WIDTH",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.2.9",
+   "title": "Chiều rộng thông thủy của cửa trên lối ra thoát nạn",
+   "text": "Cửa trên lối ra thoát nạn phải có chiều rộng thông thủy không nhỏ hơn 0,8 m.\nKích thước kiểm tra là kích thước lọt lòng khi cánh cửa mở, không phải kích\nthước phủ bì của khuôn cửa.",
+   "notes": "Giá trị 0,8 m là ngưỡng chung; một số loại gian phòng và nhóm nguy hiểm cháy\ncó yêu cầu cao hơn. Phải đối chiếu với bản QCVN 06 hiện hành trước khi dùng\ncho hồ sơ thẩm duyệt.",
+   "tags": [
+    "egress",
+    "door",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-EGRESS-HEADROOM",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.2.1",
+   "title": "Chiều cao thông thủy của đường thoát nạn",
+   "text": "Chiều cao thông thủy của đoạn đường thoát nạn (hành lang, sảnh, buồng thang)\nkhông nhỏ hơn 2,0 m, đo tới đáy kết cấu hoặc thiết bị treo thấp nhất.",
+   "notes": "Đối chiếu QCVN 06 hiện hành. Ống gió và máng cáp treo dưới trần là nguyên nhân vi phạm phổ biến.",
+   "tags": [
+    "egress",
+    "corridor",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN04-ELEVATOR-PROVISION",
+   "document": "QCVN 04:2021/BXD",
+   "clause": "2.5.4",
+   "title": "Số thang máy tối thiểu của nhà chung cư",
+   "text": "Nhà chung cư từ 6 tầng trở lên phải có thang máy; từ 10 tầng trở lên phải có\nkhông ít hơn hai thang máy. Nhà dưới 6 tầng không bắt buộc.",
+   "notes": "Quy chuẩn còn yêu cầu ít nhất một thang máy đáp ứng vận chuyển cáng cứu thương\nđối với nhà cao tầng; đặc tính đó không nằm trong số lượng nên chưa mã hoá.\nSố tầng ở đây là số tầng nổi, không tính tầng hầm.",
+   "tags": [
+    "accessibility",
+    "elevator",
+    "apartment"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-EXIT-CAPACITY",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.3.1 (Bảng 9)",
+   "title": "Năng lực thoát nạn theo tổng chiều rộng lối ra",
+   "text": "Mỗi mét chiều rộng thông thủy của lối ra phục vụ tối đa 165 người đối với nhà ở\n(F1.3, F1.4) và nhà văn phòng (F4.3). Tổng chiều rộng lối ra của một tầng phải\nđủ cho số người thiết kế của tầng đó.",
+   "notes": "165 người/m là mức cơ sở của Bảng 9 cho các nhóm nêu trên; bảng đầy đủ còn phân\nbiệt theo bậc chịu lửa và số tầng, chưa mã hoá ở đây.\nTổng chiều rộng total_exit_width_mm là số cộng dồn theo hồ sơ thoát nạn, không\nđo tự động từ mô hình.",
+   "tags": [
+    "egress",
+    "exits",
+    "capacity",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-EXITS-ASSEMBLY-ROOM",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.2.1",
+   "title": "Số lối ra của gian phòng tập trung đông người",
+   "text": "Gian phòng trong nhà nhóm F2 có sức chứa thiết kế trên 50 người phải có không ít\nhơn hai lối ra. Dưới 50 người, một lối ra được chấp nhận.",
+   "notes": "Sức chứa thiết kế design_occupancy là số người theo hồ sơ thiết kế, không suy ra\ntừ diện tích. Gian phòng chưa khai sức chứa sẽ trả skip chứ không mặc định là\ndưới 50 người.",
+   "tags": [
+    "egress",
+    "exits",
+    "assembly",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-EXITS-PER-STOREY-HIGH-RISE",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.2.1",
+   "title": "Số lối ra thoát nạn mỗi tầng của nhà ở trên 28 m",
+   "text": "Mỗi tầng của nhà ở (nhóm F1.3, F1.4) có chiều cao trên 28 m phải có không ít hơn\nhai lối ra thoát nạn độc lập. Một lối ra duy nhất nghĩa là một đám cháy chặn\nđúng lối đó sẽ nhốt toàn bộ người trên tầng.",
+   "notes": "Số lối ra lấy từ thuộc tính exit_count khai trên tầng, không đếm tự động từ mô\nhình: plancheck không phân biệt được cửa nào thực sự dẫn ra ngoài hay ra buồng\nthang không nhiễm khói. Con số này thuộc hồ sơ thiết kế thoát nạn.\nNgưỡng 28 m là chiều cao PCCC theo QCVN 06, đo tới sàn tầng trên cùng có người\nở, không phải chiều cao đỉnh mái.",
+   "tags": [
+    "egress",
+    "exits",
+    "high-rise",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-FLOOR-FIRE-RESISTANCE",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "2.6.3 (Bảng 4)",
+   "title": "Giới hạn chịu lửa của sàn giữa các tầng",
+   "text": "Sàn giữa các tầng trong công trình bậc chịu lửa I hoặc II phải đạt giới hạn chịu\nlửa không nhỏ hơn REI 60. Sàn là mặt ngăn cháy nằm ngang: nó giữ cho đám cháy ở\nlại tầng phát sinh trong khoảng thời gian người trên các tầng còn lại cần để\nthoát.",
+   "notes": "Ngưỡng REI 60 áp cho sàn giữa các tầng thông thường; sàn tầng hầm, sàn trên\ngara và sàn ngăn khoang cháy có yêu cầu cao hơn, chưa mã hoá ở đây.",
+   "tags": [
+    "fire-resistance",
+    "slab",
+    "compartmentation",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-2622-LEGACY-ESCAPE-WIDTH",
+   "document": "TCVN 2622:1995",
+   "clause": "5.4",
+   "title": "Chiều rộng lối thoát nạn theo TCVN 2622:1995 (tiêu chuẩn đã thay thế)",
+   "text": "TCVN 2622:1995 yêu cầu lối thoát nạn rộng không nhỏ hơn 1,0 m. Tiêu chuẩn này đã\nđược thay thế bởi QCVN 06:2022/BXD, vốn đặt mức cao hơn. Luật giữ lại ở đây chỉ\nđể soát công trình cũ theo đúng bộ tiêu chuẩn tại thời điểm nó được thẩm duyệt —\ndùng cho cải tạo và đánh giá hiện trạng.",
+   "notes": "Không dùng luật này để kết luận cho công trình mới. Severity đặt ở mức info\nđúng nghĩa: đạt luật này KHÔNG có nghĩa là đạt QCVN 06:2022/BXD, và luật\nTCVN-QCVN06-CORRIDOR-WIDTH mới là mức áp dụng cho hồ sơ hiện hành.\nChỉ chạy khi hồ sơ khai báo mốc tiêu chuẩn cũ qua project.code_edition.",
+   "tags": [
+    "egress",
+    "legacy",
+    "fire",
+    "retrofit"
+   ],
+   "severity": "info"
+  },
+  {
+   "id": "TCVN-QCVN04-PARKING-AREA-RATIO",
+   "document": "QCVN 04:2021/BXD",
+   "clause": "2.6.2",
+   "title": "Diện tích đỗ xe ô tô theo tổng diện tích sàn ở",
+   "text": "Diện tích dành cho đỗ xe ô tô trong nhà chung cư không nhỏ hơn 6 % tổng diện\ntích sàn ở — tương đương khoảng 6 m² chỗ đỗ cho mỗi 100 m² sàn.",
+   "notes": "Luật này tính theo DIỆN TÍCH, khác với TCVN-QCVN01-PARKING-RESIDENTIAL vốn tính\ntheo SỐ CHỖ đỗ trên diện tích sàn và trích QCVN 01:2021/BXD. Hai quy chuẩn diễn\nđạt cùng một mối quan tâm bằng hai đại lượng khác nhau, nên cả hai cùng chạy và\nhồ sơ phải thoả mãn cả hai.",
+   "tags": [
+    "parking",
+    "apartment",
+    "area"
+   ],
+   "severity": "warning"
+  },
+  {
+   "id": "TCVN-QCVN01-PARKING-RESIDENTIAL",
+   "document": "QCVN 01:2021/BXD",
+   "clause": "2.10",
+   "title": "Chỗ đỗ ô tô tối thiểu cho nhà chung cư",
+   "text": "Nhà chung cư phải bố trí tối thiểu 1 chỗ đỗ ô tô cho mỗi 100 m² diện tích sàn\ncăn hộ. Số chỗ yêu cầu làm tròn lên.",
+   "notes": "Tỷ lệ đỗ xe do quy hoạch địa phương quyết định và thay đổi theo tỉnh/thành;\n1 chỗ/100 m² là giá trị tham chiếu phổ biến. Trước khi dùng, thay bằng tỷ lệ\ncủa địa phương trong một luật riêng (ví dụ HANOI-PARKING-RESIDENTIAL).\nThuộc tính `residential_floor_area_m2` cố tình chưa ánh xạ sang IFC: đây là\nsố liệu quy hoạch, không nằm trong mô hình hình học.",
+   "tags": [
+    "planning",
+    "parking"
+   ],
+   "severity": "warning"
+  },
+  {
+   "id": "TCVN-QCVN04-ROOM-CEILING-HEIGHT",
+   "document": "QCVN 04:2021/BXD",
+   "clause": "2.4",
+   "title": "Chiều cao thông thủy của phòng ở",
+   "text": "Phòng ở trong nhà chung cư phải có chiều cao thông thủy không nhỏ hơn 2,6 m,\nđo từ mặt sàn hoàn thiện tới trần hoàn thiện.",
+   "notes": "Ngưỡng 2,6 m cần được xác nhận lại với QCVN 04:2021/BXD bản hiện hành — một\nsố tài liệu cũ (TCVN 4451) dùng 2,7 m cho phòng ở. Đây là lý do luật này ở\ntrạng thái `draft`.",
+   "tags": [
+    "residential",
+    "space",
+    "comfort"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-SEPARATION-DISTANCE",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "Phụ lục E (Bảng E.1)",
+   "title": "Khoảng cách phòng cháy giữa hai công trình",
+   "text": "Khoảng cách tới công trình liền kề phụ thuộc bậc chịu lửa của cả hai: hai nhà\ncùng bậc I được phép cách 6 m; khi một trong hai nhà thuộc bậc III, IV hoặc V thì\nkhoảng cách phải không nhỏ hơn 10 m. Khoảng cách này là thứ ngăn đám cháy lan\nsang lô đất bên cạnh bằng bức xạ nhiệt.",
+   "notes": "Bảng E.1 có đủ tổ hợp bậc chịu lửa I–V; bản mã hoá này lấy hai trường hợp biên\n(I–I và mọi tổ hợp có III/IV/V) và trả n/a cho phần còn lại thay vì đoán.\nBậc chịu lửa của công trình liền kề là dữ liệu khảo sát hiện trạng, không nằm\ntrong mô hình của chính công trình đang thiết kế. Khi chưa khảo sát, luật lấy\nmặc định là bậc V — tức nhánh 10 m. Một ô trống trong hồ sơ khảo sát không được\nphép mua lấy mức nới lỏng 6 m.",
+   "tags": [
+    "separation",
+    "site",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN01-SETBACK-FRONT",
+   "document": "QCVN 01:2021/BXD",
+   "clause": "Bảng 2.7",
+   "title": "Khoảng lùi tối thiểu của công trình theo lộ giới và chiều cao",
+   "text": "Khoảng lùi tối thiểu của công trình so với chỉ giới đường đỏ phụ thuộc đồng\nthời vào lộ giới của tuyến đường tiếp giáp và chiều cao xây dựng công trình:\n\n  lộ giới < 19 m   :  h ≤ 19 → 0 m ; h ≤ 22 → 3 m ; h ≤ 25 → 4 m ; h > 25 → 6 m\n  19 ≤ lộ giới < 22:  h ≤ 22 → 0 m ; h ≤ 25 → 3 m ; h > 25 → 6 m\n  lộ giới ≥ 22 m   :  h ≤ 25 → 0 m ; h > 25 → 6 m\n\nĐây là ví dụ điển hình của một yêu cầu KHÔNG biểu diễn được bằng IDS: giá trị\nyêu cầu là một hàm hai biến, không phải một hằng số so sánh.",
+   "notes": "Bảng tra cần đối chiếu với QCVN 01:2021/BXD bản hiện hành và với quy định\nriêng của địa phương (nhiều tỉnh/thành có bảng khoảng lùi chặt hơn).",
+   "tags": [
+    "planning",
+    "setback",
+    "site"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-STAIR-FLIGHT-WIDTH",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.4.1",
+   "title": "Chiều rộng bản thang bộ thoát nạn",
+   "text": "Chiều rộng thông thủy của bản thang bộ dùng để thoát nạn không nhỏ hơn 1,05 m\nđối với nhà chung cư và các nhà có số người thoát nạn tương đương.",
+   "notes": "Ngưỡng 1,05 m áp cho trường hợp phổ biến. Nhà nhóm F1.1 (nhà trẻ, bệnh viện)\nvà thang phục vụ dưới 15 người có ngưỡng khác — cần bổ sung luật riêng.",
+   "tags": [
+    "egress",
+    "stair",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-STAIR-LANDING-WIDTH",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.4.4",
+   "title": "Chiều rộng chiếu nghỉ buồng thang thoát nạn",
+   "text": "Chiều rộng chiếu nghỉ không được nhỏ hơn chiều rộng bản thang. Chiếu nghỉ hẹp\nhơn bản thang tạo nút thắt đúng chỗ dòng người đổi hướng, triệt tiêu năng lực\nthoát nạn mà bản thang rộng vừa tạo ra.",
+   "notes": "Đây là ràng buộc tương đối giữa hai kích thước của cùng một cấu kiện, nên không\nxuất được sang IDS — IDS chỉ so sánh thuộc tính với hằng số.",
+   "tags": [
+    "egress",
+    "stair",
+    "landing",
+    "fire"
+   ],
+   "severity": "warning"
+  },
+  {
+   "id": "TCVN-QCVN06-STAIR-RISER-TREAD",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.4.2",
+   "title": "Kích thước bậc thang bộ thoát nạn",
+   "text": "Bậc của thang bộ trên đường thoát nạn: chiều cao bậc không lớn hơn 220 mm và\nchiều rộng mặt bậc không nhỏ hơn 250 mm. Hai điều kiện phải đồng thời thỏa mãn —\nmột vế đạt không bù được cho vế kia.",
+   "notes": "Thang bộ trong nhà ở riêng lẻ và thang phục vụ có ngưỡng khác; luật này áp cho thang thoát nạn.",
+   "tags": [
+    "egress",
+    "stair",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-TRAVEL-DISTANCE-OFFICE",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "3.3.5",
+   "title": "Khoảng cách thoát nạn trong nhà văn phòng",
+   "text": "Trong nhà hành chính — văn phòng (nhóm F4.3), khoảng cách từ điểm xa nhất của\ngian phòng tới lối ra thoát nạn gần nhất không vượt quá 50 m.",
+   "notes": "QCVN 06 phân biệt khoảng cách theo mật độ người, số lối ra và việc có sprinkler;\n50 m ở đây là mức cơ sở cho F4.3 và chưa phản ánh các cột còn lại của bảng.\nKhoảng cách phải do người thiết kế đo trên đường đi thực tế, không phải khoảng\ncách đường chim bay — plancheck không tự đo được điều đó từ mô hình.",
+   "tags": [
+    "egress",
+    "travel-distance",
+    "office",
+    "fire"
+   ],
+   "severity": "error"
+  },
+  {
+   "id": "TCVN-QCVN06-WALL-FIRE-RESISTANCE",
+   "document": "QCVN 06:2022/BXD",
+   "clause": "2.6.3 (Bảng 4)",
+   "title": "Giới hạn chịu lửa của tường chịu lực theo bậc chịu lửa",
+   "text": "Bậc chịu lửa của công trình quyết định giới hạn chịu lửa tối thiểu của tường\nchịu lực: bậc I đòi REI 120, bậc II đòi REI 90. REI là ba tiêu chí đồng thời —\nkhả năng chịu lực, tính toàn vẹn và khả năng cách nhiệt — tính bằng phút.",
+   "notes": "Bảng 4 còn quy định cho bậc III, IV, V và cho các cấu kiện khác; bản mã hoá này\nmới phủ tường chịu lực bậc I và II. Công trình khai bậc III trở xuống sẽ trả\nn/a, không phải pass.\nGiá trị REI phải lấy từ kết quả thử nghiệm hoặc cấu tạo đã được công nhận, không\nsuy ra từ chiều dày tường.",
+   "tags": [
+    "fire-resistance",
+    "wall",
+    "structure",
+    "fire"
+   ],
+   "severity": "error"
+  }
+ ]
+}

@@ -30,6 +30,7 @@ import {
   aiConfig,
   aiEnabled,
   answerDrawingQuestion,
+  answerStandardsQuestion,
   imageRenderEnabled,
   renderConcept,
   writeRenderBrief,
@@ -716,6 +717,41 @@ export function startRelay(port = 8787, options = {}) {
           question.trim(),
           config,
         );
+        return reply(200, { answer });
+      }
+
+      if (url.pathname === "/ai/standards-qa" && request.method === "POST") {
+        // Tra cứu là tính năng đọc: viewer đăng nhập là đủ (khác read-drawing
+        // vốn đụng file dự án). Client đã retrieval sẵn các điều khoản; relay
+        // chỉ chuyển cho model kèm kỷ luật trích dẫn — relay không giữ corpus.
+        if (!identity) {
+          return reply(401, { error: "Cần đăng nhập để hỏi AI về quy chuẩn." });
+        }
+        const config = aiConfig();
+        if (!aiEnabled(config)) {
+          return reply(501, { error: AI_NOT_CONFIGURED });
+        }
+        const { question, excerpts } = JSON.parse((await readBody(request)).toString());
+        // Chặn kích thước TRƯỚC khi gọi model: đây là cổng chung cho mọi
+        // client, không phải proxy LLM tự do.
+        if (typeof question !== "string" || !question.trim() || question.length > 500) {
+          return reply(400, { error: "question required (≤500 ký tự)" });
+        }
+        if (
+          !Array.isArray(excerpts) ||
+          excerpts.length === 0 ||
+          excerpts.length > 8 ||
+          excerpts.some(
+            (excerpt) =>
+              typeof excerpt?.label !== "string" ||
+              typeof excerpt?.text !== "string" ||
+              excerpt.label.length + excerpt.text.length > 4000,
+          )
+        ) {
+          return reply(400, { error: "excerpts: 1–8 trích đoạn, mỗi cái ≤4000 ký tự" });
+        }
+        const answer = await answerStandardsQuestion(question.trim(), excerpts, config);
+        audit.log({ user: identity.username, action: "ai.standards-qa" });
         return reply(200, { answer });
       }
 

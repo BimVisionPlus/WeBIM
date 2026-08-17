@@ -5,6 +5,7 @@ import {
   aiConfig,
   aiEnabled,
   answerDrawingQuestion,
+  answerStandardsQuestion,
   chat,
   extractPdfText,
   imageRenderEnabled,
@@ -112,6 +113,28 @@ describe("parseJsonLoose", () => {
   it("reports unusable output instead of returning junk", () => {
     expect(() => parseJsonLoose("xin lỗi, tôi không thể")).toThrow("không trả về JSON");
     expect(() => parseJsonLoose('{"a": 1')).toThrow("chưa đóng");
+  });
+});
+
+describe("answerStandardsQuestion", () => {
+  it("system prompt do server giữ và buộc trích dẫn; trích đoạn nằm trong user text", async () => {
+    const { calls, fetchImpl } = stub(completion("Theo [1], tối thiểu 1,2 m."));
+    const answer = await answerStandardsQuestion(
+      "hành lang rộng bao nhiêu?",
+      [{ label: "[1] QCVN 06:2022/BXD, điều 3.3.5", text: "không nhỏ hơn 1,2 m" }],
+      CONFIG,
+      fetchImpl,
+    );
+    expect(answer).toContain("[1]");
+    const body = JSON.parse(String(calls[0].init.body));
+    const [system, user] = body.messages;
+    expect(system.role).toBe("system");
+    expect(system.content).toContain("trích dẫn");
+    expect(system.content).toContain("không suy đoán");
+    expect(user.content).toContain("[1] QCVN 06:2022/BXD, điều 3.3.5");
+    expect(user.content).toContain("hành lang rộng bao nhiêu?");
+    // Nhiệt độ thấp có chủ đích: tra cứu quy phạm không phải chỗ sáng tác.
+    expect(body.temperature).toBe(0.1);
   });
 });
 

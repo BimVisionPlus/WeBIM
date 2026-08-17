@@ -176,6 +176,37 @@ export async function answerDrawingQuestion(pdfBuffer, question, config = aiConf
   );
 }
 
+// Kỷ luật trích dẫn là CHÍNH SÁCH SERVER — client gửi câu hỏi + trích đoạn,
+// nhưng không được thay system prompt: đổi được prompt là đổi được việc
+// model có bị buộc trích dẫn hay không.
+const STANDARDS_QA_SYSTEM =
+  "Bạn là trợ lý tra cứu quy chuẩn xây dựng Việt Nam. CHỈ được dùng các trích" +
+  " đoạn được cung cấp; không dùng kiến thức ngoài. Mỗi khẳng định phải kèm số" +
+  " trích dẫn dạng [1], [2]… đúng theo danh sách. Nếu các trích đoạn không đủ" +
+  ' để trả lời, nói thẳng: "Corpus hiện chưa có điều khoản trả lời câu này" —' +
+  " không suy đoán. Trả lời ngắn gọn bằng tiếng Việt.";
+
+export async function answerStandardsQuestion(
+  question,
+  excerpts,
+  config = aiConfig(),
+  fetchImpl = fetch,
+) {
+  const blocks = excerpts
+    .map((excerpt) => `${excerpt.label}\n${excerpt.text}`)
+    .join("\n\n");
+  return chat(
+    {
+      system: STANDARDS_QA_SYSTEM,
+      text: `TRÍCH ĐOẠN QUY CHUẨN:\n\n${blocks}\n\nCÂU HỎI: ${question}`,
+      maxTokens: 1024,
+      temperature: 0.1,
+    },
+    config,
+    fetchImpl,
+  );
+}
+
 const RENDER_SYSTEM =
   "Bạn là kiến trúc sư viết brief render. Chỉ trả về JSON đúng schema, không" +
   " thêm lời dẫn.";

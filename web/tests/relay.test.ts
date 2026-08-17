@@ -184,4 +184,28 @@ describe("từ chối vì thiếu quyền nói đúng nguyên nhân", () => {
       expect(body.error).toContain("viewer");
     }
   });
+
+  it("standards-qa: chưa đăng nhập → 401", async () => {
+    const response = await post("/ai/standards-qa");
+    expect(response.status).toBe(401);
+    expect(((await response.json()) as { error: string }).error).toContain("đăng nhập");
+  });
+
+  it("standards-qa: viewer ĐƯỢC hỏi (tra cứu là đọc) — AI chưa cấu hình thì 501, không phải 403", async () => {
+    const login = await fetch(`http://127.0.0.1:${authPort}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "xem", password: "viewer-pw" }),
+    });
+    const { token } = (await login.json()) as { token: string };
+    const response = await fetch(`http://127.0.0.1:${authPort}/ai/standards-qa`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        question: "hành lang rộng bao nhiêu?",
+        excerpts: [{ label: "[1] QCVN 06, điều 3.3.5", text: "≥ 1,2 m" }],
+      }),
+    });
+    expect(response.status).toBe(501);
+  });
 });
