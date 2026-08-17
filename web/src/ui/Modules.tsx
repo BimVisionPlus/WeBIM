@@ -14,7 +14,13 @@ import {
 } from "../standards/catalog";
 import { climateFindings, estimateOttv, facadeByOrientation } from "../application/climate";
 import { DEFAULT_CONVENTION } from "../application/naming";
-import { ganttChart, weekTicks } from "../application/gantt";
+import {
+  criticalPath,
+  ganttChart,
+  parseTaskPaste,
+  tasksCsv,
+  weekTicks,
+} from "../application/gantt";
 import { Viewer3D } from "../viewport/Viewer3D";
 import {
   atlasTargetPath,
@@ -405,7 +411,71 @@ const GANTT_ROW_HEIGHT = 26;
 const GANTT_LABEL_WIDTH = 180;
 
 function GanttView() {
+  useStoreVersion();
   const chart = ganttChart(store.project, new Date().toISOString().slice(0, 10));
+  const cpm = criticalPath(store.project.tasks);
+  /**
+   * Kéo-thả: nắm giữa thanh = dời cả hạng mục (giữ số ngày); nắm mép phải
+   * = đổi ngày kết thúc. Snap theo NGÀY — tiến độ công trường không có
+   * khái niệm nửa buổi trong Gantt. Ghi vào store lúc NHẢ chuột: mỗi cú
+   * kéo là một bước undo, không phải ba mươi bước giữa chừng.
+   */
+  const dragRef = { current: null as null | {
+    taskId: string; mode: "move" | "resize"; startX: number;
+    origStart: string; origEnd: string; deltaDays: number;
+  } };
+  const shiftDate = (iso: string, days: number) => {
+    const time = Date.parse(iso);
+    return new Date(time + days * 86_400_000).toISOString().slice(0, 10);
+  };
+  const onBarPointerDown = (
+    event: React.PointerEvent<SVGRectElement>,
+    taskId: string,
+    mode: "move" | "resize",
+  ) => {
+    if (!store.canEdit) return;
+    const task = store.project.tasks.find((candidate) => candidate.id === taskId);
+    if (!task?.start || !task.end) return;
+    event.preventDefault();
+    (event.target as SVGRectElement).setPointerCapture(event.pointerId);
+    dragRef.current = {
+      taskId, mode, startX: event.clientX,
+      origStart: task.start, origEnd: task.end, deltaDays: 0,
+    };
+  };
+  const onBarPointerMove = (event: React.PointerEvent<SVGRectElement>) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    drag.deltaDays = Math.round((event.clientX - drag.startX) / GANTT_DAY_WIDTH);
+    const target = event.target as SVGRectElement;
+    // preview bằng transform — không commit
+    if (drag.mode === "move") {
+      target.parentElement?.setAttribute(
+        "transform",
+        `translate(${drag.deltaDays * GANTT_DAY_WIDTH}, 0)`,
+      );
+    }
+  };
+  const onBarPointerUp = (event: React.PointerEvent<SVGRectElement>) => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    if (!drag || drag.deltaDays === 0) {
+      (event.target as SVGRectElement).parentElement?.removeAttribute("transform");
+      return;
+    }
+    (event.target as SVGRectElement).parentElement?.removeAttribute("transform");
+    if (drag.mode === "move") {
+      store.updateTask(drag.taskId, {
+        start: shiftDate(drag.origStart, drag.deltaDays),
+        end: shiftDate(drag.origEnd, drag.deltaDays),
+      });
+    } else {
+      const newEnd = shiftDate(drag.origEnd, drag.deltaDays);
+      if (Date.parse(newEnd) >= Date.parse(drag.origStart)) {
+        store.updateTask(drag.taskId, { end: newEnd });
+      }
+    }
+  };
   if (!chart) {
     return (
       <p className="module-hint">
@@ -470,6 +540,23 @@ function GanttView() {
                   rx={3}
                   fill={statusColor[bar.task.status] ?? "#4b5563"}
                   opacity={0.35}
+                  stroke={cpm.critical.has(bar.task.id) ? "#e06c75" : "none"}
+                  strokeWidth={cpm.critical.has(bar.task.id) ? 1.5 : 0}
+                  style={{ cursor: store.canEdit ? "grab" : "default" }}
+                  onPointerDown={(event) => onBarPointerDown(event, bar.task.id, "move")}
+                  onPointerMove={onBarPointerMove}
+                  onPointerUp={onBarPointerUp}
+                />
+                <rect
+                  x={x(bar.endDay) - 4}
+                  y={y(bar.row)}
+                  width={8}
+                  height={16}
+                  fill="transparent"
+                  style={{ cursor: store.canEdit ? "ew-resize" : "default" }}
+                  onPointerDown={(event) => onBarPointerDown(event, bar.task.id, "resize")}
+                  onPointerMove={onBarPointerMove}
+                  onPointerUp={onBarPointerUp}
                 />
                 <rect
                   x={x(bar.startDay)}
@@ -504,6 +591,19 @@ function GanttView() {
           );
         })}
       </svg>
+      {cpm.cycle ? (
+        <p className="module-hint climate-finding warning">
+          Phụ thuộc tạo thành VÒNG (a→b→…→a) — đường găng không tính được.
+          Gỡ vòng ở cột Phụ thuộc trong chế độ Bảng.
+        </p>
+      ) : (
+        cpm.critical.size > 0 && (
+          <p className="module-hint">
+            Viền đỏ = <strong>đường găng</strong> (trễ một ngày là trễ cả dự
+            án). Kéo thanh để dời hạng mục, nắm mép phải để đổi ngày kết thúc.
+          </p>
+        )
+      )}
       {chart.links.some((link) => link.violated) && (
         <p className="module-hint climate-finding warning">
           Có phụ thuộc bị vi phạm (đường đỏ): công việc bắt đầu trước khi công
@@ -579,6 +679,45 @@ export function PlanModule() {
             Gantt
           </button>
         </span>
+        <button
+          onClick={() => {
+            const pasted = window.prompt(
+              "Dán bảng từ Excel (chọn vùng → Ctrl+C → dán vào đây).\n" +
+                "Cột: Tên | Nhóm | Bắt đầu | Kết thúc | % — ngày dd/mm/yyyy hoặc yyyy-mm-dd:",
+            );
+            if (!pasted) return;
+            const { rows, errors } = parseTaskPaste(pasted);
+            for (const row of rows) {
+              const task = store.project.tasks;
+              store.addTask(row.name, row.category, row.start, row.end);
+              const added = store.project.tasks[store.project.tasks.length - 1];
+              if (added && row.progress > 0) {
+                store.updateTask(added.id, { progress: row.progress });
+              }
+              void task;
+            }
+            store.setStatus(
+              `Import ${rows.length} hạng mục` +
+                (errors.length ? ` · ${errors.length} dòng lỗi: ${errors[0]}${errors.length > 1 ? "…" : ""}` : ""),
+            );
+          }}
+          title="Dán TSV từ Excel — dòng lỗi được báo kèm số dòng, không nuốt im lặng"
+        >
+          Import Excel…
+        </button>
+        <button
+          onClick={() => {
+            const blob = new Blob([tasksCsv(store.project.tasks)], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = `${store.projectLabel}-tien-do.csv`;
+            anchor.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
+          Export CSV
+        </button>
       </div>
       {view === "GANTT" && <GanttView />}
       {view === "TABLE" && (

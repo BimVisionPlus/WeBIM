@@ -138,3 +138,150 @@ export function weekTicks(chart: GanttChart): { day: number; label: string }[] {
   }
   return ticks;
 }
+
+// ── Critical path (CPM trên chuỗi FS) ────────────────────────────────────
+//
+// Tasks ở đây có NGÀY CỤ THỂ chứ không phải duration trôi nổi, nên CPM làm
+// việc trên duration suy từ ngày: forward pass tính sớm-nhất theo chuỗi
+// dependsOn (FS), backward pass tính muộn-nhất từ mốc kết thúc dự án; task
+// slack = 0 là nằm trên đường găng — trễ nó một ngày là trễ cả dự án.
+// Task thiếu ngày đứng ngoài CPM (không bịa duration cho nó).
+
+export interface CriticalPathResult {
+  /** Id các task trên đường găng. */
+  critical: Set<string>;
+  /** Slack (ngày) theo id — 0 = găng. */
+  slackByTask: Map<string, number>;
+  /** Chu trình phụ thuộc nếu có (a→b→a): CPM bó tay, UI phải nói. */
+  cycle: boolean;
+}
+
+export function criticalPath(tasks: readonly TaskDatum[]): CriticalPathResult {
+  const dated = tasks.filter(
+    (task) => parseDay(task.start) !== null && parseDay(task.end) !== null,
+  );
+  const byId = new Map(dated.map((task) => [task.id, task]));
+  const duration = (task: TaskDatum) =>
+    Math.max(1, (parseDay(task.end) as number) - (parseDay(task.start) as number) + 1);
+
+  // Topo sort (Kahn) trên dependsOn đã lọc về task có ngày.
+  const incoming = new Map<string, number>();
+  const successors = new Map<string, string[]>();
+  for (const task of dated) {
+    const deps = task.dependsOn.filter((id) => byId.has(id));
+    incoming.set(task.id, deps.length);
+    for (const dep of deps) {
+      successors.set(dep, [...(successors.get(dep) ?? []), task.id]);
+    }
+  }
+  const queue = dated.filter((task) => (incoming.get(task.id) ?? 0) === 0).map((t) => t.id);
+  const order: string[] = [];
+  while (queue.length > 0) {
+    const id = queue.shift() as string;
+    order.push(id);
+    for (const next of successors.get(id) ?? []) {
+      const left = (incoming.get(next) ?? 1) - 1;
+      incoming.set(next, left);
+      if (left === 0) queue.push(next);
+    }
+  }
+  if (order.length !== dated.length) {
+    return { critical: new Set(), slackByTask: new Map(), cycle: true };
+  }
+
+  // Forward: earliest finish; Backward: latest finish.
+  const earlyFinish = new Map<string, number>();
+  for (const id of order) {
+    const task = byId.get(id) as TaskDatum;
+    const depFinish = Math.max(
+      0,
+      ...task.dependsOn.filter((d) => byId.has(d)).map((d) => earlyFinish.get(d) ?? 0),
+    );
+    earlyFinish.set(id, depFinish + duration(task));
+  }
+  const projectEnd = Math.max(0, ...earlyFinish.values());
+  const lateFinish = new Map<string, number>();
+  for (const id of [...order].reverse()) {
+    const succ = successors.get(id) ?? [];
+    const lf =
+      succ.length === 0
+        ? projectEnd
+        : Math.min(
+            ...succ.map(
+              (next) => (lateFinish.get(next) ?? projectEnd) - duration(byId.get(next) as TaskDatum),
+            ),
+          );
+    lateFinish.set(id, lf);
+  }
+
+  const critical = new Set<string>();
+  const slackByTask = new Map<string, number>();
+  for (const id of order) {
+    const slack = (lateFinish.get(id) as number) - (earlyFinish.get(id) as number);
+    slackByTask.set(id, slack);
+    if (slack <= 0) critical.add(id);
+  }
+  return { critical, slackByTask, cycle: false };
+}
+
+/** Xuất tasks ra CSV (Excel mở thẳng) — cột khớp với chiều import TSV. */
+export function tasksCsv(tasks: readonly TaskDatum[]): string {
+  const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const rows = tasks.map((task) =>
+    [task.name, task.category, task.start, task.end, String(task.progress), task.status]
+      .map(escape)
+      .join(","),
+  );
+  return ["Tên,Nhóm,Bắt đầu,Kết thúc,Tiến độ %,Trạng thái", ...rows].join("\n");
+}
+
+export interface ParsedTaskRow {
+  name: string;
+  category: string;
+  start: string;
+  end: string;
+  progress: number;
+}
+
+/**
+ * Parse bảng dán từ Excel (TSV: chọn vùng → Ctrl+C → dán). Cột:
+ * Tên | Nhóm | Bắt đầu | Kết thúc | %. Dòng đầu là header thì tự bỏ.
+ * Trả kèm danh sách dòng lỗi CÓ SỐ DÒNG — người sửa Excel cần biết sửa đâu.
+ */
+export function parseTaskPaste(text: string): {
+  rows: ParsedTaskRow[];
+  errors: string[];
+} {
+  const rows: ParsedTaskRow[] = [];
+  const errors: string[] = [];
+  const lines = text.split(/\r?\n/).filter((line) => line.trim());
+  for (let index = 0; index < lines.length; index += 1) {
+    const cells = lines[index].split("\t").map((cell) => cell.trim());
+    if (index === 0 && /tên|name/i.test(cells[0] ?? "")) continue; // header
+    const [name, category = "", start = "", end = "", progressText = "0"] = cells;
+    if (!name) {
+      errors.push(`Dòng ${index + 1}: thiếu tên hạng mục`);
+      continue;
+    }
+    const normalizeDate = (value: string) => {
+      if (!value) return "";
+      // Excel VN hay ra dd/mm/yyyy — đổi về ISO; yyyy-mm-dd giữ nguyên.
+      const vn = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (vn) return `${vn[3]}-${vn[2].padStart(2, "0")}-${vn[1].padStart(2, "0")}`;
+      return Number.isNaN(Date.parse(value)) ? null : value;
+    };
+    const startIso = normalizeDate(start);
+    const endIso = normalizeDate(end);
+    if (startIso === null || endIso === null) {
+      errors.push(`Dòng ${index + 1} (${name}): ngày không đọc được "${startIso === null ? start : end}"`);
+      continue;
+    }
+    if (startIso && endIso && Date.parse(endIso) < Date.parse(startIso)) {
+      errors.push(`Dòng ${index + 1} (${name}): kết thúc trước bắt đầu`);
+      continue;
+    }
+    const progress = Math.min(100, Math.max(0, Number(progressText.replace("%", "")) || 0));
+    rows.push({ name, category, start: startIso, end: endIso, progress });
+  }
+  return { rows, errors };
+}

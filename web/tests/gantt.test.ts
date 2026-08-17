@@ -50,3 +50,63 @@ describe("a task whose end precedes its start", () => {
     expect(chart.bars.find((bar) => bar.task.name === "Thật")!.startDay).toBe(0);
   });
 });
+
+describe("critical path (CPM)", () => {
+  const task = (id: string, start: string, end: string, deps: string[] = []) => ({
+    id, name: id, category: "", assignee: "", status: "IN_PROGRESS" as const,
+    start, end, progress: 0, dependsOn: deps,
+  });
+
+  it("chuỗi dài nhất là đường găng, nhánh ngắn có slack", async () => {
+    const { criticalPath } = await import("../src/application/gantt");
+    // A(5d) → B(10d) → D(2d) và A → C(3d) → D: găng là A-B-D
+    const result = criticalPath([
+      task("A", "2026-01-01", "2026-01-05"),
+      task("B", "2026-01-06", "2026-01-15", ["A"]),
+      task("C", "2026-01-06", "2026-01-08", ["A"]),
+      task("D", "2026-01-16", "2026-01-17", ["B", "C"]),
+    ]);
+    expect(result.cycle).toBe(false);
+    expect([...result.critical].sort()).toEqual(["A", "B", "D"]);
+    expect(result.slackByTask.get("C")).toBe(7); // 10 - 3
+  });
+
+  it("chu trình phụ thuộc được gọi tên thay vì treo", async () => {
+    const { criticalPath } = await import("../src/application/gantt");
+    const result = criticalPath([
+      task("A", "2026-01-01", "2026-01-05", ["B"]),
+      task("B", "2026-01-06", "2026-01-10", ["A"]),
+    ]);
+    expect(result.cycle).toBe(true);
+  });
+
+  it("task không ngày đứng ngoài CPM, không bịa duration", async () => {
+    const { criticalPath } = await import("../src/application/gantt");
+    const result = criticalPath([
+      task("A", "2026-01-01", "2026-01-05"),
+      task("X", "", ""),
+    ]);
+    expect(result.critical.has("A")).toBe(true);
+    expect(result.slackByTask.has("X")).toBe(false);
+  });
+});
+
+describe("import Excel (dán TSV)", () => {
+  it("parse header + dd/mm/yyyy + báo lỗi CÓ SỐ DÒNG", async () => {
+    const { parseTaskPaste } = await import("../src/application/gantt");
+    const pasted = [
+      "Tên\tNhóm\tBắt đầu\tKết thúc\t%",
+      "Móng\tKết cấu\t01/02/2026\t28/02/2026\t80",
+      "Thân\tKết cấu\t2026-03-01\t2026-05-31\t20%",
+      "\tThiếu tên\t01/03/2026\t02/03/2026\t0",
+      "Ngược\tX\t10/03/2026\t01/03/2026\t0",
+    ].join("\n");
+    const { rows, errors } = parseTaskPaste(pasted);
+    expect(rows).toHaveLength(2);
+    expect(rows[0].start).toBe("2026-02-01"); // dd/mm → ISO
+    expect(rows[1].progress).toBe(20); // "20%" → 20
+    expect(errors).toHaveLength(2);
+    expect(errors[0]).toContain("Dòng 4");
+    expect(errors[1]).toContain("kết thúc trước bắt đầu");
+  });
+});
