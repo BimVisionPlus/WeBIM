@@ -860,6 +860,19 @@ export class AppStore {
     documentId: string,
     changes: Parameters<NativeBimProject["updateDocument"]>[1],
   ): void {
+    // ISO 19650: Published là khu vực CÓ PHÊ DUYỆT — trong dự án đã đăng
+    // ký, chỉ chủ dự án bấm được sang PUBLISHED, và việc duyệt ký tên.
+    if (changes.status === "PUBLISHED") {
+      if (this.projectRole?.scope === "project" && this.projectRole.role !== "owner") {
+        this.setStatus("Chỉ chủ dự án mới duyệt PUBLISHED được — hỏi chủ dự án.");
+        return;
+      }
+      changes = {
+        ...changes,
+        approvedBy: this.auth?.username ?? "local",
+        approvedAt: new Date().toISOString(),
+      };
+    }
     this.project.updateDocument(documentId, changes);
     this.commit();
   }
@@ -880,12 +893,20 @@ export class AppStore {
     }
     try {
       const key = `${this.project.id}/${documentId}/${Date.now()}-${file.name}`;
+      const bytes = await file.arrayBuffer();
+      // Checksum tính TRƯỚC khi gửi — bằng chứng toàn vẹn độc lập với đường
+      // truyền; tải về verify lại được (linkIfcFromCde làm đúng thế).
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      const checksum = [...new Uint8Array(digest)]
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
       const response = await fetch(
         `${fileServerBase()}/files/${encodeURIComponent(key)}`,
-        { method: "PUT", body: file, headers: authHeaders() },
+        { method: "PUT", body: bytes, headers: authHeaders() },
       );
       if (!response.ok) {
-        throw new Error(`Upload failed (${response.status})`);
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? `Upload failed (${response.status})`);
       }
       this.project.addDocumentRevision(
         documentId,
@@ -893,6 +914,7 @@ export class AppStore {
         key,
         file.name,
         new Date().toISOString(),
+        checksum,
       );
       this.statusMessage = `Revision uploaded (${file.name})`;
       this.commit();
@@ -1497,14 +1519,30 @@ export class AppStore {
    * luồng xương sống: hồ sơ nộp lên rồi XEM được ngay, không phải tải về
    * máy rồi link tay lại.
    */
-  async linkIfcFromCde(fileKey: string, fileName: string): Promise<void> {
+  async linkIfcFromCde(
+    fileKey: string,
+    fileName: string,
+    expectedChecksum?: string,
+  ): Promise<void> {
     try {
       const response = await fetch(
         `${fileServerBase()}/files/${encodeURIComponent(fileKey)}`,
         { headers: authHeaders() },
       );
       if (!response.ok) throw new Error(`Không tải được file (${response.status})`);
-      this.linkIfcModel(fileName, await response.text());
+      const buffer = await response.arrayBuffer();
+      if (expectedChecksum) {
+        const digest = await crypto.subtle.digest("SHA-256", buffer);
+        const actual = [...new Uint8Array(digest)]
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join("");
+        if (actual !== expectedChecksum) {
+          throw new Error(
+            `File tải về KHÔNG khớp checksum lúc nộp — dữ liệu hỏng trên đường đi hoặc trên máy chủ, không đưa vào mô hình.`,
+          );
+        }
+      }
+      this.linkIfcModel(fileName, new TextDecoder().decode(buffer));
       this.setPane("VIEWER");
     } catch (error) {
       this.setStatus(error instanceof Error ? error.message : String(error));

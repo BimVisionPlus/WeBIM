@@ -98,3 +98,21 @@ describe("markup toạ độ phải hữu hạn", () => {
     expect(reloaded.documents[0].markups?.[0].to[0]).toBe(0.5);
   });
 });
+
+describe("approval PUBLISHED + checksum (ISO 19650)", () => {
+  it("approvedBy/checksum round-trip qua JSON", () => {
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    const document = project.addDocument("X-001", "MB");
+    project.addDocumentRevision(
+      document.id, "nộp", "p/d/v1.pdf", "v1.pdf", "2026-01-01", "abc123def456",
+    );
+    project.updateDocument(document.id, {
+      status: "PUBLISHED",
+      approvedBy: "sophie",
+      approvedAt: "2026-01-02T08:00:00Z",
+    });
+    const reloaded = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(reloaded.documents[0].approvedBy).toBe("sophie");
+    expect(reloaded.documents[0].revisions[0].checksum).toBe("abc123def456");
+  });
+});

@@ -13,6 +13,7 @@ import {
   VBPL_PROVENANCE,
 } from "../standards/catalog";
 import { climateFindings, estimateOttv, facadeByOrientation } from "../application/climate";
+import { DEFAULT_CONVENTION } from "../application/naming";
 import { ganttChart, weekTicks } from "../application/gantt";
 import { Viewer3D } from "../viewport/Viewer3D";
 import {
@@ -101,11 +102,35 @@ function downloadStoredFile(fileKey: string, fileName: string): void {
   });
 }
 
+/** Bộ môn đọc từ MÃ tài liệu theo quy ước đặt tên — cấu trúc ISO thật sự
+ * đến từ mã, không phải folder tự đặt. */
+function disciplineOf(code: string): string {
+  const convention = store.project.namingConvention ?? DEFAULT_CONVENTION;
+  const index = convention.segments.findIndex((segment) =>
+    segment.name.toLowerCase().includes("bộ môn"),
+  );
+  if (index < 0) return "—";
+  return code.split(convention.separator)[index]?.trim() || "—";
+}
+
+const STATUS_ZONE: Record<DocumentStatus, string> = {
+  WIP: "WIP — đang làm",
+  SHARED: "Shared — chia sẻ nội bộ",
+  PUBLISHED: "Published — đã phê duyệt",
+  ARCHIVED: "Archived — lưu trữ",
+};
+
 export function CdeModule() {
   useStoreVersion();
   const [code, setCode] = useState("");
   const [title, setTitle] = useState("");
-  const documents = store.project.documents;
+  const [discipline, setDiscipline] = useState("");
+  const documents = store.project.documents.filter(
+    (document) => !discipline || disciplineOf(document.code) === discipline,
+  );
+  const disciplines = [
+    ...new Set(store.project.documents.map((document) => disciplineOf(document.code))),
+  ].sort();
   const selected =
     store.selection?.kind === "document"
       ? documents.find((document) => document.id === store.selection?.id)
@@ -150,6 +175,29 @@ export function CdeModule() {
           <strong>Add document</strong>.
         </p>
       )}
+      {disciplines.length > 1 && (
+        <div className="module-form">
+          <label>
+            Bộ môn{" "}
+            <select value={discipline} onChange={(event) => setDiscipline(event.target.value)}>
+              <option value="">— tất cả —</option>
+              {disciplines.map((entry) => (
+                <option key={entry} value={entry}>
+                  {entry}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+      {(["WIP", "SHARED", "PUBLISHED", "ARCHIVED"] as DocumentStatus[])
+        .filter((zone) => documents.some((document) => document.status === zone))
+        .map((zone) => (
+        <div key={zone}>
+        {/* Bốn khu vực trạng thái của ISO 19650 — tài liệu SỐNG trong khu
+            vực, không phải folder tự do: nhìn bảng là biết cái gì còn nháp,
+            cái gì đã được phép dùng. */}
+        <h3 className={`cde-zone cde-zone-${zone.toLowerCase()}`}>{STATUS_ZONE[zone]}</h3>
       <table>
         <thead>
           <tr>
@@ -162,7 +210,7 @@ export function CdeModule() {
           </tr>
         </thead>
         <tbody>
-          {documents.map((document) => (
+          {documents.filter((document) => document.status === zone).map((document) => (
             <tr
               key={document.id}
               className={selected?.id === document.id ? "row-selected" : ""}
@@ -224,6 +272,8 @@ export function CdeModule() {
           ))}
         </tbody>
       </table>
+        </div>
+      ))}
       {selected && <DocumentDetail document={selected} />}
     </div>
   );
@@ -234,6 +284,12 @@ function DocumentDetail({ document }: { document: DocumentDatum }) {
   return (
     <div className="module-detail">
       <h3>{document.code} — revisions</h3>
+      {document.approvedBy && (
+        <p className="module-hint">
+          ✓ PUBLISHED — duyệt bởi <strong>{document.approvedBy}</strong>
+          {document.approvedAt ? ` lúc ${document.approvedAt.slice(0, 16).replace("T", " ")}` : ""}
+        </p>
+      )}
       <div className="module-form">
         <input
           placeholder="Ghi chú revision"
@@ -298,14 +354,25 @@ function DocumentDetail({ document }: { document: DocumentDatum }) {
                   "—"
                 )}
               </td>
-              <td>{revision.uploadedAt.slice(0, 19).replace("T", " ")}</td>
+              <td>
+                {revision.uploadedAt.slice(0, 19).replace("T", " ")}
+                {revision.checksum && (
+                  <span className="checksum" title={`SHA-256: ${revision.checksum}`}>
+                    {" "}#{revision.checksum.slice(0, 8)}
+                  </span>
+                )}
+              </td>
               <td>
                 {revision.fileKey && revision.fileName?.toLowerCase().endsWith(".ifc") && (
                   <button
                     className="mini"
                     title="Link file IFC này vào mô hình và mở View 3D"
                     onClick={() =>
-                      void store.linkIfcFromCde(revision.fileKey!, revision.fileName!)
+                      void store.linkIfcFromCde(
+                        revision.fileKey!,
+                        revision.fileName!,
+                        revision.checksum,
+                      )
                     }
                   >
                     👁

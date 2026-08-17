@@ -404,3 +404,26 @@ describe("admin reset password", () => {
     expect(denied.status).toBe(403);
   });
 });
+
+describe("quota dung lượng theo dự án", () => {
+  it("vượt quota là 413 kèm số liệu; dưới quota vẫn ghi bình thường", async () => {
+    process.env.WEBIM_PROJECT_QUOTA_MB = "0.001"; // ~1 KB cho test
+    try {
+      const small = await api(`/files/${encodeURIComponent("duan-quota/a.txt")}`, {
+        method: "PUT",
+        headers: asUser("chu"),
+        body: "x".repeat(500),
+      });
+      expect(small.status).toBe(200);
+      const over = await api(`/files/${encodeURIComponent("duan-quota/b.txt")}`, {
+        method: "PUT",
+        headers: asUser("chu"),
+        body: "x".repeat(900),
+      });
+      expect(over.status).toBe(413);
+      expect(((await over.json()) as { error: string }).error).toContain("quota");
+    } finally {
+      delete process.env.WEBIM_PROJECT_QUOTA_MB;
+    }
+  });
+});

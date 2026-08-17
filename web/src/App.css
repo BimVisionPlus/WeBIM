@@ -1526,3 +1526,21 @@ input[type="text"],
   gap: 6px;
   margin-left: 10px;
 }
+
+/* ── Khu vực ISO 19650 trong CDE ───────────────────────────────────────── */
+
+.cde-zone {
+  margin: 14px 0 4px;
+  font-size: 13px;
+  text-transform: none;
+}
+
+.cde-zone-published { color: var(--ok, #3fb950); }
+.cde-zone-wip { color: var(--warn, #d29922); }
+.cde-zone-archived { color: var(--muted); }
+
+.checksum {
+  color: var(--muted);
+  font-family: var(--mono, monospace);
+  font-size: 10.5px;
+}

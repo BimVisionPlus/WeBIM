@@ -207,6 +207,8 @@ export interface DocumentRevision {
   fileKey: string | null;
   fileName: string | null;
   uploadedAt: string;
+  /** SHA-256 của file lúc nộp — bằng chứng toàn vẹn, verify lại khi tải. */
+  checksum?: string;
 }
 
 /**
@@ -258,6 +260,9 @@ export interface DocumentDatum {
    * "file theo hạng mục" của DB dự án. Vắng mặt = tài liệu chung.
    */
   taskId?: string;
+  /** Ai duyệt PUBLISHED, lúc nào — ISO 19650: Published là khu vực CÓ PHÊ DUYỆT. */
+  approvedBy?: string;
+  approvedAt?: string;
   revisions: DocumentRevision[];
   notes: DocumentNote[];
   /** Đánh dấu trên bản vẽ; vắng mặt trong JSON cho tới khi có cái đầu tiên. */
@@ -634,6 +639,9 @@ export class NativeBimProject {
         title: document.title,
         status: document.status,
         ...(document.taskId ? { task_id: document.taskId } : {}),
+        ...(document.approvedBy
+          ? { approved_by: document.approvedBy, approved_at: document.approvedAt ?? "" }
+          : {}),
         revisions: document.revisions.map((revision) => ({
           id: revision.id,
           rev: revision.rev,
@@ -641,6 +649,7 @@ export class NativeBimProject {
           file_key: revision.fileKey,
           file_name: revision.fileName,
           uploaded_at: revision.uploadedAt,
+          ...(revision.checksum ? { checksum: revision.checksum } : {}),
         })),
         notes: document.notes.map((note) => ({
           id: note.id,
@@ -855,6 +864,12 @@ export class NativeBimProject {
         title: (document.title as string) ?? "",
         status: (document.status as DocumentStatus) ?? "WIP",
         ...(typeof document.task_id === "string" ? { taskId: document.task_id } : {}),
+        ...(typeof document.approved_by === "string"
+          ? {
+              approvedBy: document.approved_by,
+              approvedAt: (document.approved_at as string) ?? "",
+            }
+          : {}),
         revisions: ((document.revisions as Record<string, unknown>[]) ?? []).map(
           (revision) => ({
             id: revision.id as string,
@@ -863,6 +878,9 @@ export class NativeBimProject {
             fileKey: (revision.file_key as string) ?? null,
             fileName: (revision.file_name as string) ?? null,
             uploadedAt: (revision.uploaded_at as string) ?? "",
+            ...(typeof revision.checksum === "string"
+              ? { checksum: revision.checksum }
+              : {}),
           }),
         ),
         notes: ((document.notes as Record<string, unknown>[]) ?? []).map((note) => ({
@@ -1372,12 +1390,16 @@ export class NativeBimProject {
       title?: string;
       status?: DocumentStatus;
       taskId?: string | null;
+      approvedBy?: string;
+      approvedAt?: string;
     },
   ): DocumentDatum {
     const document = this.documentById(documentId);
     document.code = changes.code ?? document.code;
     document.title = changes.title ?? document.title;
     document.status = changes.status ?? document.status;
+    if (changes.approvedBy !== undefined) document.approvedBy = changes.approvedBy;
+    if (changes.approvedAt !== undefined) document.approvedAt = changes.approvedAt;
     if (changes.taskId !== undefined) {
       if (changes.taskId === null) {
         delete document.taskId;
@@ -1408,6 +1430,7 @@ export class NativeBimProject {
     fileKey: string | null,
     fileName: string | null,
     uploadedAt: string,
+    checksum?: string,
   ): DocumentRevision {
     const document = this.documentById(documentId);
     const prefix = document.status === "PUBLISHED" ? "C" : "P";
@@ -1421,6 +1444,7 @@ export class NativeBimProject {
       fileKey,
       fileName,
       uploadedAt,
+      ...(checksum ? { checksum } : {}),
     };
     document.revisions.push(revision);
     return revision;

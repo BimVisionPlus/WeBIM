@@ -645,7 +645,25 @@ export function startRelay(port = 8787, options = {}) {
               error: "Bạn không có quyền editor trong dự án này.",
             });
           }
-          await storage.put(key, await readBody(request));
+          const body = await readBody(request);
+          // Quota theo DỰ ÁN (mặc định 2 GB, chỉnh WEBIM_PROJECT_QUOTA_MB):
+          // một editor không được phép ghi đầy đĩa của cả máy chủ. Đếm thật
+          // qua storage.list — chậm hơn một biến đếm nhưng không bao giờ
+          // lệch khỏi sự thật trên đĩa.
+          const quotaMb = Number(process.env.WEBIM_PROJECT_QUOTA_MB ?? 2048);
+          const projectPrefix = key.split("/")[0] + "/";
+          const used = (await storage.list(projectPrefix)).reduce(
+            (sum, file) => sum + (file.size ?? 0),
+            0,
+          );
+          if (used + body.length > quotaMb * 1024 * 1024) {
+            return reply(413, {
+              error:
+                `Dự án đã dùng ${(used / 1048576).toFixed(0)} MB / quota ${quotaMb} MB — ` +
+                `xoá bớt file cũ hoặc liên hệ quản trị viên nâng quota.`,
+            });
+          }
+          await storage.put(key, body);
           audit.log({
             user: identity?.username ?? "?",
             action: "file.put",
