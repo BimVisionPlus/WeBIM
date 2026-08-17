@@ -253,7 +253,13 @@ export function createAuth({ usersPath, accountsPath, secret } = {}) {
       try {
         const payload = JSON.parse(Buffer.from(body, "base64url").toString());
         if (payload.e < Date.now()) return null;
-        return { username: payload.u, role: payload.r, plan: payload.p ?? "free" };
+        // Token sống 12h nhưng TÀI KHOẢN có thể bị xoá giữa chừng — chữ ký
+        // đúng không có nghĩa là người đó còn tồn tại. Không có check này,
+        // xoá tài khoản không thu hồi được gì cả (bài học từ đợt dọn QA:
+        // tab cũ của tài khoản đã xoá vẫn đẩy lại snapshot lên server).
+        const user = users.find((candidate) => candidate.username === payload.u);
+        if (!user) return null;
+        return { username: payload.u, role: user.role, plan: effectivePlan(user) };
       } catch {
         return null;
       }

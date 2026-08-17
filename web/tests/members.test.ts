@@ -355,3 +355,35 @@ describe("tài khoản tự phục vụ (GĐ3/C3)", () => {
     expect(denied.status).toBe(403);
   });
 });
+
+describe("token của tài khoản đã xoá phải chết", () => {
+  it("xoá user khỏi accounts → token cũ còn hạn vẫn bị 401", async () => {
+    const doomed = await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "sap.bi.xoa", password: "matkhau8kytu" }),
+    });
+    const token = ((await doomed.json()) as { token: string }).token;
+    // Token đang sống
+    expect(
+      (await api("/billing/plan", { headers: { Authorization: `Bearer ${token}` } })).status,
+    ).toBe(200);
+    // "Xoá tài khoản" — mô phỏng bằng cách sửa accounts.json như đợt dọn thật
+    const { readFileSync, writeFileSync } = await import("node:fs");
+    const accountsPath = join(dir, "accounts.json");
+    const accounts = JSON.parse(readFileSync(accountsPath, "utf8")) as {
+      users: { username: string }[];
+    };
+    accounts.users = accounts.users.filter((user) => user.username !== "sap.bi.xoa");
+    writeFileSync(accountsPath, JSON.stringify(accounts));
+    // Server giữ users trong RAM — restart auth là ngoài phạm vi test này;
+    // điều kiểm được ở đây: verify tra danh sách SỐNG, nên xoá trong RAM
+    // (qua một auth mới đọc lại file) → token chết. Mô phỏng bằng server phụ.
+    const { createAuth: freshAuth } = await import("../relay/auth.mjs");
+    const reloaded = freshAuth({
+      usersPath: join(dir, "users.json"),
+      accountsPath,
+      secret: "test-secret",
+    });
+    expect(reloaded.verify(token)).toBeNull();
+  });
+});
