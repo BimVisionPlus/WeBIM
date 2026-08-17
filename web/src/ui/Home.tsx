@@ -12,6 +12,7 @@
 // hỏi người ta hỏi ngay khi mở app.
 
 import { DashboardModule } from "./Dashboard";
+import { assessFlow } from "../application/flow";
 import { sectionById, type PaneId, type SectionId } from "./navigation";
 import { store, useStoreVersion } from "../state/store";
 
@@ -93,6 +94,36 @@ const TIERS: HomeTier[] = [
   },
 ];
 
+const FLOW_ICON: Record<string, string> = { OK: "✓", ATTENTION: "⚠", EMPTY: "○" };
+
+function FlowStrip() {
+  useStoreVersion();
+  const steps = assessFlow(store.flowInput());
+  return (
+    <div className="flow-strip">
+      {steps.map((step, index) => (
+        <button
+          key={step.id}
+          className={`flow-step flow-${step.state.toLowerCase()}`}
+          onClick={() => store.setPane(step.pane)}
+          title={step.nextAction ?? step.summary}
+        >
+          <span className="flow-step-head">
+            <span className="flow-step-icon">{FLOW_ICON[step.state]}</span>
+            <span className="flow-step-label">
+              {index + 1}. {step.label}
+            </span>
+          </span>
+          <span className="flow-step-summary">{step.summary}</span>
+          {step.nextAction && (
+            <span className="flow-step-next">→ {step.nextAction}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function HomeModule() {
   useStoreVersion();
   const project = store.project;
@@ -103,6 +134,10 @@ export function HomeModule() {
       <p className="module-hint">
         {project.siteName} · {project.buildingName} — chọn việc cần làm.
       </p>
+
+      {/* Luồng xương sống: 5 bước tự soi dữ liệu thật — người mở app thấy
+          ngay mình đứng ở đâu và việc kế tiếp là gì. */}
+      <FlowStrip />
 
       {TIERS.map((tier) => (
         <div key={tier.title} className="home-tier">

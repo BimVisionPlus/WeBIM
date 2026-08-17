@@ -1441,3 +1441,49 @@ input[type="text"],
 .login-gate {
   max-width: 480px;
 }
+
+/* ── Luồng xương sống trên trang chủ ───────────────────────────────────── */
+
+.flow-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.flow-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 9px 11px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--panel, transparent);
+}
+
+.flow-step-head {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.flow-step-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.flow-step-summary {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.flow-step-next {
+  font-size: 11.5px;
+}
+
+.flow-ok .flow-step-icon { color: var(--ok, #3fb950); }
+.flow-attention .flow-step-icon,
+.flow-attention .flow-step-next { color: var(--warn, #d29922); }
+.flow-empty .flow-step-icon { color: var(--muted); }

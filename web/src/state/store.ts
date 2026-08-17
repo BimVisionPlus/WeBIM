@@ -12,6 +12,7 @@ import {
 import { parseIfc, type LinkedElement } from "../ifc/parseIfc";
 import { buildDemoProject } from "../demo/seedProject";
 import { pairKey, ruleFor } from "../application/clashMatrix";
+import { analyseProject } from "../application/pccc";
 import type { ClashRule, FireSettings } from "../domain/project";
 import { sectionById, sectionOfPane, type PaneId, type SectionId } from "../ui/navigation";
 
@@ -1330,6 +1331,79 @@ export class AppStore {
 
   serializeProject(): string {
     return JSON.stringify(this.project.toDict());
+  }
+
+  /**
+   * Số liệu cho dải luồng xương sống trên trang chủ. PCCC (pathfinding)
+   * chỉ chạy khi phòng ≤ 40 — dự án lớn hơn thì bước Đối chiếu nói "mở tab
+   * Thoát nạn" thay vì âm thầm treo trang chủ.
+   */
+  flowInput(): import("../application/flow").FlowInput {
+    const documents = this.project.documents;
+    const tasks = this.project.tasks;
+    const publishedByTask = new Set(
+      documents
+        .filter((doc) => doc.taskId && doc.status === "PUBLISHED")
+        .map((doc) => doc.taskId as string),
+    );
+    let pcccSeriousCount: number | null = null;
+    if (this.project.rooms.length > 0 && this.project.rooms.length <= 40) {
+      try {
+        pcccSeriousCount = analyseProject(this.project)
+          .flatMap((room) => room.findings)
+          .filter((finding) => finding.level === "serious").length;
+      } catch {
+        pcccSeriousCount = null;
+      }
+    }
+    return {
+      serverSynced: this.relayConnected,
+      registered:
+        this.projectRole === null ? null : this.projectRole.scope === "project",
+      memberCount: null,
+      documentCount: documents.length,
+      documentsWithoutFile: documents.filter(
+        (doc) => !doc.revisions.some((rev) => rev.fileKey),
+      ).length,
+      documentsWithoutTask: documents.filter((doc) => !doc.taskId).length,
+      elementCount:
+        this.project.walls.length +
+        this.project.slabs.length +
+        this.project.rooms.length +
+        this.project.masses.length,
+      linkedModelCount: this.linkedModels.length,
+      taskCount: tasks.length,
+      averageProgress: tasks.length
+        ? Math.round(tasks.reduce((sum, task) => sum + task.progress, 0) / tasks.length)
+        : 0,
+      doneTasksMissingPublished: tasks.filter(
+        (task) => task.status === "DONE" && !publishedByTask.has(task.id),
+      ).length,
+      pcccSeriousCount,
+      markupCount: documents.reduce(
+        (sum, doc) => sum + (doc.markups?.length ?? 0),
+        0,
+      ),
+    };
+  }
+
+  /**
+   * Link file IFC đã nộp trong CDE vào mô hình — mắt xích CDE → View của
+   * luồng xương sống: hồ sơ nộp lên rồi XEM được ngay, không phải tải về
+   * máy rồi link tay lại.
+   */
+  async linkIfcFromCde(fileKey: string, fileName: string): Promise<void> {
+    try {
+      const response = await fetch(
+        `${fileServerBase()}/files/${encodeURIComponent(fileKey)}`,
+        { headers: authHeaders() },
+      );
+      if (!response.ok) throw new Error(`Không tải được file (${response.status})`);
+      this.linkIfcModel(fileName, await response.text());
+      this.setPane("VIEWER");
+    } catch (error) {
+      this.setStatus(error instanceof Error ? error.message : String(error));
+    }
   }
 
   /** Danh sách dự án có snapshot trên máy chủ mà tôi xem được. */

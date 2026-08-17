@@ -300,6 +300,17 @@ function DocumentDetail({ document }: { document: DocumentDatum }) {
               </td>
               <td>{revision.uploadedAt.slice(0, 19).replace("T", " ")}</td>
               <td>
+                {revision.fileKey && revision.fileName?.toLowerCase().endsWith(".ifc") && (
+                  <button
+                    className="mini"
+                    title="Link file IFC này vào mô hình và mở View 3D"
+                    onClick={() =>
+                      void store.linkIfcFromCde(revision.fileKey!, revision.fileName!)
+                    }
+                  >
+                    👁
+                  </button>
+                )}
                 {revision.fileKey && index < document.revisions.length - 1 && (
                   <button
                     className="mini"
