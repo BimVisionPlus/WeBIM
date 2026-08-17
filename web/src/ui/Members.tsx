@@ -16,6 +16,20 @@ interface MembersInfo {
   you: { scope: "open" | "project"; role: string | null };
 }
 
+const ACTION_LABEL: Record<string, string> = {
+  "auth.login": "đăng nhập",
+  "auth.login_failed": "đăng nhập TRƯỢT",
+  "auth.register": "tạo tài khoản",
+  "auth.password_changed": "đổi mật khẩu",
+  "project.claim": "đăng ký dự án riêng tư",
+  "member.set": "đặt quyền thành viên",
+  "member.remove": "xoá thành viên",
+  "state.push": "đẩy snapshot mô hình",
+  "file.put": "nộp file",
+  "plan.set": "cấp gói",
+  "billing.team_activated": "kích hoạt gói Team (VNPay)",
+};
+
 const ROLE_LABEL: Record<string, string> = {
   owner: "Chủ dự án",
   editor: "Editor — sửa mô hình, nộp file",
@@ -30,6 +44,9 @@ export function MembersModule() {
   const [busy, setBusy] = useState(false);
   const [newUser, setNewUser] = useState("");
   const [newRole, setNewRole] = useState("editor");
+  const [auditEvents, setAuditEvents] = useState<
+    { at: string; user: string; action: string; detail?: string }[] | null
+  >(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -46,6 +63,17 @@ export function MembersModule() {
       // Quyền của chính mình có thể vừa đổi (claim, bị hạ quyền…) — banner
       // và khoá công cụ phải đổi theo ngay, không chờ reload.
       void store.refreshProjectRole();
+      // Nhật ký chỉ có nghĩa khi mình là thành viên — 403 thì thôi, im lặng.
+      void fetch(`${apiBase()}/projects/${encodeURIComponent(projectId)}/audit`, {
+        headers: authHeaders(),
+      })
+        .then((auditResponse) => (auditResponse.ok ? auditResponse.json() : null))
+        .then((body) =>
+          setAuditEvents(
+            (body as { events: typeof auditEvents } | null)?.events ?? null,
+          ),
+        )
+        .catch(() => setAuditEvents(null));
     } catch (err) {
       setInfo(null);
       setError(
@@ -206,6 +234,33 @@ export function MembersModule() {
               </button>
             </div>
           )}
+        </>
+      )}
+
+      {auditEvents && auditEvents.length > 0 && (
+        <>
+          <h3>Nhật ký dự án</h3>
+          <p className="module-hint">
+            Ghi ở máy chủ, theo từng hành động — ai đăng ký, ai mời ai, ai nộp
+            file, ai đẩy mô hình. Đây là bản đối chiếu khi có tranh luận "ai
+            đã đổi cái này".
+          </p>
+          <table className="data-table audit-table">
+            <tbody>
+              {auditEvents.slice(0, 30).map((event, index) => (
+                <tr key={index}>
+                  <td className="audit-time">
+                    {event.at.slice(0, 16).replace("T", " ")}
+                  </td>
+                  <td>{event.user}</td>
+                  <td>
+                    {ACTION_LABEL[event.action] ?? event.action}
+                    {event.detail ? ` — ${event.detail}` : ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
     </div>

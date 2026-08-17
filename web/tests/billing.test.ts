@@ -7,6 +7,8 @@ import { join } from "node:path";
 import { startRelay } from "../relay/server.mjs";
 import { createAuth, hashEntry } from "../relay/auth.mjs";
 import { createMembers } from "../relay/members.mjs";
+// @ts-expect-error — module .mjs không có type declarations
+import { createAudit } from "../relay/audit.mjs";
 import { createStorage } from "../relay/storage.mjs";
 import {
   buildCheckoutUrl,
@@ -48,7 +50,8 @@ beforeAll(async () => {
   });
   const members = createMembers({ path: join(dir, "memberships.json") });
   const storage = createStorage(join(dir, "data"));
-  server = startRelay(0, { auth, members, storage }) as unknown as WebSocketServer;
+  const audit = createAudit({ path: join(dir, "audit.jsonl") });
+  server = startRelay(0, { auth, members, storage, audit }) as unknown as WebSocketServer;
   const httpServer = (server as unknown as { httpServer: import("node:http").Server })
     .httpServer;
   if (!httpServer.listening) {
@@ -181,5 +184,40 @@ describe("chữ ký VNPay", () => {
     const ref = makeTxnRef("qa.thu-nghiem", 999);
     expect(usernameFromTxnRef(ref, ["sophie", "qa.thu-nghiem"])).toBe("qa.thu-nghiem");
     expect(usernameFromTxnRef(ref, ["sophie"])).toBeNull();
+  });
+});
+
+describe("nhật ký kiểm toán (GĐ4)", () => {
+  it("hành động để lại vết; thành viên đọc được, người ngoài không", async () => {
+    // freeuser đã claim da1/da2 và được cấp team ở các test trên — giờ mời + nộp file
+    await api("/projects/da1/members", {
+      method: "PUT",
+      headers: asUser("quantri", { "Content-Type": "application/json" }),
+      body: JSON.stringify({ username: "quantri", role: "editor" }),
+    }); // quantri là admin nên tự set được? — chủ là freeuser; admin toàn cục vẫn owner-equivalent
+    await api(`/files/${encodeURIComponent("da1/tai-lieu/v1.pdf")}`, {
+      method: "PUT",
+      headers: asUser("freeuser"),
+      body: "x",
+    });
+
+    const events = (await (
+      await api("/projects/da1/audit", { headers: asUser("freeuser") })
+    ).json()) as { events: { action: string; user: string }[] };
+    const actions = events.events.map((event) => event.action);
+    expect(actions).toContain("project.claim");
+    expect(actions).toContain("file.put");
+    expect(events.events[0].at ?? "").not.toBe(""); // có timestamp
+
+    // người ngoài dự án: 403 — nhật ký cũng là dữ liệu dự án
+    const outsider = await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "ngoai.cuoc", password: "matkhau8kytu" }),
+    });
+    const outsiderToken = ((await outsider.json()) as { token: string }).token;
+    const denied = await api("/projects/da1/audit", {
+      headers: { Authorization: `Bearer ${outsiderToken}` },
+    });
+    expect(denied.status).toBe(403);
   });
 });

@@ -107,3 +107,50 @@ export function qtoCsv(project: NativeBimProject): string {
   }
   return lines.join("\n");
 }
+
+/** Một dòng khối lượng KHAI BÁO trong file IFC link (Qto_*). */
+export interface LinkedQtoRow {
+  model: string;
+  ifcType: string;
+  quantity: string;
+  total: number;
+  elementCount: number;
+}
+
+/**
+ * Khối lượng từ các model IFC link — đọc từ Qto_* mà FILE TỰ KHAI, không
+ * phải WeBIM đo lại. Phân biệt này quan trọng và UI phải nói ra: số của
+ * file sai thì bảng này sai theo; nó là bảng ĐỐI CHIẾU với khối lượng
+ * WeBIM đo từ hình học native, không phải nguồn thay thế.
+ */
+export function linkedQtoRows(
+  models: { name: string; elements: { ifcType: string; properties?: Record<string, string | number | boolean> }[] }[],
+): LinkedQtoRow[] {
+  const buckets = new Map<string, LinkedQtoRow>();
+  for (const model of models) {
+    for (const element of model.elements) {
+      for (const [key, value] of Object.entries(element.properties ?? {})) {
+        if (typeof value !== "number" || !Number.isFinite(value)) continue;
+        const [setName, quantityName] = key.split(".");
+        if (!setName?.startsWith("Qto_") || !quantityName) continue;
+        const bucketKey = `${model.name}|${element.ifcType}|${quantityName}`;
+        const bucket = buckets.get(bucketKey) ?? {
+          model: model.name,
+          ifcType: element.ifcType,
+          quantity: quantityName,
+          total: 0,
+          elementCount: 0,
+        };
+        bucket.total += value;
+        bucket.elementCount += 1;
+        buckets.set(bucketKey, bucket);
+      }
+    }
+  }
+  return [...buckets.values()].sort(
+    (a, b) =>
+      a.model.localeCompare(b.model) ||
+      a.ifcType.localeCompare(b.ifcType) ||
+      a.quantity.localeCompare(b.quantity),
+  );
+}

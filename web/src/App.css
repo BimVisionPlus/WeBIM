@@ -1499,3 +1499,13 @@ input[type="text"],
   border-bottom: 1px solid var(--panel-border);
   margin-bottom: 4px;
 }
+
+.audit-table {
+  font-size: 12px;
+}
+
+.audit-time {
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

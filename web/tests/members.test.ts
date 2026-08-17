@@ -11,6 +11,8 @@ import { startRelay } from "../relay/server.mjs";
 import { createAuth, hashEntry } from "../relay/auth.mjs";
 import { createMembers } from "../relay/members.mjs";
 import { createStorage } from "../relay/storage.mjs";
+// @ts-expect-error — module .mjs không có type declarations
+import { createAudit } from "../relay/audit.mjs";
 import type { WebSocketServer } from "ws";
 
 let server: WebSocketServer;
@@ -43,7 +45,8 @@ beforeAll(async () => {
   const auth = createAuth({ usersPath, accountsPath: join(dir, "accounts.json"), secret: "test-secret" });
   const members = createMembers({ path: join(dir, "memberships.json") });
   const storage = createStorage(join(dir, "data"));
-  server = startRelay(0, { auth, members, storage }) as unknown as WebSocketServer;
+  const audit = createAudit({ path: join(dir, "audit.jsonl") });
+  server = startRelay(0, { auth, members, storage, audit }) as unknown as WebSocketServer;
   const httpServer = (server as unknown as { httpServer: import("node:http").Server })
     .httpServer;
   if (!httpServer.listening) {

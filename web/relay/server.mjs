@@ -35,6 +35,7 @@ import {
   writeRenderBrief,
 } from "./ai.mjs";
 import { createAuth } from "./auth.mjs";
+import { createAudit } from "./audit.mjs";
 import { createMembers } from "./members.mjs";
 import {
   buildCheckoutUrl,
@@ -79,6 +80,7 @@ export function startRelay(port = 8787, options = {}) {
   const auth = options.auth ?? createAuth();
   const storage = options.storage ?? createStorage(DATA_DIR);
   const members = options.members ?? createMembers();
+  const audit = options.audit ?? createAudit();
   if (!auth.enabled) {
     console.warn(
       "[webim] auth OPEN mode — create relay/users.json to require login " +
@@ -157,6 +159,12 @@ export function startRelay(port = 8787, options = {}) {
         }
         const { username, password } = JSON.parse((await readBody(request)).toString());
         const session = auth.login(username, password);
+        if (session) {
+          audit.log({ user: username, action: "auth.login" });
+        } else {
+          // Đăng nhập trượt là tín hiệu an ninh — đáng một dòng.
+          audit.log({ user: username ?? "?", action: "auth.login_failed" });
+        }
         return session
           ? reply(200, session)
           : reply(401, { error: "Sai tên đăng nhập hoặc mật khẩu." });
@@ -183,7 +191,9 @@ export function startRelay(port = 8787, options = {}) {
         }
         try {
           const { username, password } = JSON.parse((await readBody(request)).toString());
-          return reply(200, auth.register(username, password));
+          const session = auth.register(username, password);
+          audit.log({ user: username, action: "auth.register" });
+          return reply(200, session);
         } catch (error) {
           return reply(400, { error: String(error.message ?? error) });
         }
@@ -198,6 +208,7 @@ export function startRelay(port = 8787, options = {}) {
         try {
           const { oldPassword, newPassword } = JSON.parse((await readBody(request)).toString());
           auth.changePassword(caller.username, oldPassword, newPassword);
+          audit.log({ user: caller.username, action: "auth.password_changed" });
           return reply(200, { ok: true });
         } catch (error) {
           return reply(400, { error: String(error.message ?? error) });
@@ -211,11 +222,14 @@ export function startRelay(port = 8787, options = {}) {
         }
         try {
           const { plan, months } = JSON.parse((await readBody(request)).toString());
-          return reply(200, auth.setPlan(
-            decodeURIComponent(url.pathname.split("/")[3]),
-            plan,
-            months ?? 12,
-          ));
+          const target = decodeURIComponent(url.pathname.split("/")[3]);
+          const outcome = auth.setPlan(target, plan, months ?? 12);
+          audit.log({
+            user: caller.username,
+            action: "plan.set",
+            detail: `${target} → ${plan}`,
+          });
+          return reply(200, outcome);
         } catch (error) {
           return reply(400, { error: String(error.message ?? error) });
         }
@@ -274,10 +288,22 @@ export function startRelay(port = 8787, options = {}) {
               return reply(400, { error: `Không có tài khoản "${username}" trên máy chủ.` });
             }
             members.setMember(projectId, identity, username, role);
+            audit.log({
+              user: identity.username,
+              action: "member.set",
+              projectId,
+              detail: `${username} → ${role}`,
+            });
             return reply(200, { ok: true });
           }
           if (request.method === "DELETE" && membersMatch[2]) {
             members.removeMember(projectId, identity, decodeURIComponent(membersMatch[2]));
+            audit.log({
+              user: identity.username,
+              action: "member.remove",
+              projectId,
+              detail: decodeURIComponent(membersMatch[2]),
+            });
             return reply(200, { ok: true });
           }
         } catch (error) {
@@ -302,6 +328,7 @@ export function startRelay(port = 8787, options = {}) {
         }
         try {
           members.claim(projectId, identity);
+          audit.log({ user: identity.username, action: "project.claim", projectId });
           return reply(200, { ok: true });
         } catch (error) {
           return reply(409, { error: String(error.message ?? error) });
@@ -361,6 +388,7 @@ export function startRelay(port = 8787, options = {}) {
         const username = usernameFromTxnRef(result.txnRef, auth.listUsernames());
         if (!username) return { ok: false, code: "01" };
         auth.setPlan(username, "team", vnpayConfig().teamMonths);
+        audit.log({ user: username, action: "billing.team_activated", detail: result.txnRef });
         console.log(`[webim] billing: ${username} → team (VNPay ${result.txnRef}, ${result.amountVnd}đ)`);
         return { ok: true, code: "00" };
       };
@@ -428,6 +456,16 @@ export function startRelay(port = 8787, options = {}) {
         return reply(200, { projects });
       }
 
+      const auditMatch = url.pathname.match(/^\/projects\/([^/]+)\/audit$/);
+      if (auditMatch && request.method === "GET") {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const projectId = decodeURIComponent(auditMatch[1]);
+        if (!fileAccess(`${projectId}/x`, "viewer")) {
+          return reply(403, { error: "Bạn không phải thành viên dự án này." });
+        }
+        return reply(200, { events: audit.forProject(projectId) });
+      }
+
       const stateMatch = url.pathname.match(/^\/projects\/([^/]+)\/state$/);
       if (stateMatch) {
         if (!identity) return reply(401, { error: "Cần đăng nhập." });
@@ -461,6 +499,7 @@ export function startRelay(port = 8787, options = {}) {
             return reply(400, { error: "Snapshot cần {project, clocks}." });
           }
           await storage.put(stateKey, raw);
+          audit.log({ user: identity.username, action: "state.push", projectId });
           return reply(200, { ok: true });
         }
       }
@@ -476,6 +515,12 @@ export function startRelay(port = 8787, options = {}) {
             });
           }
           await storage.put(key, await readBody(request));
+          audit.log({
+            user: identity?.username ?? "?",
+            action: "file.put",
+            projectId: key.split("/")[0],
+            detail: key.split("/").slice(1).join("/"),
+          });
           return reply(200, { ok: true, key });
         }
         if (request.method === "GET") {

@@ -3,7 +3,7 @@ import {
   slabScheduleRows,
   wallScheduleRows,
 } from "../application/schedules";
-import { qtoCsv, qtoRows, qtoSummary } from "../application/qto";
+import { qtoCsv, qtoRows, qtoSummary, linkedQtoRows } from "../application/qto";
 import { clashReport, externalClashes } from "../application/clash";
 import {
   applyMatrix,
@@ -132,6 +132,45 @@ function SlabTable() {
   );
 }
 
+/** Khối lượng KHAI BÁO trong các file IFC link — bảng đối chiếu, không phải đo lại. */
+function LinkedQto() {
+  const rows = linkedQtoRows(store.linkedModels);
+  if (rows.length === 0) return null;
+  return (
+    <>
+      <h3>Khối lượng khai báo trong IFC link</h3>
+      <p className="module-hint">
+        Đọc từ Qto_* mà chính file khai — WeBIM <strong>không đo lại</strong>{" "}
+        hình học link. Dùng để đối chiếu với bảng đo từ model native ở trên;
+        hai bảng lệch nhau là câu hỏi cho người dựng file, không phải cho phần
+        mềm nào đúng.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Loại</th>
+            <th>Đại lượng</th>
+            <th>Số phần tử</th>
+            <th>Tổng</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={index}>
+              <td>{row.model}</td>
+              <td>{row.ifcType}</td>
+              <td>{row.quantity}</td>
+              <td>{row.elementCount}</td>
+              <td>{row.total.toFixed(3)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
 export function QtoTable() {
   const rows = qtoRows(store.project);
   const summary = qtoSummary(rows);
@@ -180,6 +219,7 @@ export function QtoTable() {
           ))}
         </tfoot>
       </table>
+      <LinkedQto />
     </>
   );
 }

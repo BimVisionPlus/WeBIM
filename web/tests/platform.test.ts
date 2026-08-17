@@ -128,3 +128,34 @@ describe("CDE documents and tasks (domain)", () => {
     expect(restored.tasks[0].status).toBe("IN_PROGRESS");
   });
 });
+
+describe("khối lượng khai báo trong IFC link", () => {
+  it("gom Qto_* theo model × loại × đại lượng, bỏ giá trị không phải số", async () => {
+    const { linkedQtoRows } = await import("../src/application/qto");
+    const rows = linkedQtoRows([
+      {
+        name: "KC.ifc",
+        elements: [
+          {
+            ifcType: "IFCWALL",
+            properties: {
+              "Qto_WallBaseQuantities.NetSideArea": 19.8,
+              "Qto_WallBaseQuantities.NetVolume": 4.2,
+              "Pset_WallCommon.IsExternal": true, // không phải Qto → bỏ
+            },
+          },
+          {
+            ifcType: "IFCWALL",
+            properties: { "Qto_WallBaseQuantities.NetSideArea": 10.2 },
+          },
+          { ifcType: "IFCSLAB" }, // không properties → bỏ êm
+        ],
+      },
+    ]);
+    expect(rows).toHaveLength(2);
+    const area = rows.find((row) => row.quantity === "NetSideArea")!;
+    expect(area.total).toBeCloseTo(30.0);
+    expect(area.elementCount).toBe(2);
+    expect(rows.find((row) => row.quantity === "IsExternal")).toBeUndefined();
+  });
+});
