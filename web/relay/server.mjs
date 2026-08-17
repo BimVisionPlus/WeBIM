@@ -68,7 +68,9 @@ function safeKey(key) {
 function corsHeaders(extra = {}) {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, PUT, POST, OPTIONS",
+    // DELETE có mặt vì thu hồi API key / xoá webhook / xoá thành viên đi
+    // bằng DELETE từ browser — thiếu nó preflight chặn và nút chết im lặng.
+    "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     ...extra,
   };

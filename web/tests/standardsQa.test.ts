@@ -64,6 +64,11 @@ describe("rankClauses", () => {
     expect(rankClauses("zzz qqq", corpus)).toHaveLength(0);
   });
 
+  it("câu dài chỉ khớp MỘT token lẻ (nhiễu bỏ dấu) cũng bị loại", () => {
+    // "giá vàng" bỏ dấu dính "gia"/"vang" khớp lung tung trong corpus thật.
+    expect(rankClauses("giá vàng hôm nay thế nào", CLAUSES)).toHaveLength(0);
+  });
+
   it("hỏi bằng số điều khoản tìm thẳng được", () => {
     const hits = rankClauses("3.3.5", corpus);
     expect(hits[0]?.clause.id).toBe("CORRIDOR");

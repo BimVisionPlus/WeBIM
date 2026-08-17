@@ -455,10 +455,14 @@ function GanttView() {
    * khái niệm nửa buổi trong Gantt. Ghi vào store lúc NHẢ chuột: mỗi cú
    * kéo là một bước undo, không phải ba mươi bước giữa chừng.
    */
-  const dragRef = { current: null as null | {
+  // useRef, KHÔNG phải object thường: sync relay có thể re-render giữa cú
+  // kéo, và object tạo lại mỗi render thì drag chết im lặng đúng lúc có
+  // đồng nghiệp cùng sửa — demo một mình không bao giờ lộ.
+  const dragRef = useRef<null | {
     taskId: string; mode: "move" | "resize"; startX: number;
     origStart: string; origEnd: string; deltaDays: number;
-  } };
+    group: SVGGElement | null;
+  }>(null);
   const shiftDate = (iso: string, days: number) => {
     const time = Date.parse(iso);
     return new Date(time + days * 86_400_000).toISOString().slice(0, 10);
@@ -472,33 +476,38 @@ function GanttView() {
     const task = store.project.tasks.find((candidate) => candidate.id === taskId);
     if (!task?.start || !task.end) return;
     event.preventDefault();
-    (event.target as SVGRectElement).setPointerCapture(event.pointerId);
+    // Capture là tối ưu, không phải chỗ dựa: move/up lắng nghe ở SVG gốc
+    // (sự kiện bubble tới đó dù capture có ăn hay không). Một số môi trường
+    // không giữ capture cho con SVG — dựa hẳn vào nó thì kéo đứt giữa chừng.
+    try {
+      (event.target as SVGRectElement).setPointerCapture(event.pointerId);
+    } catch {
+      // không capture được vẫn kéo được nhờ handler ở svg
+    }
     dragRef.current = {
       taskId, mode, startX: event.clientX,
       origStart: task.start, origEnd: task.end, deltaDays: 0,
+      group: (event.target as SVGRectElement).closest("g"),
     };
   };
-  const onBarPointerMove = (event: React.PointerEvent<SVGRectElement>) => {
+  const onBarPointerMove = (event: React.PointerEvent<SVGElement>) => {
     const drag = dragRef.current;
     if (!drag) return;
     drag.deltaDays = Math.round((event.clientX - drag.startX) / GANTT_DAY_WIDTH);
-    const target = event.target as SVGRectElement;
     // preview bằng transform — không commit
     if (drag.mode === "move") {
-      target.parentElement?.setAttribute(
+      drag.group?.setAttribute(
         "transform",
         `translate(${drag.deltaDays * GANTT_DAY_WIDTH}, 0)`,
       );
     }
   };
-  const onBarPointerUp = (event: React.PointerEvent<SVGRectElement>) => {
+  const onBarPointerUp = () => {
     const drag = dragRef.current;
     dragRef.current = null;
-    if (!drag || drag.deltaDays === 0) {
-      (event.target as SVGRectElement).parentElement?.removeAttribute("transform");
-      return;
-    }
-    (event.target as SVGRectElement).parentElement?.removeAttribute("transform");
+    if (!drag) return;
+    drag.group?.removeAttribute("transform");
+    if (drag.deltaDays === 0) return;
     if (drag.mode === "move") {
       store.updateTask(drag.taskId, {
         start: shiftDate(drag.origStart, drag.deltaDays),
@@ -530,7 +539,15 @@ function GanttView() {
   };
   return (
     <div className="gantt-scroll">
-      <svg width={width} height={height}>
+      <svg
+        width={width}
+        height={height}
+        onPointerMove={onBarPointerMove}
+        onPointerUp={onBarPointerUp}
+        // KHÔNG kết thúc drag ở pointerleave: setPointerCapture retarget sự
+        // kiện về rect làm svg nhận pointerleave NGAY sau pointerdown — bắt
+        // nó là giết drag ở mili giây đầu tiên.
+      >
         {weekTicks(chart).map((tick) => (
           <g key={tick.day}>
             <line
@@ -579,8 +596,6 @@ function GanttView() {
                   strokeWidth={cpm.critical.has(bar.task.id) ? 1.5 : 0}
                   style={{ cursor: store.canEdit ? "grab" : "default" }}
                   onPointerDown={(event) => onBarPointerDown(event, bar.task.id, "move")}
-                  onPointerMove={onBarPointerMove}
-                  onPointerUp={onBarPointerUp}
                 />
                 <rect
                   x={x(bar.endDay) - 4}
@@ -590,8 +605,6 @@ function GanttView() {
                   fill="transparent"
                   style={{ cursor: store.canEdit ? "ew-resize" : "default" }}
                   onPointerDown={(event) => onBarPointerDown(event, bar.task.id, "resize")}
-                  onPointerMove={onBarPointerMove}
-                  onPointerUp={onBarPointerUp}
                 />
                 <rect
                   x={x(bar.startDay)}
@@ -604,6 +617,10 @@ function GanttView() {
                   height={16}
                   rx={3}
                   fill={statusColor[bar.task.status] ?? "#4b5563"}
+                  // Overlay tiến độ vẽ ĐÈ lên thanh chính — không tha pointer
+                  // thì task tiến độ càng cao càng không kéo được (100% = phủ
+                  // kín, mọi cú nắm đều trúng overlay câm).
+                  pointerEvents="none"
                 />
               </>
             )}

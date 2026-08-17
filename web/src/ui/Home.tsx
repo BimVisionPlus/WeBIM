@@ -108,6 +108,13 @@ function ServerProjects() {
   if (!projects || projects.length === 0) return null;
   const others = projects.filter((project) => project.id !== store.project.id);
   if (others.length === 0) return null;
+  // Hai dự án server có thể TRÙNG TÊN (nhân bản demo, seed lại máy khác…).
+  // Không phân biệt thì người dùng bấm nhầm bản rỗng và tưởng mất dữ liệu —
+  // tên trùng được gắn thêm 8 ký tự id để biết mình đang mở bản nào.
+  const nameCount = new Map<string, number>();
+  for (const project of projects) {
+    nameCount.set(project.name, (nameCount.get(project.name) ?? 0) + 1);
+  }
   return (
     <p className="module-hint server-projects">
       Dự án khác của bạn trên máy chủ:{" "}
@@ -116,6 +123,7 @@ function ServerProjects() {
           {index > 0 && " · "}
           <button
             className="link-button"
+            title={`id ${project.id}`}
             onClick={() => {
               if (
                 window.confirm(
@@ -127,6 +135,9 @@ function ServerProjects() {
             }}
           >
             {project.name}
+            {(nameCount.get(project.name) ?? 0) > 1 && (
+              <span className="project-id-hint"> ({project.id.slice(0, 8)})</span>
+            )}
           </button>
         </span>
       ))}

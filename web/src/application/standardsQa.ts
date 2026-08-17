@@ -78,22 +78,31 @@ export function rankClauses(
   const idf = (token: string) =>
     Math.log(1 + clauses.length / (1 + (documentFrequency.get(token) ?? 0)));
 
+  // Câu hỏi nhiều từ phải khớp ÍT NHẤT HAI token — tiếng Việt bỏ dấu đầy
+  // token ngắn trùng nhau ("giá"→"gia" khớp "gia cường", "vàng"→"van(g)"…),
+  // một token khớp lẻ loi trên câu dài gần như chắc chắn là nhiễu. Câu một
+  // token ("3.3.5", "corridor") thì một khớp là đủ.
+  const requiredMatches = Math.min(2, queryTokens.length);
+
   const scored = clauses.map((clause, index) => {
     const field = fields[index];
     let score = 0;
+    let matched = 0;
     for (const token of queryTokens) {
       const weight = idf(token);
       const count = (list: string[]) => list.filter((t) => t === token).length;
-      score +=
-        weight *
-        (4 * count(field.ref) + 3 * count(field.title) + Math.min(count(field.body), 3));
+      const hits =
+        4 * count(field.ref) + 3 * count(field.title) + Math.min(count(field.body), 3);
+      if (hits > 0) matched += 1;
+      score += weight * hits;
     }
-    return { clause, score };
+    return { clause, score, matched };
   });
   return scored
-    .filter((entry) => entry.score > 0)
+    .filter((entry) => entry.score > 0 && entry.matched >= requiredMatches)
     .sort((a, b) => b.score - a.score)
-    .slice(0, k);
+    .slice(0, k)
+    .map(({ clause, score }) => ({ clause, score }));
 }
 
 /** Trích đoạn đánh số gửi cho model — [n] là hợp đồng trích dẫn. */

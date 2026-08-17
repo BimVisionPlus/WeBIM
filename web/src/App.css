@@ -634,6 +634,11 @@ input[type="text"],
   overflow-y: auto;
 }
 
+.project-id-hint {
+  opacity: 0.55;
+  font-size: 0.85em;
+}
+
 /* Key/secret hiện MỘT lần — viền vàng để mắt không lướt qua. */
 .fresh-secret {
   border-left: 2px solid #fab219;

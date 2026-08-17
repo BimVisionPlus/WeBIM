@@ -137,10 +137,14 @@ export function PdfMarkupView({
   const onClick = (event: React.MouseEvent<SVGSVGElement>) => {
     if (measuring) {
       const box = event.currentTarget.getBoundingClientRect();
-      if (!(box.width > 0)) return;
+      if (!(box.width > 0) || !(box.height > 0)) return;
+      // Toạ độ VIEWBOX, không phải CSS px: SVG vẽ theo viewBox (kích thước
+      // canvas PDF), còn CSS px đổi theo cỡ cửa sổ. Lưu CSS px thì line đo
+      // vẽ lệch chỗ và tỉ lệ calibrate chết ngay khi resize — đo 5m hôm nay,
+      // resize xong cùng đoạn đó ra số khác.
       const point: [number, number] = [
-        event.clientX - box.left,
-        event.clientY - box.top,
+        ((event.clientX - box.left) / box.width) * (size.width || 1),
+        ((event.clientY - box.top) / box.height) * (size.height || 1),
       ];
       if (measureStart === null) {
         setMeasureStart(point);
@@ -287,6 +291,10 @@ export function PdfMarkupView({
             const [x1, y1] = px(markup.from);
             const [x2, y2] = px(markup.to);
             const remove = (event: React.MouseEvent) => {
+              // Đang đo thì markup phải "trong suốt" với click: nuốt sự kiện
+              // ở đây vừa XOÁ nhầm chú thích vừa mất điểm đo — người dùng đo
+              // cạnh vùng đã đánh dấu là dính cả hai.
+              if (measuring) return;
               event.stopPropagation();
               store.removeMarkup(doc.id, markup.id);
             };
