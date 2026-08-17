@@ -70,6 +70,11 @@ export function createMembers({ path = DEFAULT_PATH } = {}) {
       return { scope: "project", role: record.members[identity.username] ?? null };
     },
 
+    /** Số dự án một người đang làm chủ — thước đo hạn mức gói (C4). */
+    countOwned(username) {
+      return Object.values(projects).filter((record) => record.owner === username).length;
+    },
+
     /** Đăng ký dự án — người gọi thành chủ. Lỗi nếu đã có chủ. */
     claim(projectId, identity) {
       if (!projectId || !identity) throw new Error("Cần đăng nhập.");

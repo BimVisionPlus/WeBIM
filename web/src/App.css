@@ -1487,3 +1487,15 @@ input[type="text"],
 .flow-attention .flow-step-icon,
 .flow-attention .flow-step-next { color: var(--warn, #d29922); }
 .flow-empty .flow-step-icon { color: var(--muted); }
+
+.plan-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0 6px;
+  font-size: 12px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--panel-border);
+  margin-bottom: 4px;
+}

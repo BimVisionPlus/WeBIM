@@ -26,6 +26,18 @@ const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 
 const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,31}$/;
 
+// Gói (C4): free | team | enterprise. Gói nằm TRÊN TÀI KHOẢN và có hạn —
+// VNPay là thanh toán một lần, không phải subscription tự gia hạn, nên mô
+// hình đúng là "mua N tháng": planUntil qua đi thì tự về free, không có
+// trạng thái "nợ" nào phải đòi.
+const PLANS = new Set(["free", "team", "enterprise"]);
+
+function effectivePlan(user) {
+  if (!user?.plan || user.plan === "free") return "free";
+  if (user.planUntil && Date.parse(user.planUntil) < Date.now()) return "free";
+  return user.plan;
+}
+
 export function createAuth({ usersPath, accountsPath, secret } = {}) {
   const seedPath =
     usersPath ?? join(dirname(fileURLToPath(import.meta.url)), "users.json");
@@ -109,6 +121,42 @@ export function createAuth({ usersPath, accountsPath, secret } = {}) {
       persist();
     },
 
+    /** Mọi username đang tồn tại — billing đối chiếu txnRef về người mua. */
+    listUsernames() {
+      return users.map((user) => user.username);
+    },
+
+    /** {plan, planUntil} cho UI — plan đã tính hết hạn. */
+    planInfoOf(username) {
+      const user = users.find((candidate) => candidate.username === username);
+      if (!user) return { plan: enabled ? "free" : "team", planUntil: null };
+      return { plan: effectivePlan(user), planUntil: user.planUntil ?? null };
+    },
+
+    /** Gói hiệu dụng HIỆN TẠI (đọc live, tính cả hết hạn) — đừng tin token cũ. */
+    planOf(username) {
+      if (!enabled) return "team";
+      return effectivePlan(users.find((candidate) => candidate.username === username));
+    },
+
+    /**
+     * Đặt gói cho một tài khoản — đường vào của CẢ VNPay lẫn admin cấp tay
+     * (chuyển khoản thủ công vẫn là một cổng thanh toán hợp lệ ở VN).
+     * months = null nghĩa là không hết hạn (enterprise self-host).
+     */
+    setPlan(username, plan, months = 12) {
+      if (!PLANS.has(plan)) throw new Error("Gói không hợp lệ.");
+      const user = users.find((candidate) => candidate.username === username);
+      if (!user) throw new Error(`Không có tài khoản "${username}".`);
+      user.plan = plan;
+      user.planUntil =
+        plan === "free" || months === null
+          ? null
+          : new Date(Date.now() + months * 30.44 * 86_400_000).toISOString();
+      persist();
+      return { plan: user.plan, planUntil: user.planUntil };
+    },
+
     /** Admin đổi role người khác. Không tự hạ admin cuối cùng. */
     setRole(username, role) {
       if (!(role in ROLE_RANK)) throw new Error("Role không hợp lệ.");
@@ -130,16 +178,23 @@ export function createAuth({ usersPath, accountsPath, secret } = {}) {
       if (hash.length !== stored.length || !timingSafeEqual(hash, stored)) {
         return null;
       }
+      const plan = effectivePlan(user);
       return {
-        token: sign({ u: user.username, r: user.role, e: Date.now() + TOKEN_TTL_MS }),
+        token: sign({
+          u: user.username,
+          r: user.role,
+          p: plan,
+          e: Date.now() + TOKEN_TTL_MS,
+        }),
         username: user.username,
         role: user.role,
+        plan,
       };
     },
 
     /** Returns {username, role} or null. Open mode: anonymous editor. */
     verify(token) {
-      if (!enabled) return { username: "anonymous", role: "editor" };
+      if (!enabled) return { username: "anonymous", role: "editor", plan: "team" };
       if (!token) return null;
       const [body, mac] = token.split(".");
       if (!body || !mac) return null;
@@ -157,7 +212,7 @@ export function createAuth({ usersPath, accountsPath, secret } = {}) {
       try {
         const payload = JSON.parse(Buffer.from(body, "base64url").toString());
         if (payload.e < Date.now()) return null;
-        return { username: payload.u, role: payload.r };
+        return { username: payload.u, role: payload.r, plan: payload.p ?? "free" };
       } catch {
         return null;
       }

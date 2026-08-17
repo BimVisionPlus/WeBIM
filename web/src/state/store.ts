@@ -707,6 +707,44 @@ export class AppStore {
     }
   }
 
+  /** Thông tin gói + nút nâng cấp — đọc live từ server, không tin token. */
+  async fetchPlan(): Promise<{
+    plan: string;
+    planUntil: string | null;
+    ownedProjects: number;
+    teamPriceVnd: number;
+    teamMonths: number;
+    vnpayReady: boolean;
+  } | null> {
+    try {
+      const response = await fetch(`${fileServerBase()}/billing/plan`, {
+        headers: authHeaders(),
+      });
+      if (!response.ok) return null;
+      return (await response.json()) as Awaited<ReturnType<AppStore["fetchPlan"]>>;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Mở trang thanh toán VNPay cho gói Team; lỗi cấu hình nói thẳng. */
+  async upgradeTeam(): Promise<void> {
+    try {
+      const response = await fetch(`${fileServerBase()}/billing/checkout`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      const body = (await response.json()) as { payUrl?: string; error?: string };
+      if (!response.ok || !body.payUrl) {
+        throw new Error(body.error ?? `Lỗi ${response.status}`);
+      }
+      window.open(body.payUrl, "_blank", "noopener");
+      this.setStatus("Đang mở trang thanh toán VNPay — gói kích hoạt ngay khi VNPay xác nhận.");
+    } catch (error) {
+      this.setStatus(error instanceof Error ? error.message : String(error));
+    }
+  }
+
   logout(): void {
     this.auth = null;
     localStorage.removeItem(AUTH_KEY);

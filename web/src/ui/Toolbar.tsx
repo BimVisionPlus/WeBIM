@@ -13,6 +13,34 @@ import { useEffect, useRef, useState } from "react";
 import { store, useStoreVersion } from "../state/store";
 import { AtlasPublishDialog } from "./AtlasPublish";
 
+/** Dòng gói trong menu tài khoản: gói gì, mấy dự án, nút nâng cấp VNPay. */
+function PlanRow() {
+  const [info, setInfo] = useState<Awaited<ReturnType<typeof store.fetchPlan>>>(null);
+  useEffect(() => {
+    void store.fetchPlan().then(setInfo);
+  }, []);
+  if (!info) return null;
+  const label =
+    info.plan === "free"
+      ? `Gói Free · ${info.ownedProjects}/1 dự án riêng`
+      : `Gói ${info.plan === "team" ? "Team" : "Enterprise"}` +
+        (info.planUntil ? ` · đến ${info.planUntil.slice(0, 10)}` : "");
+  return (
+    <div className="plan-row">
+      <span>{label}</span>
+      {info.plan === "free" && (
+        <button
+          className="mini"
+          title={`Team: không giới hạn dự án riêng — ${info.teamPriceVnd.toLocaleString("vi-VN")}₫ / ${info.teamMonths} tháng, thanh toán VNPay`}
+          onClick={() => void store.upgradeTeam()}
+        >
+          Nâng cấp Team…
+        </button>
+      )}
+    </div>
+  );
+}
+
 function AuthControls() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +67,7 @@ function AuthControls() {
           <div className="menu-heading">
             {store.auth.username} <em>({store.auth.role})</em>
           </div>
+          <PlanRow />
           <button
             onClick={() => {
               const oldPassword = window.prompt("Mật khẩu hiện tại:");

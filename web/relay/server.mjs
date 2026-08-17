@@ -36,6 +36,14 @@ import {
 } from "./ai.mjs";
 import { createAuth } from "./auth.mjs";
 import { createMembers } from "./members.mjs";
+import {
+  buildCheckoutUrl,
+  makeTxnRef,
+  usernameFromTxnRef,
+  verifyCallback,
+  vnpayConfig,
+  vnpayEnabled,
+} from "./billing.mjs";
 import { createStorage } from "./storage.mjs";
 
 const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "data");
@@ -196,6 +204,23 @@ export function startRelay(port = 8787, options = {}) {
         }
       }
 
+      if (url.pathname.match(/^\/auth\/users\/[^/]+\/plan$/) && request.method === "PUT") {
+        const caller = identityOf(request);
+        if (!auth.allows(caller, "admin")) {
+          return reply(caller ? 403 : 401, { error: "Chỉ admin cấp được gói." });
+        }
+        try {
+          const { plan, months } = JSON.parse((await readBody(request)).toString());
+          return reply(200, auth.setPlan(
+            decodeURIComponent(url.pathname.split("/")[3]),
+            plan,
+            months ?? 12,
+          ));
+        } catch (error) {
+          return reply(400, { error: String(error.message ?? error) });
+        }
+      }
+
       if (url.pathname.match(/^\/auth\/users\/[^/]+\/role$/) && request.method === "PUT") {
         const caller = identityOf(request);
         if (!auth.allows(caller, "admin")) {
@@ -262,12 +287,99 @@ export function startRelay(port = 8787, options = {}) {
       if (url.pathname.match(/^\/projects\/[^/]+\/claim$/) && request.method === "POST") {
         if (!auth.allows(identity, "editor")) return needsEditor();
         const projectId = decodeURIComponent(url.pathname.split("/")[2]);
+        // Hạn mức gói (C4) cưỡng chế Ở ĐÂY, không phải trong UI: Free được
+        // MỘT dự án riêng tư; Team/Enterprise không giới hạn. Đọc plan live
+        // (auth.planOf) chứ không tin claim trong token — token sống 12h,
+        // gói có thể hết hạn giữa chừng.
+        if (
+          auth.planOf(identity.username) === "free" &&
+          members.countOwned(identity.username) >= 1
+        ) {
+          return reply(402, {
+            error:
+              "Gói Free được 1 dự án riêng tư. Nâng cấp Team (menu tài khoản) để đăng ký thêm — dự án được mời tham gia thì không giới hạn.",
+          });
+        }
         try {
           members.claim(projectId, identity);
           return reply(200, { ok: true });
         } catch (error) {
           return reply(409, { error: String(error.message ?? error) });
         }
+      }
+
+      // ── Billing (VNPay) ─────────────────────────────────────────────────
+      if (url.pathname === "/billing/plan" && request.method === "GET") {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const config = vnpayConfig();
+        return reply(200, {
+          ...auth.planInfoOf(identity.username),
+          ownedProjects: members.countOwned(identity.username),
+          teamPriceVnd: config.teamPriceVnd,
+          teamMonths: config.teamMonths,
+          vnpayReady: vnpayEnabled(config),
+        });
+      }
+
+      if (url.pathname === "/billing/checkout" && request.method === "POST") {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const config = vnpayConfig();
+        if (!vnpayEnabled(config)) {
+          return reply(501, {
+            error:
+              "Cổng VNPay chưa cấu hình — đặt VNPAY_TMN_CODE và VNPAY_HASH_SECRET " +
+              "(đăng ký merchant tại vnpay.vn), hoặc liên hệ để được cấp gói tay.",
+          });
+        }
+        // vnp_CreateDate theo giờ VN (GMT+7), định dạng yyyyMMddHHmmss.
+        const now = new Date(Date.now() + 7 * 3600_000);
+        const createDate = now.toISOString().replace(/[-:T]/g, "").slice(0, 14);
+        const payUrl = buildCheckoutUrl(
+          {
+            username: identity.username,
+            amountVnd: config.teamPriceVnd,
+            orderInfo: `WeBIM Team ${config.teamMonths} thang cho ${identity.username}`,
+            ipAddress: request.socket?.remoteAddress ?? "127.0.0.1",
+            createDate,
+            txnRef: makeTxnRef(identity.username),
+          },
+          config,
+        );
+        return reply(200, { payUrl });
+      }
+
+      /**
+       * IPN là NGUỒN SỰ THẬT của VNPay (server-to-server); return chỉ là màn
+       * hiển thị cho trình duyệt. Cả hai cùng verify chữ ký và cùng nâng gói
+       * — setPlan idempotent nên đến trước đến sau đều lành.
+       */
+      const settleVnpay = (query) => {
+        const config = vnpayConfig();
+        const result = verifyCallback(query, config);
+        if (!result.valid) return { ok: false, code: "97" };
+        if (!result.success) return { ok: false, code: "00" }; // giao dịch huỷ/thất bại — ghi nhận, không nâng gói
+        const username = usernameFromTxnRef(result.txnRef, auth.listUsernames());
+        if (!username) return { ok: false, code: "01" };
+        auth.setPlan(username, "team", vnpayConfig().teamMonths);
+        console.log(`[webim] billing: ${username} → team (VNPay ${result.txnRef}, ${result.amountVnd}đ)`);
+        return { ok: true, code: "00" };
+      };
+
+      if (url.pathname === "/billing/vnpay-ipn" && request.method === "GET") {
+        const outcome = settleVnpay(Object.fromEntries(url.searchParams));
+        return reply(200, {
+          RspCode: outcome.code,
+          Message: outcome.ok ? "Confirm Success" : "Checksum failed",
+        });
+      }
+
+      if (url.pathname === "/billing/vnpay-return" && request.method === "GET") {
+        const outcome = settleVnpay(Object.fromEntries(url.searchParams));
+        response.writeHead(302, {
+          Location: `/?billing=${outcome.ok ? "success" : "fail"}`,
+        });
+        response.end();
+        return;
       }
 
       /**
