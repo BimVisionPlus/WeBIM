@@ -191,3 +191,99 @@ export function clashesToBcf(
   }
   return buildZip(entries);
 }
+
+// ── BCF IMPORT (round-trip) ───────────────────────────────────────────────
+//
+// File .bcf từ Revit/Navisworks/BIMcollab là ZIP có thể nén DEFLATE (bản
+// mình xuất là store-only). Unzip zero-dep bằng central directory + 
+// DecompressionStream("deflate-raw") — có sẵn trong browser lẫn Node 18+.
+
+export interface BcfTopic {
+  guid: string;
+  title: string;
+  status: string;
+  description: string;
+  author: string;
+}
+
+function readU16(bytes: Uint8Array, at: number): number {
+  return bytes[at] | (bytes[at + 1] << 8);
+}
+function readU32(bytes: Uint8Array, at: number): number {
+  return (bytes[at] | (bytes[at + 1] << 8) | (bytes[at + 2] << 16) | (bytes[at + 3] << 24)) >>> 0;
+}
+
+async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {
+  const stream = new Blob([data.buffer as ArrayBuffer]).stream()
+    .pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+/** Đọc mọi entry của một ZIP (store + deflate) qua central directory. */
+export async function unzip(bytes: Uint8Array): Promise<Map<string, Uint8Array>> {
+  // EOCD ở cuối file (có thể lùi vì comment) — quét ngược tìm chữ ký.
+  let eocd = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65558); i -= 1) {
+    if (readU32(bytes, i) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) throw new Error("Không phải file ZIP (thiếu End of Central Directory).");
+  const count = readU16(bytes, eocd + 10);
+  let at = readU32(bytes, eocd + 16);
+  const files = new Map<string, Uint8Array>();
+  for (let index = 0; index < count; index += 1) {
+    if (readU32(bytes, at) !== 0x02014b50) throw new Error("Central directory hỏng.");
+    const method = readU16(bytes, at + 10);
+    const compressedSize = readU32(bytes, at + 20);
+    const nameLength = readU16(bytes, at + 28);
+    const extraLength = readU16(bytes, at + 30);
+    const commentLength = readU16(bytes, at + 32);
+    const localOffset = readU32(bytes, at + 42);
+    const name = new TextDecoder().decode(bytes.slice(at + 46, at + 46 + nameLength));
+    // Local header có name/extra RIÊNG (có thể khác central) — đọc lại.
+    const localNameLength = readU16(bytes, localOffset + 26);
+    const localExtraLength = readU16(bytes, localOffset + 28);
+    const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+    const raw = bytes.slice(dataStart, dataStart + compressedSize);
+    if (method === 0) {
+      files.set(name, raw);
+    } else if (method === 8) {
+      files.set(name, await inflateRaw(raw));
+    } else {
+      throw new Error(`ZIP dùng phương thức nén ${method} chưa hỗ trợ.`);
+    }
+    at += 46 + nameLength + extraLength + commentLength;
+  }
+  return files;
+}
+
+function xmlText(xml: string, tag: string): string {
+  const match = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
+  return (match?.[1] ?? "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .trim();
+}
+
+/** Đọc topics từ một file .bcf — của WeBIM hay của tool khác đều được. */
+export async function parseBcf(bytes: Uint8Array): Promise<BcfTopic[]> {
+  const files = await unzip(bytes);
+  const topics: BcfTopic[] = [];
+  for (const [name, data] of files) {
+    if (!name.endsWith("markup.bcf")) continue;
+    const xml = new TextDecoder().decode(data);
+    const topicTag = xml.match(/<Topic\s[^>]*>/)?.[0] ?? "";
+    topics.push({
+      guid: topicTag.match(/Guid="([^"]+)"/)?.[1] ?? name.split("/")[0],
+      status: topicTag.match(/TopicStatus="([^"]+)"/)?.[1] ?? "",
+      title: xmlText(xml, "Title"),
+      description: xmlText(xml, "Description"),
+      author: xmlText(xml, "CreationAuthor") || xmlText(xml, "ModifiedAuthor"),
+    });
+  }
+  return topics;
+}

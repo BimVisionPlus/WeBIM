@@ -619,6 +619,7 @@ export class AppStore {
           if (target) {
             target.min = realElement.min;
             target.max = realElement.max;
+            target.expressId = realElement.expressId;
           }
         } else {
           merged.push({
@@ -626,6 +627,7 @@ export class AppStore {
             ifcType: realElement.ifcType,
             min: realElement.min,
             max: realElement.max,
+            expressId: realElement.expressId,
             globalId: realElement.globalId || undefined,
           });
         }

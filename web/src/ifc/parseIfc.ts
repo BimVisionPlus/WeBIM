@@ -17,6 +17,8 @@ export interface LinkedElement {
   max: [number, number, number];
   /** IFC GlobalId — the only stable handle back to the authoring tool. */
   globalId?: string;
+  /** express id trong file — chìa khoá nối sang mesh phiên (web-ifc). */
+  expressId?: number;
   /**
    * Property sets and quantities, flattened to "Pset_WallCommon.IsExternal".
    * Flat because that is how they are read, filtered and exported to CSV;

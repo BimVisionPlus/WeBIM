@@ -19,6 +19,12 @@ export interface ClashItem {
   kind: "WALL_WALL" | "WALL_SLAB" | "SLAB_SLAB" | "NATIVE_IFC" | "IFC_IFC";
   /** Penetration depth estimate in metres (minimum separating overlap). */
   depth: number;
+  /**
+   * Pass 2 tam giác: true = mesh giao thật, false = AABB chồng nhưng mesh
+   * KHÔNG chạm (false positive), undefined = chưa kiểm được (thiếu mesh
+   * trong phiên) — ba trạng thái, báo cáo phải nói đúng trạng thái.
+   */
+  meshVerified?: boolean;
 }
 
 const TOUCH_TOLERANCE = 1e-3;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   openingScheduleRows,
   slabScheduleRows,
@@ -5,7 +6,8 @@ import {
 } from "../application/schedules";
 import { qtoCsv, qtoRows, qtoSummary, linkedQtoRows } from "../application/qto";
 import { clashReport, crossModelClashes, externalClashes } from "../application/clash";
-import { clashesToBcf } from "../application/bcf";
+import { clashesToBcf, parseBcf, type BcfTopic } from "../application/bcf";
+import { elementsIntersect } from "../application/meshClash";
 import {
   applyMatrix,
   clashSystems,
@@ -306,12 +308,38 @@ export function ClashMatrixGrid() {
 }
 
 export function ClashTable() {
+  const [imported, setImported] = useState<BcfTopic[] | null>(null);
   const internal = clashReport(store.project);
   const crossModel = crossModelClashes(store.linkedModels);
   const external = store.linkedModels.flatMap((model) =>
     externalClashes(store.project, model.elements),
   );
-  const all = [...internal, ...external, ...crossModel].sort((a, b) => b.depth - a.depth);
+  // Pass 2: cặp IFC×IFC có mesh trong phiên thì kiểm tam giác thật —
+  // AABB chồng mà mesh không chạm là false positive, đánh dấu chứ không
+  // lặng lẽ xoá (người phối hợp cần thấy nó ĐÃ được kiểm và loại).
+  const meshesFor = (clashId: string) => {
+    const [modelName, globalId] = clashId.split(":");
+    const meshes = store.meshCache.get(modelName);
+    if (!meshes) return null;
+    const model = store.linkedModels.find((entry) => entry.name === modelName);
+    const element = model?.elements.find((entry) => entry.globalId === globalId);
+    // Verdict phải thuộc về ĐÚNG cặp phần tử — thiếu expressId thì thà trả
+    // null (chưa kiểm được) còn hơn kiểm nhầm cả model rồi kết luận sai.
+    if (element?.expressId === undefined) return null;
+    const own = meshes.filter((mesh) => mesh.expressId === element.expressId);
+    return own.length > 0 ? own : null;
+  };
+  for (const clash of crossModel) {
+    const meshesA = meshesFor(clash.aId);
+    const meshesB = meshesFor(clash.bId);
+    if (meshesA && meshesB) {
+      clash.meshVerified = elementsIntersect(meshesA, meshesB);
+    }
+  }
+  const all = [...internal, ...external, ...crossModel]
+    .filter((clash) => clash.meshVerified !== false)
+    .sort((a, b) => b.depth - a.depth);
+  const falsePositives = crossModel.filter((clash) => clash.meshVerified === false).length;
   const filtered = applyMatrix(
     all,
     store.project.clashMatrix,
@@ -340,6 +368,60 @@ export function ClashTable() {
           Xuất BCF ({clashes.length})
         </button>
       )}
+      <label className="upload-button">
+        Import BCF…
+        <input
+          type="file"
+          accept=".bcf,.bcfzip"
+          style={{ display: "none" }}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (!file) return;
+            void file.arrayBuffer().then(async (buffer) => {
+              try {
+                const topics = await parseBcf(new Uint8Array(buffer));
+                setImported(topics);
+                store.setStatus(`Đọc ${topics.length} topic từ ${file.name}.`);
+              } catch (error) {
+                store.setStatus(
+                  error instanceof Error ? error.message : String(error),
+                );
+              }
+            });
+          }}
+        />
+      </label>
+      {imported && imported.length > 0 && (
+        <>
+          <h3>Issue nhận từ BCF ({imported.length})</h3>
+          <p className="module-hint">
+            Đọc từ file .bcf của công cụ khác (Revit/Navisworks/BIMcollab…) —
+            vòng phối hợp khép kín: xuất phát hiện của mình, nhận phản hồi
+            của người khác.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Tiêu đề</th>
+                <th>Trạng thái</th>
+                <th>Người tạo</th>
+                <th>Mô tả</th>
+              </tr>
+            </thead>
+            <tbody>
+              {imported.map((topic) => (
+                <tr key={topic.guid}>
+                  <td>{topic.title}</td>
+                  <td>{topic.status}</td>
+                  <td>{topic.author}</td>
+                  <td>{topic.description.slice(0, 90)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
       <p className="module-hint">
         {/*
           "Không phát hiện va chạm cứng" khi ma trận vừa ẩn hết là một câu
@@ -351,6 +433,8 @@ export function ClashTable() {
             ? `Không còn va chạm nào để hiện — ma trận đang ẩn toàn bộ ${suppressed} va chạm tìm thấy.`
             : "Không phát hiện va chạm cứng — các liên kết tường hợp lệ đã được loại trừ."
           : `${clashes.length} va chạm (${external.length} với model IFC link), sắp xếp theo độ xuyên sâu.`}
+        {falsePositives > 0 &&
+          ` · ${falsePositives} cặp AABB chồng nhưng mesh KHÔNG chạm — đã kiểm tam giác và loại`}
         {suppressed > 0 &&
           ` · ma trận đã ẩn ${suppressed} (${filtered.suppressedByRule} do tắt ô, ${filtered.suppressedByTolerance} dưới dung sai)`}{" "}
         Va chạm với IFC link ở mức AABB (sàng lọc kiểu Navisworks) — chỉ đọc thân

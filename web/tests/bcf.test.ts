@@ -66,3 +66,58 @@ describe("BCF topics", () => {
     expect(text).toContain('VersionId="2.1"');
   });
 });
+
+describe("BCF round-trip (import)", () => {
+  it("xuất rồi đọc lại: topics giữ nguyên guid/title/status, escape đảo đúng", async () => {
+    const { parseBcf } = await import("../src/application/bcf");
+    const bytes = clashesToBcf([CLASH], { createdAt: "2026-08-17T00:00:00Z", author: "sophie" });
+    const topics = await parseBcf(bytes);
+    expect(topics).toHaveLength(1);
+    expect(topics[0].title).toContain('Wall "W1" <KT>'); // escape đảo lại
+    expect(topics[0].title).toContain("& mong");
+    expect(topics[0].status).toBe("Open");
+    expect(topics[0].author).toBe("sophie");
+    expect(topics[0].guid).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it("ZIP nén DEFLATE (từ tool khác) cũng đọc được", async () => {
+    const { parseBcf, unzip } = await import("../src/application/bcf");
+    // Tạo zip deflate bằng chính node:zlib — mô phỏng file từ Revit
+    const { deflateRawSync } = await import("node:zlib");
+    const xml = `<?xml version="1.0"?><Markup><Topic Guid="abc-123" TopicStatus="Closed"><Title>Tu Revit</Title><CreationAuthor>rvt</CreationAuthor></Topic></Markup>`;
+    const raw = new TextEncoder().encode(xml);
+    const compressed = new Uint8Array(deflateRawSync(raw));
+    // Dựng zip 1 entry method=8 bằng tay
+    const name = new TextEncoder().encode("t1/markup.bcf");
+    const u16 = (v: number) => [v & 0xff, (v >> 8) & 0xff];
+    const u32 = (v: number) => [v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff];
+    const { crc32: crc } = await import("../src/application/bcf");
+    const c = crc(raw);
+    const local = [
+      ...u32(0x04034b50), ...u16(20), ...u16(0), ...u16(8), ...u16(0), ...u16(0),
+      ...u32(c), ...u32(compressed.length), ...u32(raw.length),
+      ...u16(name.length), ...u16(0), ...name, ...compressed,
+    ];
+    const central = [
+      ...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0), ...u16(8), ...u16(0), ...u16(0),
+      ...u32(c), ...u32(compressed.length), ...u32(raw.length),
+      ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(0),
+      ...name,
+    ];
+    const eocd = [
+      ...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(1), ...u16(1),
+      ...u32(central.length), ...u32(local.length), ...u16(0),
+    ];
+    const zip = new Uint8Array([...local, ...central, ...eocd]);
+    const files = await unzip(zip);
+    expect(files.has("t1/markup.bcf")).toBe(true);
+    const topics = await parseBcf(zip);
+    expect(topics[0].title).toBe("Tu Revit");
+    expect(topics[0].status).toBe("Closed");
+  });
+
+  it("file không phải zip → lỗi có lời, không treo", async () => {
+    const { parseBcf } = await import("../src/application/bcf");
+    await expect(parseBcf(new TextEncoder().encode("khong phai zip"))).rejects.toThrow(/ZIP/);
+  });
+});
