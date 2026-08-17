@@ -1305,6 +1305,15 @@ export class AppStore {
    * another machine sees the same bậc chịu lửa the findings were judged by —
    * a threshold table means nothing without the row it was read from.
    */
+  setCostCode(material: string, code: string): void {
+    if (code.trim()) {
+      this.project.costCodes[material] = code.trim();
+    } else {
+      delete this.project.costCodes[material];
+    }
+    this.commit();
+  }
+
   setFireSettings(patch: Partial<FireSettings>): void {
     this.project.fireSettings = { ...this.project.fireSettings, ...patch };
     this.commit();

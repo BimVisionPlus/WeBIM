@@ -274,3 +274,16 @@ describe("nhãn dự án", () => {
     expect(`${label}.ifc`.startsWith(".")).toBe(false);
   });
 });
+
+describe("cost mapping (mã định mức)", () => {
+  it("costCodes round-trip qua JSON, chuỗi rỗng bị loại", async () => {
+    const { NativeBimProject } = await import("../src/domain/project");
+    const project = NativeBimProject.create("P", "S", "B", "L1");
+    project.costCodes["Brick"] = "AF.11110";
+    project.costCodes["Rong"] = "  ";
+    const reloaded = NativeBimProject.fromJson(JSON.stringify(project.toDict()));
+    expect(reloaded.costCodes["Brick"]).toBe("AF.11110");
+    // "  " được toDict ghi nguyên nhưng fromJson lọc trim rỗng
+    expect(reloaded.costCodes["Rong"]).toBeUndefined();
+  });
+});

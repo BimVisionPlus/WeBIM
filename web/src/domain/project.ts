@@ -466,6 +466,12 @@ export class NativeBimProject {
    * tổng tiền phải đang nhân với cùng bộ giá.
    */
   rates: Record<string, number> = {};
+  /**
+   * Ánh xạ vật liệu → mã định mức/hạng mục chi phí (vd "AF.11110" theo
+   * ĐM 1776, hay mã nội bộ công ty). Cùng đời sống với rates: cấu hình
+   * dự án, đồng bộ qua META, chỉ ghi khi có gì đó.
+   */
+  costCodes: Record<string, string> = {};
 
   constructor(
     id: string,
@@ -544,6 +550,9 @@ export class NativeBimProject {
           }
         : {}),
       ...(Object.keys(this.rates).length > 0 ? { rates: { ...this.rates } } : {}),
+      ...(Object.keys(this.costCodes).length > 0
+        ? { cost_codes: { ...this.costCodes } }
+        : {}),
       // Written only once it differs from the default, for the same reason:
       // a project that never opened the PCCC tab round-trips unchanged.
       ...(this.fireSettings.grade !== DEFAULT_FIRE_SETTINGS.grade ||
@@ -926,6 +935,13 @@ export class NativeBimProject {
         occupancyOverride:
           typeof room.occupancy_override === "number" ? room.occupancy_override : null,
       });
+    }
+
+    const storedCodes = (data.cost_codes ?? {}) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(storedCodes)) {
+      if (typeof value === "string" && value.trim()) {
+        project.costCodes[key] = value.trim();
+      }
     }
 
     const storedRates = (data.rates ?? {}) as Record<string, unknown>;

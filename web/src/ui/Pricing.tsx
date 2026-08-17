@@ -19,6 +19,44 @@ import { store, useStoreVersion } from "../state/store";
 const vnd = (value: number) =>
   value.toLocaleString("vi-VN", { maximumFractionDigits: 0 });
 
+/** Tổng theo mã định mức — cùng mã gộp một dòng, chưa gán mã gộp riêng. */
+function CostCodeSummary({ rows }: { rows: { key: string; amount: number | null }[] }) {
+  useStoreVersion();
+  const byCode = new Map<string, number>();
+  let unmapped = 0;
+  for (const row of rows) {
+    if (row.amount === null) continue;
+    const code = store.project.costCodes[row.key];
+    if (!code) {
+      unmapped += row.amount;
+      continue;
+    }
+    byCode.set(code, (byCode.get(code) ?? 0) + row.amount);
+  }
+  if (byCode.size === 0) return null;
+  return (
+    <>
+      <h3>Tổng theo mã định mức</h3>
+      <table>
+        <tbody>
+          {[...byCode.entries()].sort().map(([code, amount]) => (
+            <tr key={code}>
+              <td>{code}</td>
+              <td>{amount.toLocaleString("vi-VN")} ₫</td>
+            </tr>
+          ))}
+          {unmapped > 0 && (
+            <tr>
+              <td className="row-warning">chưa gán mã</td>
+              <td>{unmapped.toLocaleString("vi-VN")} ₫</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
 export function PricingModule() {
   useStoreVersion();
   const [markups, setMarkups] = useState<Markups>(DEFAULT_MARKUPS);
@@ -96,6 +134,7 @@ export function PricingModule() {
               <tr>
                 <th>Hạng mục</th>
                 <th>Vật liệu</th>
+                <th>Mã định mức</th>
                 <th>ĐVT</th>
                 <th>Khối lượng</th>
                 <th>Đơn giá (VNĐ)</th>
@@ -107,6 +146,16 @@ export function PricingModule() {
                 <tr key={row.key} className={row.rate === null ? "row-warning" : ""}>
                   <td>{row.category}</td>
                   <td>{row.material}</td>
+                  <td>
+                    {/* Ánh xạ chi phí: mã ĐM 1776 / mã nội bộ — cầu nối từ
+                        ước tính mô hình sang cấu trúc dự toán của công ty. */}
+                    <input
+                      value={store.project.costCodes[row.key] ?? ""}
+                      placeholder="vd AF.11110"
+                      style={{ width: 100 }}
+                      onChange={(event) => store.setCostCode(row.key, event.target.value)}
+                    />
+                  </td>
                   <td>{row.unit}</td>
                   <td>{row.quantity.toFixed(3)}</td>
                   <td>
@@ -127,6 +176,12 @@ export function PricingModule() {
               ))}
             </tbody>
           </table>
+          <CostCodeSummary
+            rows={result.rows.map((row) => ({
+              key: row.key,
+              amount: row.amount,
+            }))}
+          />
 
           {result.uncovered.length > 0 && (
             <p className="module-hint climate-finding warning">
