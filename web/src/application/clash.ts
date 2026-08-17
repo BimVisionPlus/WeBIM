@@ -16,7 +16,7 @@ export interface ClashItem {
   aName: string;
   bId: string;
   bName: string;
-  kind: "WALL_WALL" | "WALL_SLAB" | "SLAB_SLAB" | "NATIVE_IFC";
+  kind: "WALL_WALL" | "WALL_SLAB" | "SLAB_SLAB" | "NATIVE_IFC" | "IFC_IFC";
   /** Penetration depth estimate in metres (minimum separating overlap). */
   depth: number;
 }
@@ -239,6 +239,41 @@ export function externalClashes(
           kind: "NATIVE_IFC",
           depth,
         });
+      }
+    }
+  }
+  return clashes.sort((first, second) => second.depth - first.depth);
+}
+
+/**
+ * Va chạm GIỮA các model IFC link với nhau (KT × KC, KC × MEP…) — chính là
+ * ca phối hợp bộ môn thật: mỗi bộ môn nộp một file, và câu hỏi là các file
+ * đâm nhau ở đâu. Cùng mức AABB như externalClashes — sàng lọc kiểu
+ * Navisworks pass đầu, không phải hình học chính xác, và UI phải nói thế.
+ */
+export function crossModelClashes(
+  models: readonly { name: string; elements: readonly LinkedElement[] }[],
+): ClashItem[] {
+  const clashes: ClashItem[] = [];
+  for (let a = 0; a < models.length; a += 1) {
+    for (let b = a + 1; b < models.length; b += 1) {
+      for (const first of models[a].elements) {
+        for (const second of models[b].elements) {
+          const depth = aabbOverlapDepth(
+            { name: first.name, min: first.min, max: first.max },
+            { name: second.name, min: second.min, max: second.max },
+          );
+          if (depth > TOUCH_TOLERANCE) {
+            clashes.push({
+              aId: `${models[a].name}:${first.globalId ?? first.name}`,
+              aName: `${first.name} (${models[a].name})`,
+              bId: `${models[b].name}:${second.globalId ?? second.name}`,
+              bName: `${second.name} (${models[b].name})`,
+              kind: "IFC_IFC",
+              depth,
+            });
+          }
+        }
       }
     }
   }

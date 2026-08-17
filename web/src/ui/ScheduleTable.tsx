@@ -4,7 +4,7 @@ import {
   wallScheduleRows,
 } from "../application/schedules";
 import { qtoCsv, qtoRows, qtoSummary, linkedQtoRows } from "../application/qto";
-import { clashReport, externalClashes } from "../application/clash";
+import { clashReport, crossModelClashes, externalClashes } from "../application/clash";
 import {
   applyMatrix,
   clashSystems,
@@ -306,10 +306,11 @@ export function ClashMatrixGrid() {
 
 export function ClashTable() {
   const internal = clashReport(store.project);
+  const crossModel = crossModelClashes(store.linkedModels);
   const external = store.linkedModels.flatMap((model) =>
     externalClashes(store.project, model.elements),
   );
-  const all = [...internal, ...external].sort((a, b) => b.depth - a.depth);
+  const all = [...internal, ...external, ...crossModel].sort((a, b) => b.depth - a.depth);
   const filtered = applyMatrix(
     all,
     store.project.clashMatrix,

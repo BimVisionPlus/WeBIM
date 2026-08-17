@@ -142,3 +142,39 @@ describe("persistence", () => {
     });
   });
 });
+
+describe("va chạm giữa hai model IFC link (phối hợp bộ môn)", () => {
+  it("crossModelClashes bắt cặp KT×KC chồng nhau, bỏ qua chạm mép", async () => {
+    const { crossModelClashes } = await import("../src/application/clash");
+    const kt = {
+      name: "KT.ifc",
+      elements: [
+        { name: "Tuong KT", ifcType: "IFCWALL", globalId: "g1",
+          min: [0, 0, 0] as [number, number, number], max: [4, 0.2, 3] as [number, number, number] },
+      ],
+    };
+    const kc = {
+      name: "KC.ifc",
+      elements: [
+        { name: "Dam KC", ifcType: "IFCBEAM", globalId: "g2",
+          min: [1, 0.1, 2.5] as [number, number, number], max: [3, 0.3, 2.9] as [number, number, number] },
+        { name: "Cot xa", ifcType: "IFCCOLUMN", globalId: "g3",
+          min: [10, 10, 0] as [number, number, number], max: [10.4, 10.4, 3] as [number, number, number] },
+      ],
+    };
+    const clashes = crossModelClashes([kt, kc]);
+    expect(clashes).toHaveLength(1);
+    expect(clashes[0].kind).toBe("IFC_IFC");
+    expect(clashes[0].aName).toContain("KT.ifc");
+    expect(clashes[0].bName).toContain("KC.ifc");
+  });
+
+  it("systemsOf xếp IFC_IFC vào đúng hai hệ IFC:<model> để ma trận lọc được", async () => {
+    const { systemsOf } = await import("../src/application/clashMatrix");
+    const systems = systemsOf(
+      { aId: "KT.ifc:g1", aName: "x", bId: "KC.ifc:g2", bName: "y", kind: "IFC_IFC", depth: 0.1 },
+      () => undefined,
+    );
+    expect(systems).toEqual(["IFC:KT.ifc", "IFC:KC.ifc"]);
+  });
+});

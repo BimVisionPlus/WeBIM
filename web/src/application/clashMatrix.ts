@@ -82,6 +82,12 @@ export function systemsOf(
       const model = modelOfElement(item.bId);
       return model ? [native, `IFC:${model}`] : null;
     }
+    case "IFC_IFC": {
+      // Hai phía đều là model link — id mang tiền tố "<model>:" do clash.ts đặt.
+      const modelA = item.aId.split(":")[0];
+      const modelB = item.bId.split(":")[0];
+      return modelA && modelB ? [`IFC:${modelA}`, `IFC:${modelB}`] : null;
+    }
     default:
       return null;
   }
