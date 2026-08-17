@@ -387,3 +387,20 @@ describe("token của tài khoản đã xoá phải chết", () => {
     expect(reloaded.verify(token)).toBeNull();
   });
 });
+
+describe("admin reset password", () => {
+  it("admin đặt lại được; mật khẩu mới dùng ngay; non-admin bị 403", async () => {
+    // Fixture không có admin → dùng server billing? Ở file này toàn editor.
+    // Đăng ký nạn nhân, rồi thử reset bằng editor thường → 403.
+    await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "quen.mat.khau", password: "matkhaucu88" }),
+    });
+    const denied = await api("/auth/users/quen.mat.khau/reset-password", {
+      method: "POST",
+      headers: asUser("chu", { "Content-Type": "application/json" }),
+      body: JSON.stringify({ newPassword: "matkhaumoi88" }),
+    });
+    expect(denied.status).toBe(403);
+  });
+});

@@ -257,3 +257,24 @@ describe("render credit (GĐ6)", () => {
     expect(((await refill.json()) as { renderCredits: number }).renderCredits).toBe(15);
   });
 });
+
+describe("admin reset password (fixture có admin)", () => {
+  it("reset xong đăng nhập được bằng mật khẩu mới, role giữ nguyên", async () => {
+    await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "mat.nho", password: "matkhaucu88" }),
+    });
+    const reset = await api("/auth/users/mat.nho/reset-password", {
+      method: "POST",
+      headers: asUser("quantri", { "Content-Type": "application/json" }),
+      body: JSON.stringify({ newPassword: "matkhaumoi88" }),
+    });
+    expect(reset.status).toBe(200);
+    const login = await api("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "mat.nho", password: "matkhaumoi88" }),
+    });
+    expect(login.status).toBe(200);
+    expect(((await login.json()) as { role: string }).role).toBe("editor");
+  });
+});

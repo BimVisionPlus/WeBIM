@@ -198,6 +198,25 @@ export function createAuth({ usersPath, accountsPath, secret } = {}) {
       return user.renderCredits;
     },
 
+    /**
+     * Admin đặt lại mật khẩu cho người quên — KHÔNG cần mật khẩu cũ (khác
+     * changePassword). Token cũ của người đó vẫn sống tới hết hạn; đổi
+     * mật khẩu không tự thu hồi phiên — ghi rõ để không ai tưởng nhầm.
+     */
+    resetPassword(username, newPassword) {
+      if ((newPassword ?? "").length < 8) {
+        throw new Error("Mật khẩu mới cần ít nhất 8 ký tự.");
+      }
+      const index = users.findIndex((candidate) => candidate.username === username);
+      if (index === -1) throw new Error(`Không có tài khoản "${username}".`);
+      const kept = users[index];
+      users[index] = {
+        ...kept,
+        ...hashEntry(newPassword, { username, role: kept.role }),
+      };
+      persist();
+    },
+
     /** Admin đổi role người khác. Không tự hạ admin cuối cùng. */
     setRole(username, role) {
       if (!(role in ROLE_RANK)) throw new Error("Role không hợp lệ.");

@@ -247,6 +247,22 @@ export function startRelay(port = 8787, options = {}) {
         }
       }
 
+      if (url.pathname.match(/^\/auth\/users\/[^/]+\/reset-password$/) && request.method === "POST") {
+        const caller = identityOf(request);
+        if (!auth.allows(caller, "admin")) {
+          return reply(caller ? 403 : 401, { error: "Chỉ admin đặt lại được mật khẩu." });
+        }
+        try {
+          const { newPassword } = JSON.parse((await readBody(request)).toString());
+          const target = decodeURIComponent(url.pathname.split("/")[3]);
+          auth.resetPassword(target, newPassword);
+          audit.log({ user: caller.username, action: "auth.password_reset", detail: target });
+          return reply(200, { ok: true });
+        } catch (error) {
+          return reply(400, { error: String(error.message ?? error) });
+        }
+      }
+
       if (url.pathname.match(/^\/auth\/users\/[^/]+\/credits$/) && request.method === "PUT") {
         const caller = identityOf(request);
         if (!auth.allows(caller, "admin")) {
