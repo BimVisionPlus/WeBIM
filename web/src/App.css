@@ -1437,3 +1437,7 @@ input[type="text"],
   font-size: 11px;
   color: var(--warn, #d29922);
 }
+
+.login-gate {
+  max-width: 480px;
+}

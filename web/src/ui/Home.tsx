@@ -45,8 +45,19 @@ function sectionCard(id: SectionId): HomeCard {
 const TIERS: HomeTier[] = [
   {
     title: "Công cụ miễn phí",
-    note: "Dùng ngay, không cần dự án — đọc bản vẽ và tra văn bản.",
-    cards: [sectionCard("PDF"), sectionCard("STANDARDS")],
+    note: "Dùng ngay, không cần tài khoản — đọc bản vẽ và tra văn bản.",
+    cards: [
+      {
+        target: { pane: "PDF" },
+        label: "Đọc & chỉnh sửa PDF",
+        blurb: "Mở bản vẽ PDF, ghi chú và đánh dấu ngay trên trang.",
+      },
+      {
+        target: { pane: "STANDARDS" },
+        label: "Tra cứu tiêu chuẩn",
+        blurb: "QCVN / TCVN, tình trạng hiệu lực, chuỗi thay thế và xung đột.",
+      },
+    ],
   },
   {
     title: "Cốt lõi dự án",

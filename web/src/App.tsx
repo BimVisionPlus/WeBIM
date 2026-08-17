@@ -1,5 +1,5 @@
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ProjectBrowser } from "./ui/ProjectBrowser";
 import { PropertiesPanel } from "./ui/PropertiesPanel";
 import { ScheduleTable, QtoTable } from "./ui/ScheduleTable";
@@ -110,6 +110,63 @@ function Pane({ id }: { id: PaneId }) {
   }
 }
 
+/** Màn chặn nhánh dự án khi chưa đăng nhập — form tại chỗ, không bắt đi tìm. */
+function LoginGate() {
+  useStoreVersion();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  if (store.standalone) {
+    return (
+      <div className="module-host login-gate">
+        <h2>Nhánh dự án cần máy chủ nền tảng</h2>
+        <p className="module-hint">
+          CDE, hồ sơ, phân quyền và cộng tác sống trên máy chủ nền tảng — bản
+          demo độc lập này chưa kết nối máy chủ nào nên nhánh Quản lý dự án
+          chưa dùng được. Các công cụ miễn phí (PDF, tra cứu tiêu chuẩn) và
+          BIM vẫn hoạt động bình thường.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="module-host login-gate">
+      <h2>Đăng nhập để vào Quản lý dự án</h2>
+      <p className="module-hint">
+        CDE, hồ sơ theo hạng mục, thành viên và tiến độ thuộc về dự án của
+        đội bạn — cần tài khoản trên máy chủ nền tảng để truy cập. Công cụ
+        miễn phí (PDF, tra cứu tiêu chuẩn) không cần đăng nhập.
+      </p>
+      <div className="module-form">
+        <input
+          placeholder="Tên đăng nhập"
+          autoComplete="username"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Mật khẩu"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") void store.login(username, password);
+          }}
+        />
+        <button
+          disabled={!username.trim() || !password}
+          onClick={() => void store.login(username, password)}
+        >
+          Đăng nhập
+        </button>
+      </div>
+      <p className="module-hint">
+        Chưa có tài khoản? Liên hệ quản trị viên máy chủ của công ty bạn.
+      </p>
+    </div>
+  );
+}
+
 export default function App() {
   useStoreVersion();
 
@@ -138,6 +195,15 @@ export default function App() {
   const section = sectionById(store.activeSection);
   const railed = RAILED.includes(pane);
 
+  // "Phải có tài khoản mới truy cập được": nhánh dự án chặn ở đây. Ba trạng
+  // thái server ba câu trả lời — auth bật + chưa đăng nhập → form đăng nhập;
+  // standalone → nói cần máy chủ; auth tắt (dev open mode) → cho qua, vì
+  // "tài khoản" không tồn tại trên một máy chủ không bật đăng nhập.
+  const gated =
+    section.requiresAuth &&
+    !store.auth &&
+    store.authRequired !== false;
+
   return (
     <div className="app-shell">
       <Toolbar />
@@ -156,8 +222,15 @@ export default function App() {
             key={entry.id}
             className={store.activeSection === entry.id ? "active" : ""}
             onClick={() => store.setSection(entry.id)}
+            title={
+              entry.requiresAuth && !store.auth && store.authRequired !== false
+                ? "Cần tài khoản — bấm để đăng nhập"
+                : undefined
+            }
           >
-            {entry.label}
+            {entry.requiresAuth && !store.auth && store.authRequired !== false
+              ? `🔒 ${entry.label}`
+              : entry.label}
           </button>
         ))}
       </nav>
@@ -178,11 +251,11 @@ export default function App() {
       )}
 
       <div className="app-body">
-        {railed && <ProjectBrowser />}
+        {railed && !gated && <ProjectBrowser />}
         <main className="viewport-host">
-          <Pane id={pane} />
+          {gated ? <LoginGate /> : <Pane id={pane} />}
         </main>
-        {railed && <PropertiesPanel />}
+        {railed && !gated && <PropertiesPanel />}
       </div>
 
       <footer className="status-bar">{store.statusMessage}</footer>

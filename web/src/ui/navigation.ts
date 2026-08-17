@@ -37,8 +37,7 @@ export type PaneId =
 
 export type SectionId =
   | "HOME"
-  | "PDF"
-  | "STANDARDS"
+  | "TOOLS"
   | "PROJECT"
   | "BIM"
   | "CLASH"
@@ -67,27 +66,28 @@ export interface Section {
   /** Một câu nói nhánh này làm gì, hiện trên thẻ ở trang chủ. */
   blurb: string;
   tier: SectionTier;
+  /** Nhánh chỉ dành cho người có tài khoản trên máy chủ nền tảng. */
+  requiresAuth?: boolean;
   panes: Pane[];
 }
 
 export const SECTIONS: Section[] = [
+  // Hai công cụ miễn phí sống chung một nhánh: chúng là cửa vào không cần
+  // tài khoản, tách khỏi phần dự án (có tài khoản mới truy cập được).
   {
-    id: "PDF",
+    id: "TOOLS",
     tier: "FREE",
-    label: "Đọc & chỉnh sửa PDF",
-    blurb: "Mở bản vẽ PDF từ CDE, ghi chú và đánh dấu ngay trên trang.",
-    panes: [{ id: "PDF", label: "Bản vẽ" }],
-  },
-  {
-    id: "STANDARDS",
-    tier: "FREE",
-    label: "Tra cứu tiêu chuẩn",
-    blurb: "QCVN / TCVN, tình trạng hiệu lực, chuỗi thay thế và xung đột.",
-    panes: [{ id: "STANDARDS", label: "QCVN / TCVN" }],
+    label: "Công cụ",
+    blurb: "Đọc & đánh dấu bản vẽ PDF, tra cứu QCVN/TCVN — miễn phí, không cần tài khoản.",
+    panes: [
+      { id: "PDF", label: "Bản vẽ PDF" },
+      { id: "STANDARDS", label: "Tra cứu tiêu chuẩn" },
+    ],
   },
   {
     id: "PROJECT",
     tier: "PLUS",
+    requiresAuth: true,
     label: "Quản lý dự án",
     blurb:
       "Hồ sơ CDE, tiến độ hạng mục, quy trình ISO của công ty, đánh giá nhân sự và hồ sơ công trường.",
