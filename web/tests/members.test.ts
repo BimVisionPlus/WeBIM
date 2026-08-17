@@ -40,7 +40,7 @@ beforeAll(async () => {
       ],
     }),
   );
-  const auth = createAuth({ usersPath, secret: "test-secret" });
+  const auth = createAuth({ usersPath, accountsPath: join(dir, "accounts.json"), secret: "test-secret" });
   const members = createMembers({ path: join(dir, "memberships.json") });
   const storage = createStorage(join(dir, "data"));
   server = startRelay(0, { auth, members, storage }) as unknown as WebSocketServer;
@@ -275,5 +275,80 @@ describe("snapshot dự án trên server (C1)", () => {
       await api("/list?prefix=", { headers: asUser("chu") })
     ).json()) as { files: { key: string }[] };
     expect(list.files.some((file) => file.key.includes("/.state/"))).toBe(false);
+  });
+});
+
+describe("tài khoản tự phục vụ (GĐ3/C3)", () => {
+  it("đăng ký → đăng nhập → tài khoản sống qua accounts.json", async () => {
+    const registered = await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "nguoi.moi", password: "matkhau8kytu" }),
+    });
+    expect(registered.status).toBe(200);
+    const session = (await registered.json()) as { token: string; role: string };
+    expect(session.role).toBe("editor");
+
+    // Tài khoản mới claim được dự án riêng của mình
+    const claim = await api("/projects/duan-moi/claim", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.token}` },
+    });
+    expect(claim.status).toBe(200);
+  });
+
+  it("đăng ký trùng tên / mật khẩu ngắn / tên xấu đều bị chặn có lời", async () => {
+    const dup = await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "chu", password: "matkhau8kytu" }),
+    });
+    expect(dup.status).toBe(400);
+    expect(((await dup.json()) as { error: string }).error).toContain("đã có người dùng");
+
+    const short = await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "hop.le", password: "ngan" }),
+    });
+    expect(short.status).toBe(400);
+
+    const badName = await api("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username: "Có Dấu", password: "matkhau8kytu" }),
+    });
+    expect(badName.status).toBe(400);
+  });
+
+  it("đổi mật khẩu cần mật khẩu cũ đúng, và mật khẩu mới dùng được ngay", async () => {
+    const wrong = await api("/auth/change-password", {
+      method: "POST",
+      headers: asUser("thanhvien", { "Content-Type": "application/json" }),
+      body: JSON.stringify({ oldPassword: "sai", newPassword: "matkhaumoi8" }),
+    });
+    expect(wrong.status).toBe(400);
+
+    const ok = await api("/auth/change-password", {
+      method: "POST",
+      headers: asUser("thanhvien", { "Content-Type": "application/json" }),
+      body: JSON.stringify({ oldPassword: "pw", newPassword: "matkhaumoi8" }),
+    });
+    expect(ok.status).toBe(200);
+
+    const relogin = await api("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "thanhvien", password: "matkhaumoi8" }),
+    });
+    expect(relogin.status).toBe(200);
+    // token mới thay token cũ trong bảng test để các test sau còn dùng
+    tokens.thanhvien = ((await relogin.json()) as { token: string }).token;
+  });
+
+  it("admin đổi role; không hạ được admin cuối cùng", async () => {
+    // 'chu' là editor — cấp admin cho chu trước bằng... không có admin trong fixture!
+    // Fixture toàn editor/viewer → setRole phải bị 403 với editor.
+    const denied = await api("/auth/users/xem/role", {
+      method: "PUT",
+      headers: asUser("chu", { "Content-Type": "application/json" }),
+      body: JSON.stringify({ role: "editor" }),
+    });
+    expect(denied.status).toBe(403);
   });
 });

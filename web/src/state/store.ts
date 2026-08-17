@@ -669,6 +669,44 @@ export class AppStore {
     }
   }
 
+  /** Tự đăng ký — thành công là đăng nhập luôn (server trả session). */
+  async register(username: string, password: string): Promise<void> {
+    try {
+      const response = await fetch(`${fileServerBase()}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const body = (await response.json()) as AuthSession & { error?: string };
+      if (!response.ok) throw new Error(body.error ?? `Lỗi ${response.status}`);
+      this.auth = body;
+      localStorage.setItem(AUTH_KEY, JSON.stringify(this.auth));
+      this.statusMessage = `Đã tạo tài khoản và đăng nhập: ${body.username}`;
+      this.sync?.reconnectRelay();
+      this.commit(false);
+      void this.refreshProjectRole();
+    } catch (error) {
+      this.setStatus((error as Error).message);
+    }
+  }
+
+  async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${fileServerBase()}/auth/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+      const body = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(body.error ?? `Lỗi ${response.status}`);
+      this.setStatus("Đã đổi mật khẩu — dùng mật khẩu mới từ lần đăng nhập sau.");
+      return true;
+    } catch (error) {
+      this.setStatus((error as Error).message);
+      return false;
+    }
+  }
+
   logout(): void {
     this.auth = null;
     localStorage.removeItem(AUTH_KEY);

@@ -41,6 +41,18 @@ function AuthControls() {
           </div>
           <button
             onClick={() => {
+              const oldPassword = window.prompt("Mật khẩu hiện tại:");
+              if (oldPassword === null) return;
+              const newPassword = window.prompt("Mật khẩu mới (≥ 8 ký tự):");
+              if (newPassword === null) return;
+              void store.changePassword(oldPassword, newPassword);
+              setOpen(false);
+            }}
+          >
+            Đổi mật khẩu…
+          </button>
+          <button
+            onClick={() => {
               store.logout();
               setOpen(false);
             }}
@@ -315,6 +327,19 @@ export function Toolbar() {
             title="Xuất IFC rồi đăng vào Models của một dự án Atlas"
           >
             Đẩy sang Atlas…
+          </button>
+          <div className="menu-heading">Hỗ trợ</div>
+          <button
+            onClick={() => {
+              window.open(
+                "mailto:sophie.nguyenthuthuy@gmail.com?subject=WeBIM%20support" +
+                  `&body=${encodeURIComponent(`Dự án: ${store.projectLabel}`)}`,
+              );
+              close();
+            }}
+            title="Gửi email cho đội WeBIM — kèm sẵn tên dự án để chẩn đoán nhanh"
+          >
+            Trợ giúp & liên hệ…
           </button>
         </div>
       </details>

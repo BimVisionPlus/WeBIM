@@ -26,3 +26,4 @@ relay/users.json
 *.njsproj
 *.sln
 *.sw?
+relay/users/

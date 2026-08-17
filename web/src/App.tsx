@@ -115,6 +115,7 @@ function LoginGate() {
   useStoreVersion();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"LOGIN" | "REGISTER">("LOGIN");
   if (store.standalone) {
     return (
       <div className="module-host login-gate">
@@ -137,31 +138,55 @@ function LoginGate() {
         miễn phí (PDF, tra cứu tiêu chuẩn) không cần đăng nhập.
       </p>
       <div className="module-form">
+        <span className="view-toggle">
+          <button
+            className={mode === "LOGIN" ? "active" : ""}
+            onClick={() => setMode("LOGIN")}
+          >
+            Đăng nhập
+          </button>
+          <button
+            className={mode === "REGISTER" ? "active" : ""}
+            onClick={() => setMode("REGISTER")}
+          >
+            Tạo tài khoản
+          </button>
+        </span>
+      </div>
+      <div className="module-form">
         <input
-          placeholder="Tên đăng nhập"
+          placeholder={mode === "REGISTER" ? "Tên đăng nhập (a-z, số, chấm, gạch)" : "Tên đăng nhập"}
           autoComplete="username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
         />
         <input
           type="password"
-          placeholder="Mật khẩu"
-          autoComplete="current-password"
+          placeholder={mode === "REGISTER" ? "Mật khẩu (≥ 8 ký tự)" : "Mật khẩu"}
+          autoComplete={mode === "REGISTER" ? "new-password" : "current-password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") void store.login(username, password);
+            if (event.key !== "Enter") return;
+            if (mode === "LOGIN") void store.login(username, password);
+            else void store.register(username.trim(), password);
           }}
         />
         <button
           disabled={!username.trim() || !password}
-          onClick={() => void store.login(username, password)}
+          onClick={() =>
+            mode === "LOGIN"
+              ? void store.login(username, password)
+              : void store.register(username.trim(), password)
+          }
         >
-          Đăng nhập
+          {mode === "LOGIN" ? "Đăng nhập" : "Tạo tài khoản & vào ngay"}
         </button>
       </div>
       <p className="module-hint">
-        Chưa có tài khoản? Liên hệ quản trị viên máy chủ của công ty bạn.
+        {mode === "REGISTER"
+          ? "Tài khoản mới tạo được dự án riêng tư của mình ngay; máy chủ đóng đăng ký sẽ báo tại đây."
+          : "Chưa có tài khoản? Bấm Tạo tài khoản — hoặc liên hệ quản trị viên nếu máy chủ đóng đăng ký."}
       </p>
     </div>
   );

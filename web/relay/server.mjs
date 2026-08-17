@@ -94,6 +94,24 @@ export function startRelay(port = 8787, options = {}) {
     );
   }
 
+  /**
+   * Rate-limit đường auth theo IP (C6): login/register là cửa brute-force
+   * rẻ nhất. Bộ đếm trong bộ nhớ — relay đơn node nên thế là đủ, và một
+   * lần restart xoá bộ đếm cũng không phải lỗ hổng đáng kể.
+   */
+  const authHits = new Map(); // ip -> {count, resetAt}
+  const authLimited = (request) => {
+    const ip = request.socket?.remoteAddress ?? "?";
+    const now = Date.now();
+    const entry = authHits.get(ip);
+    if (!entry || now > entry.resetAt) {
+      authHits.set(ip, { count: 1, resetAt: now + 60_000 });
+      return false;
+    }
+    entry.count += 1;
+    return entry.count > 20;
+  };
+
   const identityOf = (request) => {
     const header = request.headers.authorization ?? "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;
@@ -126,9 +144,70 @@ export function startRelay(port = 8787, options = {}) {
         return reply(200, { enabled: auth.enabled });
       }
       if (url.pathname === "/auth/login" && request.method === "POST") {
+        if (authLimited(request)) {
+          return reply(429, { error: "Thử lại sau một phút — quá nhiều lần đăng nhập." });
+        }
         const { username, password } = JSON.parse((await readBody(request)).toString());
         const session = auth.login(username, password);
-        return session ? reply(200, session) : reply(401, { error: "invalid credentials" });
+        return session
+          ? reply(200, session)
+          : reply(401, { error: "Sai tên đăng nhập hoặc mật khẩu." });
+      }
+
+      /**
+       * Tự đăng ký (GĐ3/C3). Mặc định MỞ để onboarding không cần quản trị
+       * viên; self-host kín đặt WEBIM_REGISTRATION=closed. Chỉ có nghĩa khi
+       * auth đang bật — open mode không có khái niệm tài khoản.
+       */
+      if (url.pathname === "/auth/register" && request.method === "POST") {
+        if (authLimited(request)) {
+          return reply(429, { error: "Thử lại sau một phút." });
+        }
+        if (!auth.enabled) {
+          return reply(400, {
+            error: "Máy chủ đang chạy chế độ mở (chưa bật đăng nhập) — không cần tài khoản.",
+          });
+        }
+        if ((process.env.WEBIM_REGISTRATION ?? "open") === "closed") {
+          return reply(403, {
+            error: "Máy chủ này không mở đăng ký — liên hệ quản trị viên để được cấp tài khoản.",
+          });
+        }
+        try {
+          const { username, password } = JSON.parse((await readBody(request)).toString());
+          return reply(200, auth.register(username, password));
+        } catch (error) {
+          return reply(400, { error: String(error.message ?? error) });
+        }
+      }
+
+      if (url.pathname === "/auth/change-password" && request.method === "POST") {
+        if (authLimited(request)) {
+          return reply(429, { error: "Thử lại sau một phút." });
+        }
+        const caller = identityOf(request);
+        if (!caller) return reply(401, { error: "Cần đăng nhập." });
+        try {
+          const { oldPassword, newPassword } = JSON.parse((await readBody(request)).toString());
+          auth.changePassword(caller.username, oldPassword, newPassword);
+          return reply(200, { ok: true });
+        } catch (error) {
+          return reply(400, { error: String(error.message ?? error) });
+        }
+      }
+
+      if (url.pathname.match(/^\/auth\/users\/[^/]+\/role$/) && request.method === "PUT") {
+        const caller = identityOf(request);
+        if (!auth.allows(caller, "admin")) {
+          return reply(caller ? 403 : 401, { error: "Chỉ admin đổi được role." });
+        }
+        try {
+          const { role } = JSON.parse((await readBody(request)).toString());
+          auth.setRole(decodeURIComponent(url.pathname.split("/")[3]), role);
+          return reply(200, { ok: true });
+        } catch (error) {
+          return reply(400, { error: String(error.message ?? error) });
+        }
       }
 
       const identity = identityOf(request);

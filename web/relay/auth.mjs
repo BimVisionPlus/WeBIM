@@ -1,15 +1,15 @@
 // Authentication + role-based authorization for the platform server.
 //
-// Users live in relay/users.json (gitignored):
-//   { "users": [{ "username": "sophie", "role": "admin",
-//                 "salt": "<hex>", "hash": "<scrypt hex>" }] }
-// Generate an entry with:  node relay/auth.mjs hash <password>
+// Tài khoản sống ở HAI tầng (quyết định C3, docs/KIEN-TRUC.md):
+//   - relay/users.json (ro, gitignored) — seed do quản trị viên đặt tay.
+//   - relay/users/accounts.json (volume GHI ĐƯỢC) — nguồn sự thật sống:
+//     đăng ký mới, đổi mật khẩu, đổi role đều ghi vào đây (tmp+rename).
+//     Lần đầu chạy, accounts.json được nhân giống từ users.json.
+// Generate a seed entry with:  node relay/auth.mjs hash <password>
 //
-// When users.json is absent the server runs in OPEN mode (dev): every
-// request is treated as an anonymous editor and a warning is logged.
-// Roles: admin ≥ editor ≥ viewer. Viewers can read files and receive
-// sync, but their file writes and model-sync frames are rejected —
-// enforced server-side, not just in the UI.
+// Không có file nào tồn tại = OPEN mode (dev): mọi request là anonymous
+// editor, có cảnh báo. Roles: admin ≥ editor ≥ viewer — cưỡng chế phía
+// server, không phải chỉ ẩn nút.
 
 import {
   createHmac,
@@ -17,20 +17,41 @@ import {
   scryptSync,
   timingSafeEqual,
 } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROLE_RANK = { viewer: 0, editor: 1, admin: 2 };
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 
-export function createAuth({ usersPath, secret } = {}) {
-  const resolvedPath =
+const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,31}$/;
+
+export function createAuth({ usersPath, accountsPath, secret } = {}) {
+  const seedPath =
     usersPath ?? join(dirname(fileURLToPath(import.meta.url)), "users.json");
-  const enabled = existsSync(resolvedPath);
-  const users = enabled
-    ? JSON.parse(readFileSync(resolvedPath, "utf8")).users
-    : [];
+  const livePath =
+    accountsPath ??
+    join(dirname(fileURLToPath(import.meta.url)), "users", "accounts.json");
+
+  // accounts.json (ghi được) là nguồn sự thật; users.json chỉ là seed —
+  // lần đầu chạy thì nhân giống, các lần sau seed không đè lên thay đổi
+  // sống (đổi mật khẩu, tài khoản mới) nữa.
+  let users = [];
+  if (existsSync(livePath)) {
+    users = JSON.parse(readFileSync(livePath, "utf8")).users ?? [];
+  } else if (existsSync(seedPath)) {
+    users = JSON.parse(readFileSync(seedPath, "utf8")).users ?? [];
+  }
+  const enabled = users.length > 0;
+
+  const persist = () => {
+    mkdirSync(dirname(livePath), { recursive: true });
+    const tmp = `${livePath}.tmp`;
+    writeFileSync(tmp, JSON.stringify({ users }, null, 2));
+    renameSync(tmp, livePath);
+  };
+  // Chạy với seed lần đầu thì ghi ngay bản sống — từ đây accounts.json là chủ.
+  if (enabled && !existsSync(livePath)) persist();
   const signingSecret =
     secret ?? process.env.WEBIM_SECRET ?? randomBytes(32).toString("hex");
 
@@ -47,6 +68,58 @@ export function createAuth({ usersPath, secret } = {}) {
     userExists(username) {
       if (!enabled) return true;
       return users.some((candidate) => candidate.username === username);
+    },
+
+    /**
+     * Tự đăng ký. Tài khoản mới là EDITOR toàn cục — đủ để tạo và đăng ký
+     * dự án riêng tư của mình; dự án của người khác vẫn chặn theo thành
+     * viên. Lỗi trả về là chuỗi tiếng Việt cho UI dùng thẳng.
+     */
+    register(username, password) {
+      if (!USERNAME_RE.test(username ?? "")) {
+        throw new Error(
+          "Tên đăng nhập: 3–32 ký tự thường a-z, số, dấu chấm/gạch, bắt đầu bằng chữ hoặc số.",
+        );
+      }
+      if ((password ?? "").length < 8) {
+        throw new Error("Mật khẩu cần ít nhất 8 ký tự.");
+      }
+      if (users.some((candidate) => candidate.username === username)) {
+        throw new Error("Tên đăng nhập đã có người dùng.");
+      }
+      users.push(hashEntry(password, { username, role: "editor" }));
+      persist();
+      return this.login(username, password);
+    },
+
+    /** Đổi mật khẩu — phải chứng minh biết mật khẩu cũ, kể cả khi đã có token. */
+    changePassword(username, oldPassword, newPassword) {
+      if (!this.login(username, oldPassword)) {
+        throw new Error("Mật khẩu hiện tại không đúng.");
+      }
+      if ((newPassword ?? "").length < 8) {
+        throw new Error("Mật khẩu mới cần ít nhất 8 ký tự.");
+      }
+      const index = users.findIndex((candidate) => candidate.username === username);
+      const fresh = hashEntry(newPassword, {
+        username,
+        role: users[index].role,
+      });
+      users[index] = fresh;
+      persist();
+    },
+
+    /** Admin đổi role người khác. Không tự hạ admin cuối cùng. */
+    setRole(username, role) {
+      if (!(role in ROLE_RANK)) throw new Error("Role không hợp lệ.");
+      const user = users.find((candidate) => candidate.username === username);
+      if (!user) throw new Error(`Không có tài khoản "${username}".`);
+      const adminCount = users.filter((candidate) => candidate.role === "admin").length;
+      if (user.role === "admin" && role !== "admin" && adminCount <= 1) {
+        throw new Error("Không thể hạ quyền admin cuối cùng.");
+      }
+      user.role = role;
+      persist();
     },
 
     login(username, password) {

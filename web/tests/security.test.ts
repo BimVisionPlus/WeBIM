@@ -32,7 +32,7 @@ beforeAll(async () => {
       ],
     }),
   );
-  const auth = createAuth({ usersPath, secret: "test-secret" });
+  const auth = createAuth({ usersPath, accountsPath: join(dir, "accounts.json"), secret: "test-secret" });
   server = startRelay(0, { auth });
   const httpServer = (server as unknown as { httpServer: import("node:http").Server })
     .httpServer;

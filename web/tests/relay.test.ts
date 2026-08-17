@@ -135,7 +135,7 @@ describe("từ chối vì thiếu quyền nói đúng nguyên nhân", () => {
     writeFileSync(usersFile, JSON.stringify({ users: [entry] }));
 
     authServer = startRelay(0, {
-      auth: createAuth({ usersPath: usersFile, secret: "test-secret" }),
+      auth: createAuth({ usersPath: usersFile, accountsPath: usersFile.replace("users", "accounts"), secret: "test-secret" }),
     });
     const httpServer = (authServer as unknown as { httpServer: import("node:http").Server })
       .httpServer;
