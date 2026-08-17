@@ -21,6 +21,7 @@ export type PaneId =
   | "ATLASPEOPLE"
   | "ATLASSITE"
   | "ATLAS"
+  | "APIACCESS"
   | "PLANVIEW"
   | "MASSING"
   | "IFCIMPORT"
@@ -106,6 +107,7 @@ export const SECTIONS: Section[] = [
       { id: "ATLASPEOPLE", label: "Nhân sự" },
       { id: "ATLASSITE", label: "Công trường" },
       { id: "ATLAS", label: "Atlas" },
+      { id: "APIACCESS", label: "API & Webhook" },
     ],
   },
   {

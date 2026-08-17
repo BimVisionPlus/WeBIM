@@ -253,6 +253,18 @@ export function createAuth({ usersPath, accountsPath, secret } = {}) {
     },
 
     /** Returns {username, role} or null. Open mode: anonymous editor. */
+    /**
+     * Danh tính SỐNG theo username — cho API key: key chỉ nói "tôi là ai",
+     * role/plan luôn tra lại danh sách hiện tại (xoá tài khoản = key chết
+     * theo, cùng bài học với verify()).
+     */
+    identify(username) {
+      if (!enabled) return { username: "anonymous", role: "editor", plan: "team" };
+      const user = users.find((candidate) => candidate.username === username);
+      if (!user) return null;
+      return { username, role: user.role, plan: effectivePlan(user) };
+    },
+
     verify(token) {
       if (!enabled) return { username: "anonymous", role: "editor", plan: "team" };
       if (!token) return null;

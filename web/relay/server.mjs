@@ -35,8 +35,10 @@ import {
   renderConcept,
   writeRenderBrief,
 } from "./ai.mjs";
+import { createApiKeys } from "./apikeys.mjs";
 import { createAuth } from "./auth.mjs";
 import { createAudit, summarizeEvents } from "./audit.mjs";
+import { createWebhooks, WEBHOOK_EVENTS } from "./webhooks.mjs";
 import { createOrgs } from "./orgs.mjs";
 import { createMembers } from "./members.mjs";
 import {
@@ -96,6 +98,8 @@ export function startRelay(port = 8787, options = {}) {
   const orgs = options.orgs ?? createOrgs();
   const members = options.members ?? createMembers({ orgs });
   const audit = options.audit ?? createAudit();
+  const apiKeys = options.apiKeys ?? createApiKeys();
+  const webhooks = options.webhooks ?? createWebhooks();
   if (!auth.enabled) {
     console.warn(
       "[webim] auth OPEN mode — create relay/users.json to require login " +
@@ -140,6 +144,14 @@ export function startRelay(port = 8787, options = {}) {
   const identityOf = (request) => {
     const header = request.headers.authorization ?? "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+    // API key (wbk_) là danh tính dài hạn cho máy: map về người dùng thật
+    // rồi tra role/plan SỐNG — mọi enforcement đi chung một đường với người.
+    if (token?.startsWith("wbk_")) {
+      const match = apiKeys.identify(token);
+      if (!match) return null;
+      const identity = auth.identify(match.username);
+      return identity ? { ...identity, viaApiKey: match.keyId } : null;
+    }
     return auth.verify(token);
   };
 
@@ -588,6 +600,95 @@ export function startRelay(port = 8787, options = {}) {
         return reply(200, { projects });
       }
 
+      // ── Public API: API key ───────────────────────────────────────────
+      // Quản lý key chỉ bằng SESSION token — key bị lộ không tự nhân bản
+      // được chính nó, và không tự xoá dấu vết được.
+      if (url.pathname === "/apikeys" && (request.method === "POST" || request.method === "GET")) {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        if (identity.viaApiKey) {
+          return reply(403, {
+            error: "Quản lý API key cần đăng nhập bằng mật khẩu, không dùng được bằng API key.",
+          });
+        }
+        if (request.method === "GET") {
+          return reply(200, { keys: apiKeys.list(identity.username) });
+        }
+        let label = "";
+        try {
+          label = JSON.parse((await readBody(request)).toString() || "{}").label ?? "";
+        } catch {
+          return reply(400, { error: "Body phải là JSON." });
+        }
+        const created = apiKeys.create(identity.username, label);
+        audit.log({ user: identity.username, action: "apikey.create", detail: created.prefix });
+        // key plaintext xuất hiện ĐÚNG MỘT LẦN trong response này.
+        return reply(201, { ...created, note: "Lưu key ngay — sẽ không hiển thị lại." });
+      }
+      const apiKeyMatch = url.pathname.match(/^\/apikeys\/([^/]+)$/);
+      if (apiKeyMatch && request.method === "DELETE") {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        if (identity.viaApiKey) {
+          return reply(403, {
+            error: "Quản lý API key cần đăng nhập bằng mật khẩu, không dùng được bằng API key.",
+          });
+        }
+        const removed = apiKeys.revoke(identity.username, apiKeyMatch[1]);
+        if (!removed) return reply(404, { error: "Không thấy key này của bạn." });
+        audit.log({ user: identity.username, action: "apikey.revoke", detail: apiKeyMatch[1] });
+        return reply(200, { ok: true });
+      }
+
+      // ── Public API: webhook theo dự án (owner) ────────────────────────
+      const webhookMatch = url.pathname.match(/^\/projects\/([^/]+)\/webhooks(?:\/([^/]+))?$/);
+      if (webhookMatch) {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const projectId = decodeURIComponent(webhookMatch[1]);
+        const grip = members.effectiveRole(identity, projectId);
+        if (grip.scope === "open") {
+          return reply(409, {
+            error: "Dự án chưa được claim — claim quyền sở hữu trước rồi mới đăng ký webhook.",
+          });
+        }
+        if (grip.role !== "owner" && identity.role !== "admin") {
+          return reply(403, { error: "Chỉ owner dự án quản lý được webhook." });
+        }
+        if (!webhookMatch[2] && request.method === "GET") {
+          return reply(200, { webhooks: webhooks.list(projectId), events: WEBHOOK_EVENTS });
+        }
+        if (!webhookMatch[2] && request.method === "POST") {
+          let body;
+          try {
+            body = JSON.parse((await readBody(request)).toString());
+          } catch {
+            return reply(400, { error: "Body phải là JSON." });
+          }
+          const created = await webhooks.add(projectId, {
+            url: body.url,
+            events: body.events,
+          });
+          if (created.error) return reply(400, { error: created.error });
+          audit.log({
+            user: identity.username,
+            action: "webhook.create",
+            projectId,
+            detail: created.url,
+          });
+          // secret xuất hiện ĐÚNG MỘT LẦN — bên nhận dùng nó verify chữ ký.
+          return reply(201, { ...created, note: "Lưu secret ngay — sẽ không hiển thị lại." });
+        }
+        if (webhookMatch[2] && request.method === "DELETE") {
+          const removed = webhooks.remove(projectId, webhookMatch[2]);
+          if (!removed) return reply(404, { error: "Không thấy webhook này." });
+          audit.log({
+            user: identity.username,
+            action: "webhook.remove",
+            projectId,
+            detail: webhookMatch[2],
+          });
+          return reply(200, { ok: true });
+        }
+      }
+
       const auditMatch = url.pathname.match(/^\/projects\/([^/]+)\/audit$/);
       if (auditMatch && request.method === "GET") {
         if (!identity) return reply(401, { error: "Cần đăng nhập." });
@@ -632,6 +733,15 @@ export function startRelay(port = 8787, options = {}) {
           }
           await storage.put(stateKey, raw);
           audit.log({ user: identity.username, action: "state.push", projectId });
+          // Fire-and-forget: webhook chậm/chết không được giữ chân người đẩy.
+          void webhooks
+            .emit({
+              event: "state.push",
+              projectId,
+              user: identity.username,
+              size: raw.length,
+            })
+            .catch(() => {});
           return reply(200, { ok: true });
         }
       }
@@ -671,6 +781,15 @@ export function startRelay(port = 8787, options = {}) {
             projectId: key.split("/")[0],
             detail: key.split("/").slice(1).join("/"),
           });
+          void webhooks
+            .emit({
+              event: "file.put",
+              projectId: key.split("/")[0],
+              key,
+              size: body.length,
+              user: identity?.username ?? "?",
+            })
+            .catch(() => {});
           return reply(200, { ok: true, key });
         }
         if (request.method === "GET") {

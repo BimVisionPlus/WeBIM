@@ -634,6 +634,13 @@ input[type="text"],
   overflow-y: auto;
 }
 
+/* Key/secret hiện MỘT lần — viền vàng để mắt không lướt qua. */
+.fresh-secret {
+  border-left: 2px solid #fab219;
+  padding: 6px 10px;
+  word-break: break-all;
+}
+
 .standards-qa {
   border: 1px solid #2a2f3a;
   border-radius: 6px;

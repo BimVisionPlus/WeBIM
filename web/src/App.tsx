@@ -22,6 +22,7 @@ import {
   ViewerModule,
 } from "./ui/Modules";
 import { NamingModule } from "./ui/Naming";
+import { ApiAccessModule } from "./ui/ApiAccess";
 import { MembersModule } from "./ui/Members";
 import { HOME, SECTIONS, sectionById, type PaneId } from "./ui/navigation";
 import { DrawingTools } from "./ui/DrawingTools";
@@ -60,6 +61,8 @@ function Pane({ id }: { id: PaneId }) {
       return <AtlasModule target="site" />;
     case "ATLAS":
       return <AtlasModule />;
+    case "APIACCESS":
+      return <ApiAccessModule />;
     case "MASSING":
       return <MassingModule />;
     case "PLANVIEW":
