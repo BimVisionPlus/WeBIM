@@ -28,7 +28,7 @@ const DEFAULT_PATH = join(
 
 const MEMBER_ROLES = new Set(["editor", "viewer"]);
 
-export function createMembers({ path = DEFAULT_PATH } = {}) {
+export function createMembers({ path = DEFAULT_PATH, orgs = null } = {}) {
   let projects = {};
   if (existsSync(path)) {
     try {
@@ -67,7 +67,19 @@ export function createMembers({ path = DEFAULT_PATH } = {}) {
       if (identity.role === "admin" || record.owner === identity.username) {
         return { scope: "project", role: "owner" };
       }
-      return { scope: "project", role: record.members[identity.username] ?? null };
+      // Mời per-project THẮNG org-default cho người đó — hạ một member
+      // xuống viewer ở dự án nhạy cảm vẫn phải làm được.
+      const explicit = record.members[identity.username];
+      if (explicit) return { scope: "project", role: explicit };
+      // Dự án thuộc org: thành viên org tự có quyền theo role trong org.
+      if (record.orgId && orgs) {
+        const orgRole = orgs.roleIn(record.orgId, identity.username);
+        if (orgRole === "owner" || orgRole === "admin") {
+          return { scope: "project", role: "owner" };
+        }
+        if (orgRole === "member") return { scope: "project", role: "editor" };
+      }
+      return { scope: "project", role: null };
     },
 
     /** Số dự án một người đang làm chủ — thước đo hạn mức gói (C4). */
@@ -76,14 +88,41 @@ export function createMembers({ path = DEFAULT_PATH } = {}) {
     },
 
     /** Đăng ký dự án — người gọi thành chủ. Lỗi nếu đã có chủ. */
-    claim(projectId, identity) {
+    claim(projectId, identity, orgId = null) {
       if (!projectId || !identity) throw new Error("Cần đăng nhập.");
       if (projects[projectId]) {
         throw new Error("Dự án đã được đăng ký rồi.");
       }
-      projects[projectId] = { owner: identity.username, members: {} };
+      if (orgId) {
+        const role = orgs?.roleIn(orgId, identity.username);
+        if (!role) throw new Error("Bạn không thuộc tổ chức này.");
+      }
+      projects[projectId] = {
+        owner: identity.username,
+        members: {},
+        ...(orgId ? { orgId } : {}),
+      };
       persist();
       return projects[projectId];
+    },
+
+    /** Gắn/gỡ dự án đã đăng ký vào một org — chỉ chủ dự án (hoặc admin hệ thống). */
+    assignOrg(projectId, actor, orgId) {
+      const record = projects[projectId];
+      if (!record) throw new Error("Dự án chưa đăng ký.");
+      if (this.effectiveRole(actor, projectId).role !== "owner") {
+        throw new Error("Chỉ chủ dự án mới gắn được vào tổ chức.");
+      }
+      if (orgId === null) {
+        delete record.orgId;
+      } else {
+        if (!orgs?.roleIn(orgId, actor.username) && actor.role !== "admin") {
+          throw new Error("Bạn không thuộc tổ chức này.");
+        }
+        record.orgId = orgId;
+      }
+      persist();
+      return record;
     },
 
     /** Thêm/đổi role một thành viên — chỉ chủ dự án hoặc admin toàn cục. */

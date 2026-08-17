@@ -14,6 +14,7 @@ interface MembersInfo {
   owner: string | null;
   members: Record<string, string>;
   you: { scope: "open" | "project"; role: string | null };
+  org?: { id: string; name: string };
 }
 
 const ACTION_LABEL: Record<string, string> = {
@@ -237,6 +238,8 @@ export function MembersModule() {
         </>
       )}
 
+      <OrgSection info={info} reload={load} />
+
       {auditEvents && auditEvents.length > 0 && (
         <>
           <h3>Nhật ký dự án</h3>
@@ -262,6 +265,224 @@ export function MembersModule() {
             </tbody>
           </table>
         </>
+      )}
+    </div>
+  );
+}
+
+
+/**
+ * Tổ chức (workspace): công ty 12 người không phải mời 12 lần mỗi dự án.
+ * Dự án gắn org → org-admin như chủ, org-member như editor; mời per-project
+ * vẫn thắng cho từng người (hạ xuống viewer ở dự án nhạy cảm được).
+ */
+function OrgSection({
+  info,
+  reload,
+}: {
+  info: MembersInfo | null;
+  reload: () => Promise<void>;
+}) {
+  const [orgs, setOrgs] = useState<{ id: string; name: string; role: string }[] | null>(null);
+  const [newOrg, setNewOrg] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const loadOrgs = useCallback(async () => {
+    try {
+      const response = await fetch(`${apiBase()}/orgs`, { headers: authHeaders() });
+      setOrgs(response.ok ? ((await response.json()) as { orgs: typeof orgs }).orgs : null);
+    } catch {
+      setOrgs(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (store.auth) void loadOrgs();
+  }, [loadOrgs]);
+
+  if (!store.auth) return null;
+
+  const call = async (run: () => Promise<Response>) => {
+    setError(null);
+    const response = await run();
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setError(body.error ?? `Lỗi ${response.status}`);
+      return false;
+    }
+    await loadOrgs();
+    await reload();
+    return true;
+  };
+
+  const myAdminOrgs = (orgs ?? []).filter(
+    (org) => org.role === "owner" || org.role === "admin",
+  );
+
+  return (
+    <>
+      <h3>Tổ chức</h3>
+      <p className="module-hint">
+        Dự án gắn vào tổ chức thì MỌI thành viên tổ chức tự có quyền — mở dự
+        án mới không phải mời lại từng người. Mời riêng theo dự án vẫn thắng
+        cho người đó (hạ xuống viewer ở dự án nhạy cảm được).
+      </p>
+      {error && <p className="module-hint members-error">⚠ {error}</p>}
+
+      {info?.org ? (
+        <p className="module-hint">
+          Dự án này thuộc tổ chức <strong>{info.org.name}</strong>.
+          {info.you.role === "owner" && (
+            <>
+              {" "}
+              <button
+                className="mini"
+                onClick={() =>
+                  void call(() =>
+                    fetch(
+                      `${apiBase()}/projects/${encodeURIComponent(store.project.id)}/org`,
+                      {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json", ...authHeaders() },
+                        body: JSON.stringify({ orgId: null }),
+                      },
+                    ),
+                  )
+                }
+              >
+                Gỡ khỏi tổ chức
+              </button>
+            </>
+          )}
+        </p>
+      ) : (
+        info?.registered &&
+        info.you.role === "owner" &&
+        myAdminOrgs.length > 0 && (
+          <div className="module-form">
+            <span>Gắn dự án này vào:</span>
+            {myAdminOrgs.map((org) => (
+              <button
+                key={org.id}
+                className="mini"
+                onClick={() =>
+                  void call(() =>
+                    fetch(
+                      `${apiBase()}/projects/${encodeURIComponent(store.project.id)}/org`,
+                      {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json", ...authHeaders() },
+                        body: JSON.stringify({ orgId: org.id }),
+                      },
+                    ),
+                  )
+                }
+              >
+                {org.name}
+              </button>
+            ))}
+          </div>
+        )
+      )}
+
+      {(orgs ?? []).map((org) => (
+        <OrgMembers key={org.id} org={org} onError={setError} />
+      ))}
+
+      <div className="module-form">
+        <input
+          placeholder="Tên tổ chức mới (vd Cty Kiến trúc ABC)"
+          value={newOrg}
+          onChange={(event) => setNewOrg(event.target.value)}
+        />
+        <button
+          disabled={newOrg.trim().length < 2}
+          onClick={() => {
+            void call(() =>
+              fetch(`${apiBase()}/orgs`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...authHeaders() },
+                body: JSON.stringify({ name: newOrg.trim() }),
+              }),
+            ).then((ok) => ok && setNewOrg(""));
+          }}
+        >
+          Tạo tổ chức
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** Thành viên một org — chỉ hiện chi tiết cho owner/admin của org đó. */
+function OrgMembers({
+  org,
+  onError,
+}: {
+  org: { id: string; name: string; role: string };
+  onError: (message: string | null) => void;
+}) {
+  const [detail, setDetail] = useState<{
+    owner: string;
+    members: Record<string, string>;
+  } | null>(null);
+  const [invite, setInvite] = useState("");
+
+  const load = useCallback(async () => {
+    const response = await fetch(`${apiBase()}/orgs/${encodeURIComponent(org.id)}/members`, {
+      headers: authHeaders(),
+    });
+    setDetail(response.ok ? ((await response.json()) as typeof detail) : null);
+  }, [org.id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (!detail) return null;
+  const canManage = org.role === "owner" || org.role === "admin";
+
+  return (
+    <div className="org-card">
+      <strong>{org.name}</strong>{" "}
+      <span className="module-hint-inline">
+        (bạn: {org.role}) · owner {detail.owner}
+        {Object.entries(detail.members).length > 0 &&
+          " · " +
+            Object.entries(detail.members)
+              .map(([username, role]) => `${username} (${role})`)
+              .join(", ")}
+      </span>
+      {canManage && (
+        <span className="module-form-inline">
+          <input
+            placeholder="Mời tài khoản…"
+            value={invite}
+            onChange={(event) => setInvite(event.target.value)}
+          />
+          <button
+            className="mini"
+            disabled={!invite.trim()}
+            onClick={() => {
+              void fetch(`${apiBase()}/orgs/${encodeURIComponent(org.id)}/members`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", ...authHeaders() },
+                body: JSON.stringify({ username: invite.trim(), role: "member" }),
+              }).then(async (response) => {
+                if (!response.ok) {
+                  const body = (await response.json().catch(() => ({}))) as { error?: string };
+                  onError(body.error ?? `Lỗi ${response.status}`);
+                  return;
+                }
+                onError(null);
+                setInvite("");
+                void load();
+              });
+            }}
+          >
+            Mời
+          </button>
+        </span>
       )}
     </div>
   );

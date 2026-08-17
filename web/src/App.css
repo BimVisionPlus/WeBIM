@@ -1509,3 +1509,20 @@ input[type="text"],
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+
+.org-card {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+}
+
+.module-hint-inline {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.module-form-inline {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 10px;
+}

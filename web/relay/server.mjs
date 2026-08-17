@@ -36,6 +36,7 @@ import {
 } from "./ai.mjs";
 import { createAuth } from "./auth.mjs";
 import { createAudit } from "./audit.mjs";
+import { createOrgs } from "./orgs.mjs";
 import { createMembers } from "./members.mjs";
 import {
   buildCheckoutUrl,
@@ -91,7 +92,8 @@ async function readBody(request) {
 export function startRelay(port = 8787, options = {}) {
   const auth = options.auth ?? createAuth();
   const storage = options.storage ?? createStorage(DATA_DIR);
-  const members = options.members ?? createMembers();
+  const orgs = options.orgs ?? createOrgs();
+  const members = options.members ?? createMembers({ orgs });
   const audit = options.audit ?? createAudit();
   if (!auth.enabled) {
     console.warn(
@@ -308,6 +310,75 @@ export function startRelay(port = 8787, options = {}) {
             })
           : reply(401, { error: "Cần đăng nhập để dùng chức năng này." });
 
+      // ── Tổ chức (organization/workspace) ──────────────────────────────
+      if (url.pathname === "/orgs" && request.method === "GET") {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        return reply(200, { orgs: orgs.ofUser(identity.username) });
+      }
+      if (url.pathname === "/orgs" && request.method === "POST") {
+        if (!auth.allows(identity, "editor")) return needsEditor();
+        try {
+          const { name } = JSON.parse((await readBody(request)).toString());
+          const org = orgs.create(name, identity.username);
+          audit.log({ user: identity.username, action: "org.create", detail: org.name });
+          return reply(200, { id: org.id, name: org.name });
+        } catch (error) {
+          return reply(400, { error: String(error.message ?? error) });
+        }
+      }
+      const orgMemberMatch = url.pathname.match(/^\/orgs\/([^/]+)\/members(?:\/([^/]+))?$/);
+      if (orgMemberMatch) {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const orgId = decodeURIComponent(orgMemberMatch[1]);
+        try {
+          if (request.method === "GET") {
+            const org = orgs.get(orgId);
+            if (!org || !orgs.roleIn(orgId, identity.username)) {
+              return reply(403, { error: "Bạn không thuộc tổ chức này." });
+            }
+            return reply(200, {
+              name: org.name,
+              owner: org.owner,
+              members: org.members,
+              you: orgs.roleIn(orgId, identity.username),
+            });
+          }
+          if (request.method === "PUT" && !orgMemberMatch[2]) {
+            const { username, role } = JSON.parse((await readBody(request)).toString());
+            if (!auth.userExists(username)) {
+              return reply(400, { error: `Không có tài khoản "${username}" trên máy chủ.` });
+            }
+            orgs.setMember(orgId, identity.username, username, role);
+            audit.log({ user: identity.username, action: "org.member.set", detail: `${username} → ${role}` });
+            return reply(200, { ok: true });
+          }
+          if (request.method === "DELETE" && orgMemberMatch[2]) {
+            orgs.removeMember(orgId, identity.username, decodeURIComponent(orgMemberMatch[2]));
+            audit.log({ user: identity.username, action: "org.member.remove", detail: decodeURIComponent(orgMemberMatch[2]) });
+            return reply(200, { ok: true });
+          }
+        } catch (error) {
+          return reply(403, { error: String(error.message ?? error) });
+        }
+      }
+      if (url.pathname.match(/^\/projects\/[^/]+\/org$/) && request.method === "PUT") {
+        if (!identity) return reply(401, { error: "Cần đăng nhập." });
+        const projectId = decodeURIComponent(url.pathname.split("/")[2]);
+        try {
+          const { orgId } = JSON.parse((await readBody(request)).toString());
+          members.assignOrg(projectId, identity, orgId ?? null);
+          audit.log({
+            user: identity.username,
+            action: orgId ? "project.assign_org" : "project.unassign_org",
+            projectId,
+            ...(orgId ? { detail: `org ${orgId}` } : {}),
+          });
+          return reply(200, { ok: true });
+        } catch (error) {
+          return reply(403, { error: String(error.message ?? error) });
+        }
+      }
+
       // ── Thành viên & phân quyền theo dự án ────────────────────────────
       const membersMatch = url.pathname.match(
         /^\/projects\/([^/]+)\/members(?:\/([^/]+))?$/,
@@ -319,11 +390,15 @@ export function startRelay(port = 8787, options = {}) {
           if (request.method === "GET") {
             const record = members.get(projectId);
             const you = members.effectiveRole(identity, projectId);
+            const org = record?.orgId ? orgs.get(record.orgId) : null;
             return reply(200, {
               registered: record !== null,
               owner: record?.owner ?? null,
               members: record?.members ?? {},
               you,
+              ...(record?.orgId
+                ? { org: { id: record.orgId, name: org?.name ?? record.orgId } }
+                : {}),
             });
           }
           if (request.method === "PUT" && !membersMatch[2]) {
@@ -371,8 +446,19 @@ export function startRelay(port = 8787, options = {}) {
           });
         }
         try {
-          members.claim(projectId, identity);
-          audit.log({ user: identity.username, action: "project.claim", projectId });
+          let orgId = null;
+          try {
+            orgId = JSON.parse((await readBody(request)).toString()).orgId ?? null;
+          } catch {
+            orgId = null; // body rỗng = claim cá nhân, như cũ
+          }
+          members.claim(projectId, identity, orgId);
+          audit.log({
+            user: identity.username,
+            action: "project.claim",
+            projectId,
+            ...(orgId ? { detail: `org ${orgId}` } : {}),
+          });
           return reply(200, { ok: true });
         } catch (error) {
           return reply(409, { error: String(error.message ?? error) });
