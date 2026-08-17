@@ -47,6 +47,8 @@ function AuthControls() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [open, setOpen] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (store.authRequired === null) void store.probeAuthMode();
@@ -95,10 +97,25 @@ function AuthControls() {
     );
   }
 
-  const signIn = () => {
-    void store.login(username, password);
-    setPassword("");
-    setOpen(false);
+  // Đăng nhập THẤT BẠI thì panel phải ở lại và nói lý do ngay tại chỗ —
+  // đóng panel và thả lỗi xuống status bar là người dùng chỉ thấy "bấm
+  // xong không có gì xảy ra" rồi thử lại mãi. Đăng ký nằm cùng panel:
+  // relay có /auth/register từ lâu nhưng UI từng quên mất đường vào.
+  const submit = async () => {
+    setError(null);
+    if (registering && username.includes("@")) {
+      setError("Tên đăng nhập không phải email — dùng chữ thường a-z, số, dấu chấm/gạch (vd: duong.hoang).");
+      return;
+    }
+    const done = registering
+      ? await store.register(username.trim(), password)
+      : await store.login(username.trim(), password);
+    if (done) {
+      setPassword("");
+      setOpen(false);
+    } else {
+      setError(store.statusMessage);
+    }
   };
 
   return (
@@ -109,22 +126,34 @@ function AuthControls() {
     >
       <summary>Đăng nhập</summary>
       <div className="top-menu-panel">
-        <div className="menu-heading">Đăng nhập</div>
+        <div className="menu-heading">{registering ? "Tạo tài khoản" : "Đăng nhập"}</div>
         <input
-          placeholder="Tài khoản"
+          placeholder="Tên đăng nhập (vd: duong.hoang)"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
         />
         <input
-          placeholder="Mật khẩu"
+          placeholder={registering ? "Mật khẩu (≥ 8 ký tự)" : "Mật khẩu"}
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") signIn();
+            if (event.key === "Enter") void submit();
           }}
         />
-        <button onClick={signIn}>Đăng nhập</button>
+        <button onClick={() => void submit()}>
+          {registering ? "Tạo tài khoản" : "Đăng nhập"}
+        </button>
+        {error && <p className="menu-note login-error">⚠ {error}</p>}
+        <button
+          className="link-button"
+          onClick={() => {
+            setRegistering(!registering);
+            setError(null);
+          }}
+        >
+          {registering ? "← Đã có tài khoản? Đăng nhập" : "Chưa có tài khoản? Đăng ký"}
+        </button>
         <p className="menu-note">
           Chưa đăng nhập vẫn dựng mô hình được — nó lưu trong máy này. Đồng bộ
           nhiều máy và kho file thì cần tài khoản.

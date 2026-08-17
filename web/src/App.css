@@ -634,6 +634,12 @@ input[type="text"],
   overflow-y: auto;
 }
 
+.login-error {
+  color: #e06c75;
+  max-width: 260px;
+  white-space: normal;
+}
+
 .project-id-hint {
   opacity: 0.55;
   font-size: 0.85em;

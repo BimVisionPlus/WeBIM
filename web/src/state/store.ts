@@ -667,7 +667,8 @@ export class AppStore {
     this.commit(false);
   }
 
-  async login(username: string, password: string): Promise<void> {
+  /** Trả true khi đăng nhập xong — form dựa vào đó để đóng hay hiện lỗi. */
+  async login(username: string, password: string): Promise<boolean> {
     try {
       const response = await fetch(`${fileServerBase()}/auth/login`, {
         method: "POST",
@@ -675,7 +676,13 @@ export class AppStore {
         body: JSON.stringify({ username, password }),
       });
       if (!response.ok) {
-        throw new Error("Sai tên đăng nhập hoặc mật khẩu");
+        // Người mới hay gõ EMAIL vào ô tài khoản — nói thẳng điều đó thay
+        // vì một câu "sai mật khẩu" khiến họ thử lại mãi cùng một lỗi.
+        throw new Error(
+          username.includes("@")
+            ? "Tài khoản là TÊN ĐĂNG NHẬP, không phải email — chưa có thì bấm Đăng ký."
+            : "Sai tên đăng nhập hoặc mật khẩu — chưa có tài khoản thì bấm Đăng ký.",
+        );
       }
       this.auth = (await response.json()) as AuthSession;
       localStorage.setItem(AUTH_KEY, JSON.stringify(this.auth));
@@ -683,13 +690,15 @@ export class AppStore {
       this.sync?.reconnectRelay();
       this.commit(false);
       void this.refreshProjectRole();
+      return true;
     } catch (error) {
       this.setStatus((error as Error).message);
+      return false;
     }
   }
 
   /** Tự đăng ký — thành công là đăng nhập luôn (server trả session). */
-  async register(username: string, password: string): Promise<void> {
+  async register(username: string, password: string): Promise<boolean> {
     try {
       const response = await fetch(`${fileServerBase()}/auth/register`, {
         method: "POST",
@@ -704,8 +713,10 @@ export class AppStore {
       this.sync?.reconnectRelay();
       this.commit(false);
       void this.refreshProjectRole();
+      return true;
     } catch (error) {
       this.setStatus((error as Error).message);
+      return false;
     }
   }
 
@@ -812,6 +823,12 @@ export class AppStore {
       return this.projectRole.role === "viewer"
         ? "Bạn là VIEWER trong dự án này — chỉ xem. Chỉnh sửa và nộp file đã khoá (máy chủ cũng chặn)."
         : "Bạn KHÔNG PHẢI THÀNH VIÊN dự án này — nội dung không đồng bộ về máy bạn. Hỏi chủ dự án để được mời.";
+    }
+    // Chưa đăng nhập ≠ "tài khoản viewer" — nói nhầm thế thì người mới
+    // tưởng mình CÓ tài khoản bị khoá, trong khi việc cần làm là đăng
+    // nhập hoặc đăng ký.
+    if (this.auth == null) {
+      return "Chưa đăng nhập — đang xem chế độ chỉ đọc. Đăng nhập (hoặc Đăng ký, góc trên phải) để chỉnh sửa.";
     }
     return "Tài khoản của bạn là viewer — chỉ xem, chỉnh sửa đã khoá.";
   }
