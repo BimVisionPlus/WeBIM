@@ -70,9 +70,21 @@ function corsHeaders(extra = {}) {
   };
 }
 
+/** Trần 30 MB cho MỌI body HTTP — snapshot đã tự giới hạn 25 MB, file CDE
+ * lớn hơn thế thuộc về S3/BYO storage chứ không phải một POST. */
+const MAX_BODY_BYTES = 30 * 1024 * 1024;
+
 async function readBody(request) {
   const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
+  let total = 0;
+  for await (const chunk of request) {
+    total += chunk.length;
+    if (total > MAX_BODY_BYTES) {
+      request.destroy();
+      throw new Error("Body vượt trần 30 MB");
+    }
+    chunks.push(chunk);
+  }
   return Buffer.concat(chunks);
 }
 
@@ -597,7 +609,9 @@ export function startRelay(port = 8787, options = {}) {
     }
   });
 
-  const server = new WebSocketServer({ server: httpServer });
+  // maxPayload: một frame sync là cả project JSON — 30 MB là trần hào phóng;
+  // không đặt thì mặc định ws cho 100 MB và một client lỗi có thể nuốt RAM.
+  const server = new WebSocketServer({ server: httpServer, maxPayload: 30 * 1024 * 1024 });
   const clients = new Map(); // socket -> {clientId, role, identity}
 
   /**

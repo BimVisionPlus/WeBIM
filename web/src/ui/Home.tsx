@@ -13,6 +13,7 @@
 
 import { DashboardModule } from "./Dashboard";
 import { assessFlow } from "../application/flow";
+import { useEffect, useState } from "react";
 import { sectionById, type PaneId, type SectionId } from "./navigation";
 import { store, useStoreVersion } from "../state/store";
 
@@ -94,6 +95,45 @@ const TIERS: HomeTier[] = [
   },
 ];
 
+function ServerProjects() {
+  useStoreVersion();
+  const [projects, setProjects] = useState<{ id: string; name: string }[] | null>(null);
+  useEffect(() => {
+    if (store.standalone || !store.relayConnected) return;
+    void store
+      .listServerProjects()
+      .then(setProjects)
+      .catch(() => setProjects(null));
+  }, [store.relayConnected]);
+  if (!projects || projects.length === 0) return null;
+  const others = projects.filter((project) => project.id !== store.project.id);
+  if (others.length === 0) return null;
+  return (
+    <p className="module-hint server-projects">
+      Dự án khác của bạn trên máy chủ:{" "}
+      {others.slice(0, 6).map((project, index) => (
+        <span key={project.id}>
+          {index > 0 && " · "}
+          <button
+            className="link-button"
+            onClick={() => {
+              if (
+                window.confirm(
+                  `Mở "${project.name}" sẽ thay "${store.projectLabel}" đang mở. Tiếp tục?`,
+                )
+              ) {
+                void store.openServerProject(project.id);
+              }
+            }}
+          >
+            {project.name}
+          </button>
+        </span>
+      ))}
+    </p>
+  );
+}
+
 const FLOW_ICON: Record<string, string> = { OK: "✓", ATTENTION: "⚠", EMPTY: "○" };
 
 function FlowStrip() {
@@ -138,6 +178,10 @@ export function HomeModule() {
       {/* Luồng xương sống: 5 bước tự soi dữ liệu thật — người mở app thấy
           ngay mình đứng ở đâu và việc kế tiếp là gì. */}
       <FlowStrip />
+
+      {/* Toàn cảnh: các dự án khác của tôi trên máy chủ — đổi dự án không
+          cần biết trước id, và thấy được mình đang giữ bao nhiêu dự án. */}
+      <ServerProjects />
 
       {TIERS.map((tier) => (
         <div key={tier.title} className="home-tier">

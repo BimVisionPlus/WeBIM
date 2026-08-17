@@ -5,6 +5,7 @@ import {
 } from "../application/schedules";
 import { qtoCsv, qtoRows, qtoSummary, linkedQtoRows } from "../application/qto";
 import { clashReport, crossModelClashes, externalClashes } from "../application/clash";
+import { clashesToBcf } from "../application/bcf";
 import {
   applyMatrix,
   clashSystems,
@@ -318,8 +319,27 @@ export function ClashTable() {
   );
   const clashes = filtered.kept;
   const suppressed = filtered.suppressedByRule + filtered.suppressedByTolerance;
+  const exportBcf = () => {
+    const bytes = clashesToBcf(clashes, {
+      createdAt: new Date().toISOString(),
+      author: store.auth?.username ?? "webim",
+    });
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${store.projectLabel}-clash.bcf`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    store.setStatus(`Đã xuất ${clashes.length} va chạm ra BCF 2.1 — mở được trong Revit/Navisworks/BIMcollab.`);
+  };
   return (
     <>
+      {clashes.length > 0 && (
+        <button onClick={exportBcf} title="BCF 2.1 — chuẩn trao đổi issue giữa các công cụ BIM">
+          Xuất BCF ({clashes.length})
+        </button>
+      )}
       <p className="module-hint">
         {/*
           "Không phát hiện va chạm cứng" khi ma trận vừa ẩn hết là một câu

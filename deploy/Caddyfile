@@ -4,6 +4,17 @@
 {$WEBIM_DOMAIN} {
 	encode zstd gzip
 
+	# Hardening (GĐ5): các header không tốn gì nhưng chặn cả lớp tấn công.
+	# X-Frame-Options DENY vì app.webim.vn không được nhúng đâu cả (Atlas
+	# nhúng chiều ngược lại); HSTS 1 năm sau khi đã chạy HTTPS ổn định.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
 	# Platform server: files + auth + AI + WebSocket sync relay.
 	# handle_path strips /api before proxying, and Caddy upgrades
 	# WebSocket connections automatically.
