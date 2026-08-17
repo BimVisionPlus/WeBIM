@@ -37,6 +37,7 @@ services:
       # AUTOMATIC1111-compatible Stable Diffusion. Unset = AI routes 501.
       - AI_BASE_URL=${AI_BASE_URL:-}
       - AI_MODEL=${AI_MODEL:-qwen2.5vl:7b}
+      - AI_TEXT_MODEL=${AI_TEXT_MODEL:-}
       - AI_API_KEY=${AI_API_KEY:-}
       - SD_BASE_URL=${SD_BASE_URL:-}
       - S3_ENDPOINT=${S3_ENDPOINT:-}

@@ -136,6 +136,19 @@ describe("answerStandardsQuestion", () => {
     // Nhiệt độ thấp có chủ đích: tra cứu quy phạm không phải chỗ sáng tác.
     expect(body.temperature).toBe(0.1);
   });
+
+  it("dùng AI_TEXT_MODEL khi đặt — bản -instruct nhỏ giữ kỷ luật [n] tốt hơn bản VL", async () => {
+    const config = aiConfig({
+      AI_BASE_URL: "http://127.0.0.1:11434/v1",
+      AI_MODEL: "qwen2.5vl:3b",
+      AI_TEXT_MODEL: "qwen2.5:3b-instruct",
+    });
+    const { calls, fetchImpl } = stub(completion("1,2 m [1]."));
+    await answerStandardsQuestion("q", [{ label: "[1]", text: "t" }], config, fetchImpl);
+    expect(JSON.parse(String(calls[0].init.body)).model).toBe("qwen2.5:3b-instruct");
+    // Không đặt thì rơi về model chung — không ai phải cấu hình hai lần.
+    expect(aiConfig({ AI_MODEL: "m" }).textModel).toBe("m");
+  });
 });
 
 describe("chat", () => {

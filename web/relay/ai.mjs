@@ -20,6 +20,10 @@ export function aiConfig(env = process.env) {
     // e.g. http://127.0.0.1:11434/v1 (Ollama) or http://127.0.0.1:8000/v1 (vLLM)
     baseUrl: trim(env.AI_BASE_URL),
     model: (env.AI_MODEL ?? "qwen2.5vl:7b").trim(),
+    // Việc chỉ-text (Q&A quy chuẩn) được phép chạy model khác model vision:
+    // bản -instruct nhỏ giữ kỷ luật trích dẫn [n] tốt hơn hẳn bản VL cùng
+    // cỡ. Không đặt thì dùng chung AI_MODEL.
+    textModel: (env.AI_TEXT_MODEL ?? env.AI_MODEL ?? "qwen2.5vl:7b").trim(),
     // Only for local gateways that demand one; llama.cpp/Ollama ignore it.
     apiKey: (env.AI_API_KEY ?? "").trim() || null,
     // e.g. http://127.0.0.1:7860
@@ -73,7 +77,7 @@ export function parseJsonLoose(text) {
  * all accept for vision models.
  */
 export async function chat(
-  { system, text, imageDataUrl = null, json = false, maxTokens = 2048, temperature = 0.3 },
+  { system, text, imageDataUrl = null, json = false, maxTokens = 2048, temperature = 0.3, model },
   config = aiConfig(),
   fetchImpl = fetch,
 ) {
@@ -87,7 +91,7 @@ export async function chat(
     : text;
 
   const body = {
-    model: config.model,
+    model: model ?? config.model,
     max_tokens: maxTokens,
     temperature,
     messages: [
@@ -182,7 +186,9 @@ export async function answerDrawingQuestion(pdfBuffer, question, config = aiConf
 const STANDARDS_QA_SYSTEM =
   "Bạn là trợ lý tra cứu quy chuẩn xây dựng Việt Nam. CHỈ được dùng các trích" +
   " đoạn được cung cấp; không dùng kiến thức ngoài. Mỗi khẳng định phải kèm số" +
-  " trích dẫn dạng [1], [2]… đúng theo danh sách. Nếu các trích đoạn không đủ" +
+  " trích dẫn dạng [1], [2]… đúng theo danh sách." +
+  ' Ví dụ đúng: "Chiều rộng thông thủy tối thiểu là 1,2 m [1]." —' +
+  " thiếu [n] là trả lời sai định dạng. Nếu các trích đoạn không đủ" +
   ' để trả lời, nói thẳng: "Corpus hiện chưa có điều khoản trả lời câu này" —' +
   " không suy đoán. Trả lời ngắn gọn bằng tiếng Việt.";
 
@@ -201,6 +207,7 @@ export async function answerStandardsQuestion(
       text: `TRÍCH ĐOẠN QUY CHUẨN:\n\n${blocks}\n\nCÂU HỎI: ${question}`,
       maxTokens: 1024,
       temperature: 0.1,
+      model: config.textModel,
     },
     config,
     fetchImpl,
