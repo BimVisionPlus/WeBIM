@@ -14,6 +14,7 @@ import {
 } from "../standards/catalog";
 import { climateFindings, estimateOttv, facadeByOrientation } from "../application/climate";
 import { DEFAULT_CONVENTION } from "../application/naming";
+import { PdfCompare } from "./PdfCompare";
 import {
   criticalPath,
   ganttChart,
@@ -287,9 +288,36 @@ export function CdeModule() {
 
 function DocumentDetail({ document }: { document: DocumentDatum }) {
   const [note, setNote] = useState("");
+  const [compare, setCompare] = useState<{
+    urlOld: string; urlNew: string; labelOld: string; labelNew: string;
+  } | null>(null);
+  const pdfRevisions = document.revisions.filter(
+    (revision) => revision.fileKey && revision.fileName?.toLowerCase().endsWith(".pdf"),
+  );
+  const openCompare = async () => {
+    // Mặc định so hai bản PDF mới nhất — đúng câu người ta hỏi thường nhất.
+    const [previous, latest] = pdfRevisions.slice(-2);
+    try {
+      const [urlOld, urlNew] = await Promise.all([
+        fetchFileUrl(previous.fileKey!),
+        fetchFileUrl(latest.fileKey!),
+      ]);
+      setCompare({ urlOld, urlNew, labelOld: previous.rev, labelNew: latest.rev });
+    } catch (error) {
+      store.setStatus(error instanceof Error ? error.message : String(error));
+    }
+  };
   return (
     <div className="module-detail">
       <h3>{document.code} — revisions</h3>
+      {pdfRevisions.length >= 2 && !compare && (
+        <div className="module-form">
+          <button onClick={() => void openCompare()} title="Overlay hai bản PDF mới nhất: đỏ = nét đã bỏ, xanh = nét mới thêm">
+            So sánh {pdfRevisions.at(-2)?.rev} ↔ {pdfRevisions.at(-1)?.rev}
+          </button>
+        </div>
+      )}
+      {compare && <PdfCompare {...compare} onClose={() => setCompare(null)} />}
       {document.approvedBy && (
         <p className="module-hint">
           ✓ PUBLISHED — duyệt bởi <strong>{document.approvedBy}</strong>

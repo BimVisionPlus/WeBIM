@@ -19,6 +19,7 @@ import * as pdfjs from "pdfjs-dist";
 import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { DocumentDatum, MarkupKind } from "../domain/project";
 import { store, useStoreVersion } from "../state/store";
+import { measure, scaleFromCalibration } from "../application/pdfDiff";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
@@ -74,6 +75,16 @@ export function PdfMarkupView({
   const [color, setColor] = useState(COLORS[0]);
   const [start, setStart] = useState<[number, number] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Đo khoảng cách: phù du trong phiên (không sync — phép đo là câu hỏi,
+  // không phải dữ liệu dự án). Tỉ lệ lấy bằng CALIBRATE trên một đoạn đã
+  // biết chiều dài thật — khung tên nói 1:100 nhưng file in ra có thể đã
+  // bị scale, đo đoạn thật là nguồn sự thật duy nhất.
+  const [measuring, setMeasuring] = useState(false);
+  const [metresPerPixel, setMetresPerPixel] = useState<number | null>(null);
+  const [measureStart, setMeasureStart] = useState<[number, number] | null>(null);
+  const [readings, setReadings] = useState<
+    { a: [number, number]; b: [number, number]; metres: number }[]
+  >([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,6 +135,44 @@ export function PdfMarkupView({
   };
 
   const onClick = (event: React.MouseEvent<SVGSVGElement>) => {
+    if (measuring) {
+      const box = event.currentTarget.getBoundingClientRect();
+      if (!(box.width > 0)) return;
+      const point: [number, number] = [
+        event.clientX - box.left,
+        event.clientY - box.top,
+      ];
+      if (measureStart === null) {
+        setMeasureStart(point);
+        return;
+      }
+      const pixelDistance = Math.hypot(
+        point[0] - measureStart[0],
+        point[1] - measureStart[1],
+      );
+      if (metresPerPixel === null) {
+        const answer = window.prompt(
+          "CALIBRATE: đoạn vừa đo dài bao nhiêu mét ngoài thực tế?",
+        );
+        const metres = Number(answer);
+        const scale = scaleFromCalibration(pixelDistance, metres);
+        if (scale === null) {
+          store.setStatus("Chiều dài calibrate phải là số dương — đo lại.");
+        } else {
+          setMetresPerPixel(scale);
+          store.setStatus(
+            `Đã đặt tỉ lệ: ${pixelDistance.toFixed(0)}px = ${metres}m. Giờ mỗi cặp click là một phép đo.`,
+          );
+        }
+      } else {
+        setReadings([
+          ...readings,
+          { a: measureStart, b: point, metres: measure(measureStart, point, metresPerPixel) },
+        ]);
+      }
+      setMeasureStart(null);
+      return;
+    }
     if (!tool) return;
     const at = toPageRatio(event);
     if (at === null) return;
@@ -156,6 +205,29 @@ export function PdfMarkupView({
   return (
     <div className="pdf-markup">
       <div className="module-form">
+        <button
+          className={measuring ? "active" : ""}
+          onClick={() => {
+            setMeasuring(!measuring);
+            setTool(null);
+            setMeasureStart(null);
+          }}
+          title="Đo khoảng cách — cặp click đầu tiên calibrate tỉ lệ bằng một đoạn đã biết"
+        >
+          Đo
+        </button>
+        {metresPerPixel !== null && measuring && (
+          <button
+            className="mini"
+            onClick={() => {
+              setMetresPerPixel(null);
+              setReadings([]);
+              store.setStatus("Đã xoá tỉ lệ — cặp click sau sẽ calibrate lại.");
+            }}
+          >
+            Đặt lại tỉ lệ
+          </button>
+        )}
         {TOOLS.map((entry) => (
           <button
             key={entry.kind}
@@ -283,6 +355,27 @@ export function PdfMarkupView({
               </text>
             );
           })}
+          {readings.map((reading, index) => (
+            <g key={index} stroke="#fab219" fill="#fab219">
+              <line
+                x1={reading.a[0]} y1={reading.a[1]}
+                x2={reading.b[0]} y2={reading.b[1]}
+                strokeWidth={1.5}
+              />
+              <text
+                x={(reading.a[0] + reading.b[0]) / 2 + 4}
+                y={(reading.a[1] + reading.b[1]) / 2 - 4}
+                fontSize={12}
+                fontWeight={600}
+                stroke="none"
+              >
+                {reading.metres.toFixed(2)} m
+              </text>
+            </g>
+          ))}
+          {measureStart && (
+            <circle cx={measureStart[0]} cy={measureStart[1]} r={4} fill="#fab219" />
+          )}
           {start && (
             <circle cx={px(start)[0]} cy={px(start)[1]} r={4} fill={color} />
           )}

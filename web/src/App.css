@@ -1544,3 +1544,19 @@ input[type="text"],
   font-family: var(--mono, monospace);
   font-size: 10.5px;
 }
+
+/* ── So sánh PDF ───────────────────────────────────────────────────────── */
+
+.pdf-compare-scroll {
+  overflow: auto;
+  max-height: 70vh;
+  border: 1px solid var(--panel-border);
+}
+
+.pdf-compare canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.diff-old { color: #e04c4c; font-size: 12px; }
+.diff-new { color: #4091ff; font-size: 12px; }
