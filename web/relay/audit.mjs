@@ -73,3 +73,62 @@ export function createAudit({ path = DEFAULT_PATH } = {}) {
     },
   };
 }
+
+/**
+ * Số liệu sản phẩm TỪ CHÍNH audit log — không nhúng tracker bên thứ ba
+ * (quyết định trong ROADMAP: dữ liệu server-side đã có là đủ, hợp khẩu vị
+ * khách xây dựng VN và khỏi cần privacy policy phức tạp).
+ *
+ * Hàm thuần trên mảng events để test được không cần file.
+ */
+export function summarizeEvents(events, now = Date.now()) {
+  const DAY = 86_400_000;
+  const inWindow = (event, days) => {
+    const at = Date.parse(event.at);
+    return Number.isFinite(at) && now - at <= days * DAY;
+  };
+  const window = (days) => {
+    const slice = events.filter((event) => inWindow(event, days));
+    const by = (action) => slice.filter((event) => event.action === action);
+    return {
+      activeUsers: new Set(
+        slice
+          .filter((event) => event.action !== "auth.login_failed")
+          .map((event) => event.user),
+      ).size,
+      registers: by("auth.register").length,
+      claims: by("project.claim").length,
+      uploads: by("file.put").length,
+      renders: by("ai.render").length,
+      loginFailures: by("auth.login_failed").length,
+    };
+  };
+
+  // Activation: người đăng ký trong 30 ngày qua có ÍT NHẤT một hành động
+  // tạo giá trị (claim hoặc nộp file) trong 7 ngày sau khi đăng ký.
+  const registered = events.filter(
+    (event) => event.action === "auth.register" && inWindow(event, 30),
+  );
+  let activated = 0;
+  for (const registration of registered) {
+    const start = Date.parse(registration.at);
+    const acted = events.some(
+      (event) =>
+        event.user === registration.user &&
+        (event.action === "project.claim" || event.action === "file.put") &&
+        Date.parse(event.at) >= start &&
+        Date.parse(event.at) <= start + 7 * DAY,
+    );
+    if (acted) activated += 1;
+  }
+
+  return {
+    last7d: window(7),
+    last30d: window(30),
+    activation: {
+      registered30d: registered.length,
+      activated,
+      rate: registered.length ? Math.round((activated / registered.length) * 100) : null,
+    },
+  };
+}

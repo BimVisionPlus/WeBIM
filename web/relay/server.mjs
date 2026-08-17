@@ -35,7 +35,7 @@ import {
   writeRenderBrief,
 } from "./ai.mjs";
 import { createAuth } from "./auth.mjs";
-import { createAudit } from "./audit.mjs";
+import { createAudit, summarizeEvents } from "./audit.mjs";
 import { createOrgs } from "./orgs.mjs";
 import { createMembers } from "./members.mjs";
 import {
@@ -734,11 +734,24 @@ export function startRelay(port = 8787, options = {}) {
         return reply(200, { ...brief, image: rendered });
       }
 
+      if (url.pathname === "/admin/metrics" && request.method === "GET") {
+        if (!auth.allows(identity, "admin")) {
+          return reply(identity ? 403 : 401, { error: "Chỉ admin xem được số liệu." });
+        }
+        return reply(200, summarizeEvents(audit.recent(5000)));
+      }
+
       reply(404, { error: "not found" });
     } catch (error) {
-      reply(error.code === "ENOENT" ? 404 : 500, {
-        error: String(error.message ?? error),
-      });
+      const status = error.code === "ENOENT" ? 404 : 500;
+      if (status === 500) {
+        // Error tracking tối thiểu: mỗi 500 một dòng có cấu trúc — grep
+        // được, đếm được, không cần Sentry ở quy mô này.
+        console.error(
+          `[webim] 500 ${request.method} ${url.pathname}: ${error.message ?? error}`,
+        );
+      }
+      reply(status, { error: String(error.message ?? error) });
     }
   });
 
