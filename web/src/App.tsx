@@ -301,6 +301,19 @@ export default function App() {
           </main>
           {railed && !gated && <PropertiesPanel />}
         </div>
+
+        {/* Mobile: rail Properties bị ẩn (CSS) — thay bằng bottom-sheet
+            hiện KHI CHỌN phần tử. Cùng một PropertiesPanel, chỉ đổi khung
+            chứa; sheet nằm ngoài .app-body nên không dính rule ẩn rail. */}
+        {railed && !gated && store.selection && (
+          <div className="props-sheet">
+            <div className="props-sheet-head">
+              <span>Thuộc tính</span>
+              <button onClick={() => store.select(null)}>✕ Đóng</button>
+            </div>
+            <PropertiesPanel />
+          </div>
+        )}
       </div>
 
       <footer className="status-bar">{store.statusMessage}</footer>

@@ -1719,4 +1719,40 @@ input[type="text"],
   .app-body .properties-panel {
     display: none;
   }
+
+  /* Properties dạng bottom-sheet khi chọn phần tử — thay cho rail đã ẩn. */
+  .props-sheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 55;
+    max-height: 55vh;
+    background: var(--panel);
+    border-top: 1px solid var(--panel-border);
+    border-radius: 10px 10px 0 0;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.45);
+  }
+  .props-sheet-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px 4px;
+    font-weight: 600;
+  }
+  .props-sheet .properties-panel {
+    display: block;
+    width: auto;
+    border: none;
+    overflow-y: auto;
+  }
+}
+
+/* Desktop: sheet không tồn tại — rail bên phải đã lo việc này. */
+@media (min-width: 821px) {
+  .props-sheet {
+    display: none;
+  }
 }

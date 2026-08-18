@@ -139,6 +139,14 @@ export class GridViewport {
   private panning = false;
   private panStart = new THREE.Vector2();
   private cameraStart = new THREE.Vector3();
+  // ── Touch ──────────────────────────────────────────────────────────────
+  // Ngón tay không phải con trỏ: 1 ngón kéo = pan, tap = vẽ/chọn (phát ở
+  // pointerUP, sau khi chắc chắn không phải kéo), 2 ngón = pinch-zoom quanh
+  // điểm giữa + pan theo điểm giữa. Vẽ ngay ở pointerdown như chuột thì
+  // ngón đầu của mỗi cú pinch để lại một điểm tường rác.
+  private touchPoints = new Map<number, { x: number; y: number }>();
+  private touchTap: { id: number; x: number; y: number } | null = null;
+  private pinchLast: { dist: number; mid: { x: number; y: number } } | null = null;
   private appliedViewKey = "";
   private frameHandle = 0;
   private disposed = false;
@@ -174,6 +182,10 @@ export class GridViewport {
     canvas.addEventListener("pointerdown", this.onPointerDown);
     canvas.addEventListener("pointermove", this.onPointerMove);
     canvas.addEventListener("pointerup", this.onPointerUp);
+    canvas.addEventListener("pointercancel", this.onPointerCancel);
+    // touch-action đặt ở đây thay vì CSS: chính module bắt gesture là
+    // module tắt scroll/zoom mặc định của trình duyệt trên canvas.
+    canvas.style.touchAction = "none";
     canvas.addEventListener("wheel", this.onWheel, { passive: false });
     canvas.addEventListener("contextmenu", this.onContextMenu);
     window.addEventListener("keydown", this.onKeyDown);
@@ -207,6 +219,7 @@ export class GridViewport {
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("pointermove", this.onPointerMove);
     this.canvas.removeEventListener("pointerup", this.onPointerUp);
+    this.canvas.removeEventListener("pointercancel", this.onPointerCancel);
     this.canvas.removeEventListener("wheel", this.onWheel);
     this.canvas.removeEventListener("contextmenu", this.onContextMenu);
     window.removeEventListener("keydown", this.onKeyDown);
@@ -568,6 +581,25 @@ export class GridViewport {
   }
 
   private onPointerDown = (event: PointerEvent): void => {
+    if (event.pointerType === "touch") {
+      event.preventDefault();
+      this.touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      // Capture SAU khi state đã ghi, và không được là chỗ dựa: capture
+      // ném lỗi (pointer không active) thì gesture vẫn phải chạy tiếp.
+      try {
+        this.canvas.setPointerCapture(event.pointerId);
+      } catch {
+        // vẫn nhận move/up qua bubbling trên canvas
+      }
+      if (this.touchPoints.size === 1) {
+        this.touchTap = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      } else {
+        // Ngón thứ hai chạm xuống: đây là gesture, không phải thao tác vẽ.
+        this.touchTap = null;
+        this.pinchLast = this.pinchState();
+      }
+      return;
+    }
     if (event.button === 1 || event.button === 2 || (event.button === 0 && event.shiftKey)) {
       this.panning = true;
       this.panStart.set(event.clientX, event.clientY);
@@ -576,7 +608,17 @@ export class GridViewport {
       return;
     }
     if (event.button !== 0 || !this.inPlanView) return;
-    const world = this.screenToWorld(event.clientX, event.clientY);
+    this.handlePrimaryAction(event.clientX, event.clientY);
+  };
+
+  /**
+   * Toàn bộ thao tác vẽ/chọn tại một điểm màn hình. Chuột gọi ngay ở
+   * pointerdown (hành vi desktop giữ nguyên); ngón tay gọi ở pointerup
+   * và CHỈ khi đó là một cú TAP — kéo là pan, hai ngón là pinch, không
+   * cú nào trong số đó được phép để lại một bức tường vẽ nhầm.
+   */
+  private handlePrimaryAction(clientX: number, clientY: number): void {
+    const world = this.screenToWorld(clientX, clientY);
     // Canvas chưa layout (kích thước 0) cho ra world NaN — một cú click lúc
     // đó từng ghi dimension [NaN,NaN] vào dự án. Không toạ độ thì không vẽ.
     if (!Number.isFinite(world[0]) || !Number.isFinite(world[1])) return;
@@ -746,9 +788,79 @@ export class GridViewport {
       const slab = this.pickSlab(world);
       store.select(slab ? { kind: "slab", id: slab.id } : null);
     }
-  };
+  }
+
+  /** Khoảng cách + điểm giữa của hai ngón hiện tại. */
+  private pinchState(): { dist: number; mid: { x: number; y: number } } {
+    const [a, b] = [...this.touchPoints.values()];
+    return {
+      dist: Math.max(Math.hypot(b.x - a.x, b.y - a.y), 1),
+      mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+    };
+  }
+
+  /** Dời camera theo một delta pixel màn hình (dùng basis của camera). */
+  private panByPixels(dxPixels: number, dyPixels: number): void {
+    const worldPerPixel = this.worldPerPixel();
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    this.camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+    this.camera.position
+      .addScaledVector(right, -dxPixels * worldPerPixel)
+      .addScaledVector(up, dyPixels * worldPerPixel);
+  }
+
+  private onTouchMove(event: PointerEvent): void {
+    const point = this.touchPoints.get(event.pointerId);
+    if (!point) return;
+    // Delta tự tính từ vị trí trước — movementX/Y không đáng tin trên
+    // trình duyệt di động.
+    const deltaX = event.clientX - point.x;
+    const deltaY = event.clientY - point.y;
+    point.x = event.clientX;
+    point.y = event.clientY;
+
+    if (this.touchPoints.size >= 2 && this.pinchLast) {
+      // Pinch: zoom quanh điểm giữa (giữ điểm giữa đứng yên trong thế giới,
+      // như onWheel giữ con trỏ), rồi pan theo dịch chuyển của điểm giữa.
+      const current = this.pinchState();
+      const factor = this.pinchLast.dist / current.dist;
+      const before = this.screenToWorld(current.mid.x, current.mid.y);
+      this.camera.top *= factor;
+      this.camera.bottom *= factor;
+      this.camera.left *= factor;
+      this.camera.right *= factor;
+      this.camera.updateProjectionMatrix();
+      if (this.inPlanView) {
+        const after = this.screenToWorld(current.mid.x, current.mid.y);
+        this.camera.position.x += before[0] - after[0];
+        this.camera.position.y += before[1] - after[1];
+      }
+      this.panByPixels(
+        current.mid.x - this.pinchLast.mid.x,
+        current.mid.y - this.pinchLast.mid.y,
+      );
+      this.pinchLast = current;
+      return;
+    }
+
+    // Một ngón: kéo là pan. Di quá 8px thì đây không còn là tap nữa —
+    // nhấc ngón lên sẽ không vẽ gì.
+    if (this.touchTap && event.pointerId === this.touchTap.id) {
+      const moved = Math.hypot(
+        event.clientX - this.touchTap.x,
+        event.clientY - this.touchTap.y,
+      );
+      if (moved > 8) this.touchTap = null;
+    }
+    this.panByPixels(deltaX, deltaY);
+  }
 
   private onPointerMove = (event: PointerEvent): void => {
+    if (event.pointerType === "touch") {
+      this.onTouchMove(event);
+      return;
+    }
     if (this.panning) {
       const worldPerPixel = this.worldPerPixel();
       const dx = (event.clientX - this.panStart.x) * worldPerPixel;
@@ -791,10 +903,32 @@ export class GridViewport {
   };
 
   private onPointerUp = (event: PointerEvent): void => {
+    if (event.pointerType === "touch") {
+      this.touchPoints.delete(event.pointerId);
+      if (this.touchPoints.size < 2) this.pinchLast = null;
+      // Tap sạch (không kéo, không thành pinch) mới là thao tác vẽ/chọn.
+      if (
+        this.touchPoints.size === 0 &&
+        this.touchTap &&
+        event.pointerId === this.touchTap.id &&
+        this.inPlanView
+      ) {
+        this.handlePrimaryAction(this.touchTap.x, this.touchTap.y);
+      }
+      if (this.touchPoints.size === 0) this.touchTap = null;
+      return;
+    }
     if (this.panning) {
       this.panning = false;
       this.canvas.releasePointerCapture(event.pointerId);
     }
+  };
+
+  private onPointerCancel = (event: PointerEvent): void => {
+    if (event.pointerType !== "touch") return;
+    this.touchPoints.delete(event.pointerId);
+    if (this.touchPoints.size < 2) this.pinchLast = null;
+    if (this.touchPoints.size === 0) this.touchTap = null;
   };
 
   private onWheel = (event: WheelEvent): void => {
