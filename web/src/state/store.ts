@@ -834,6 +834,20 @@ export class AppStore {
   }
 
   /** Open a pane; the branch bar follows it rather than being set separately. */
+  /** Drawer nav mở/đóng — chỉ có nghĩa ở màn hẹp (CSS quyết định). */
+  navOpen = false;
+
+  toggleNav(): void {
+    this.navOpen = !this.navOpen;
+    this.commit(false);
+  }
+
+  closeNav(): void {
+    if (!this.navOpen) return;
+    this.navOpen = false;
+    this.commit(false);
+  }
+
   setPane(pane: PaneId): void {
     this.activePane = pane;
     this.activeSection = sectionOfPane(pane);

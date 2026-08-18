@@ -191,6 +191,10 @@ export function Toolbar() {
 
   return (
     <header className="toolbar">
+      {/* ☰ chỉ hiện ở màn hẹp (CSS) — mở drawer nav dọc. */}
+      <button className="nav-toggle" title="Menu" onClick={() => store.toggleNav()}>
+        ☰
+      </button>
       <span className="brand">WeBIM Web</span>
       <input
         className="project-name"

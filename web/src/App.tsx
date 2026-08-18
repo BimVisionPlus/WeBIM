@@ -237,53 +237,70 @@ export default function App() {
       <Toolbar />
       {store.roleBanner && <div className="role-banner">👁 {store.roleBanner}</div>}
 
-      <nav className="module-bar">
-        <button
-          className={store.activeSection === "HOME" ? "active" : ""}
-          onClick={() => store.setSection("HOME")}
-          title={HOME.label}
-        >
-          ⌂
-        </button>
-        {SECTIONS.map((entry) => (
+      <div className="app-main">
+        {/* Nav DỌC bên trái thay cho hai hàng tab ngang: nhánh là mục cấp
+            một, nhánh đang mở xoè các bước con ngay bên dưới (dạng cây).
+            Ở màn hẹp sidebar thu thành drawer (nút ☰ trên toolbar) — cùng
+            một cấu trúc, chỉ đổi cách hiện, nên mobile không cần nav riêng. */}
+        <nav className={`side-nav${store.navOpen ? " open" : ""}`}>
           <button
-            key={entry.id}
-            className={store.activeSection === entry.id ? "active" : ""}
-            onClick={() => store.setSection(entry.id)}
-            title={
-              entry.requiresAuth && !store.auth && store.authRequired !== false
-                ? "Cần tài khoản — bấm để đăng nhập"
-                : undefined
-            }
+            className={store.activeSection === "HOME" ? "active" : ""}
+            onClick={() => {
+              store.setSection("HOME");
+              store.closeNav();
+            }}
           >
-            {entry.requiresAuth && !store.auth && store.authRequired !== false
-              ? `🔒 ${entry.label}`
-              : entry.label}
+            ⌂ {HOME.label}
           </button>
-        ))}
-      </nav>
-
-      {/* Sub-tabs only when the branch has more than one step. */}
-      {section.panes.length > 1 && (
-        <nav className="pane-bar">
-          {section.panes.map((entry) => (
-            <button
-              key={entry.id}
-              className={pane === entry.id ? "active" : ""}
-              onClick={() => store.setPane(entry.id)}
-            >
-              {entry.label}
-            </button>
-          ))}
+          {SECTIONS.map((entry) => {
+            const locked =
+              entry.requiresAuth && !store.auth && store.authRequired !== false;
+            const current = store.activeSection === entry.id;
+            return (
+              <div key={entry.id} className="side-nav-group">
+                <button
+                  className={current ? "active" : ""}
+                  onClick={() => {
+                    store.setSection(entry.id);
+                    // Nhánh một bước thì chọn xong là xong; nhánh nhiều bước
+                    // giữ drawer mở để chọn tiếp bước con.
+                    if (entry.panes.length <= 1) store.closeNav();
+                  }}
+                  title={locked ? "Cần tài khoản — bấm để đăng nhập" : undefined}
+                >
+                  {locked ? `🔒 ${entry.label}` : entry.label}
+                </button>
+                {current && entry.panes.length > 1 && (
+                  <div className="side-nav-panes">
+                    {entry.panes.map((sub) => (
+                      <button
+                        key={sub.id}
+                        className={pane === sub.id ? "active" : ""}
+                        onClick={() => {
+                          store.setPane(sub.id);
+                          store.closeNav();
+                        }}
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
-      )}
+        {store.navOpen && (
+          <div className="nav-backdrop" onClick={() => store.closeNav()} />
+        )}
 
-      <div className="app-body">
-        {railed && !gated && <ProjectBrowser />}
-        <main className="viewport-host">
-          {gated ? <LoginGate /> : <Pane id={pane} />}
-        </main>
-        {railed && !gated && <PropertiesPanel />}
+        <div className="app-body">
+          {railed && !gated && <ProjectBrowser />}
+          <main className="viewport-host">
+            {gated ? <LoginGate /> : <Pane id={pane} />}
+          </main>
+          {railed && !gated && <PropertiesPanel />}
+        </div>
       </div>
 
       <footer className="status-bar">{store.statusMessage}</footer>
