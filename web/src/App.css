@@ -159,6 +159,9 @@ input[type="text"],
   display: flex;
   flex: 1;
   min-height: 0;
+  /* Flex item mặc định không co dưới content — thiếu dòng này thì một
+     bảng rộng đẩy cả pane giãn ra thay vì tự cuộn. */
+  min-width: 0;
 }
 
 .panel {
@@ -1652,3 +1655,68 @@ input[type="text"],
 
 .diff-old { color: #e04c4c; font-size: 12px; }
 .diff-new { color: #4091ff; font-size: 12px; }
+
+/* ── Mobile pass — nội dung pane ở màn hẹp ────────────────────────────
+   Nguyên tắc: KHÔNG layout mobile riêng — cùng markup, đổi cách hiện.
+   Bảng rộng cuộn ngang trong pane; rail phụ nhường chỗ cho nội dung
+   chính; đích chạm đủ lớn cho ngón tay. */
+@media (max-width: 820px) {
+  /* Toolbar trên: cho phép xuống dòng thay vì cắt cụt nút cuối. */
+  .toolbar {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  .toolbar .project-name {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+
+  .module-host {
+    padding: 12px;
+    /* Không cho pane giãn theo phần tử con rộng nhất — giãn là bảng hết
+       đường tự cuộn (max-width:100% của nó đo theo pane đã giãn). */
+    overflow-x: hidden;
+  }
+
+  /* Bảng CDE/Plan/QTO rộng hơn màn hình: cuộn ngang trong pane —
+     bóp cột đến vỡ chữ hay tràn khung đều tệ hơn một cú vuốt ngang. */
+  .module-host table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  /* Input đặt min-width inline cho desktop (240–320px) không được phá
+     khung điện thoại — !important là chủ đích để thắng inline style. */
+  .module-form input,
+  .standards-qa input {
+    min-width: 0 !important;
+    flex: 1 1 150px;
+  }
+
+  /* Đích chạm: ngón tay không phải con trỏ chuột. */
+  .module-host button,
+  .side-nav button,
+  .toolbar button {
+    min-height: 34px;
+  }
+
+  /* Bản vẽ PDF: danh sách trên, trang vẽ dưới — hai cột cạnh nhau thì
+     canvas chỉ còn bề rộng con tem. */
+  .drawings-body {
+    flex-direction: column;
+    height: auto;
+  }
+  .drawings-list {
+    width: auto;
+    max-height: 30vh;
+  }
+
+  /* BIM: hai rail (cây dự án + properties) chiếm quá nửa màn — ẩn để
+     viewport vẽ/3D full màn. Chỉnh thuộc tính chi tiết là việc desktop;
+     xem mô hình là việc mobile làm tốt. */
+  .app-body .panel,
+  .app-body .properties-panel {
+    display: none;
+  }
+}
